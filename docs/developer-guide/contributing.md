@@ -2,17 +2,17 @@
 
 This page is for working on Open Meridian's public repositories: meridian-core,
 meridian-cli, meridian-python, meridian-schema, meridian-snaptrade and meridian-docs. It covers how each is
-checked, the rules every change keeps, and how contributions are accepted.
+checked, the rules every change keeps, and how to raise a bug or an idea.
 
-!!! note "The contributor licence agreement"
-    Before your first contribution, read the repository's `CLA.md`. You keep
-    your copyright, and give Societal Lab Inc. the right to use your work in
-    Open Meridian and to release it under other licences, including commercial
-    ones. To agree, open a pull request from your own account that adds
-    `- @your-github-login` on its own line to the repository's
-    `CONTRIBUTORS.md`; a check on every pull request looks for it. Do the same
-    in each repository you contribute to. A corporate form, for an employer
-    that owns its employees' work, is not offered yet.
+!!! note "Issues, not pull requests"
+    Open Meridian is open source, and built by its team: we don't merge pull
+    requests from outside it. To help, open an issue on the repository --
+    **Report a bug** or **Suggest an improvement** -- and describe the problem
+    or the idea rather than pasting code; we build every change ourselves.
+    Opening an issue gives Societal Lab Inc. a perpetual, irrevocable,
+    royalty-free licence to use what you suggest, as each repository's
+    `CONTRIBUTING.md` says. Plugins, which live in your own repositories, are
+    the way to build on Open Meridian.
 
 ## The gate: `make ci-local`
 
