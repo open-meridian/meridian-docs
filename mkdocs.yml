@@ -1,0 +1,110 @@
+site_name: Open Meridian
+site_description: Documentation for Open Meridian, the open-source OEMS. Own your trading stack, and build on it yourself or with AI agents.
+site_url: https://open-meridian.dev
+repo_url: https://github.com/open-meridian/meridian-core
+repo_name: open-meridian/meridian-core
+edit_uri: https://github.com/open-meridian/meridian-docs/edit/main/docs/
+copyright: © Open Meridian
+
+theme:
+  name: material
+  logo: assets/mark.svg
+  favicon: assets/mark.svg
+  palette:
+    - scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.indexes
+    - navigation.top
+    - navigation.footer
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.tabs.link
+    - content.action.edit
+    - toc.follow
+
+extra_css:
+  - stylesheets/extra.css
+
+extra:
+  homepage: https://open-meridian.com
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/open-meridian
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+
+nav:
+  - Home: index.md
+  - Getting started:
+      - getting-started/index.md
+      - Install a deployment: getting-started/installation.md
+      - Your first plugin: getting-started/first-plugin.md
+      - Build with an AI agent: getting-started/build-with-an-ai-agent.md
+  - Concepts:
+      - concepts/index.md
+      - Architecture: concepts/architecture.md
+      - Projects and deployments: concepts/projects-and-deployments.md
+      - Plugins, roles and grants: concepts/plugins.md
+      - Access: concepts/access.md
+      - Accounts: concepts/accounts.md
+      - Instruments: concepts/instruments.md
+      - Development deployments: concepts/development-deployments.md
+  - How-to:
+      - how-to/index.md
+      - Choose how people sign in: how-to/choose-sign-in.md
+      - Give people access: how-to/administer-access.md
+      - Reset a lost password: how-to/reset-a-lost-password.md
+      - Recover administration: how-to/recover-administration.md
+      - Release a plugin version: how-to/release-a-plugin.md
+      - Remove or start over: how-to/remove-or-start-over.md
+      - Troubleshoot an install: how-to/troubleshoot-install.md
+  - Tutorials:
+      - tutorials/index.md
+      - Change your plugin's page, live: tutorials/change-the-page-live.md
+      - Record a holdings statement: tutorials/record-a-holdings-statement.md
+  - API reference:
+      - api/index.md
+      - Command line: api/cli.md
+      - Python SDK: api/python-sdk.md
+      - Typed operations: api/typed-operations.md
+      - Plugin manifest: api/plugin-manifest.md
+      - plugin dev events: api/plugin-dev-events.md
+  - Developer guide:
+      - developer-guide/index.md
+      - Repositories: developer-guide/repositories.md
+      - Contributing: developer-guide/contributing.md

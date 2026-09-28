@@ -1,0 +1,168 @@
+# Build with an AI agent
+
+Open Meridian is built so a coding agent can write your plugin while you watch. On a development
+deployment, `meridian plugin dev` runs your plugin as you write it: each save is running in about a
+second, in the same pod, with the same sidecar and the same grants.
+
+Every plugin made by `meridian plugin new` carries the instructions an agent needs:
+
+| File | For |
+|---|---|
+| `AGENTS.md` | Any coding agent. It teaches the live loop: start it, change something, check the result, release. |
+| `CLAUDE.md` | Claude Code. It points to `AGENTS.md`. |
+| `.claude/skills/develop-live/SKILL.md` | Claude Code. A skill that also leads to `AGENTS.md`. |
+
+`CLAUDE.md` and the skill come with CLI v0.1.8 and later. Commit all three with the plugin, so
+whoever works on it next has them too. `.dockerignore` keeps them out of the plugin's image.
+
+## Before you start
+
+- A deployment installed **for development**. Development deployments run unreviewed code, so
+  never use one your firm depends on. See
+  [Development deployments](../concepts/development-deployments.md).
+- The `meridian` CLI, version 0.1.3 or later for `plugin dev`, and 0.1.8 or later for the Claude
+  Code files. Check with `meridian --version`; update with `meridian upgrade`.
+- Docker on this machine. The first run builds the plugin's image.
+- A coding agent that can run shell commands in the plugin's directory.
+
+## 1. Install a development deployment
+
+Follow [Install a deployment](installation.md), adding `--development` to `meridian up`:
+
+```bash
+export MERIDIAN_ENROLMENT_CODE=ENR-XXXX-XXXX-XXXX
+meridian up --id DEP-XXXXXXXXXXXXXXXXXXXXXXXXXX --development
+```
+
+Every page of this deployment says **Development deployment**.
+
+## 2. Sign in yourself
+
+```bash
+meridian connect http://meridian.localhost
+```
+
+Only you can do this. It signs in through your browser, so an agent cannot run it for you. Every
+command the agent runs later uses this session.
+
+## 3. Make the plugin
+
+```bash
+meridian plugin new my-plugin
+cd my-plugin
+```
+
+If you already have a plugin made by an older CLI, it may lack `CLAUDE.md` and the skill. Its
+`AGENTS.md` still works for any agent.
+
+## 4. Start your agent in the plugin's directory
+
+Start your coding agent with `my-plugin` as its working directory. Then ask for what you want, and
+say you want to see it running. For example:
+
+```text
+Read AGENTS.md. Start the live loop for the instance my-plugin, then add a
+section to the page that shows today's date. Check the page with
+`meridian plugin open --print /` and tell me when it is running.
+```
+
+Claude Code reads `CLAUDE.md` by itself. Other agents need to be told to read `AGENTS.md`, or pick
+it up by their own convention.
+
+## 5. Approve what the plugin asks for
+
+The first launch of an instance needs your yes. `AGENTS.md` tells the agent to show you the `roles`
+and `tags` in `pyproject.toml` and ask. Only after you say yes does it pass `--yes`. An instance
+that is already live asks nothing.
+
+!!! warning
+    Approving roles decides what the plugin may do in your deployment. Read them. If an agent passes
+    `--yes` without asking you, stop it.
+
+## 6. Watch it work
+
+The agent runs `plugin dev` in the background and writes its output under `.meridian/`:
+
+```bash
+mkdir -p .meridian
+meridian plugin dev --instance my-plugin --yes --json > .meridian/dev.jsonl 2> .meridian/dev.err
+```
+
+The first run uploads the plugin and launches it live. That takes a minute or two. After that, each
+save is a new **revision**, and the agent waits for that revision to be `ready` or `crashed`. The
+events are:
+
+| Event | Means |
+|---|---|
+| `sent` | A change was sent, and given a revision number |
+| `synced` | The sidecar wrote it |
+| `restarted` | The plugin's process started on that revision |
+| `ready` | It connected to its sidecar again: that revision is running |
+| `crashed` | It stopped with an error. `traceback` has the last of what it printed |
+| `exited` | It stopped by itself, without an error |
+| `refused` | The sidecar refused it something. `reason` says what |
+
+The agent checks its work with the command that answers the question:
+
+| To know | It runs |
+|---|---|
+| What the page shows | `meridian plugin open --instance my-plugin --print /` |
+| What the plugin printed | `meridian plugin logs --instance my-plugin --since <revision>` |
+| What was refused | `meridian plugin events --instance my-plugin --since <revision> --json` |
+| What you see in a browser | `meridian plugin open --instance my-plugin`, a link for one browser |
+
+You can run any of these yourself from another terminal. See
+[Change your plugin's page, live](../tutorials/change-the-page-live.md) for the same loop by hand,
+and [plugin dev events](../api/plugin-dev-events.md) for the event format.
+
+## What a save cannot change
+
+A save changes what the plugin **does**, never what it is **allowed** to do.
+
+- **Roles and tags.** Adding one to `pyproject.toml` changes nothing live. It needs a new version,
+  and you approve it.
+- **Dependencies.** The live code runs on the image the instance was launched from. A new package
+  needs a new version.
+
+A `refused` event is the plugin's grants working, not a bug. A good agent tells you when a change
+needs either of these, rather than looking for a way round.
+
+## When the session lapses
+
+Every command exits with a code an agent can act on:
+
+| Exit | Means |
+|---|---|
+| 0 | Done |
+| 1 | Refused or failed |
+| 2 | Asked wrongly |
+| 3 | No session, or it has lapsed |
+
+On exit 3 the agent should stop and ask you to run the `meridian connect` the command printed. There
+is no `meridian status`; `meridian plugin list` shows whether the session is there.
+
+## 7. Release it
+
+When you are happy, ask the agent to release. It runs the plugin's tests if it has any, raises
+`version` in `pyproject.toml`, shows you the roles and tags again, and then runs:
+
+```bash
+meridian plugin dev --release --instance my-plugin --yes
+```
+
+That uploads the directory as the new version and runs it in place of the live instance. It is then
+an ordinary version in the catalogue. See [Release a plugin version](../how-to/release-a-plugin.md).
+
+## 8. Stop
+
+Stopping the background `plugin dev` leaves the instance running as it was. To end it:
+
+```bash
+meridian plugin stop my-plugin
+```
+
+## Next steps
+
+- [Record a holdings statement](../tutorials/record-a-holdings-statement.md): a plugin that writes
+  to the deployment, with the roles and grants that takes.
+- [Typed operations](../api/typed-operations.md): what a plugin's roles let it do.
