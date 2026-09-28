@@ -1,15 +1,18 @@
 # Contributing
 
 This page is for working on Open Meridian's public repositories: meridian-core,
-meridian-cli, meridian-python and meridian-schema. It covers how each is
+meridian-cli, meridian-python, meridian-schema, meridian-snaptrade and meridian-docs. It covers how each is
 checked, the rules every change keeps, and how contributions are accepted.
 
-!!! warning "Outside contributions cannot be merged yet"
-    Contributors from outside Societal Lab Inc. will agree to a contributor
-    licence agreement, `CLA.md`, once, by opening a pull request that adds
-    `- @your-github-login` to the repository's `CONTRIBUTORS.md`. `CLA.md` is
-    not published yet, so until it is, outside pull requests cannot be merged.
-    If you would like to contribute, open an issue on the repository.
+!!! note "The contributor licence agreement"
+    Before your first contribution, read the repository's `CLA.md`. You keep
+    your copyright, and give Societal Lab Inc. the right to use your work in
+    Open Meridian and to release it under other licences, including commercial
+    ones. To agree, open a pull request from your own account that adds
+    `- @your-github-login` on its own line to the repository's
+    `CONTRIBUTORS.md`; a check on every pull request looks for it. Do the same
+    in each repository you contribute to. A corporate form, for an employer
+    that owns its employees' work, is not offered yet.
 
 ## The gate: `make ci-local`
 
