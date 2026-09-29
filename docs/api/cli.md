@@ -368,7 +368,7 @@ With `--json`, one object. `line` is `null` when the failure is a whole file, or
 `outcome` is `passed`, `failed`, or `skipped` for `tests-pass` without `--run-tests`.
 
 !!! note "A freshly scaffolded plugin"
-    The plugin `meridian plugin new` writes at CLI 0.1.15 keeps every rule but `tests-exist`: the template has no tests yet. Add one, and it keeps them all.
+    From CLI 0.1.16, the plugin `meridian plugin new` writes keeps every rule, with its own tests and a CI workflow (`.github/workflows/check.yaml`) that runs `meridian plugin check --run-tests`. At 0.1.15 it failed `tests-exist` until you added a test.
 
 **Exit codes:** `0` every rule holds; `1` at least one does not; `2` asked wrongly, or `--dir` is not a directory.
 
