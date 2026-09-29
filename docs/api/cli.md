@@ -12,6 +12,7 @@ This page describes release 0.1.8 of the command line. `meridian --version` says
 meridian doctor
 meridian up --id <id> [options]
 meridian down [--release <name>] [--delete-namespace]
+meridian upgrade-deployment [--release <name>] [--chart-version <v>] [options]
 meridian connect [<address>]
 meridian sign-out [<address>]
 meridian plugin new <name> [--into <dir>]
@@ -35,7 +36,7 @@ meridian --help
 - An unknown flag is refused, not ignored, and so is a stray word after a command that takes none. `meridian up --no-docter` exits 2 rather than installing without the checks.
 - A flag given with nothing after it is refused rather than defaulted.
 - When a flag is given twice, the last one counts. The exception is `-f`/`--values`: every one is kept, in the order given.
-- `--release` means two different things. After `up` or `down` it takes a value, the Helm release's name. After `plugin` it takes none, and `plugin dev --release` releases the code as a version.
+- `--release` means two different things. After `up`, `down` or `upgrade-deployment` it takes a value, the Helm release's name. After `plugin` it takes none, and `plugin dev --release` releases the code as a version.
 
 ## Global options
 
@@ -43,7 +44,7 @@ These are read before any command runs.
 
 | Flag | Argument | Default | Meaning |
 |---|---|---|---|
-| `-n`, `--namespace` | `<name>` | `meridian` | The Kubernetes namespace the deployment goes in. Used by `doctor`, `up` and `down`. |
+| `-n`, `--namespace` | `<name>` | `meridian` | The Kubernetes namespace the deployment goes in. Used by `doctor`, `up`, `down` and `upgrade-deployment`. |
 | `--platform` | `<url>` | `https://open-meridian.com` | The platform the deployment reports to. Used by `doctor` and `up`. `up` passes it to the chart only when you give it. |
 | `--image` | `<ref>` | `ghcr.io/open-meridian/meridian-runtime:latest` | The runtime image. Used by `doctor` and `up`. `up` passes it to the chart only when you give it. |
 | `-h`, `--help` | | | Print the usage text and exit 0. |
@@ -178,6 +179,52 @@ By default the namespace is kept, and with it the database the deployment brough
 Either way, the deployment still exists on the platform. Retiring it there is what revokes its key. Not to be confused with `meridian uninstall`, which removes the command line itself.
 
 **Exit codes:** `0` done, `1` failed, `2` given a word it does not take.
+
+## `meridian upgrade-deployment`
+
+```text
+meridian upgrade-deployment [--release <name>] [-n <name>] [--chart <ref>] [--chart-version <v>] [--timeout <d>] [--yes]
+```
+
+Moves a running deployment to a newer version of its chart, in place, with your own cluster rights. Not to be confused with `meridian upgrade`, which replaces the command line itself. For the whole task, and for upgrading from your own pipeline instead, see [Upgrade a deployment](../how-to/upgrade-a-deployment.md).
+
+It works in four steps, and stops at the step that fails.
+
+1. **Check.** It changes nothing if any of these fails, and says which and what to do:
+    - `helm` is 3.14 or newer, for `--reset-then-reuse-values`;
+    - the cluster is reachable, and you may patch Deployments and create and delete Jobs in the namespace;
+    - the release exists and Helm holds it as `deployed`. A `failed` or `pending-…` release is refused with how to recover it;
+    - the chart version is published, and it is the chart the release was installed from;
+    - it is not older than the installed version. If it is the same, it says so and exits 0.
+
+    Two more are printed as `unknown` every time, because they are not built: whether the upgrade is within the skip policy, which is not ruled yet, and whether every installed plugin's runtime floor is met, which nothing declares yet. `unknown` does not stop it, and does not mean it passed.
+
+    If the deployment's own values set `image.tag`, it says so as `worth`: the upgrade keeps that tag rather than moving to the chart's.
+
+2. **Show and ask.** It prints the release, the namespace, the version and image it is on, the version and image it moves to, and the `helm upgrade` it will run, then asks `Upgrade it?`. Anything but `y` or `yes` is no. With no terminal to ask at, it is refused unless you pass `--yes`.
+
+3. **Apply and wait.** It runs `helm upgrade <release> <chart> --version <v> --namespace <ns> --reset-then-reuse-values --timeout <d>`, never `--wait`. Then it waits, up to `--timeout`, for the new revision's migration Job to complete, every Deployment and StatefulSet of the release to roll out, and every one of their pods to run the image its template names. It prints each thing it is waiting for once, when it first sees it.
+
+4. **Clean up and report.** It deletes the finished Jobs of this release from earlier revisions, found by the release's label, and nothing else. Old ReplicaSets are left to the chart's `revisionHistoryLimit`. It then prints the versions it moved between, each component's images and readiness, every container that restarted during the upgrade with the reason Kubernetes gives, and what it cleaned up.
+
+It never prints the deployment's values, which hold its enrolment code. The one thing it reads from them is `image`.
+
+| Flag | Argument | Default | Meaning |
+|---|---|---|---|
+| `--release` | `<name>` | `meridian` | The Helm release to upgrade. |
+| `--chart` | `<ref>` | `oci://ghcr.io/open-meridian/charts/meridian-runtime` | The chart the release was installed from. |
+| `--chart-version` | `<v>` | the latest published | The version to move to. It is resolved once, and that version is what is checked and applied. |
+| `--timeout` | `<d>` | `10m` | How long to wait for the migration and every component, and what Helm is given. Written as Helm writes a duration: `10m`, `90s`, `1h30m`. |
+| `--yes` | | off | Upgrade without being asked. For a script that has already read the plan. |
+| `-n`, `--namespace` | `<name>` | `meridian` | The namespace. |
+
+**Exit codes:**
+
+| Code | When |
+|---|---|
+| `0` | Upgraded, or already at that version. |
+| `1` | A check stopped it (nothing was changed), it was not approved, Helm refused it, the migration failed, or the wait timed out. What is still waited for is listed, and nothing is rolled back. |
+| `2` | Asked wrongly, for example a `--timeout` Helm would not read. Nothing was done. |
 
 ## `meridian connect`
 
@@ -403,7 +450,7 @@ A body that is not UTF-8 text comes as `body_base64` instead of `body`.
 meridian upgrade [--to <version>]
 ```
 
-Replaces this binary with the latest release, or with the release `--to` names, older or newer. Releases come from `https://github.com/open-meridian/meridian-cli/releases`, or from `MERIDIAN_RELEASES`, which must be HTTPS unless it is this machine. The download is checked against the `.sha256` published beside it. This catches a broken download, not a compromised release; signing is not built yet.
+Replaces this binary with the latest release, or with the release `--to` names, older or newer. It upgrades the command line, not a deployment: that is [`meridian upgrade-deployment`](#meridian-upgrade-deployment). Releases come from `https://github.com/open-meridian/meridian-cli/releases`, or from `MERIDIAN_RELEASES`, which must be HTTPS unless it is this machine. The download is checked against the `.sha256` published beside it. This catches a broken download, not a compromised release; signing is not built yet.
 
 It never looks for a newer release on its own.
 

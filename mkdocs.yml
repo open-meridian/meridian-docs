@@ -91,6 +91,7 @@ nav:
       - Reset a lost password: how-to/reset-a-lost-password.md
       - Recover administration: how-to/recover-administration.md
       - Release a plugin version: how-to/release-a-plugin.md
+      - Upgrade a deployment: how-to/upgrade-a-deployment.md
       - Remove or start over: how-to/remove-or-start-over.md
       - Troubleshoot an install: how-to/troubleshoot-install.md
   - Tutorials:

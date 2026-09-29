@@ -1,0 +1,194 @@
+# Upgrade a deployment
+
+A deployment is a Helm release of the `meridian-runtime` chart. Upgrading it moves the release to a
+newer version of that chart, in place: the database migrates, every component restarts on the new
+image, and the data, the key and the configuration stay.
+
+You apply an upgrade with your own cluster rights. Nothing in a deployment holds a right to change
+the cluster, and the dashboard does not upgrade itself.
+
+| To | Run or do |
+|---|---|
+| Upgrade to the latest published chart | `meridian upgrade-deployment` |
+| Upgrade to a particular version | `meridian upgrade-deployment --chart-version <v>` |
+| Upgrade from your own pipeline | Plain Helm, Argo CD or Flux, below |
+| Upgrade the command line itself | `meridian upgrade`, which is a different thing |
+
+## To upgrade with the command line
+
+```bash
+meridian upgrade-deployment
+```
+
+It checks first, and changes nothing if a check fails:
+
+- the cluster is reachable, and you may patch Deployments and create and delete Jobs in the
+  namespace;
+- your `helm` is 3.14 or newer, which an upgrade needs (see [why](#why-not-reuse-values));
+- the release exists and Helm holds it as `deployed`, not `failed` or `pending-…`;
+- the version you are moving to is published, and is not older than the one installed.
+
+If the release is at that version already, it says so and exits 0.
+
+Then it shows what it will do, and asks:
+
+```text
+Upgrading meridian in meridian:
+  from  meridian-runtime 0.1.180 (revision 7), running ghcr.io/open-meridian/meridian-runtime:845bd06
+  to    meridian-runtime 0.1.182, running ghcr.io/open-meridian/meridian-runtime:9c5d480
+
+  helm upgrade meridian oci://ghcr.io/open-meridian/charts/meridian-runtime --version 0.1.182 --namespace meridian --reset-then-reuse-values --timeout 10m
+
+Upgrade it? [y/N]
+```
+
+Answer `y`. It runs that `helm upgrade`, then waits, up to `--timeout`, for:
+
+1. the new revision's migration Job to complete;
+2. every Deployment and StatefulSet of the release to roll out;
+3. every pod of theirs to run the image its template now names.
+
+When they have, it deletes the finished Jobs the release ran at earlier revisions, and reports:
+
+```text
+Upgraded meridian in meridian: meridian-runtime 0.1.180 -> meridian-runtime 0.1.182, now revision 8.
+Migrated: job/meridian-meridian-runtime-migrate-8 completed.
+
+Every component on its new template, and ready:
+  conductor  1/1  ghcr.io/open-meridian/meridian-runtime:9c5d480
+  dashboard  1/1  ghcr.io/open-meridian/meridian-runtime:9c5d480
+  ...
+
+Cleaned up 2 finished Job(s) of earlier revisions: job/meridian-meridian-runtime-migrate-7, ...
+Old ReplicaSets are left to the chart's revisionHistoryLimit.
+```
+
+A container that restarted while the upgrade ran is listed with the reason Kubernetes gives and the
+`kubectl logs … --previous` that shows why. That is worth reading, and it is not a failure: a
+component that starts before its migration has finished exits and is restarted.
+
+`--yes` answers the question for a script that has already read the plan. `--release`, `-n`,
+`--chart` and `--timeout` are as for `meridian up`; see the
+[command line reference](../api/cli.md#meridian-upgrade-deployment).
+
+### If it stops
+
+| It says | What to do |
+|---|---|
+| a check `stops` | Nothing was changed. Each one says what to do. |
+| the release is `failed` | `helm history meridian -n meridian` says why. Fix the cause, then `helm rollback meridian -n meridian` returns it to its last deployed revision, and you can upgrade again. |
+| the release is `pending-upgrade` or `pending-install` | Another Helm operation is running, or one was interrupted. If none is running, `helm rollback meridian -n meridian` clears it. |
+| the migration failed | It names the Job. Read its log with `kubectl logs -n meridian job/<name> --all-containers`. The new revision stays applied. Read the log before rolling back: a migration that got part of the way may have changed what the older version reads. |
+| still waiting after the timeout | It lists what it was waiting for, each with why. Nothing is rolled back. Run it again with a longer `--timeout`: it is at the new version already, so it only waits. |
+
+!!! note "Not checked yet"
+    Two checks are planned and not built, and the command says so each time rather than passing
+    them: whether an upgrade skips more versions than is supported, and whether every installed
+    plugin runs on the new version. Neither has anything to check against yet.
+
+## To upgrade from your own pipeline
+
+Firms usually apply an upgrade through their own change control: a reviewed version bump, applied by
+a pipeline. The chart is the same one the command line applies, and it works that way too. Whatever
+applies it, do what the command line does:
+
+**Before:** the release is `deployed`; the new version is published and is newer than the one
+installed.
+
+**The upgrade:** the new chart's defaults, with the deployment's own values over them.
+
+**After:**
+
+1. Wait for the migration Job of the new revision, `<release>-meridian-runtime-migrate-<revision>`,
+   to complete. If it fails, stop and read its log.
+2. Wait for every Deployment and StatefulSet with the label
+   `app.kubernetes.io/instance=<release>` to roll out.
+3. Delete the finished Jobs of earlier revisions. Their names end with the revision that ran them.
+   The Job ending in `-key` is kept: it runs once, at install.
+
+### Plain Helm
+
+```bash
+helm upgrade meridian oci://ghcr.io/open-meridian/charts/meridian-runtime \
+  --version 0.1.182 --namespace meridian --reset-then-reuse-values
+
+kubectl wait -n meridian --for=condition=complete --timeout=10m \
+  job/meridian-meridian-runtime-migrate-8
+kubectl rollout status -n meridian deployment -l app.kubernetes.io/instance=meridian --timeout=10m
+kubectl rollout status -n meridian statefulset -l app.kubernetes.io/instance=meridian --timeout=10m
+```
+
+`helm history meridian -n meridian` gives the new revision, the number the migration Job ends with.
+
+Do not add `--wait`. Charts up to 0.1.182 mark an upgrade failed under `--wait` on one of their own
+setup resources, although the upgrade worked. Wait with `kubectl` as above.
+
+### Flux
+
+A `HelmRelease` runs Helm itself. The values it holds are the deployment's own, and on each upgrade
+it applies them over the new chart's defaults, which is what `--reset-then-reuse-values` does. To
+upgrade, change the version in Git:
+
+```yaml
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: OCIRepository
+metadata:
+  name: meridian-runtime
+  namespace: meridian
+spec:
+  interval: 1h
+  url: oci://ghcr.io/open-meridian/charts/meridian-runtime
+  ref:
+    tag: 0.1.182          # the version; change this to upgrade
+  layerSelector:
+    mediaType: application/vnd.cncf.helm.chart.content.v1.tar+gzip
+    operation: copy
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: meridian
+  namespace: meridian
+spec:
+  interval: 10m
+  chartRef:
+    kind: OCIRepository
+    name: meridian-runtime
+  upgrade:
+    disableWait: true     # see Plain Helm: wait for the migration yourself
+  values: {}              # the deployment's own values
+```
+
+Flux waits for the resources by default, which fails as `--wait` does on charts up to 0.1.182;
+`disableWait` turns that off. Check the migration Job and the rollouts afterwards, as above.
+
+### Argo CD
+
+Argo CD renders the chart with `helm template` and applies what it renders. Its Application holds the
+deployment's own values, so there is nothing to reuse: each sync renders the new chart's defaults
+with those values. To upgrade, change `targetRevision` in Git to the new chart version.
+
+!!! warning "Jobs named by revision"
+    `helm template` renders every release as revision 1. The chart names its migration Job and its
+    other per-revision Jobs by Helm's revision, so under Argo CD each upgrade renders a Job with the
+    same name as the last one, and Kubernetes refuses to change a Job's template. Delete the
+    finished migration Job before syncing an upgrade. Nothing else depends on it.
+
+## Why not `--reuse-values`
+
+`helm upgrade --reuse-values` reuses the previous release's values, the old chart's defaults among
+them. The image tag is one of those defaults, so the upgrade applies the new chart's templates and
+keeps the old image: every pod restarts, and nothing changes version.
+
+`--reset-then-reuse-values` starts from the new chart's defaults, the new image among them, and
+applies only the values the deployment was given over them. It needs Helm 3.14 or newer.
+
+If the deployment's own values set `image.tag`, as `meridian up --image` does, that tag is one of
+its own values and an upgrade keeps it. `meridian upgrade-deployment` says so before it asks. Remove
+`image.tag` from the deployment's values if it should move with the chart.
+
+## Related
+
+- [Install a deployment](../getting-started/installation.md)
+- [Remove or start over](remove-or-start-over.md)
+- [Command line reference](../api/cli.md)

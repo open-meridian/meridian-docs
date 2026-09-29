@@ -10,5 +10,6 @@ Short recipes for one task each. They assume you have a deployment; if not, star
 | [Reset a lost password](reset-a-lost-password.md) | Get a local administrator back in with a code from the platform. |
 | [Recover administration](recover-administration.md) | Get back in when nobody can administer the deployment. |
 | [Release a plugin version](release-a-plugin.md) | Ship a change to a plugin as a new version. |
+| [Upgrade a deployment](upgrade-a-deployment.md) | Move a deployment to a newer chart, with the command line or your own pipeline. |
 | [Remove or start over](remove-or-start-over.md) | Uninstall, reinstall, or retire a deployment. |
 | [Troubleshoot an install](troubleshoot-install.md) | Match what you see to what it means and what to do. |
