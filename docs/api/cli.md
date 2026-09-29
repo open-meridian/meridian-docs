@@ -4,7 +4,7 @@
 
 Nothing in a cloud install depends on it. A marketplace listing's form and the deployment's own wizard are the whole path there; `meridian` makes the same things convenient from a terminal.
 
-This page describes release 0.1.8 of the command line. `meridian --version` says which one you have. For installing it, see [Install a deployment](../getting-started/installation.md).
+This page describes release 0.1.12 of the command line. `meridian --version` says which one you have. For installing it, see [Install a deployment](../getting-started/installation.md).
 
 ## Synopsis
 
