@@ -16,6 +16,7 @@ meridian upgrade-deployment [--release <name>] [--chart-version <v>] [options]
 meridian connect [<address>]
 meridian sign-out [<address>]
 meridian plugin new <name> [--into <dir>]
+meridian plugin check [--dir <dir>] [--run-tests] [--json]
 meridian plugin upload [--dir <dir>]
 meridian plugin list
 meridian plugin launch <name> <version> --instance <id> [--yes]
@@ -64,12 +65,12 @@ Every command exits 0 when it succeeds. What a non-zero code means depends on th
 A `plugin` command exits 3 in two cases:
 
 - when no session is held for the deployment, or you hold several and `--deployment` does not pick one;
-- when the deployment answers `401 Unauthorized`.
+- when the deployment answers `401 Unauthorized`: the session lapsed, was ended, or is one the deployment does not know, as after its dashboard restarted. That includes the deployment's registry, which `plugin upload` pushes through. The message says which, and ends with the `meridian connect` to run, for example ``http://meridian.localhost does not know your session; it may have restarted: `meridian connect` to sign in again``. Before CLI 0.1.15, `plugin upload` reported a lapsed session met at the registry as `the registry did not start an upload: 401 Unauthorized: invalid_token` and exited 1.
 
 A script or an AI agent should treat 3 as "ask the person to connect again". Retrying won't help.
 
 !!! note "`--json`"
-    The CLI README says every command takes `--json`. The parser does accept `--json` on every command, but only `plugin dev`, `plugin logs`, `plugin events` and `plugin open` change their output for it. Every other command prints text whether or not you pass it.
+    The CLI README says every command takes `--json`. The parser does accept `--json` on every command, but only `plugin check`, `plugin dev`, `plugin logs`, `plugin events` and `plugin open` change their output for it. Every other command prints text whether or not you pass it.
 
 ## `meridian doctor`
 
@@ -95,6 +96,8 @@ Each result is one of:
 | `stops` | Would stop an install. Printed with its fix. |
 | `worth` | Worth knowing, and not in the way. |
 | `unknown` | Could not be checked from here. This does not mean it passed. |
+
+A right the cluster refuses is `stops`, naming the right to ask for. `kubectl auth can-i` answers "no" by exiting 1, and from CLI 0.1.15 that is read as the refusal it is rather than as `unknown`; `unknown` is left for a question `kubectl` could not answer.
 
 **Exit codes:** `0` when nothing would stop an install, `1` when at least one check says `stops`.
 
@@ -276,6 +279,98 @@ Writes a working plugin to start from: the Python SDK's reference plugin, rename
 | `--into` | `<dir>` | `./<name>` | Where to write it. Never somewhere that already exists. |
 
 **Exit codes:** `0` written, `1` refused (bad name, or the directory exists), `2` asked wrongly.
+
+## `meridian plugin check` { #plugin-check }
+
+```text
+meridian plugin check [--dir <dir>] [--run-tests] [--json]
+```
+
+From CLI 0.1.15. Holds the plugin in `--dir` to the framework's rules: the rules every plugin is built to, so that plugins written by different people and different coding agents look and behave alike, and a change to what plugins call can be applied to all of them. It needs no deployment and no session, changes nothing, and reads nothing outside the directory. Run it while you work, and in the plugin's own CI.
+
+Each failure names the rule, the file and line, and what to write instead, so that a coding agent can fix it without asking. The rules are compiled into the binary: the check a plugin meets is the one of the `meridian` that runs it.
+
+| Flag | Argument | Default | Meaning |
+|---|---|---|---|
+| `--dir` | `<dir>` | `.` | The plugin's directory. |
+| `--run-tests` | | off | Also run the plugin's tests with pytest: `.venv/bin/python -m pytest` when the plugin has a `.venv`, otherwise `python3 -m pytest`, which must have the plugin and pytest installed. No cache or bytecode is written. |
+| `--json` | | off | One JSON object on stdout instead of the report. |
+
+### The rules
+
+| Rule | Holds | Fails on |
+|---|---|---|
+| `template-shape` | The project keeps the template's shape. | No `pyproject.toml`, or one with no plugin name or version; the SDK not pinned exactly (`open-meridian==<version>`); no `Dockerfile`, or one not built on `ghcr.io/open-meridian/plugin-python:<the pinned version>`; no `src/<module>/__main__.py`; nothing calling `meridian.connect()`; no `AGENTS.md`; a `CLAUDE.md` that does not begin from `@AGENTS.md`; a `.dockerignore` that does not name `AGENTS.md` and `.meridian`. |
+| `tool-meridian` | `[tool.meridian]` names roles from the fixed list, and no tags. | No `[tool.meridian]`; a role not in the deployment's list (`ccm`, `compliance`, `custody`, `dgm`, `ems`, `match`, `oms`, `operations`, `portfolio`, `reporting`, `servicing`, `settlement`, `signal`); `tags`, empty or not; an `interface` that is not true or false. |
+| `kit-linked` | Every page links the kit from `/.meridian/ui/`, and the plugin holds no copy of it. | A file that writes a document (`<!doctype html>`, `<html>` or `<head>`) with no link to `/.meridian/ui/…/meridian.css`; a file named `meridian.css` or `meridian.js` in the plugin. |
+| `no-raw-colour` | No raw colour in a page or its styles. | A hex colour where a colour goes, `rgb()`, `rgba()`, `hsl()`, `hsla()`, `hwb()`, `oklch()` or `oklab()`, or a CSS colour name as the value of a colour property (`color`, `background`, `border`, `fill`, `stroke` and the like), a colour attribute (`fill="…"`) or a script's `.style.…Color`. A fallback in `var(--x, #fff)` is a raw colour too. |
+| `own-origin` | A page loads nothing from another origin. | An absolute or protocol-relative address (`https://…`, `//…`, `wss://…`) as a script's, stylesheet's, image's or frame's source, in `@import` or `url()`, or given to `fetch`, `EventSource`, `WebSocket` or `import`. A link people follow (`<a href>`) is not loading. |
+| `settings-declared` | Settings are declared to the SDK, not read from the environment. | `os.environ`, `os.getenv`, `getenv(` or `environ[…]`. One name is allowed: a variable ending `_PAGE_PORT`, where the page listens on loopback for its sidecar, as the template's does. That is the plugin's own wiring, which nobody configures. |
+| `secrets-kept` | No secret setting's value is logged or put in a page. | For each `meridian.Setting(…, secret=True)`, by its name or the constant that names it: its value (`values[NAME]`, `.get(NAME)`, `.name`, `{name}`) in a logging call, `print`, a `raise`, or a statement that writes HTML. Its name alone, as in "waiting for broker_api_key", is not its value. |
+| `through-the-sdk` | The deployment is reached only through the SDK. | Importing `nats`, `psycopg`, `psycopg2`, `asyncpg`, `sqlalchemy`, `pg8000`, `aiopg`, `grpc`, `kubernetes`, or the sidecar's raw `*_pb2_grpc` stubs; naming `nats://`, `postgres://`, a cluster service (`*.svc`, `*.svc.cluster.local`), `meridian.localhost`, a dashboard `/terminal/` path, or `MERIDIAN_SIDECAR_ADDRESS`. |
+| `tests-exist` | The plugin has tests. | No `test_*.py` or `*_test.py` with a `def test_…` in it. |
+| `tests-pass` | Its tests pass. | With `--run-tests`: pytest exits non-zero, collects nothing, or is not installed. Without it the rule is reported as not run, and does not fail. |
+
+The page rules read HTML, CSS, SVG, script and templates, and the Python that renders a page, so they hold for a plugin in any language. The rules about the plugin's code read Python, the one SDK there is. Tests (`tests/`, `test_*.py`, `conftest.py`) are not held to the page and code rules: a test may name a colour to assert it is absent. Comments are not read, so a colour in a comment is on no page.
+
+The rules match what can be decided from the text: the obvious forms, not every form. A secret copied into another variable before it is logged, or a colour built from parts in a script, gets past them. They are the floor, not the review.
+
+### What it cannot check
+
+These stay advice, in the template's `AGENTS.md`, because deciding them takes judgement:
+
+- which of the kit's components or classes fits what the page shows;
+- the page's layout, and whether it draws only its content, with no header bar, navigation, sign-in or theme switch of its own;
+- custom properties the kit does not define, other than the page's own layout ones (the check does not know the kit's list);
+- that prices and quantities reach the page as decimal strings and are never parsed as floats;
+- names: of the plugin, its settings, its pages and its tests;
+- whether the tests test what matters.
+
+### Output
+
+In text, one line per rule, and under a failed one each place it failed and what to write instead:
+
+```text
+meridian plugin check: ., by the rules of meridian 0.1.15
+
+  ok    template-shape     the project keeps the template's shape
+  ok    tool-meridian      [tool.meridian] names roles from the fixed list, and no tags
+  ok    kit-linked         every page links the kit from /.meridian/ui/, and holds no copy of it
+  FAIL  no-raw-colour      no raw colour: no hex, rgb(), hsl() or colour name in a page or its styles
+        src/my_plugin/page.py:41: `#c0ffee` is a raw colour, which no scheme can change
+          instead: the kit's custom property for what the colour means, as var(--name): …
+  ok    own-origin         a page loads nothing from another origin
+  ok    settings-declared  settings are declared to the SDK, not read from the environment
+  ok    secrets-kept       no secret setting's value is logged or put in a page
+  ok    through-the-sdk    the deployment is reached only through the SDK
+  ok    tests-exist        the plugin has tests
+  --    tests-pass         its tests pass: --run-tests runs them
+
+1 of 10 rules failed, 1 place(s) in all. Fix each as it says, then check again.
+```
+
+With `--json`, one object. `line` is `null` when the failure is a whole file, or a file that is missing:
+
+```json
+{
+  "dir": ".",
+  "meridian": "0.1.15",
+  "passed": false,
+  "rules": [{"rule": "no-raw-colour", "holds": "no raw colour: …", "outcome": "failed"}, …],
+  "failures": [
+    {"rule": "no-raw-colour", "file": "src/my_plugin/page.py", "line": 41,
+     "found": "`#c0ffee` is a raw colour, which no scheme can change",
+     "instead": "the kit's custom property for what the colour means, as var(--name): …"}
+  ]
+}
+```
+
+`outcome` is `passed`, `failed`, or `skipped` for `tests-pass` without `--run-tests`.
+
+!!! note "A freshly scaffolded plugin"
+    The plugin `meridian plugin new` writes at CLI 0.1.15 keeps every rule but `tests-exist`: the template has no tests yet. Add one, and it keeps them all.
+
+**Exit codes:** `0` every rule holds; `1` at least one does not; `2` asked wrongly, or `--dir` is not a directory.
 
 ## Plugin commands on a deployment
 
