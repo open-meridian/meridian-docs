@@ -18,10 +18,11 @@ It works on any deployment. For the faster loop where each save runs at once, se
 ## 1. Sign the CLI in
 
 ```bash
-meridian connect http://meridian.localhost
+meridian connect
 ```
 
-Use your deployment's address in place of `http://meridian.localhost`. Your browser opens the
+With no address it signs in to the deployment on this machine, `http://meridian.localhost`. For any
+other, give its address: `meridian connect https://meridian.firm.example`. Your browser opens the
 deployment's sign-in. The CLI keeps the session: 30 minutes idle, 12 hours at most.
 
 ## 2. Make the plugin

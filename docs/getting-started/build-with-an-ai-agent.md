@@ -39,7 +39,7 @@ Every page of this deployment says **Development deployment**.
 ## 2. Sign in yourself
 
 ```bash
-meridian connect http://meridian.localhost
+meridian connect
 ```
 
 Only you can do this. It signs in through your browser, so an agent cannot run it for you. Every

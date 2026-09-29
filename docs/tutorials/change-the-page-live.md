@@ -16,12 +16,13 @@ your agent is doing. Allow 15 minutes.
 - Docker on this machine.
 - Two terminals.
 
-The examples use `http://meridian.localhost`. Use your deployment's address if it differs.
+The examples use `http://meridian.localhost`, the deployment on this machine. For another, give
+its address to `meridian connect`.
 
 ## 1. Sign in and make the plugin
 
 ```bash
-meridian connect http://meridian.localhost
+meridian connect
 meridian plugin new live-demo
 cd live-demo
 ```

@@ -86,7 +86,7 @@ This site is how it works. For what it is and why, see
 curl -fsSL https://raw.githubusercontent.com/open-meridian/meridian-cli/main/install.sh | sh
 meridian doctor
 meridian up --id DEP-… --development
-meridian connect http://meridian.localhost
+meridian connect
 meridian plugin new my-plugin && cd my-plugin
 meridian plugin dev --instance my-plugin
 ```

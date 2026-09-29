@@ -12,7 +12,7 @@ This page describes release 0.1.8 of the command line. `meridian --version` says
 meridian doctor
 meridian up --id <id> [options]
 meridian down [--release <name>] [--delete-namespace]
-meridian connect <address>
+meridian connect [<address>]
 meridian sign-out [<address>]
 meridian plugin new <name> [--into <dir>]
 meridian plugin upload [--dir <dir>]
@@ -182,10 +182,12 @@ Either way, the deployment still exists on the platform. Retiring it there is wh
 ## `meridian connect`
 
 ```text
-meridian connect <address>
+meridian connect [<address>]
 ```
 
 Signs you in to a deployment's dashboard in your browser, however that deployment signs people in, and keeps the session on this machine. It never takes a password.
+
+With no address it signs in to `http://meridian.localhost`, the deployment `meridian up` installs on this machine by default. Give an address for any other.
 
 `<address>` is the dashboard's address alone, with no path:
 

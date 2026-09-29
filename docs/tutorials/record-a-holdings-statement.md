@@ -25,7 +25,8 @@ Allow 20 minutes.
 - To have done [Change your plugin's page, live](change-the-page-live.md), or be comfortable with
   `meridian plugin dev`.
 
-The examples use `http://meridian.localhost`. Use your deployment's address if it differs.
+The examples use `http://meridian.localhost`, the deployment on this machine. For another, give
+its address to `meridian connect`.
 
 ## How it fits together
 
@@ -54,7 +55,7 @@ See [Accounts](../concepts/accounts.md) and [Instruments](../concepts/instrument
 ## 1. Make the plugin
 
 ```bash
-meridian connect http://meridian.localhost
+meridian connect
 meridian plugin new holdings-demo
 cd holdings-demo
 ```

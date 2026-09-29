@@ -94,7 +94,7 @@ never holding a copy of your firm's staff, and it is a stated number.
 
 ### Terminal sessions
 
-The CLI signs in with `meridian connect <address>`. It opens the deployment's
+The CLI signs in with `meridian connect`, given the deployment's address unless it is the local one. It opens the deployment's
 own sign-in in a browser, always as a fresh sign-in, and receives a session of
 its own through a one-time code on a loopback address. It never takes a
 password. A terminal session has the same bounds as a browser's, and grants

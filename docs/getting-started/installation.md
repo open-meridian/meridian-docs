@@ -260,7 +260,8 @@ Applying takes a couple of minutes and restarts what changed.
     meridian connect https://meridian.firm.example
     ```
 
-    On a laptop, `meridian connect http://meridian.localhost`. It opens the deployment's own sign-in
+    On a laptop, just `meridian connect`: with no address it signs in to
+    `http://meridian.localhost`, where `meridian up` puts a deployment. It opens the deployment's own sign-in
     in your browser and never takes a password. The session lasts 30 minutes idle and 12 hours at
     most.
 
