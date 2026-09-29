@@ -67,7 +67,6 @@ Open `pyproject.toml` and set the roles:
 ```toml title="pyproject.toml"
 [tool.meridian]
 roles = ["custody"]
-tags = []
 interface = true
 ```
 
@@ -88,7 +87,6 @@ Approve the role when asked:
 ```text
 holdings-demo 0.1.0 asks for
   roles: custody
-  tags:  none
 Launch it live as holdings-demo, with these? [y/N] y
 Launched holdings-demo: holdings-demo 0.1.0.
 Its page, if it serves one: http://meridian.localhost/plugins/holdings-demo
@@ -126,10 +124,11 @@ this deployment**. See [Give people access](../how-to/administer-access.md) for 
    **Entries, one per line** write:
 
     ```text
-    holdings-demo custody write
+    holdings-demo write
     ```
 
-    Choose **Create**. A part can be one of a plugin's roles or one of its tags.
+    Choose **Create**. An entry is a plugin instance and a level, `read` or `write`, the same for
+    every plugin.
 
 4. **Permissions** tab: choose **Grant a permission**. Choose:
     - **User group:** `Deployment admins`, or a user group of your own.

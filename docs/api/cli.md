@@ -288,7 +288,7 @@ These flags are shared among them:
 | `--deployment` | `<addr>` | the one deployment connected | all | Which connected deployment, when you hold sessions with more than one. |
 | `--dir` | `<dir>` | `.` | `upload`, `dev` | The plugin's directory. Its image is built with `docker`, from its own `Dockerfile`. |
 | `--instance` | `<id>` | none (required) | `launch`, `dev`, `logs`, `events`, `open` | The instance's name. Its page is found by it. Lowercase letters, digits and single hyphens, starting with a letter, at most 63 characters. |
-| `--yes` | | off | `launch`, `dev` | Approve the roles and tags the version asks for without being asked. For a script that has already shown them to a person. |
+| `--yes` | | off | `launch`, `dev` | Approve the roles the version asks for without being asked. For a script that has already shown them to a person. |
 | `--json` | | off | `dev`, `logs`, `events`, `open` | JSON on stdout: one object, or one per line for `dev` and `--follow`. Progress goes to stderr. |
 | `--release` | | off | `dev` | Upload the plugin as it is now as a version, and run that version in place of the live instance. |
 | `--since` | `<revision>` | none | `logs`, `events` | Only what came after that revision, a whole number. |
@@ -305,7 +305,7 @@ meridian plugin upload [--dir <dir>] [--deployment <addr>]
 
 Builds the plugin's image on this machine and puts it in the deployment's catalogue as a version. The steps:
 
-1. Read `pyproject.toml` and check its [plugin manifest](plugin-manifest.md).
+1. Read `pyproject.toml` and check its [plugin manifest](plugin-manifest.md). From the CLI's next release, a `[tool.meridian]` that declares `tags` is refused here, before anything is built: a plugin declares none, since access to a plugin is `read` or `write` in the deployment's access groups.
 2. Build the image with `docker build`, tagged `meridian-plugin/<name>:<version>`.
 3. Read the image back with `docker save`.
 4. Push it into the deployment's registry through the dashboard. A layer the registry already holds is not sent again, and one another plugin's repository holds is mounted from there.
@@ -319,7 +319,7 @@ A version is recorded once and never replaced: uploading a name and version alre
 meridian plugin list [--deployment <addr>]
 ```
 
-Prints the catalogue: every version uploaded, with its roles, tags, whether it serves a page, and the SDK version it pins, and every launch, with its instance, version and state (`launched`, `stopped` or `failed`, with the failure). Because it needs a live session, it is also the way to check you are connected: it exits 3 when you aren't.
+Prints the catalogue: every version uploaded, with its roles, whether it serves a page, and the SDK version it pins, and every launch, with its instance, version and state (`launched`, `stopped` or `failed`, with the failure). Because it needs a live session, it is also the way to check you are connected: it exits 3 when you aren't.
 
 ### `meridian plugin launch`
 
@@ -327,9 +327,9 @@ Prints the catalogue: every version uploaded, with its roles, tags, whether it s
 meridian plugin launch <name> <version> --instance <id> [--yes] [--deployment <addr>]
 ```
 
-Runs a recorded version as an instance. It first prints the roles and tags the version declares, then asks `Launch it as <id>, with these?`. Anything but `y` or `yes` is no. With no terminal to ask at, it is refused unless you pass `--yes`.
+Runs a recorded version as an instance. It first prints the roles the version declares, then asks `Launch it as <id>, with these?`. Anything but `y` or `yes` is no. With no terminal to ask at, it is refused unless you pass `--yes`.
 
-The deployment runs the instance with exactly the roles and tags it declares; an approval that names anything else is refused. On success it prints the instance's page address, `<address>/plugins/<id>`. See [Plugins, roles and grants](../concepts/plugins.md).
+The deployment runs the instance with exactly the roles it declares; an approval that names anything else is refused. On success it prints the instance's page address, `<address>/plugins/<id>`. See [Plugins, roles and grants](../concepts/plugins.md).
 
 ### `meridian plugin stop`
 
@@ -362,12 +362,12 @@ The directory is scanned four times a second, and events are polled twice a seco
 
 One change may carry at most 11 MiB before encoding.
 
-A change to the plugin's dependencies, roles or tags needs a new version. The live code runs on the image the instance was launched from.
+A change to the plugin's dependencies or roles needs a new version. The live code runs on the image the instance was launched from.
 
 With `--release`, it does the following:
 
 1. It uploads the directory as it is, as the version in `pyproject.toml`. A version already recorded is refused: raise `version` first.
-2. It asks for approval of the roles and tags.
+2. It asks for approval of the roles.
 3. It stops the instance if one is running.
 4. It launches the new version in its place, not live.
 

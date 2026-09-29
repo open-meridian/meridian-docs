@@ -9,18 +9,17 @@ A **permission** joins three things:
 |---|---|---|
 | User group | Who | Directory groups, or logins |
 | Account group | On which accounts | The firm's accounts |
-| Access group | Using what | Plugins' parts, at `read` or `write` |
+| Access group | Using what | Plugins, each at `read` or `write` |
 
-So a permission reads: *the people in this user group, using these plugins' parts, on these
-accounts.* See [Access](../concepts/access.md) and [Accounts](../concepts/accounts.md) for the model.
+So a permission reads: *the people in this user group, using these plugins, on these accounts.* See [Access](../concepts/access.md) and [Accounts](../concepts/accounts.md) for the model.
 
 ## To open the Administer page
 
 1. Sign in to the dashboard.
-2. On the home page, choose **administer this deployment**. It is at `/admin`.
+2. Choose **Admin portal** at the top right. It is at `/admin`.
 
-The page has seven tabs: **Permissions**, **User groups**, **Account groups**, **Access groups**,
-**Accounts**, **External accounts** and **Terminal sessions**. Every change is recorded with who made
+The page has seven tabs: **Plugins**, **Permissions**, **User groups**, **Account groups**,
+**Access groups**, **Accounts** and **Terminal sessions**. Every change is recorded with who made
 it. If a change is refused, the page says why; choose **Back** to return to what you typed.
 
 ## To add an account
@@ -57,24 +56,31 @@ To change it later, choose **Edit** on its row.
 
 ## To say what: make an access group
 
-An access group lists parts of plugins, each at `read` or `write`. A part is one of a plugin's roles
-or one of its tags, as its `pyproject.toml` declares them.
+An access group lists plugins, each at `read` or `write`. It is the same two levels for every
+plugin:
+
+- `read`: the plugin may show the person what it reads, on the accounts they may read.
+- `write`, which includes `read`: the plugin may also act for the person, on the accounts they may
+  write.
+
+A plugin names no parts of itself. Which topics it may publish and read is its roles', and has
+nothing to do with who may use it.
 
 1. Open **Access groups** and choose **New access group**.
 2. Enter a **Name**.
-3. Under **Entries, one per line**, write each as `<plugin instance> <part> read` or
-   `<plugin instance> <part> write`. For example:
+3. Under **Entries, one per line**, write each as `<plugin instance> read` or
+   `<plugin instance> write`. For example:
 
     ```text
-    snaptrade-1 holdings read
-    my-plugin reports write
+    snaptrade-1 read
+    my-plugin write
     ```
 
 4. Choose **Create**.
 
-The plugin instance must be running and have reported to the deployment, and it must carry the part
-you name. If not, the page says so, for example that the plugin does not carry the part and lists
-what it does carry.
+The plugin instance must be running and have reported to the deployment. If not, the page says so.
+An entry with a third word, such as `snaptrade-1 holdings read`, is refused: that is the older form,
+from when a plugin declared tags.
 
 **Deployment admin** is a built-in access group. It gives the dashboard and every account, and it
 cannot be edited.
@@ -109,11 +115,16 @@ A plugin that reads a broker or custodian names accounts as that source does. Li
 deployment which of your accounts that is. Until a source's account is linked, the deployment
 refuses the plugin's rows for it.
 
-1. Open **External accounts** and choose **Link an external account**.
-2. Enter the **Plugin instance**, for example `snaptrade-1`. It must be running and have reported.
-3. Enter the **External account**, as the plugin names it.
-4. Choose the **Account** it is. **None (unlink)** removes a link.
-5. Choose **Link**.
+Each plugin links its own external accounts, on its own admin pages, because only the plugin
+knows what its accounts mean. For SnapTrade:
+
+1. Open **Plugins**, choose the plugin, and open its **Accounts** page.
+2. For an account not yet linked, choose an existing account and **Link**, or name a new account
+   and **Create and link**. A linked account offers **Unlink**.
+
+The plugin sends the link for you, and the deployment checks you are a deployment admin and that
+the plugin reported that account. A plugin's health on the **Plugins** tab counts the accounts it
+reaches that nothing links.
 
 ## To end someone's terminal sessions
 
@@ -122,11 +133,11 @@ The **Terminal sessions** tab lists who is signed in from a terminal with `merid
 
 ## What people see
 
-On the dashboard's home page, each person sees the plugins they hold a part of. A deployment admin
+On the dashboard's home page, each person sees the plugins they hold access to. A deployment admin
 sees every launched plugin. A plugin page opens only for someone with access to at least one
 account through it, or a deployment admin.
 
 ## Related
 
-- [Plugins, roles and grants](../concepts/plugins.md): roles, tags and what a plugin may do.
+- [Plugins, roles and grants](../concepts/plugins.md): roles, and what a plugin may do.
 - [Recover administration](recover-administration.md): if nobody can open this page.

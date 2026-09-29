@@ -114,15 +114,15 @@ store and authored on the dashboard's administration page.
 |---|---|
 | **User group** | A set of directory groups and individual logins. A person belongs to it when their login is listed, or when, at sign-in, their directory says they are in one of its groups |
 | **Account group** | An explicit list of the firm's [accounts](accounts.md). There is no "all accounts" group and no nesting, and an empty group reaches nothing |
-| **Access group** | A list of entries, each naming one plugin instance, one tag that plugin carries, and a level: `read` or `write`. `write` includes `read` |
-| **Permission** | Joins one user group, one account group and one access group: *these people* may use *these parts of these plugins* on *these accounts* |
+| **Access group** | A list of entries, each naming one plugin instance and a level: `read` or `write`. `write` includes `read`. The levels are the same for every plugin; a plugin names no parts of itself |
+| **Permission** | Joins one user group, one account group and one access group: *these people* may use *these plugins* on *these accounts* |
 
 A person's access is the union of every permission whose user group they
 belong to. There are no deny rules: access only adds up.
 
 Access is combined **permission by permission**, never dimension by dimension.
-For each plugin and tag, a person holds a set of accounts they may read and a
-set they may write, and each permission contributes only its own accounts at
+For each plugin, a person holds a set of accounts they may read and a set they
+may write, and each permission contributes only its own accounts at
 its own level. Write on one account group through one permission and read on
 another through a second is write on the first and read on the second — never
 write on both.

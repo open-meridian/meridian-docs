@@ -54,7 +54,7 @@ asyncio.run(main())
 |---|---|---|
 | `connect` | async function | [`meridian.connect`](#connect) |
 | `Plugin` | class | [`Plugin`](#plugin) |
-| `Identity`, `Grants`, `Interface`, `Setting`, `Settings`, `AccountScope`, `TagAccess`, `Caller` | frozen dataclasses | [Types](#types) |
+| `Identity`, `Grants`, `Interface`, `Setting`, `Settings`, `AccountScope`, `Caller` | frozen dataclasses | [Types](#types) |
 | `Identifier`, `MissReason` | generated protobuf message and enum | [Types](#types) |
 | `CallerMiddleware` | ASGI middleware | [`CallerMiddleware`](#callermiddleware) |
 | `MeridianError`, `Refused`, `NoSidecar`, `NotRegistered`, `NotGranted`, `CallFailed` | exceptions | [Exceptions](#exceptions) |
@@ -107,7 +107,7 @@ Built by `connect`. It is an async context manager: leaving the `async with` blo
 
 | Attribute | Type | Meaning |
 |---|---|---|
-| `identity` | `Identity` | Who the plugin was launched to be: instance, roles, tags, deployment. Read from the registration reply, never sent by the plugin. |
+| `identity` | `Identity` | Who the plugin was launched to be: instance, roles, deployment. Read from the registration reply, never sent by the plugin. |
 | `grants` | `Grants` | What the deployment allowed, as the topic patterns it allowed them as. |
 
 `grants` is for failing early with a good message, at startup, rather than at the first refused operation. The sidecar refuses independently of what the plugin believes, and the SDK offers no "is this allowed" check.
@@ -161,10 +161,10 @@ Returns who may use this plugin: each user group naming it, and each person who 
 
 | Field | Type | Meaning |
 |---|---|---|
-| `user_groups` | repeated `UserGroupAccess` | `user_group_id`, `name`, and `access`, a list of `TagAccess` messages. |
-| `people` | repeated `PersonAccess` | `subject`, `display_name`, `user_group_ids`, `last_signed_in_at_ns`, and `access`. Only people who have signed in are listed: the deployment holds no directory. |
+| `user_groups` | repeated `UserGroupAccess` | `user_group_id`, `name`, `read_account_ids` and `write_account_ids`. |
+| `people` | repeated `PersonAccess` | `subject`, `display_name`, `user_group_ids`, `last_signed_in_at_ns`, `read_account_ids` and `write_account_ids`. Only people who have signed in are listed: the deployment holds no directory. |
 
-Each `TagAccess` message here has `tag`, `read_account_ids` and `write_account_ids`.
+The account sets are this plugin's: what the group or person may read through it, and write through it. Every write account is also listed as read.
 
 #### `report()`
 
@@ -192,7 +192,6 @@ All the dataclasses are frozen.
 |---|---|---|---|
 | `instance_id` | `str` | | The instance's name. |
 | `roles` | `tuple[str, ...]` | `()` | The roles the instance was launched with. They decide its topic access. None is a plugin admitted with no topics. |
-| `tags` | `tuple[str, ...]` | `()` | Its parts, for people. They grant nothing on the bus. |
 | `deployment_id` | `str` | `""` | The deployment it runs in. |
 
 ### `Grants`
@@ -247,16 +246,6 @@ plugin = await meridian.connect(
 | `read` | `frozenset[str]` | empty | Every account anybody may read through this plugin. |
 | `write` | `frozenset[str]` | empty | Every account anybody may write through this plugin. |
 
-### `TagAccess`
-
-What a person may do through one tag of this plugin.
-
-| Field | Type | Default | Meaning |
-|---|---|---|---|
-| `tag` | `str` | | The tag. |
-| `read` | `frozenset[str]` | empty | Accounts readable through it. |
-| `write` | `frozenset[str]` | empty | Accounts writable through it. |
-
 ### `Caller`
 
 Who a request for the plugin's page came from, as the dashboard vouched and the sidecar checked before forwarding it. It is read, not checked, by the SDK: only the sidecar can reach the page, and the sidecar removes every other claim the request arrived with.
@@ -265,11 +254,17 @@ Who a request for the plugin's page came from, as the dashboard vouched and the 
 |---|---|---|
 | `subject` | `str` | The person, as the deployment's directory names them. Deployment-local, never an address. |
 | `display_name` | `str` | Their name, for display. |
-| `access` | `tuple[TagAccess, ...]` | Their access on this plugin, tag by tag. |
+| `read` | `frozenset[str]` | The accounts this plugin may show them. |
+| `write` | `frozenset[str]` | The accounts this plugin may act on for them. Every one is also in `read`. |
 | `header` | `str` | The `Meridian-Caller` header as received. Pass it as `acting_for` on a typed command to send the command for this person. |
 | `Caller.from_header(header: str) -> Caller` | classmethod | Decode a `Meridian-Caller` header: base64url, unpadded. |
-| `may_read(account_id: str) -> bool` | method | Whether any of their tags lets them read the account. |
-| `may_write(account_id: str) -> bool` | method | Whether any of their tags lets them write the account. |
+| `may_read(account_id: str) -> bool` | method | Whether they may read the account through this plugin: `account_id in read`. |
+| `may_write(account_id: str) -> bool` | method | Whether they may write the account through this plugin: `account_id in write`. |
+
+A person's access to a plugin is `read` or `write`, the same for every plugin, granted in the deployment's access groups. A plugin names no parts of itself, so there is nothing finer to ask. See [Access](../concepts/access.md).
+
+!!! note "`Caller.access` and `TagAccess` are gone"
+    Releases up to 0.5.0 gave access tag by tag, as `Caller.access`, a tuple of `TagAccess`, and `Identity.tags`. Tags were retired (the SDK's next release): `Caller.access` raises an `AttributeError`, and `from meridian import TagAccess` an `ImportError`, each saying to read `Caller.read` and `Caller.write`, or ask `may_read` and `may_write`, which keep their names.
 
 ### `Identifier`
 

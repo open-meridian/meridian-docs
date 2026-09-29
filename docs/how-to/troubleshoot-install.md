@@ -56,7 +56,7 @@ Every `meridian plugin` command exits with a code that says what kind of failure
 | `plugin dev` is refused | The deployment was not installed with `--development`. Nothing is wrong with the plugin. Use `plugin upload` and `plugin launch` instead. |
 | "… runs … as a version, not live" | The instance runs an ordinary version. `meridian plugin stop <instance>` first, or choose another `--instance`. |
 | "… is recorded already, and a version is never replaced" | Raise `version` in `pyproject.toml` and release again. |
-| "not approved, so not launched" | You did not answer `y`, or there was no terminal to ask at. In a script that has shown a person the roles and tags, pass `--yes`. |
+| "not approved, so not launched" | You did not answer `y`, or there was no terminal to ask at. In a script that has shown a person the roles, pass `--yes`. |
 
 ## Still stuck
 

@@ -103,7 +103,7 @@ The plugin's process stopped by itself, without an error. Like `crashed`, it is 
 
 ### `refused`
 
-The sidecar refused the plugin something it tried to do, for example a typed operation none of its roles grants, or a command for an account outside its write scope. This is the plugin's grants working, not a bug to code around. Changing roles or tags takes a new version, which a person approves. See [Plugins, roles and grants](../concepts/plugins.md).
+The sidecar refused the plugin something it tried to do, for example a typed operation none of its roles grants, or a command for an account outside its write scope. This is the plugin's grants working, not a bug to code around. Changing roles takes a new version, which a person approves. See [Plugins, roles and grants](../concepts/plugins.md).
 
 | Field | Type | Meaning |
 |---|---|---|

@@ -72,7 +72,7 @@ it up by their own convention.
 ## 5. Approve what the plugin asks for
 
 The first launch of an instance needs your yes. `AGENTS.md` tells the agent to show you the `roles`
-and `tags` in `pyproject.toml` and ask. Only after you say yes does it pass `--yes`. An instance
+in `pyproject.toml` and ask. Only after you say yes does it pass `--yes`. An instance
 that is already live asks nothing.
 
 !!! warning
@@ -119,8 +119,8 @@ and [plugin dev events](../api/plugin-dev-events.md) for the event format.
 
 A save changes what the plugin **does**, never what it is **allowed** to do.
 
-- **Roles and tags.** Adding one to `pyproject.toml` changes nothing live. It needs a new version,
-  and you approve it.
+- **Roles.** Adding one to `pyproject.toml` changes nothing live. It needs a new version, and you
+  approve it.
 - **Dependencies.** The live code runs on the image the instance was launched from. A new package
   needs a new version.
 
@@ -144,7 +144,7 @@ is no `meridian status`; `meridian plugin list` shows whether the session is the
 ## 7. Release it
 
 When you are happy, ask the agent to release. It runs the plugin's tests if it has any, raises
-`version` in `pyproject.toml`, shows you the roles and tags again, and then runs:
+`version` in `pyproject.toml`, shows you the roles again, and then runs:
 
 ```bash
 meridian plugin dev --release --instance my-plugin --yes

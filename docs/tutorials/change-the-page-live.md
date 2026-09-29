@@ -41,7 +41,6 @@ approve what the plugin asks for. The reference plugin asks for nothing:
 ```text
 live-demo 0.1.0 asks for
   roles: none
-  tags:  none
 Launch it live as live-demo, with these? [y/N] y
 Launched live-demo: live-demo 0.1.0.
 Its page, if it serves one: http://meridian.localhost/plugins/live-demo
@@ -180,7 +179,7 @@ home page.
     meridian plugin dev --release --instance live-demo
     ```
 
-    Approve the roles and tags when asked. It ends with:
+    Approve the roles when asked. It ends with:
 
     ```text
     Released live-demo 0.1.1 as sha256:…, and launched it as live-demo.

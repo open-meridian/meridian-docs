@@ -21,32 +21,31 @@ reference-plugin = "reference_plugin.__main__:main"
 
 [tool.meridian]
 roles = []
-tags = []
 interface = true
 ```
 
 ## `[tool.meridian]`
 
-The table must be present: an upload without it is refused. The command line reads these three keys and no others.
+The table must be present: an upload without it is refused. The command line reads these two keys, and refuses `tags` (below).
 
 | Key | Type | Default when absent | Meaning |
 |---|---|---|---|
 | `roles` | list of strings | `[]` | The roles the plugin asks for, from the deployment's fixed list (below). Its grants on the bus are the union of its roles' grants. Empty is a plugin admitted with no topics, as the reference plugin is. |
-| `tags` | list of strings | `[]` | The plugin's own names for its parts. People are granted access to them, at read or write. Tags carry no topics and grant nothing on the bus. See [Access](../concepts/access.md). |
 | `interface` | boolean | `false` | Whether the plugin serves a page through its sidecar. It is shown in the catalogue (`page: yes` or `no` in `meridian plugin list`). |
 
 ### Rules
 
 The command line checks these before anything is built or sent:
 
-- `roles` and `tags` are lists, and every item in them is a string.
-- Every role and tag is a name: 1 to 63 characters of lowercase letters, digits and single hyphens, starting with a letter and not ending with a hyphen.
+- `roles` is a list, and every item in it is a string.
+- Every role is a name: 1 to 63 characters of lowercase letters, digits and single hyphens, starting with a letter and not ending with a hyphen.
+- There is no `tags` key. A `[tool.meridian]` that declares one, even `tags = []`, is refused (from the CLI's next release; see below).
 
 The deployment checks these again when it records the version, and also refuses:
 
 - a role that is not on the deployment's list;
 - a role that is one of the deployment's own components, which no plugin may declare: `conductor`, `dashboard`, `street`, `instrument`, `first-run`, `launcher`, `sidecar`;
-- a role or tag declared twice.
+- a role declared twice.
 
 ### Roles
 
@@ -86,15 +85,21 @@ The command line also reads these, and refuses an upload without them.
 
 ## Changing the manifest
 
-!!! warning "Roles, tags and dependencies take a new version, which a person approves"
-    A save changes what a plugin does, never what it is allowed to do. Adding a role or tag to `pyproject.toml` changes nothing on a running instance, live or not. A new dependency does nothing either: the live code runs on the image the instance was launched from.
+!!! warning "Roles and dependencies take a new version, which a person approves"
+    A save changes what a plugin does, never what it is allowed to do. Adding a role to `pyproject.toml` changes nothing on a running instance, live or not. A new dependency does nothing either: the live code runs on the image the instance was launched from.
 
     To change any of them:
 
     1. Raise `version` in `[project]`. A version is never replaced, so uploading one that is already recorded is refused.
     2. Upload it with `meridian plugin upload`, or `meridian plugin dev --release`.
-    3. Launch it. The launch shows the roles and tags the version declares, and runs it only once a person approves them.
+    3. Launch it. The launch shows the roles the version declares, and runs it only once a person approves them.
 
-    The deployment runs a launched version with exactly the roles and tags it declares. An approval that names anything else is refused.
+    The deployment runs a launched version with exactly the roles it declares. An approval that names anything else is refused.
 
-`--yes` on `meridian plugin launch` and `meridian plugin dev` approves without asking. It is for a script that has already shown the roles and tags to a person and got their yes, never for getting past a question nobody has answered. See the [command line reference](cli.md).
+`--yes` on `meridian plugin launch` and `meridian plugin dev` approves without asking. It is for a script that has already shown the roles to a person and got their yes, never for getting past a question nobody has answered. See the [command line reference](cli.md).
+
+## Who may use a plugin is not declared here
+
+A plugin declares no `tags`, and nothing else in the manifest says who may use it. A person's access to a plugin is `read` or `write`, the same for every plugin, granted by a deployment admin in the deployment's access groups; the plugin reads what the person may do from [`Caller`](python-sdk.md#caller). See [Access](../concepts/access.md).
+
+A manifest written for an earlier release, with `tags = [...]` in `[tool.meridian]`, needs that line removed. `meridian plugin upload` in the CLI's next release refuses it, citing the reason, before anything is built.

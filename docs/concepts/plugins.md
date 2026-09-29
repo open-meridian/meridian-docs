@@ -93,34 +93,39 @@ mount, and no second policy that could disagree with the first.
 This is also why a role is never a code path. The sidecar enforces a role's
 grants and nothing in the runtime behaves differently because of it.
 
-## Tags: dividing a plugin among people
+## Who may use a plugin: read or write
 
-A **tag** is a plugin's own name for a part of itself that people may be
-given. Tags carry no topics and grant nothing on the bus. They exist so that a
-deployment admin can give different people different parts of one plugin, at
-`read` or `write`.
+Roles decide what a plugin may do on the bus. Who may use it is decided
+separately, by the deployment, and it is the same two levels for every
+plugin:
 
-For example, a compliance plugin might declare `compliance` and `reporting`
-tags. A compliance officer is given `compliance` at write and `reporting` at
-read; a trader is given `compliance` at read, to see whether an order was
-approved. How that is granted is described in [Access](access.md).
+- **`read`**: the plugin may show the person what it reads, cut to the
+  accounts they may read.
+- **`write`**, which includes `read`: the plugin may also act for the person,
+  sending commands for them, on the accounts they may write.
 
-Roles are chosen from Open Meridian's list; tags are the plugin's to name.
+A deployment admin grants these in the deployment's access groups: an entry
+names a plugin and a level. How that is granted is described in
+[Access](access.md).
+
+A plugin names no parts of itself for people. Earlier versions let a plugin
+declare **tags** for that; they were retired, so that every plugin is
+administered the same way and nobody meets a new vocabulary with each one.
 
 ## Declaring them
 
-A plugin declares its roles and tags in its own `pyproject.toml`, where
+A plugin declares its roles in its own `pyproject.toml`, where
 `meridian plugin new` puts them:
 
 ```toml
 [tool.meridian]
 roles = []          # a set, from the thirteen above
-tags = []           # its parts, for people
 interface = true    # it serves a page
 ```
 
 `meridian plugin upload` refuses a role outside the list, or a component's
-name, before anything is sent. The full format is in
+name, before anything is sent. From the CLI's next release it also refuses a
+`[tool.meridian]` that declares `tags`, even an empty list. The full format is in
 [the plugin manifest reference](../api/plugin-manifest.md).
 
 ## The catalogue: each deployment's own registry
@@ -132,7 +137,7 @@ A deployment admin uploads a plugin with `meridian plugin upload`, signed in
 from a terminal. The CLI builds the image on the developer's machine and sends
 it through the dashboard, layer by layer; layers the registry already has are
 skipped, and the shared base image for each SDK version is held once for every
-plugin built on it. The metadata — roles, tags, whether it serves a page — is
+plugin built on it. The metadata — roles, whether it serves a page — is
 recorded with the version.
 
 **A recorded version is never replaced.** Uploading a name and version that is
@@ -141,11 +146,10 @@ already recorded is refused. To change a plugin, raise its version.
 ## Launching, and approval
 
 Uploading a plugin runs nothing. Running it is a separate act, **launching**,
-and launching is where its roles and tags are approved.
+and launching is where its roles are approved.
 
-`meridian plugin launch <name> <version> --instance <id>` shows the roles and
-tags the version asks for, and runs it only once the deployment admin approves
-them. The conductor checks the launch against its catalogue, records it with
+`meridian plugin launch <name> <version> --instance <id>` shows the roles the
+version asks for, and runs it only once the deployment admin approves them. The conductor checks the launch against its catalogue, records it with
 who approved it, and only then asks the launcher to start it. The launcher
 creates one Deployment in the chart's plugin shape, from an image in the
 deployment's own registry, and nothing else.
@@ -183,7 +187,7 @@ dashboard session it came from ends. On every request after that:
 1. The dashboard checks the person's access against the records as they are
    now.
 2. It signs an assertion: who the person is, and what they hold on this plugin
-   — for each tag, the accounts they may read and the accounts they may write
+   — the accounts they may read and the accounts they may write through it
    — for this instance only, valid for 60 seconds.
 3. The plugin's sidecar verifies the assertion and hands the plugin the
    verified claims. A request that fails verification never reaches the

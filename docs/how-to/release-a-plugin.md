@@ -6,7 +6,7 @@ upload again.
 
 A new version is also the only way to change what a plugin **may** do, or what it **depends on**:
 
-- New roles or tags in `[tool.meridian]`. The person launching it approves them again.
+- New roles in `[tool.meridian]`. The person launching it approves them again.
 - New packages in `dependencies`. Live code runs on the image it was launched from.
 
 ## To release from a development deployment
@@ -21,7 +21,7 @@ Use this when the plugin is running live under `meridian plugin dev`.
     meridian plugin dev --release --instance my-plugin
     ```
 
-4. Read the roles and tags it shows, and answer `y` to approve.
+4. Read the roles it shows, and answer `y` to approve.
 
 It uploads the directory as it is now, as that version, stops the live instance and launches the
 version in its place:
@@ -86,7 +86,7 @@ firm's:
     meridian plugin launch my-plugin 0.2.0 --instance my-plugin --deployment https://meridian.firm.example
     ```
 
-The firm's deployment admin approves the roles and tags at launch.
+The firm's deployment admin approves the roles at launch.
 
 ## Related
 

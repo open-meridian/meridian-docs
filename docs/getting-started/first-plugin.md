@@ -41,7 +41,7 @@ Made my-plugin in my-plugin, on the Python SDK (open-meridian).
   meridian plugin launch my-plugin 0.1.0 --instance my-plugin
 
 Upload builds its image here and puts it in the catalogue of the deployment
-`meridian connect` signed you in to; launch shows the roles and tags its
+`meridian connect` signed you in to; launch shows the roles its
 pyproject.toml asks for, and runs it once you approve them. It reaches its
 sidecar and nothing else.
 
@@ -62,23 +62,24 @@ writes it somewhere other than `./my-plugin`. It never writes over a directory t
 | File | What it is |
 |---|---|
 | `src/my_plugin/__main__.py` | Connects to the sidecar, logs who it was launched as and what it may do, serves the page, and reports itself healthy. |
-| `src/my_plugin/page.py` | The page people see through the dashboard. It shows who is asking and what they may see, tag by tag. |
-| `pyproject.toml` | The package, pinned to the SDK (`open-meridian`). Its `[tool.meridian]` table declares the plugin's `roles`, `tags` and whether it serves a page. |
+| `src/my_plugin/page.py` | The page people see through the dashboard. It shows who is asking, and the accounts they may read or write through the plugin. |
+| `pyproject.toml` | The package, pinned to the SDK (`open-meridian`). Its `[tool.meridian]` table declares the plugin's `roles` and whether it serves a page. |
 | `Dockerfile` | Builds on the SDK's base image. |
 | `AGENTS.md`, `CLAUDE.md`, `.claude/skills/develop-live/` | Instructions for coding agents. `.dockerignore` keeps them out of the image. |
 | `README.md`, `.gitignore`, `.dockerignore` | The usual. |
 
-The reference plugin asks for no roles and no tags:
+The reference plugin asks for no roles:
 
 ```toml title="pyproject.toml"
 [tool.meridian]
 roles = []
-tags = []
 interface = true
 ```
 
 That is a plugin admitted with no topics. It can serve a page and read who is asking, and nothing
-more. See [Plugin manifest](../api/plugin-manifest.md) for every key.
+more. Who may use it is not declared here: a person's access to a plugin is `read` or `write`, the
+same for every plugin, and a deployment admin grants it (see
+[Give people access](../how-to/administer-access.md)). See [Plugin manifest](../api/plugin-manifest.md) for every key.
 
 ## 4. Upload it
 
@@ -105,7 +106,6 @@ The CLI shows what this version asks for and waits for your answer:
 ```text
 my-plugin 0.1.0 asks for
   roles: none
-  tags:  none
 Launch it as my-plugin, with these? [y/N]
 ```
 
@@ -119,8 +119,8 @@ Its page, if it serves one: http://meridian.localhost/plugins/my-plugin
 `--instance` names this running copy. You use the same name to open, stop and grant access to it.
 
 !!! note
-    `--yes` approves without asking. It is for a script that has already shown a person the roles
-    and tags. Do not use it to skip a question nobody has answered.
+    `--yes` approves without asking. It is for a script that has already shown a person the
+    roles. Do not use it to skip a question nobody has answered.
 
 ## 6. Check what is running
 
@@ -130,7 +130,7 @@ meridian plugin list
 
 ```text
 Versions:
-  my-plugin 0.1.0  roles: none  tags: none  page: yes  SDK 0.3.0
+  my-plugin 0.1.0  roles: none  page: yes  SDK 0.3.0
 Launches:
   my-plugin  my-plugin 0.1.0  launched
 ```
@@ -163,6 +163,6 @@ The version stays in the catalogue. Launch it again whenever you like.
 ## Next steps
 
 - [Build with an AI agent](build-with-an-ai-agent.md): change the plugin with a coding agent, live.
-- [Give people access](../how-to/administer-access.md): grant your firm's people parts of a plugin.
+- [Give people access](../how-to/administer-access.md): give your firm's people read or write on a plugin.
 - [Release a plugin version](../how-to/release-a-plugin.md): ship a change as a new version.
 - [Python SDK](../api/python-sdk.md): what a plugin can call.
