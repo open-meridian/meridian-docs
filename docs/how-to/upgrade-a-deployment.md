@@ -42,13 +42,24 @@ Upgrading meridian in meridian:
 Upgrade it? [y/N]
 ```
 
+If a node restart has left pods behind, the plan names them too, and the same answer covers removing
+them (see [pods left over from a restart](#pods-left-over-from-a-restart)):
+
+```text
+  Then it will remove 7 pods left over from a restart, which serve nothing:
+    pod/meridian-meridian-runtime-broker-6d9c7b5f4-x2x8q
+    ...
+```
+
 Answer `y`. It runs that `helm upgrade`, then waits, up to `--timeout`, for:
 
 1. the new revision's migration Job to complete;
 2. every Deployment and StatefulSet of the release to roll out;
 3. every pod of theirs to run the image its template now names.
 
-When they have, it deletes the finished Jobs the release ran at earlier revisions, and reports:
+While it waits it shows where it is (see [while it runs](#while-it-runs)). When they have, it
+deletes the finished Jobs the release ran at earlier revisions and the pods left over from a restart,
+and reports:
 
 ```text
 Upgraded meridian in meridian: meridian-runtime 0.1.180 -> meridian-runtime 0.1.182, now revision 8.
@@ -60,12 +71,61 @@ Every component on its new template, and ready:
   ...
 
 Cleaned up 2 finished Job(s) of earlier revisions: job/meridian-meridian-runtime-migrate-7, ...
+Removed 7 pods left over from a restart: pod/meridian-meridian-runtime-broker-6d9c7b5f4-x2x8q, ...
 Old ReplicaSets are left to the chart's revisionHistoryLimit.
 ```
 
 A container that restarted while the upgrade ran is listed with the reason Kubernetes gives and the
 `kubectl logs … --previous` that shows why. That is worth reading, and it is not a failure: a
 component that starts before its migration has finished exits and is restarted.
+
+### While it runs
+
+On a terminal, a block below what it has said is redrawn in place every half second: each step with
+its time, the total time, how many components are ready, and what it waits on now, and why.
+
+```text
+Upgrading meridian in meridian  1m 04s
+  ✓ checks                     3s
+  ✓ plan and confirmation     12s
+  ✓ apply                      8s
+  ⠹ migration                 41s
+  ⠹ components                41s  ready 4 of 7  ███████████░░░░░░░░░
+  · cleanup
+  waiting on conductor: 0 of 1 ready, waiting for its migration
+```
+
+A step is pending (`·`), in progress (a spinner), done (`✓`) or failed (`✗`). The migration and the
+components are waited for together: a component that starts before its migration has finished exits
+and is restarted, so while the migration runs, that is the reason given. Once the upgrade ends, the
+block stays with every step's time, above the report.
+
+Piped to a file or run in CI, it writes a line as each step starts and ends, and every 20 seconds a
+line saying what it still waits for, so a log never looks stalled:
+
+```text
+[3s] apply: started
+[11s] apply: done in 8s
+[11s] migration: started
+[11s] components: started
+[31s] still waiting, 4 of 7 components ready: conductor: 0 of 1 ready, waiting for its migration
+[45s] migration: done in 34s
+[1m 02s] components: done in 51s
+```
+
+Set `NO_COLOR` to turn the colour off.
+
+### Pods left over from a restart
+
+When a node restarts, as a laptop's Kubernetes does when the laptop does, each pod it ran can be left
+behind stopped, as `Failed` or `Succeeded`, on the image it had then. Its Deployment has already
+started a new pod in its place, and nothing restarts or removes the old one. It serves nothing.
+
+The command does not wait for such a pod: one stopped for good and made by a ReplicaSet its
+Deployment has since replaced. Waiting for it to run the new image would last until the timeout,
+since it never changes. It says so as it waits, and removes it in the cleanup, by name, with the
+release's other leftovers. A plugin's pods are treated the same way: a launched plugin carries the
+release's labels. A pod still pending, running or terminating on the old image is waited for.
 
 `--yes` answers the question for a script that has already read the plan. `--release`, `-n`,
 `--chart` and `--timeout` are as for `meridian up`; see the
@@ -105,6 +165,10 @@ installed.
    `app.kubernetes.io/instance=<release>` to roll out.
 3. Delete the finished Jobs of earlier revisions. Their names end with the revision that ran them.
    The Job ending in `-key` is kept: it runs once, at install.
+
+`kubectl rollout status` does not wait for [pods left over from a
+restart](#pods-left-over-from-a-restart), so a pipeline is not held up by them. Deleting them is
+tidying, and optional.
 
 ### Plain Helm
 
