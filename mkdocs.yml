@@ -6,6 +6,12 @@ repo_name: open-meridian/meridian-core
 edit_uri: https://github.com/open-meridian/meridian-docs/edit/main/docs/
 copyright: © Open Meridian
 
+# The theme's fonts are fetched at build time and served from this site, so a
+# visitor's browser asks no third party for anything (the privacy plugin).
+plugins:
+  - search
+  - privacy
+
 theme:
   name: material
   logo: assets/mark.svg
