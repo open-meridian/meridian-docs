@@ -13,7 +13,19 @@ explains both, and how accounts bound what a plugin may read and write.
 
 A deployment admin creates accounts on the **Accounts** tab of the dashboard's
 administration page. Each has a name and an identifier, `ACC-` followed by 26
-letters and digits.
+letters and digits, and may say more about itself, in free text:
+
+| Attribute | What it says | For example |
+|---|---|---|
+| Custodian | Where it is held | `Fidelity` |
+| Type | What it is | `Roth IRA` |
+| Owner | One ownership or grouping label | `Fund I` |
+| Note | Anything else | `Opened for the 2026 rollover` |
+
+All four are optional and searchable, as the name is, so two accounts of the
+same name at different custodians can be told apart. None of them decides
+anything: who may reach an account is its account groups' business, never its
+owner's.
 
 **An account is closed, never deleted.** Closing keeps it and its history:
 
@@ -34,11 +46,12 @@ against it.
 ## External accounts
 
 A plugin that brings data from outside — a brokerage connector reading
-holdings, say — sees the source's own name for each account. **A plugin never
-creates an account.** Instead, a deployment admin links each external account
-to one of the firm's accounts, on the **External accounts** tab: which plugin
-instance, the external account as that plugin names it, and which of the
-firm's accounts it is.
+holdings, say — sees the source's own name for each account. A deployment
+admin links each external account to one of the firm's accounts, on the
+plugin's own admin pages: the plugin offers the firm's accounts, and sends the
+link acting for the admin. **A plugin creates an account only that way**, when
+the admin names a new account to link to; it may pre-fill the new account's
+custodian and type from what the source reported, for the admin to change.
 
 The link is applied by the plugin's sidecar, on the way in. A holding or
 statement naming a linked external account is recorded against the firm's

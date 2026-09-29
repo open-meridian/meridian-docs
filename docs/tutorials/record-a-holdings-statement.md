@@ -138,12 +138,15 @@ this deployment**. See [Give people access](../how-to/administer-access.md) for 
     Choose **Grant**. The account is now in the plugin's write scope, and the people in that user
     group may use the plugin on it.
 
-5. **External accounts** tab: choose **Link an external account** and fill in:
-    - **Plugin instance:** `holdings-demo`
-    - **External account:** `DEMO-ACCT-1`
-    - **Account:** `Demo brokerage account`
+5. Link the external account `DEMO-ACCT-1` to `Demo brokerage account`.
 
-    Choose **Link**.
+    !!! warning "This step is being rewritten"
+        The dashboard's External accounts tab has been removed: each plugin now links its own
+        external accounts, from its own admin page, acting for the deployment admin viewing it
+        (see [Accounts](../concepts/accounts.md)). The demo plugin in this tutorial has no such page
+        yet, so this step cannot be completed as written. A version of the tutorial whose plugin
+        reports `DEMO-ACCT-1` and links it from a small admin page, with
+        `plugin.link_external_account(..., acting_for=caller.header)`, is on its way.
 
 `DEMO-ACCT-1` is the name the plugin will use for the account, as a broker would.
 
@@ -307,8 +310,8 @@ The last line now reads something like:
 … WARNING holdings_demo: not recorded: ReportSyncStatus: refused: external account DEMO-ACCT-2 is not linked to an account; a deployment admin links it (W6.4), and the next statement records it
 ```
 
-Nothing was recorded for `DEMO-ACCT-2`. Link it on the **External accounts** tab and save again, and
-the next statement records it. A row for an account outside the plugin's write scope is refused the
+Nothing was recorded for `DEMO-ACCT-2`. Once it is linked, from the plugin's own admin page, the
+next statement records it. A row for an account outside the plugin's write scope is refused the
 same way, and also shows as a `refused` event from `meridian plugin events`.
 
 Put `DEMO-ACCT-1` back when you are done.

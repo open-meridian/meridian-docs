@@ -25,10 +25,23 @@ it. If a change is refused, the page says why; choose **Back** to return to what
 ## To add an account
 
 1. Open the **Accounts** tab and choose **New account**.
-2. Enter a **Name** and choose **Create**.
+2. Enter a **Name**. Optionally, describe it:
+    - **Custodian:** where it is held, such as `Fidelity`.
+    - **Type:** what it is, such as `Roth IRA`.
+    - **Owner:** one ownership or grouping label, such as `Fund I`.
+    - **Note:** anything else worth knowing about it.
+3. Choose **Create**.
 
-To rename one, choose **Rename** on its row. To close one, choose **Close**. A closed account is kept,
-and nobody works in it. Accounts are never deleted.
+All four are free text. The custodian, type and owner hold up to 200 characters each, and the note
+up to 2,000; a longer one is refused, naming the field. The tab shows each account's custodian, type
+and owner in columns, and its note under its name.
+
+To find an account, type in the search box above the table: it keeps the rows whose name,
+identifier, custodian, type, owner or note hold every word you type.
+
+To change one, choose **Edit** on its row. What you save replaces all four, so a field you empty is
+cleared. To close one, choose **Close**. A closed account is kept, and nobody works in it. Accounts
+are never deleted.
 
 ## To group accounts
 
@@ -121,6 +134,11 @@ knows what its accounts mean. For SnapTrade:
 1. Open **Plugins**, choose the plugin, and open its **Accounts** page.
 2. For an account not yet linked, choose an existing account and **Link**, or name a new account
    and **Create and link**. A linked account offers **Unlink**.
+
+The picker shows each of your accounts with its custodian and type beside its name. A new account's
+**Custodian** starts as the connection's brokerage and its **Type** as the account type SnapTrade
+reports; change or clear either before **Create and link**. Give it an owner or a note afterwards,
+with **Edit** on the **Accounts** tab.
 
 The plugin sends the link for you, and the deployment checks you are a deployment admin and that
 the plugin reported that account. A plugin's health on the **Plugins** tab counts the accounts it
