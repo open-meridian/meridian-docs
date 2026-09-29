@@ -124,7 +124,7 @@ interface = true    # it serves a page
 ```
 
 `meridian plugin upload` refuses a role outside the list, or a component's
-name, before anything is sent. From the CLI's next release it also refuses a
+name, before anything is sent. From CLI 0.1.14 it also refuses a
 `[tool.meridian]` that declares `tags`, even an empty list. The full format is in
 [the plugin manifest reference](../api/plugin-manifest.md).
 

@@ -4,7 +4,7 @@
 
 Nothing in a cloud install depends on it. A marketplace listing's form and the deployment's own wizard are the whole path there; `meridian` makes the same things convenient from a terminal.
 
-This page describes release 0.1.12 of the command line. `meridian --version` says which one you have. For installing it, see [Install a deployment](../getting-started/installation.md).
+This page describes release 0.1.14 of the command line. `meridian --version` says which one you have. For installing it, see [Install a deployment](../getting-started/installation.md).
 
 ## Synopsis
 
@@ -305,7 +305,7 @@ meridian plugin upload [--dir <dir>] [--deployment <addr>]
 
 Builds the plugin's image on this machine and puts it in the deployment's catalogue as a version. The steps:
 
-1. Read `pyproject.toml` and check its [plugin manifest](plugin-manifest.md). From the CLI's next release, a `[tool.meridian]` that declares `tags` is refused here, before anything is built: a plugin declares none, since access to a plugin is `read` or `write` in the deployment's access groups.
+1. Read `pyproject.toml` and check its [plugin manifest](plugin-manifest.md). From CLI 0.1.14, a `[tool.meridian]` that declares `tags` is refused here, before anything is built: a plugin declares none, since access to a plugin is `read` or `write` in the deployment's access groups.
 2. Build the image with `docker build`, tagged `meridian-plugin/<name>:<version>`.
 3. Read the image back with `docker save`.
 4. Push it into the deployment's registry through the dashboard. A layer the registry already holds is not sent again, and one another plugin's repository holds is mounted from there.

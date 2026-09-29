@@ -14,7 +14,7 @@ name = "reference-plugin"
 version = "0.1.0"
 description = "A Meridian plugin"
 requires-python = ">=3.11"
-dependencies = ["open-meridian==0.3.0"]
+dependencies = ["open-meridian==0.6.0"]
 
 [project.scripts]
 reference-plugin = "reference_plugin.__main__:main"
@@ -39,7 +39,7 @@ The command line checks these before anything is built or sent:
 
 - `roles` is a list, and every item in it is a string.
 - Every role is a name: 1 to 63 characters of lowercase letters, digits and single hyphens, starting with a letter and not ending with a hyphen.
-- There is no `tags` key. A `[tool.meridian]` that declares one, even `tags = []`, is refused (from the CLI's next release; see below).
+- There is no `tags` key. A `[tool.meridian]` that declares one, even `tags = []`, is refused (from CLI 0.1.14; see below).
 
 The deployment checks these again when it records the version, and also refuses:
 
@@ -102,4 +102,4 @@ The command line also reads these, and refuses an upload without them.
 
 A plugin declares no `tags`, and nothing else in the manifest says who may use it. A person's access to a plugin is `read` or `write`, the same for every plugin, granted by a deployment admin in the deployment's access groups; the plugin reads what the person may do from [`Caller`](python-sdk.md#caller). See [Access](../concepts/access.md).
 
-A manifest written for an earlier release, with `tags = [...]` in `[tool.meridian]`, needs that line removed. `meridian plugin upload` in the CLI's next release refuses it, citing the reason, before anything is built.
+A manifest written for an earlier release, with `tags = [...]` in `[tool.meridian]`, needs that line removed. `meridian plugin upload` from CLI 0.1.14 refuses it, citing the reason, before anything is built.
