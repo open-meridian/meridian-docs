@@ -66,7 +66,7 @@ asyncio.run(main())
 | `CallerMiddleware` | ASGI middleware | [`CallerMiddleware`](#callermiddleware) |
 | `MeridianError`, `Refused`, `NoSidecar`, `NotRegistered`, `NotGranted`, `CallFailed`, `NotLinked` | exceptions | [Exceptions](#exceptions) |
 | `DEFAULT_ADDRESS` | `str` | `"127.0.0.1:9191"`, where a sidecar listens |
-| `SCHEMA_VERSION` | `str` | `"v2"`, the contract version sent at registration |
+| `SCHEMA_VERSION` | `str` | the contract version sent at registration: `"v3"` from the release after 0.7.1, `"v2"` before |
 
 ## `meridian.connect` { #connect }
 
@@ -93,7 +93,7 @@ Registers with the sidecar and returns the admitted plugin. A `Plugin` you hold 
 | `settings` | sequence of `Setting` | `()` | The settings the plugin needs a deployment admin to give it. |
 | `reads_external_accounts` | `bool` | `False` | `True` when the plugin reads accounts at an external source and names them by that source's identifiers. A deployment admin links those to accounts, and the sidecar translates them on the way in. |
 
-The contract version it sends is `SCHEMA_VERSION`. A mismatch is refused at registration rather than found later in a decode failure.
+The contract version it sends is `SCHEMA_VERSION`. A sidecar accepts a range of versions: a plugin built for an older version it still supports registers, and one built for a newer version than the sidecar knows is refused at registration, naming both, rather than running without what it was built for. After an upgrade, relaunch plugins so they get the newer sidecar (`meridian upgrade-deployment` names the ones that need it).
 
 **Raises:**
 
