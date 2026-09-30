@@ -346,8 +346,8 @@ Kit 0.3.0 also fits the rest of a page to a phone, with nothing to do but use it
   side, the buttons drop below the text.
 - **A field and its button share a row**, level and the same height, in a `.field-row`; on a narrow
   row the button drops below.
-- **A choice is drawn as the dashboard draws one**: `fieldset.choice` holding `label.option`
-  radio buttons, each with a line of hint.
+- **A choice is drawn as options to pick from**: `fieldset.choice` holding `label.option` radio
+  buttons, each with a line of hint, the chosen one marked.
 - **`om-moment` shows when figures are as of**, to read rather than to choose:
   `<om-moment label="Last read" value="2026-09-29T12:04:00Z">`. It shows the moment to the minute
   in UTC, or in the reader's own time zone with `zone="local"`, and "Not yet" for a value it cannot

@@ -280,7 +280,7 @@ One option of a setting that is a choice.
 |---|---|---|---|
 | `value` | `str` | | The value the plugin receives. |
 | `label` | `str` | `""` | What the form shows for it. |
-| `description` | `str` | `""` | A line under it. |
+| `description` | `str` | `""` | What it means: a line of the setting's hint on the form. |
 
 ### `AppliesWhen`
 

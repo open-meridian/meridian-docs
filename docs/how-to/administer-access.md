@@ -18,20 +18,22 @@ So a permission reads: *the people in this user group, using these plugins, on t
 1. Sign in to the dashboard.
 2. Choose the gear at the top right, named **Settings**. It is at `/admin`.
 
-Only a deployment admin sees the button. In Settings it is a house, named **Dashboard**, and takes
-you back to your plugins. The breadcrumb beside the mark reads **Settings**, and in a plugin's view
+Only a deployment admin sees the button. In Settings it is a house, named **Home**, and takes you
+back to your plugins. The breadcrumb beside the mark reads **Settings**, and in a plugin's view
 **Settings / Plugins /** and the plugin's name.
 
 Settings has seven tabs: **Plugins**, **Permissions**, **User groups**, **Account groups**,
 **Access groups**, **Accounts** and **Terminal sessions**. Each lists its records in a table with a
-search box above it, which keeps the rows holding every word you type, and headings that sort it. A
-record is changed with **Edit** on its own row, in a dialog that already holds it; nobody types an
-identifier. Every change is recorded with who made it. If a change is refused, the page says why;
-choose **Back** to return to what you typed.
+search box above it, which keeps the rows holding every word you type, and headings that sort it. On
+the three group tabs the section is headed **User**, **Account** or **Access**. Where a tab makes
+records, **+ Add** beside its heading opens a dialog headed with what it makes, such as **New
+account**. A record is changed with **Edit** on its own row, in a dialog that already holds it;
+nobody types an identifier. Every change is recorded with who made it. If a change is refused, the
+page says why; choose **Back** to return to what you typed.
 
 ## To add an account
 
-1. Open the **Accounts** tab and choose **New account**.
+1. Open the **Accounts** tab and choose **+ Add**. The dialog is headed **New account**.
 2. Enter a **Name**. Optionally, describe it:
     - **Custodian:** where it is held, such as `Fidelity`.
     - **Type:** what it is, such as `Roth IRA`.
@@ -53,7 +55,7 @@ are never deleted.
 
 ## To group accounts
 
-1. Open **Account groups** and choose **New account group**.
+1. Open **Account groups** and choose **+ Add**. The dialog is headed **New account group**.
 2. Enter a **Name**, and under **Accounts** choose the accounts it holds. The picker is searchable,
    by name, identifier, custodian, type or owner.
 3. Choose **Create**.
@@ -62,7 +64,7 @@ To change it later, choose **Edit** on its row, and **Save**.
 
 ## To say who: make a user group
 
-1. Open **User groups** and choose **New user group**.
+1. Open **User groups** and choose **+ Add**. The dialog is headed **New user group**.
 2. Enter a **Name**.
 3. Say who is in it, in any of three ways:
     - **People.** Choose them from the searchable list, which names each person by their user ID,
@@ -97,7 +99,7 @@ plugin:
 A plugin names no parts of itself. Which topics it may publish and read is its roles', and has
 nothing to do with who may use it.
 
-1. Open **Access groups** and choose **New access group**.
+1. Open **Access groups** and choose **+ Add**. The dialog is headed **New access group**.
 2. Enter a **Name**.
 3. Under **Plugins**, choose each plugin the group gives, from the searchable list of the
    deployment's plugin instances, and beside each choose its one level: **Read**, or **Write
@@ -111,7 +113,7 @@ cannot be edited.
 
 ## To grant a permission
 
-1. Open **Permissions** and choose **Grant a permission**.
+1. Open **Permissions** and choose **+ Add**. The dialog is headed **Grant a permission**.
 2. Choose the **User group**.
 3. Choose **On accounts**: an account group, or **Every account (deployment admin only)**.
 4. Choose the **Access** group.

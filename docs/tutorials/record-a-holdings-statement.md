@@ -126,7 +126,7 @@ Every save from now on is a new revision, `r2`, `r3` and on. To read what one lo
 ## 4. Make an account to link to
 
 Open the dashboard, sign in, and choose the gear at the top right, **Settings**. On the
-**Accounts** tab, choose **New account**, name it `Demo brokerage account`, and choose **Create**.
+**Accounts** tab, choose **+ Add**, name it `Demo brokerage account`, and choose **Create**.
 See [Give people access](../how-to/administer-access.md) for more on the tab.
 
 That is all the plugin needs from Settings. You do not group the account or grant a
