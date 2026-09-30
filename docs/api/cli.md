@@ -88,7 +88,8 @@ The checks run in this order:
 3. There is a storage class for the deployment's key.
 4. No node is short of disk.
 5. The runtime image can be pulled from here.
-6. The platform is reachable, and this machine's clock is within the tolerance a signed assertion allows.
+6. Each plugin launched in the namespace runs the sidecar its deployment's components run. One that does not is `worth`, with the commands that relaunch it; it never stops an install.
+7. The platform is reachable, and this machine's clock is within the tolerance a signed assertion allows.
 
 Each result is one of:
 
@@ -218,6 +219,8 @@ It works in four steps, and stops at the step that fails.
 3. **Apply and wait.** It runs `helm upgrade <release> <chart> --version <v> --namespace <ns> --reset-then-reuse-values --timeout <d>`, never `--wait`. Then it waits, up to `--timeout`, for the new revision's migration Job to complete, every Deployment and StatefulSet of the release to roll out, and every one of their pods to run the image its template names. It prints each thing it is waiting for once, when it first sees it.
 
 4. **Clean up and report.** It deletes the finished Jobs of this release from earlier revisions, found by the release's label, and nothing else. Old ReplicaSets are left to the chart's `revisionHistoryLimit`. It then prints the versions it moved between, each component's images and readiness, every container that restarted during the upgrade with the reason Kubernetes gives, and what it cleaned up.
+
+    Last, it names each launched plugin still on a sidecar that is not the one the components now run, since a plugin keeps the sidecar it was launched with until it is relaunched, and each plugin whose pod started during the upgrade before the new launcher was ready, since the old launcher may have launched it. For each it prints `meridian plugin stop <instance>` and `meridian plugin launch <name> <version> --instance <instance>` (`meridian plugin dev --instance <instance>` for a live one). The name comes from the plugin's image; the version is left as `<version>`, which `meridian plugin list` gives. It relaunches nothing itself.
 
 It never prints the deployment's values, which hold its enrolment code. The one thing it reads from them is `image`.
 
