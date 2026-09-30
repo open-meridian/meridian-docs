@@ -17,6 +17,7 @@ meridian connect [<address>]
 meridian sign-out [<address>]
 meridian plugin new <name> [--into <dir>]
 meridian plugin check [--dir <dir>] [--run-tests] [--json]
+meridian plugin migrate [--to <version>] [--dir <dir>] [--image <ref>] [--force] [--run-tests] [--json]
 meridian plugin upload [--dir <dir>]
 meridian plugin list
 meridian plugin launch <name> <version> --instance <id> [--yes]
@@ -47,7 +48,7 @@ These are read before any command runs.
 |---|---|---|---|
 | `-n`, `--namespace` | `<name>` | `meridian` | The Kubernetes namespace the deployment goes in. Used by `doctor`, `up`, `down` and `upgrade-deployment`. |
 | `--platform` | `<url>` | `https://open-meridian.com` | The platform the deployment reports to. Used by `doctor` and `up`. `up` passes it to the chart only when you give it. |
-| `--image` | `<ref>` | `ghcr.io/open-meridian/meridian-runtime:latest` | The runtime image. Used by `doctor` and `up`. `up` passes it to the chart only when you give it. |
+| `--image` | `<ref>` | `ghcr.io/open-meridian/meridian-runtime:latest` | The runtime image. Used by `doctor` and `up`. `up` passes it to the chart only when you give it. `plugin migrate` reads it as something else: the SDK image its steps run in (see [`meridian plugin migrate`](#plugin-migrate)). |
 | `-h`, `--help` | | | Print the usage text and exit 0. |
 | `-v` | | | Reserved for verbose output, which is not built yet. It prints a note saying so and is otherwise ignored. |
 
@@ -70,7 +71,7 @@ A `plugin` command exits 3 in two cases:
 A script or an AI agent should treat 3 as "ask the person to connect again". Retrying won't help.
 
 !!! note "`--json`"
-    The CLI README says every command takes `--json`. The parser does accept `--json` on every command, but only `plugin check`, `plugin dev`, `plugin logs`, `plugin events` and `plugin open` change their output for it. Every other command prints text whether or not you pass it.
+    The CLI README says every command takes `--json`. The parser does accept `--json` on every command, but only `plugin check`, `plugin migrate`, `plugin dev`, `plugin logs`, `plugin events` and `plugin open` change their output for it. Every other command prints text whether or not you pass it.
 
 ## `meridian doctor`
 
@@ -379,6 +380,109 @@ With `--json`, one object. `line` is `null` when the failure is a whole file, or
     From CLI 0.1.16, the plugin `meridian plugin new` writes keeps every rule, with its own tests and a CI workflow (`.github/workflows/check.yaml`) that runs `meridian plugin check --run-tests`. At 0.1.15 it failed `tests-exist` until you added a test.
 
 **Exit codes:** `0` every rule holds; `1` at least one does not; `2` asked wrongly, or `--dir` is not a directory.
+
+## `meridian plugin migrate` { #plugin-migrate }
+
+```text
+meridian plugin migrate [--to <version>] [--dir <dir>] [--image <ref>] [--force] [--run-tests] [--json]
+```
+
+From CLI 0.1.18. Moves the plugin in `--dir` to a newer release of the Python SDK, `open-meridian`. Every release of the SDK that changes what a plugin calls carries a migration from the release before it: code that rewrites the plugin to the new form, and a record of what it cannot rewrite and what a person or a coding agent must then do. Every other release carries one that only moves the pins. So the steps from any recorded release to the newest exist, and `plugin migrate` runs them in order. The first recorded step is from 0.5.0.
+
+It needs no deployment and no session. It needs `docker`, and, unless you name both `--to` and `--image`, the Python package index, which it asks for the SDK's releases. It needs no Python on your machine.
+
+In order, it:
+
+1. finds the plugin's two pins, `open-meridian==<version>` in `pyproject.toml` and `ghcr.io/open-meridian/plugin-python:<version>` in the `Dockerfile`, which must name the same release;
+2. refuses, changing nothing, if the plugin's directory has changes git does not hold yet, or is not in a git repository at all, unless you pass `--force`. A migration rewrites files, and git is how you see what it did and take it back;
+3. picks the target: `--to`, or the latest release. It never goes backwards, and a `--to` that is not released is refused unless you name the image to use with `--image`;
+4. moves both pins to the target;
+5. runs each step between the two releases, in order, each over what the one before it wrote;
+6. writes every file that changed, all at once, after the last step;
+7. runs [`meridian plugin check`](#plugin-check) on the result;
+8. reports what each step rewrote, what is left by hand, each with its rule, file and line, and the check's result.
+
+A plugin already on the target is only checked.
+
+| Flag | Argument | Default | Meaning |
+|---|---|---|---|
+| `--to` | `<version>` | the latest release | The release to move to. Never an older one than the plugin pins. |
+| `--dir` | `<dir>` | `.` | The plugin's directory. |
+| `--image` | `<ref>` | `ghcr.io/open-meridian/plugin-python:<the latest release>` | The SDK image the steps run in. The latest release carries every step there is. Name another to migrate with an SDK built locally, such as `plugin-python:local` from meridian-python's `make base-image`. |
+| `--force` | | off | Migrate a directory whose changes git does not hold yet, or that is not in a git repository. |
+| `--run-tests` | | off | Run the plugin's tests in the check, as `plugin check --run-tests` does. |
+| `--json` | | off | One JSON object on stdout instead of the report. |
+
+### Where the steps come from, and where they run
+
+The migrations are the SDK's, released inside it: the `meridian.migrations` package in `open-meridian`, one directory per step, each holding a record, `migration.toml`, and the rewrite code the record names. So every `plugin-python:<version>` image holds the steps up to its own release.
+
+`plugin migrate` builds an image of its own from the SDK image, once, tagged `meridian-migrate:<the SDK image's name>`: the SDK image with the SDK's `migrate` extra installed, which is [libcst](https://libcst.readthedocs.io), the library the rewrites read Python with. A plugin's own image never carries it. It runs `python -m meridian.migrations --from <pinned> --to <target>` in that image with no network and a read-only filesystem, mounting nothing. The plugin's Python files and its `pyproject.toml`, pins already moved, go in on stdin; the steps, the new text of each file that changed, and what is left by hand come back on stdout. Only `meridian` writes the plugin's directory, and only once every step has run.
+
+An SDK image released before migrations existed (open-meridian 0.7.0 and earlier) carries none. `plugin migrate` says so, and asks for an `--image` that does.
+
+The rewrites keep a file's formatting and comments wherever they change nothing. They do not reformat what they change to your formatter's taste: run your formatter after migrating.
+
+### What each step does
+
+| Step | Rewrites | Leaves by hand |
+|---|---|---|
+| 0.5.0 to 0.6.0: access to a plugin is read or write, and a plugin declares no tags | `tags` in `[tool.meridian]`, with the comment directly above it (`tags-undeclared`); `any(a in held.read for held in caller.access)` to `a in caller.read`, and the same for `write` (`access-any`); accounts gathered over the tags into one set to `caller.read` or `caller.write` (`access-union`); `Caller(access=(TagAccess(...), ...))` to `Caller(read=..., write=...)`, each the union over the tags (`caller-read-write`); an import of `TagAccess` nothing uses (`tag-access-import`) | `caller.access` read by a tag's own name (`access-tag-by-tag`); `TagAccess` still named (`tag-access`); `plugin.identity.tags` (`identity-tags`); tags that were declared, whose holders a deployment admin now gives read or write (`tags-granted`); a `tags` declaration it could not remove (`tags-declared`) |
+| 0.6.0 to 0.6.1 | Nothing: only the pins move | |
+| 0.6.1 to 0.7.0: the unlinked refusal is `meridian.NotLinked` | a meridian error's words tested for "not linked" (`"is not linked" in str(err)`, or in `err.detail`) to `isinstance(err, meridian.NotLinked)`, dropping the `isinstance(err, CallFailed)` and `err.kind == "refused"` beside it (`not-linked-isinstance`); `except meridian.CallFailed as err: if <that>: ... else: raise` to `except meridian.NotLinked: ...`, in a try's last handler (`not-linked-except`); a test's `CallFailed(topic, "refused", "... is not linked ...")` to `NotLinked(topic, "...")` (`not-linked-raised`) | the words "not linked" matched anywhere else in the plugin's code (`not-linked-by-text`) |
+
+`plugin migrate` adds two rules of its own: `pin-elsewhere`, for the old release still named in another file (a Makefile's base image, a workflow, a README), which it reports rather than moves because some of those are history; and `unreadable`, for a file that is not UTF-8, or that a step could not read as Python, which it leaves as it was.
+
+### Output
+
+In text, the pins it moved, each step with the files it rewrote and how many places each rule did, what is left by hand with what to write instead, and then the check's own report:
+
+```text
+meridian plugin migrate: ., open-meridian 0.5.0 to 0.7.0, the steps run in ghcr.io/open-meridian/plugin-python:0.7.1
+
+  pins  pyproject.toml:10     open-meridian==0.5.0 -> open-meridian==0.7.0
+        Dockerfile:2          ghcr.io/open-meridian/plugin-python:0.5.0 -> ghcr.io/open-meridian/plugin-python:0.7.0
+
+  0.5.0 to 0.6.0  Access to a plugin is read or write, the same for every plugin, and a plugin declares no tags (decisions/026).
+        pyproject.toml      tags-undeclared
+        src/desk/access.py  access-any (3), access-union (2)
+
+  0.6.0 to 0.6.1  A new account created by a link carries its custodian, type, owner and note: …
+        nothing to rewrite: only the pins move
+
+  0.6.1 to 0.7.0  A row refused because its external account is not linked raises meridian.NotLinked, …
+        src/desk/record.py  not-linked-except, not-linked-isinstance
+
+Wrote Dockerfile, pyproject.toml, src/desk/access.py, src/desk/record.py.
+
+Left by hand, 1 place(s): do each as it says.
+  access-tag-by-tag  src/desk/access.py:33: return any(held.tag == "statements" and held.write for held in caller.access)
+        instead: read caller.read and caller.write, … A tag's name is gone: decide whether what it guarded is showing (read) or doing (write)
+
+meridian plugin check: ., by the rules of meridian 0.1.18
+  …
+```
+
+With `--json`, one object. `image` is `null` when the plugin was on its target already; `line` is `null` for a file as a whole; a place left by hand has the step it came from in `from` and `to`, or `null` for `plugin migrate`'s own rules; `check` is [`plugin check --json`](#plugin-check)'s object; `done` is true when nothing is left by hand and every rule holds:
+
+```json
+{
+  "dir": ".", "meridian": "0.1.18", "sdk": "open-meridian",
+  "from": "0.5.0", "to": "0.7.0", "image": "ghcr.io/open-meridian/plugin-python:0.7.1",
+  "done": false,
+  "pins": [{"file": "pyproject.toml", "line": 10, "from": "open-meridian==0.5.0", "to": "open-meridian==0.7.0"}, …],
+  "steps": [{"from": "0.5.0", "to": "0.6.0", "summary": "…", "breaking": true,
+             "rewrote": [{"file": "src/desk/access.py", "rule": "access-any", "what": "…", "places": 3}, …]}, …],
+  "wrote": ["Dockerfile", "pyproject.toml", "src/desk/access.py", "src/desk/record.py"],
+  "by_hand": [{"rule": "access-tag-by-tag", "file": "src/desk/access.py", "line": 33,
+               "found": "…", "instead": "…", "from": "0.5.0", "to": "0.6.0"}],
+  "check": {"passed": true, …}
+}
+```
+
+`breaking` says whether a plugin left on the old release's code fails on the new one (0.5.0 to 0.6.0), rather than keeping a form the new release no longer promises (0.6.1 to 0.7.0, whose refusal still says "is not linked" today).
+
+**Exit codes:** `0` migrated, nothing left by hand, and every rule holds; `1` something is left by hand or a rule does not hold, or it could not run (docker failed, or the SDK image carries no migrations), in which case nothing was changed; `2` asked wrongly, or refused before changing anything: `--dir` not a directory, no pins or pins that disagree, a `--to` older than the pin or not released, no recorded steps from the pinned release, or changes git does not hold yet without `--force`.
 
 ## Plugin commands on a deployment
 
