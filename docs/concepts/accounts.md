@@ -57,14 +57,25 @@ to change.
 
 The link is applied by the plugin's sidecar, on the way in. A holding naming a
 linked external account is recorded against the firm's account. One naming an
-external account nobody has linked is refused with that reason, and the
-sidecar lists the unlinked accounts in its report of the plugin, so a
+external account nobody has linked is refused, with a code that says so, and
+the sidecar lists the unlinked accounts in its report of the plugin, so a
 deployment admin can see what needs linking. Nothing is recorded against a
 guess. A sync status for an unlinked account is not refused: it is shown
 beside the account, so an admin can tell whether it is worth linking.
 
 A link can be made only for a plugin instance that has run and reported, since
 until then what it carries is unknown.
+
+**A plugin can read its own links.** Beside its account scope, the sidecar
+hands the plugin each of its links: the external account, the firm's account
+it is linked to, and that account's name as the deployment holds it now. The
+plugin reads them as itself, acting for nobody, so a page can say which of its
+accounts are linked, and to what, without an admin viewing it. They arrive
+when the plugin starts and again whenever one changes, including when a linked
+account is renamed or closed, so the plugin keeps no copy of its own. It sees
+its own links and no other plugin's. In the Python SDK they are
+`AccountScope.links`, from 0.7.0; see
+[`account_scope()`](../api/python-sdk.md#account_scope).
 
 ## How accounts bound a plugin
 

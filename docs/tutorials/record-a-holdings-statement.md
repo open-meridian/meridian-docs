@@ -357,8 +357,17 @@ What it does:
 - **It is built on the plugin UI kit**, as the scaffold's page was: the kit's stylesheet, script and
   classes, and no colour of its own. See the plugin's `AGENTS.md`.
 
-A plugin cannot read back what its accounts are linked to, so the page does not say which are
-linked.
+On SDK 0.6.1 a plugin cannot read back what its accounts are linked to, so the page does not say
+which are linked.
+
+!!! note "What SDK 0.7.0 offers instead"
+    From SDK 0.7.0 a plugin reads its own links, `AccountScope.links` from `account_scope()`: each
+    external account it links, the account it is linked to, and that account's name, at start and
+    on every change. With kit 0.3.0, `om-account-map` draws each external account as linked or not,
+    from those links, with the link, create and unlink forms, and needs no script. Once your plugin
+    is on 0.7.0, see [Build a plugin's page](../how-to/build-a-plugin-page.md#to-link-external-accounts-om-account-map).
+    The page above links kit 0.1.0, and the dashboard answers it with the newest 0.x kit it
+    carries.
 
 !!! note "The scaffold's tests"
     `meridian plugin new` also wrote `tests/test_page.py`, which tests the scaffold's page. This page
@@ -585,6 +594,13 @@ Save, wait for `ready`, and read the logs after that revision. The last line now
 The statement opened, but its one row was refused, so nothing is recorded for `DEMO-ACCT-2`. The
 sync status before it was not refused: the dashboard shows it beside the unlinked account, so an
 admin can tell whether it is worth linking.
+
+!!! note "Telling this refusal apart"
+    The words are for you, reading the log, and may change at any release: don't match them. From
+    SDK 0.7.0 this refusal raises `meridian.NotLinked`, chosen by a code the sidecar sends with it,
+    so a plugin can catch that alone and offer the account for linking. It is a `CallFailed`, so the
+    `except meridian.MeridianError` above still catches it. See
+    [An unlinked external account](../api/typed-operations.md#an-unlinked-external-account).
 
 Now link it the other way. Reload the plugin's **Accounts** tab. On the `DEMO-ACCT-2` row, keep the
 name `Demo retirement`, the custodian `Demo Securities` and the type `IRA` under **Or to a new

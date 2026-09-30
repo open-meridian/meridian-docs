@@ -15,7 +15,7 @@ The operations are generated, not written by hand. One generator reads the contr
 - the sidecar's side of it;
 - the Python methods on [`Plugin`](python-sdk.md#plugin).
 
-This page lists every operation in SDK 0.6.1. There is no order-routing or execution operation.
+This page lists every operation in SDK 0.7.0. There is no order-routing or execution operation.
 
 ## Summary
 
@@ -105,7 +105,7 @@ Some fields describe the publisher rather than the event, and only the sidecar k
 
 | Field | On | Set by the sidecar from |
 |---|---|---|
-| `account_id` | `RecordHolding` | The link a deployment admin made from the plugin's `external_account_id` to an account. Refused when there is none. |
+| `account_id` | `RecordHolding` | The link a deployment admin made from the plugin's `external_account_id` to an account. Refused when there is none, as [`NotLinked`](#an-unlinked-external-account). |
 | `account_id` | `ReportSyncStatus` | The same link, or empty when there is none. Never refused. |
 | `publisher_instance_id` | `ReportMissingInstrument` | The instance the plugin was launched as. |
 | `placeholder_instrument_id` | `ReportMissingInstrument` | Nothing: always empty from a plugin. Only the instrument store sets it. |
@@ -133,7 +133,8 @@ A refusal is the call's gRPC status, chosen by what the caller should do about i
 | Raised | Sidecar status | Means | Your next move |
 |---|---|---|---|
 | `NotGranted` | `PERMISSION_DENIED` | None of the plugin's roles grants this operation; or the account is outside the plugin's write scope; or the person in `acting_for` may not write it; or an operation on the deployment's configuration without a deployment admin's assertion; or a link for an external account this plugin did not report. | Stop. It is configuration: a role, a permission, a link or an admin, which a person changes. |
-| `CallFailed`, `kind="refused"` | `FAILED_PRECONDITION` | An `external_account_id` nobody has linked to an account; or the sidecar considers the plugin not registered, or already left. | Report it. A deployment admin links the account, and the next statement records it. |
+| `NotLinked`, `kind="refused"` | `FAILED_PRECONDITION`, with the code `REFUSAL_REASON_EXTERNAL_ACCOUNT_NOT_LINKED` | An `external_account_id` nobody has linked to an account. See [An unlinked external account](#an-unlinked-external-account). | Offer it for linking, and stop this statement. A deployment admin links the account, and the next statement records it. |
+| `CallFailed`, `kind="refused"` | `FAILED_PRECONDITION`, with no code | The sidecar considers the plugin not registered, or already left. | Connect again. |
 | `CallFailed`, `kind="invalid"` | `INVALID_ARGUMENT` | A required field is empty, such as `external_account_id`; or a number outside what the wire carries, in params built by hand. | Fix the call. |
 | `CallFailed`, `kind="no handler"` | `UNAVAILABLE` | Nothing serves the topic right now. | Retry later. |
 | `CallFailed`, `kind="timeout"` | `DEADLINE_EXCEEDED` | What serves it did not answer in time. | Retry. |
@@ -149,10 +150,42 @@ On `NotGranted` and `CallFailed`, `topic` holds the operation's name, such as `"
 RecordHolding: refused: external account acct-1 is not linked to an account; a deployment admin links it on the plugin's admin page (W6.4), and the next statement records it
 ```
 
-On a development deployment, a refusal by the sidecar itself, for a grant, the write scope, the deployment's configuration, an external account the plugin did not report, or a number out of range, also appears as a [`refused` event](plugin-dev-events.md).
+Match on the exception's class, and on `kind`, never on these words: they are for a person reading a log, and may be reworded at any release.
 
 !!! note
     `NotGranted` and `CallFailed` use an attribute called `topic`, but for typed operations it holds the operation's name, not a bus topic.
+
+### An unlinked external account { #an-unlinked-external-account }
+
+A row naming an external account that no deployment admin has linked is refused, and nothing is recorded for it. From SDK 0.7.0 that refusal carries a code, so a plugin can tell it apart from the other refusal with the same status, a plugin that is not registered.
+
+The sidecar sends the code beside the status: a `meridian.v1.Refusal`, encoded, in the call's trailing metadata `meridian-refusal-bin`. Its `reason` comes from the refusal catalogue, the `RefusalReason` enum in `meridian/v1/sidecar.proto`:
+
+| Reason | Number | Status | Sent when |
+|---|---|---|---|
+| `REFUSAL_REASON_UNSPECIFIED` | 0 | | Never sent. A refusal the status already says everything about carries no code. |
+| `REFUSAL_REASON_EXTERNAL_ACCOUNT_NOT_LINKED` | 1 | `FAILED_PRECONDITION` | The operation named an external account nobody has linked to an account. Nothing was recorded, and the next statement after a link records it. |
+
+A reason is never reused for another cause, and a retired one's number stays reserved. Today only [`record_holding`](#record_holding) can be refused this way; `report_sync_status` for an unlinked account is not refused.
+
+The SDK reads the code and raises **`meridian.NotLinked`**. It is a `CallFailed` whose `kind` is `"refused"`, as this refusal always was, so a plugin that caught `CallFailed` still catches it. It is raised by the code alone: a refusal that carries no code is a plain `CallFailed`, whatever its words say. A sidecar from before the catalogue sends none, so on such a deployment the same refusal arrives as `CallFailed` with `kind="refused"`, which catching `CallFailed` still covers.
+
+Catch `NotLinked`. Do not match the text of the exception:
+
+```python
+try:
+    await plugin.record_holding(..., external_account_id="acct-3")
+except meridian.NotLinked:
+    ...  # offer acct-3 for linking; stop this statement
+```
+
+To know before sending, read the plugin's links from [`account_scope()`](python-sdk.md#account_scope): `scope.link_of("acct-3")` is `None` while it is unlinked. The link can still be removed between reading and sending, so catch `NotLinked` all the same.
+
+A plugin written in another language reads the same trailer: decode the `Refusal` from `meridian-refusal-bin` and compare its `reason`.
+
+### Refusals on a development deployment
+
+On a development deployment, a refusal by the sidecar itself, for a grant, the write scope, the deployment's configuration, an external account the plugin did not report, or a number out of range, also appears as a [`refused` event](plugin-dev-events.md).
 
 ## `report_external_accounts` { #report_external_accounts }
 
@@ -368,7 +401,7 @@ async def record_holding(
 **Errors:**
 
 - `TypeError` or `ValueError` for a number or an amount.
-- `invalid` for an empty `external_account_id`, and `refused` for one not linked. The sidecar counts the unlinked account in its report of the plugin, and the next statement after it is linked records it.
+- `invalid` for an empty `external_account_id`, and [`NotLinked`](#an-unlinked-external-account), a `CallFailed` of kind `refused`, for one not linked. The sidecar counts the unlinked account in its report of the plugin, and the next statement after it is linked records it.
 - `NotGranted` when the linked account is outside the plugin's write scope, as a closed account is, or when the person in `acting_for` may not write it.
 - `not vouched for` for an `acting_for` that is not accepted.
 - `handler error` from the street store for a row it refuses, with its reason. It refuses a row that states no side, a quantity whose sign contradicts its side, both or neither of `instrument_id` and `unresolved_identifiers`, or a statement it has not opened.

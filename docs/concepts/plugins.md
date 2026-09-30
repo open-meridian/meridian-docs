@@ -198,6 +198,16 @@ The plugin can refuse more than it was handed; it has no way to permit more.
 A deployment admin can open the page of any running plugin, but opening is not
 access: the assertion still carries only what they hold on that plugin.
 
+A page looks like the rest of Open Meridian because it is built on the
+**plugin UI kit**, which the dashboard serves on the plugin's own host at
+`/.meridian/ui/<version>/`, answering any 0.x version with the newest 0.x
+kit it carries. The kit brings the brand's type and spacing, each person's
+colour scheme, and components such as a data grid and the map a plugin links
+its external accounts with. A plugin's admin pages appear as tabs
+in the dashboard's admin view of the instance, each in a seamless frame: the
+page keeps its own origin, and the frame has no border or scrollbar of its own
+and is as tall as the page. See [Build a plugin's page](../how-to/build-a-plugin-page.md).
+
 ### Reads and writes on behalf of people
 
 A plugin reads **as itself**, for every account anyone may read through it —

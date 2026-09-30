@@ -12,7 +12,7 @@ pip install open-meridian
 |---|---|
 | PyPI name | `open-meridian` |
 | Import name | `meridian` |
-| Version | 0.6.1 |
+| Version | 0.7.0 |
 | Python | 3.11 or newer |
 | Dependencies | `grpcio>=1.68,<2`, `protobuf>=5.28,<7` |
 | Licence | Apache-2.0 |
@@ -20,7 +20,7 @@ pip install open-meridian
 !!! warning "Not `meridian-sdk`"
     The PyPI package `meridian-sdk` belongs to an unrelated company. Don't install it.
 
-A plugin pins the SDK exactly, `open-meridian==0.6.1`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. See [Plugin manifest](plugin-manifest.md).
+A plugin pins the SDK exactly, `open-meridian==0.7.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.7.0`, so move the two together. See [Plugin manifest](plugin-manifest.md).
 
 The package includes the wire bindings it speaks to the sidecar with, as `meridian.v1` and `meridian.plugin.v1`.
 
@@ -54,13 +54,13 @@ asyncio.run(main())
 |---|---|---|
 | `connect` | async function | [`meridian.connect`](#connect) |
 | `Plugin` | class | [`Plugin`](#plugin) |
-| `Identity`, `Grants`, `Interface`, `Page`, `Setting`, `Choice`, `AppliesWhen`, `Settings`, `AccountScope`, `Caller` | frozen dataclasses | [Types](#types) |
+| `Identity`, `Grants`, `Interface`, `Page`, `Setting`, `Choice`, `AppliesWhen`, `Settings`, `AccountScope`, `LinkedExternalAccount`, `Caller` | frozen dataclasses | [Types](#types) |
 | `Money` | frozen dataclass | [Typed operations](typed-operations.md#money) |
 | `as_decimal`, `as_money` | functions | [Typed operations](typed-operations.md#numbers-and-amounts) |
 | `Identifier`, `MissReason` | generated protobuf message and enum | [Types](#types) |
 | `ExternalAccount`, `HoldingSide`, `SyncState` | generated protobuf message and enums | [Typed operations](typed-operations.md#types) |
 | `CallerMiddleware` | ASGI middleware | [`CallerMiddleware`](#callermiddleware) |
-| `MeridianError`, `Refused`, `NoSidecar`, `NotRegistered`, `NotGranted`, `CallFailed` | exceptions | [Exceptions](#exceptions) |
+| `MeridianError`, `Refused`, `NoSidecar`, `NotRegistered`, `NotGranted`, `CallFailed`, `NotLinked` | exceptions | [Exceptions](#exceptions) |
 | `DEFAULT_ADDRESS` | `str` | `"127.0.0.1:9191"`, where a sidecar listens |
 | `SCHEMA_VERSION` | `str` | `"v2"`, the contract version sent at registration |
 
@@ -121,7 +121,7 @@ Built by `connect`. It is an async context manager: leaving the `async with` blo
 | Method | Returns | Meaning |
 |---|---|---|
 | `settings()` | `AsyncIterator[Settings]` | The settings the plugin declared, now and again on every change. |
-| `account_scope()` | `AsyncIterator[AccountScope]` | Every account anybody may read or write through this plugin, now and again on every change. |
+| `account_scope()` | `AsyncIterator[AccountScope]` | Every account anybody may read or write through this plugin, and the plugin's own links, now and again on every change. |
 | `access()` | `Awaitable[PluginAccessReply]` | Who may use this plugin. |
 | `report(*, healthy, detail="")` | `Awaitable[None]` | Report liveness once, outside the heartbeat. |
 | `leave(reason="")` | `Awaitable[None]` | Say the plugin is stopping, and close the connection. |
@@ -154,6 +154,16 @@ async def account_scope(self) -> AsyncIterator[AccountScope]
 ```
 
 Yields the plugin's account scope, now and again on every change. The scope is derived from permissions and from the plugin's links to accounts, and never declared: see [Accounts](../concepts/accounts.md#how-accounts-bound-a-plugin). A plugin reads its whole read scope as itself and serves each person only what their access allows. The sidecar refuses a write outside `write`, whoever it is for.
+
+Beside the scope come the plugin's own **links**: which of its external accounts a deployment admin has linked, to which account, and that account's name as the deployment holds it now. They are read as the plugin itself, for nobody. The first delivery comes at once, so a plugin that has just started has every link. Another comes whenever a permission changes, a link is made or removed, or a linked account is renamed or closed. Hold the latest one: a plugin keeps nothing of its own across a restart.
+
+```python
+async for scope in plugin.account_scope():
+    for link in scope.links:
+        print(link.external_account_id, "->", link.account_id, link.account_name)
+    if scope.link_of("acct-3") is None:
+        ...  # not linked: a row for it raises NotLinked
+```
 
 #### `access()`
 
@@ -305,6 +315,23 @@ plugin = await meridian.connect(
 |---|---|---|---|
 | `read` | `frozenset[str]` | empty | Every account anybody may read through this plugin, and every account one of its external accounts is linked to. |
 | `write` | `frozenset[str]` | empty | Every open account anybody may write through this plugin, and every open account one of its external accounts is linked to. |
+| `links` | `tuple[LinkedExternalAccount, ...]` | `()` | This plugin's links, and nobody else's. An external account the plugin reported that none of them names is unlinked. Added in 0.7.0. |
+
+| Method | Returns | Meaning |
+|---|---|---|
+| `link_of(external_account_id: str)` | `LinkedExternalAccount` or `None` | The link naming this external account, or `None` while it is unlinked. |
+
+A link puts its account in both `read` and `write` while it stands. A closed account stays in `read` alone, and its link is still listed.
+
+### `LinkedExternalAccount`
+
+One of the plugin's external accounts, linked to one of the deployment's accounts by a deployment admin. Added in 0.7.0.
+
+| Field | Type | Default | Meaning |
+|---|---|---|---|
+| `external_account_id` | `str` | | The external account, as the plugin reported it with `report_external_accounts`. |
+| `account_id` | `str` | | The deployment's account it is linked to. |
+| `account_name` | `str` | `""` | That account's name as the deployment holds it now, so a page can say which account a link points at without acting for anybody. A rename arrives as a new delivery. |
 
 ### `Caller`
 
@@ -373,7 +400,7 @@ It checks nothing about the caller. That is the sidecar's job, and only the side
 
 ## Exceptions
 
-Every exception carries the sidecar's own words rather than a code, so a log line says whether the fix is the plugin author's, the operator's, or nobody's.
+Every exception carries the sidecar's own words, so a log line says whether the fix is the plugin author's, the operator's, or nobody's. The words are for a person, and may be reworded at any release. Where a plugin must act on which refusal it met, the SDK raises a class of its own for it, chosen by the code the sidecar sends beside the refusal and never by the words. `NotLinked` is the one such class so far.
 
 | Exception | Attributes | Raised when |
 |---|---|---|
@@ -383,13 +410,15 @@ Every exception carries the sidecar's own words rather than a code, so a log lin
 | `NotRegistered` | | Any method, after `leave()`. |
 | `NotGranted` | `topic: str`, `reason: str` | A typed operation was refused permission. `topic` holds the operation's name (for example `"RecordHolding"`), and `reason` names what was missing. |
 | `CallFailed` | `topic: str`, `kind: str`, `detail: str` | A typed operation did not produce an answer. `topic` holds the operation's name. `kind` says which failure it was; see [Typed operations](typed-operations.md#errors). |
+| `NotLinked` | as `CallFailed`, with `kind="refused"` | A typed operation named an external account nobody has linked to an account, so nothing was recorded for it. A subclass of `CallFailed`, so code that caught `CallFailed` still catches it. Raised only when the refusal carries the code `REFUSAL_REASON_EXTERNAL_ACCOUNT_NOT_LINKED`. Not worth retrying: the next statement after a deployment admin links the account records it. Added in 0.7.0; see [Typed operations](typed-operations.md#an-unlinked-external-account). |
 
 The sidecar's status is mapped onto these for typed operations:
 
 | gRPC status from the sidecar | Raised as |
 |---|---|
 | `PERMISSION_DENIED` | `NotGranted` |
-| `FAILED_PRECONDITION` | `CallFailed`, `kind="refused"` |
+| `FAILED_PRECONDITION` carrying `REFUSAL_REASON_EXTERNAL_ACCOUNT_NOT_LINKED` | `NotLinked`, `kind="refused"` |
+| `FAILED_PRECONDITION`, any other | `CallFailed`, `kind="refused"` |
 | `UNAVAILABLE` | `CallFailed`, `kind="no handler"` |
 | `DEADLINE_EXCEEDED` | `CallFailed`, `kind="timeout"` |
 | `ABORTED` | `CallFailed`, `kind="handler error"` |

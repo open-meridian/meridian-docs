@@ -9,6 +9,7 @@ Short recipes for one task each. They assume you have a deployment; if not, star
 | [Give people access](administer-access.md) | Set up accounts, groups and permissions on the dashboard's Administer page. |
 | [Reset a lost password](reset-a-lost-password.md) | Get a local administrator back in with a code from the platform. |
 | [Recover administration](recover-administration.md) | Get back in when nobody can administer the deployment. |
+| [Build a plugin's page](build-a-plugin-page.md) | Link the plugin UI kit, link external accounts with `om-account-map`, fit a page to a phone, and sit well in the dashboard's frame. |
 | [Release a plugin version](release-a-plugin.md) | Ship a change to a plugin as a new version. |
 | [Upgrade a deployment](upgrade-a-deployment.md) | Move a deployment to a newer chart, with the command line or your own pipeline. |
 | [Remove or start over](remove-or-start-over.md) | Uninstall, reinstall, or retire a deployment. |
