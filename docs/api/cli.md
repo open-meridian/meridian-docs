@@ -85,8 +85,9 @@ The checks run in this order:
 1. Helm is present and recent enough.
 2. The cluster is reachable, and you have the rights to install into the namespace.
 3. There is a storage class for the deployment's key.
-4. The runtime image can be pulled from here.
-5. The platform is reachable, and this machine's clock is within the tolerance a signed assertion allows.
+4. No node is short of disk.
+5. The runtime image can be pulled from here.
+6. The platform is reachable, and this machine's clock is within the tolerance a signed assertion allows.
 
 Each result is one of:
 
@@ -96,6 +97,12 @@ Each result is one of:
 | `stops` | Would stop an install. Printed with its fix. |
 | `worth` | Worth knowing, and not in the way. |
 | `unknown` | Could not be checked from here. This does not mean it passed. |
+
+The disk check is new in CLI 0.1.17. A node under disk pressure is `stops`: its `DiskPressure` condition is `True`, or it carries the `node.kubernetes.io/disk-pressure` taint. Kubernetes evicts that node's pods and schedules none onto it until it has disk again, so a deployment there stops and its pods wait as `Pending`. The fix is to free disk on the node and wait a few minutes for the taint to lift; the pods come back by themselves. On a local VM such as Rancher Desktop's, Docker's build cache is often most of it (`docker builder prune -a`).
+
+Before that, low free disk is `worth`. The line is 20% of the disk free, or 10 GiB where that is more. Kubernetes' default is to start evicting at 10% free for the node's own disk and 15% for images, and on one shared disk, as a local VM has, the 15% comes first. Warning at 20% leaves room for an image pull or a build before then, and the 10 GiB floor keeps that room on a small disk. Where images have a disk of their own, each disk is read on its own.
+
+The free disk is what each node's kubelet reports, read through the API server (`kubectl get --raw /api/v1/nodes/<node>/proxy/stats/summary`). That needs the cluster-wide right to get `nodes/proxy`. Without it, free disk is `unknown` and says which right is missing. Disk pressure needs only the right to list nodes, and is still read. Neither needs anything run on the node.
 
 A right the cluster refuses is `stops`, naming the right to ask for. `kubectl auth can-i` answers "no" by exiting 1, and from CLI 0.1.15 that is read as the refusal it is rather than as `unknown`; `unknown` is left for a question `kubectl` could not answer.
 
@@ -196,6 +203,7 @@ It works in four steps, and stops at the step that fails.
 1. **Check.** It changes nothing if any of these fails, and says which and what to do:
     - `helm` is 3.14 or newer, for `--reset-then-reuse-values`;
     - the cluster is reachable, and you may patch Deployments and create and delete Jobs in the namespace;
+    - no node is under disk pressure, read as [`doctor`](#meridian-doctor) reads it. An upgrade pulls the new version's images onto the node, which would take more of the disk it is short of, and its new pods would be scheduled nowhere. This check is new in CLI 0.1.17. Low free disk is printed as `worth` and does not stop it;
     - the release exists and Helm holds it as `deployed`. A `failed` or `pending-…` release is refused with how to recover it;
     - the chart version is published, and it is the chart the release was installed from;
     - it is not older than the installed version. If it is the same, it says so and exits 0.
