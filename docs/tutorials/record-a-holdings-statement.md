@@ -21,8 +21,8 @@ Allow 30 minutes.
 
 - A deployment installed with `meridian up --development`, and you are a deployment admin on it.
   See [Install a deployment](../getting-started/installation.md).
-- The `meridian` CLI, 0.1.14 or later, so that `meridian plugin new` builds on SDK 0.6, and Docker
-  on this machine.
+- The `meridian` CLI, 0.1.16 or later, so that `meridian plugin new` builds on SDK 0.6.1, and
+  Docker on this machine.
 - To have done [Change your plugin's page, live](change-the-page-live.md), or be comfortable with
   `meridian plugin dev`.
 
@@ -148,6 +148,7 @@ import meridian
 log = logging.getLogger("holdings_demo")
 
 SOURCE = "demo"  # the source's name, like "snaptrade"
+CUSTODIAN = "Demo Securities"  # where the source says the accounts are held
 
 # Every account the source reaches: its own identifier, name and type for each.
 ACCOUNTS = (
@@ -167,7 +168,8 @@ async def report_accounts(plugin: meridian.Plugin) -> None:
 ```
 
 `DEMO-ACCT-1` and `DEMO-ACCT-2` are the names the source uses for the accounts, as a broker would.
-The name and type are the source's own words, shown to the admin who links them.
+The name and type are the source's own words, shown to the admin who links them, and so is the
+custodian.
 
 ## 6. Serve an Accounts page
 
@@ -195,6 +197,7 @@ import meridian
 from meridian.plugin.v1 import operations_pb2 as ops
 
 from .source import ACCOUNTS as REPORTED
+from .source import CUSTODIAN
 
 TITLE = "Holdings demo"
 KIT = "/.meridian/ui/0.1.0/"  # the plugin UI kit, which the dashboard serves
@@ -231,6 +234,8 @@ def render(
         f'<form method="post" action="{ACCOUNTS}" class="inline">{hidden}'
         f'<input type="hidden" name="external_account_id" value="{e(a.external_account_id)}">'
         f'<input name="new_account_name" value="{e(a.name)}" required> '
+        f'<input name="new_account_custodian" value="{e(CUSTODIAN)}" aria-label="Custodian"> '
+        f'<input name="new_account_type" value="{e(a.venue_account_type)}" aria-label="Type"> '
         '<button class="primary">Create and link</button></form></td></tr>'
         for a in REPORTED
     )
@@ -314,6 +319,9 @@ def serve(plugin: meridian.Plugin, loop: asyncio.AbstractEventLoop, port: int) -
                         external_account_id=external,
                         account_id=account_id,
                         new_account_name="" if account_id else new_name,
+                        # Pre-filled from the source, and ignored with no new name.
+                        new_account_custodian=form.get("new_account_custodian", ""),
+                        new_account_type=form.get("new_account_type", ""),
                         acting_for=caller.header,
                     )
                 )
@@ -340,8 +348,8 @@ What it does:
   header, handed back. The sidecar admits both only for a deployment admin, and a link only for an
   account this plugin reported.
 - **Each link names an existing account or a new account's name.** A new one is created and linked
-  in one step. A link naming neither removes it, so the page refuses an empty form rather than send
-  one.
+  in one step, with the custodian and type the source reported, which the admin may change first.
+  A link naming neither removes it, so the page refuses an empty form rather than send one.
 - **Every form carries a token**, made from the admin's identity and a secret only this process
   holds. The plugin's page has its own sign-in cookie, so without the token a page elsewhere could
   make an admin's browser post the form. Each save restarts the process with a new secret, so reload
@@ -352,12 +360,11 @@ What it does:
 A plugin cannot read back what its accounts are linked to, so the page does not say which are
 linked.
 
-!!! note "A new account's custodian and type"
-    From SDK 0.6.1, `link_external_account` also takes `new_account_custodian`, `new_account_type`,
-    `new_account_owner` and `new_account_note`, which a real page pre-fills from what the source
-    reported, for the admin to change. The scaffold from `meridian plugin new` 0.1.14 pins SDK
-    0.6.0, so this page leaves them out. A dependency is part of a version: it changes with a new
-    version, not with a save.
+!!! note "The scaffold's tests"
+    `meridian plugin new` also wrote `tests/test_page.py`, which tests the scaffold's page. This page
+    replaces it, so those tests now fail under `meridian plugin check --run-tests` and the
+    scaffold's CI workflow. Nothing in this tutorial runs them. Replace them as you replace the page,
+    as the file itself says, before you rely on either.
 
 ## 7. Declare the page and report on start
 
@@ -580,8 +587,9 @@ sync status before it was not refused: the dashboard shows it beside the unlinke
 admin can tell whether it is worth linking.
 
 Now link it the other way. Reload the plugin's **Accounts** tab. On the `DEMO-ACCT-2` row, keep the
-name `Demo retirement` under **Or to a new one**, and choose **Create and link**. The deployment
-creates the account and links it in one step.
+name `Demo retirement`, the custodian `Demo Securities` and the type `IRA` under **Or to a new
+one**, and choose **Create and link**. The deployment creates the account and links it in one step.
+The **Accounts** tab of the Admin page shows it with that custodian and type.
 
 The next statement records it. Make any change to `statement.py`, a blank line will do, save, and
 read the logs after that revision: the last line is `recorded holding …` again.
