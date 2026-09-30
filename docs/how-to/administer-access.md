@@ -16,7 +16,11 @@ So a permission reads: *the people in this user group, using these plugins, on t
 ## To open the Administer page
 
 1. Sign in to the dashboard.
-2. Choose **Admin portal** at the top right. It is at `/admin`.
+2. Choose **Admin** at the top right. It is at `/admin`.
+
+Only a deployment admin sees the button. On the Administer page it reads **Dashboard** instead, and
+takes you back to your plugins. The breadcrumb beside the mark reads **Admin**, and in a plugin's
+view **Admin / Plugins /** and the plugin's name.
 
 The page has seven tabs: **Plugins**, **Permissions**, **User groups**, **Account groups**,
 **Access groups**, **Accounts** and **Terminal sessions**. Every change is recorded with who made

@@ -24,8 +24,8 @@ letters and digits, and may say more about itself, in free text:
 
 All four are optional and searchable, as the name is, so two accounts of the
 same name at different custodians can be told apart. None of them decides
-anything: who may reach an account is its account groups' business, never its
-owner's.
+anything: who may reach an account is its account groups' and its links'
+business, never its owner's.
 
 **An account is closed, never deleted.** Closing keeps it and its history:
 
@@ -38,7 +38,8 @@ owner's.
 Accounts are given to people through **account groups**: explicit lists of
 accounts, which a permission names. There is no "all accounts" group and no
 nesting. An account in no account group is visible to deployment admins and
-to nobody else, and it is in no plugin's scope. See [Access](access.md).
+to nobody else, and it is in no plugin's scope except through a link. See
+[Access](access.md).
 
 The platform never receives an account, its name, or anything recorded
 against it.
@@ -51,14 +52,16 @@ admin links each external account to one of the firm's accounts, on the
 plugin's own admin pages: the plugin offers the firm's accounts, and sends the
 link acting for the admin. **A plugin creates an account only that way**, when
 the admin names a new account to link to; it may pre-fill the new account's
-custodian and type from what the source reported, for the admin to change.
+custodian, type, owner and note from what the source reported, for the admin
+to change.
 
-The link is applied by the plugin's sidecar, on the way in. A holding or
-statement naming a linked external account is recorded against the firm's
-account. One naming an external account nobody has linked is refused with
-that reason, and the sidecar lists the unlinked accounts in its report of the
-plugin, so a deployment admin can see what needs linking. Nothing is recorded
-against a guess.
+The link is applied by the plugin's sidecar, on the way in. A holding naming a
+linked external account is recorded against the firm's account. One naming an
+external account nobody has linked is refused with that reason, and the
+sidecar lists the unlinked accounts in its report of the plugin, so a
+deployment admin can see what needs linking. Nothing is recorded against a
+guess. A sync status for an unlinked account is not refused: it is shown
+beside the account, so an admin can tell whether it is worth linking.
 
 A link can be made only for a plugin instance that has run and reported, since
 until then what it carries is unknown.
@@ -66,16 +69,29 @@ until then what it carries is unknown.
 ## How accounts bound a plugin
 
 A plugin does not declare which accounts it works on. Its reach is derived
-from the permissions that name it:
+from two things: the permissions that name it, and its own links.
 
 | Scope | What it is |
 |---|---|
-| **Read scope** | Every account some person may read through this plugin |
-| **Write scope** | Every account some person may write through this plugin |
+| **Read scope** | Every account some person may read through this plugin, and every account one of its external accounts is linked to |
+| **Write scope** | Every open account some person may write through this plugin, and every open account one of its external accounts is linked to |
 
-The conductor derives both from the permissions and delivers them to the
-plugin's sidecar, and they change as permissions change, within the same
-30-second bound as everything else about access.
+A person's access to a plugin is `read` or `write`, the same for every
+plugin, and `write` includes `read`. A permission gives it on the accounts of
+an account group; see [Access](access.md).
+
+**A link is the plugin's right to the account it names.** The plugin's role
+grants it the store, such as the street store for `custody`, and the link
+grants it the one account. While the link stands, that account is in the
+plugin's read and write scope, with no permission needed, and in no other
+plugin's by that link. Removing the link removes it.
+
+**A closed account is read-only.** It stays in the read scope, through a
+permission or a link, and is in nobody's write scope.
+
+The conductor derives both scopes from the permissions and the links, and
+delivers them to the plugin's sidecar. They change as permissions and links
+change, within the same 30-second bound as everything else about access.
 
 - **Reads are aggregate.** A plugin reads as itself, for its whole read scope
   at once; the sidecar stamps that scope on its queries and subscriptions, and
@@ -102,10 +118,12 @@ them. Three rules govern it.
 - **A holding whose instrument does not resolve is recorded, and moves
   nothing.** It is kept as evidence that something was held, and shown beside
   the positions so the gap is visible. See [Instruments](instruments.md).
-- **No floating point.** Quantities and money cross the wire and sit in the
-  store as integers scaled by 10⁸, so there is no rounding to get wrong. In the
-  Python SDK they are `Decimal`, and a value that cannot be represented
-  exactly is refused rather than rounded.
+- **No floating point.** A quantity crosses the wire as an integer with the
+  scale it was stated with, up to 18 decimal places, and sits in the store as
+  an exact decimal at that scale, so there is no rounding to get wrong. An
+  amount of money always carries its currency. In the Python SDK a quantity is
+  a `Decimal` and an amount a `meridian.Money`, and a value that cannot be
+  carried exactly is refused rather than rounded.
 
 !!! note "Not built yet"
     The street store holds the custodian's view of what is held. The firm's

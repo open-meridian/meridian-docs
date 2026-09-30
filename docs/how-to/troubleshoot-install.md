@@ -37,7 +37,7 @@ Find what you see in the left column. Each row says what it means and what to do
 |---|---|---|
 | `street`, `instrument` or `migrate` still in error | They may not have retried yet | Give them two minutes. If they stay, read the message: a key still missing there means the apply did not write the database Secret. |
 | "the directory did not say when this person authenticated" | Your OpenID Connect provider returned no `auth_time` | See [Choose how people sign in](choose-sign-in.md). On Entra ID, add `auth_time` as an optional claim. Nothing in the deployment changes. |
-| You sign in but see no **administer this deployment** link | You are not in the administrators' group, or it was misspelt | See [Recover administration](recover-administration.md). |
+| You sign in but see no **Admin** button at the top right | You are not in the administrators' group, or it was misspelt | See [Recover administration](recover-administration.md). |
 | The only administrator lost their password | Nobody else can sign in to reset it | See [Reset a lost password](reset-a-lost-password.md). |
 
 ## From the CLI, after installing

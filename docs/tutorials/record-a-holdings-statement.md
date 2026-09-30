@@ -128,7 +128,7 @@ Open the dashboard, sign in, and choose **Admin** at the top right. On the **Acc
 **New account**, name it `Demo brokerage account`, and choose **Create**. See
 [Give people access](../how-to/administer-access.md) for more on the tab.
 
-That is all the plugin needs from the Admin portal. You do not group the account or grant a
+That is all the plugin needs from the Admin page. You do not group the account or grant a
 permission on it: the link you make in step 8 is the plugin's right to write it.
 
 ## 5. Report the source's accounts
@@ -584,7 +584,7 @@ Press Ctrl-C in the first terminal, then:
 meridian plugin stop holdings-demo
 ```
 
-The accounts and the links stay. Close the accounts on the Admin portal's **Accounts** tab if you
+The accounts and the links stay. Close the accounts on the Admin page's **Accounts** tab if you
 do not want them. This page offers no way to remove a link: a page does it by sending
 `link_external_account` naming neither account.
 
