@@ -88,6 +88,10 @@ Convert what the venue sent to the platform's convention before calling: amounts
 
 `meridian.as_decimal` and `meridian.as_money` read a number, or an amount, back off the wire exactly as it was stated.
 
+### Enums { #enums }
+
+A parameter whose type is an enum, such as [`AssetClass`](#assetclass) or [`HoldingSide`](#holdingside), takes the value (`meridian.AssetClass.ASSET_CLASS_EQUITY`), its name as a string (`"ASSET_CLASS_EQUITY"`), or that name without the enum's prefix in lower case (`"equity"`). `None` or `""` leaves it unset. Anything else, a different case or a value the enum does not define, raises `ValueError` naming the parameter and the values it takes, before anything is sent. The sidecar refuses a number the enum does not define with `invalid`, for a plugin that builds its params by hand.
+
 ### Times and dates
 
 A parameter ending `_ns` is a time in nanoseconds, as an `int`. `time.time_ns()` gives one. `as_of_date` is an ISO 8601 date string, such as `"2026-09-25"`.
@@ -240,7 +244,7 @@ Reports how fresh a connected account's data is, as the rail (the brokerage aggr
 async def report_sync_status(
     self, *, source: str = "", last_synced_at_ns: int = 0, connection_healthy: bool = False,
     status_detail: str = "", observed_at_ns: int = 0, external_account_id: str = "",
-    state: SyncState | None = None, holdings_as_of_ns: int = 0, history_as_of_ns: int = 0,
+    state: SyncState | str | None = None, holdings_as_of_ns: int = 0, history_as_of_ns: int = 0,
 ) -> Published
 ```
 
@@ -363,7 +367,7 @@ async def record_holding(
     self, *, statement_id: str = "", instrument_id: str = "",
     unresolved_identifiers: Sequence[Identifier] = (), quantity: Decimal | int,
     market_value: Money | None = None, external_account_id: str = "",
-    side: HoldingSide | None = None, settle_date_quantity: Decimal | int | None = None,
+    side: HoldingSide | str | None = None, settle_date_quantity: Decimal | int | None = None,
     currency_assumed: bool = False, also_counted_in_cash: bool = False,
     acting_for: str | None = None,
 ) -> RecordHoldingResult
@@ -496,8 +500,9 @@ A plugin reports only an ambiguous miss. When nothing matched, `resolve_identifi
 
 ```python
 async def report_missing_instrument(
-    self, *, source: str = "", asset_class: str = "", identifiers: Sequence[Identifier] = (),
-    as_of_ns: int = 0, reason: MissReason | None = None, observed_at_ns: int = 0,
+    self, *, source: str = "", asset_class: AssetClass | str | None = None,
+    identifiers: Sequence[Identifier] = (), as_of_ns: int = 0,
+    reason: MissReason | str | None = None, observed_at_ns: int = 0,
 ) -> Published
 ```
 
@@ -512,7 +517,7 @@ async def report_missing_instrument(
 | Name | Type | Required | Meaning |
 |---|---|---|---|
 | `source` | `str` | no | The namespace the miss occurred in, such as `"snaptrade"`. |
-| `asset_class` | `str` | no | The instrument's asset class. |
+| `asset_class` | [`AssetClass`](#assetclass), `str` or `None` | no | The instrument's asset class, such as `"equity"`, when the plugin knows it. `None` leaves it unset, and the stub the platform mints has no class until an administrator completes it. An ETF is `"fund"` and an option `"derivative"`. |
 | `identifiers` | sequence of `Identifier` | no | Everything the plugin held at the miss. Enough to look it up against a global scheme, or to create a stub carrying them. |
 | `as_of_ns` | `int` | no | The reference time of the missed resolution. The reaction targets the mapping effective then, not now. |
 | `reason` | `MissReason` or `None` | no | The `miss_reason` that `resolve_identifier` returned. `None` leaves it unset, which reads as `MISS_REASON_UNSPECIFIED`. |
@@ -522,7 +527,7 @@ The sidecar sets `publisher_instance_id`, and leaves `placeholder_instrument_id`
 
 **Returns** `Published`, with `message_id`, the message's identifier on the bus.
 
-**Errors:** `NotGranted` without the `custody` role.
+**Errors:** `ValueError` for an asset class or a reason the enum does not define, such as `"EQUITY"` or `"etf"`. `NotGranted` without the `custody` role.
 
 ```python
 import time
@@ -657,7 +662,7 @@ await plugin.link_external_account(external_account_id="acct-2", acting_for=call
 
 ## Types { #types }
 
-The plugin-facing types these operations take and return. [`Identifier`](python-sdk.md#identifier) and [`MissReason`](python-sdk.md#missreason) are described with the Python SDK. Every type below except `Money` is a generated protobuf message or enum in `meridian.plugin.v1.operations_pb2`; `Money`, `ExternalAccount`, `HoldingSide` and `SyncState` are also exported from `meridian`.
+The plugin-facing types these operations take and return. [`Identifier`](python-sdk.md#identifier) and [`MissReason`](python-sdk.md#missreason) are described with the Python SDK. Every type below except `Money` is a generated protobuf message or enum in `meridian.plugin.v1.operations_pb2`; `Money`, `AssetClass`, `ExternalAccount`, `HoldingSide` and `SyncState` are also exported from `meridian`.
 
 ### `Money` { #money }
 
@@ -677,6 +682,23 @@ One account a connection reaches, as the custodian presents it.
 | `external_account_id` | `str` | Stable: the plugin makes it so where the venue does not. It is the `external_account_id` the account's rows name. A handle the venue wants on each call stays inside the plugin. |
 | `name` | `str` | The custodian's own name for it, as a person there would recognise it. |
 | `venue_account_type` | `str` | The venue's own word for the kind of account, verbatim and for display only. |
+
+### `AssetClass` { #assetclass }
+
+The kind of claim holding an instrument gives. A closed list: a class joins it by a ruling, never because a venue sent one. In a string, a value is spelled as its name without `ASSET_CLASS_`, in lower case.
+
+| Value | Number | Meaning |
+|---|---|---|
+| `ASSET_CLASS_UNSPECIFIED` | 0 | Not known. Only a stub minted from a deployment's miss may have no class; activating it requires one. |
+| `ASSET_CLASS_EQUITY` | 1 | `equity`: a share of ownership. |
+| `ASSET_CLASS_DEBT` | 2 | `debt`: somebody owes the holder, as with a bond. |
+| `ASSET_CLASS_FUND` | 3 | `fund`: a share of a pool, such as an ETF or a mutual fund. |
+| `ASSET_CLASS_DERIVATIVE` | 4 | `derivative`: a contract whose value comes from something else, such as an option or a future. |
+| `ASSET_CLASS_CRYPTO_ASSET` | 5 | `crypto_asset`. |
+| `ASSET_CLASS_EVENT_CONTRACT` | 6 | `event_contract`: pays on whether an event happens. |
+| `ASSET_CLASS_CASH` | 7 | `cash`: a holding of a currency's cash instrument. |
+
+What kind of instrument within a class (an ETF within fund, an option within derivative) is its instrument type, which the contract does not carry yet.
 
 ### `HoldingSide` { #holdingside }
 

@@ -62,11 +62,11 @@ asyncio.run(main())
 | `Money` | frozen dataclass | [Typed operations](typed-operations.md#money) |
 | `as_decimal`, `as_money` | functions | [Typed operations](typed-operations.md#numbers-and-amounts) |
 | `Identifier`, `MissReason` | generated protobuf message and enum | [Types](#types) |
-| `ExternalAccount`, `HoldingSide`, `SyncState` | generated protobuf message and enums | [Typed operations](typed-operations.md#types) |
+| `AssetClass`, `ExternalAccount`, `HoldingSide`, `SyncState` | generated protobuf enums and message | [Typed operations](typed-operations.md#types) |
 | `CallerMiddleware` | ASGI middleware | [`CallerMiddleware`](#callermiddleware) |
 | `MeridianError`, `Refused`, `NoSidecar`, `NotRegistered`, `NotGranted`, `CallFailed`, `NotLinked` | exceptions | [Exceptions](#exceptions) |
 | `DEFAULT_ADDRESS` | `str` | `"127.0.0.1:9191"`, where a sidecar listens |
-| `SCHEMA_VERSION` | `str` | the contract version sent at registration: `"v3"` from the release after 0.7.1, `"v2"` before |
+| `SCHEMA_VERSION` | `str` | the contract version sent at registration: `"v4"` from the release after 0.8.0, `"v3"` in 0.8.0, `"v2"` before |
 
 ## `meridian.connect` { #connect }
 
