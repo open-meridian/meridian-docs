@@ -66,7 +66,7 @@ Every command exits 0 when it succeeds. What a non-zero code means depends on th
 A `plugin` command exits 3 in two cases:
 
 - when no session is held for the deployment, or you hold several and `--deployment` does not pick one;
-- when the deployment answers `401 Unauthorized`: the session lapsed, was ended, or is one the deployment does not know, as after its dashboard restarted. That includes the deployment's registry, which `plugin upload` pushes through. The message says which, and ends with the `meridian connect` to run, for example ``http://meridian.localhost does not know your session; it may have restarted: `meridian connect` to sign in again``. Before CLI 0.1.15, `plugin upload` reported a lapsed session met at the registry as `the registry did not start an upload: 401 Unauthorized: invalid_token` and exited 1.
+- when the deployment answers `401 Unauthorized`: the session lapsed, was ended, or is one the deployment does not know (before core kept terminal sessions across restarts, this was what a dashboard restart caused). That includes the deployment's registry, which `plugin upload` pushes through. The message says which, and ends with the `meridian connect` to run, for example ``http://meridian.localhost does not know your session; it may have restarted: `meridian connect` to sign in again``. Before CLI 0.1.15, `plugin upload` reported a lapsed session met at the registry as `the registry did not start an upload: 401 Unauthorized: invalid_token` and exited 1.
 
 A script or an AI agent should treat 3 as "ask the person to connect again". Retrying won't help.
 

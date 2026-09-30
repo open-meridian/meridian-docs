@@ -84,8 +84,11 @@ nothing about what they may do: access is evaluated from the records on every
 request.
 
 Sessions end after **30 minutes idle** and **12 hours** at most. Both are fixed
-by Open Meridian's contract rather than configuration. Sessions are held in the
-dashboard's memory, so restarting the dashboard signs everybody out.
+by Open Meridian's contract rather than configuration. A browser's session is
+held in the dashboard's memory, so restarting the dashboard signs browsers out.
+A terminal's session (`meridian connect`) is kept, by a hash of its token, in
+the dashboard's own table in the deployment's database, so it survives the
+dashboard restarting or being upgraded.
 
 Directory groups are read at sign-in and never copied or synchronised into the
 deployment. So a person removed from a directory group keeps access until
