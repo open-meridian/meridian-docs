@@ -3,8 +3,9 @@
 A plugin's page is built on the **plugin UI kit**, which the dashboard serves on the plugin's own
 host. Linking it gives the page the platform's look, each person's colour scheme and market-direction
 convention, and web components for what trading pages need. This guide covers linking the kit,
-which version answers, linking external accounts with `om-account-map`, grids that read well on a
-phone, and how a page behaves inside the dashboard's frame.
+which version answers, linking external accounts with `om-account-map` (at thousands of accounts
+too), grids that read well on a phone, and how a page behaves inside the dashboard's frame,
+header actions included.
 
 The kit is framework-free: CSS and custom elements, used the same way from plain HTML, React, Vue
 or Svelte, from a plugin in any language. Every class, component, attribute and event is listed in
@@ -25,8 +26,8 @@ page's own origin. Link its stylesheet and script in `<head>`, and draw the page
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Accounts</title>
-  <link rel="stylesheet" href="/.meridian/ui/0.3.0/meridian.css">
-  <script src="/.meridian/ui/0.3.0/meridian.js"></script>
+  <link rel="stylesheet" href="/.meridian/ui/0.5.0/meridian.css">
+  <script src="/.meridian/ui/0.5.0/meridian.js"></script>
 </head>
 <body>
   <main class="page">
@@ -60,6 +61,8 @@ market-direction convention, and the kit applies them.
 | 0.1.0 | The brand's tokens and colour schemes, the platform's CSS classes, and `om-grid` (with its high-rate mode), `om-chart`, `om-asof`, `om-instrument-picker`, `om-live` and `om-panels` |
 | 0.2.0 | The seamless frame: a page the dashboard frames drops its own heading and tab row, and the frame is sized to the page. See [Inside the dashboard's frame](#inside-the-dashboards-frame). |
 | 0.3.0 | `om-account-map`; `om-moment`; the grid's declared JSON, rich cells and narrow layouts; list rows that wrap; option and field-row styles, and a select as tall as an input |
+| 0.4.0 | Header actions: a framed page's head buttons, drawn by the dashboard in its own header. See [Header actions](#header-actions). |
+| 0.5.0 | `om-account-map` at scale: a dense table with search, filters, grouping, pages, a chooser found by typing, suggestions, and several links in one form (`link-several`). See [At thousands of accounts](#at-thousands-of-accounts). |
 
 **A 0.x release only adds.** Nothing in the kit is removed or renamed within 0.x, so a page built
 against an earlier 0.x keeps working on a later one.
@@ -68,8 +71,7 @@ against an earlier 0.x keeps working on a later one.
 `/.meridian/ui/0.1.0/` is answered with the newest 0.x kit the deployment carries, not with 0.1.0,
 and not with nothing. So the version in a page's path says what it was built against, and the
 deployment decides what it gets: a brand change reaches every page at once, and no plugin is
-rebuilt for it. The rule is specified in meridian-design's `spec/plugin-pages-share-one-kit.md`,
-Q2, and stated in the kit's README under
+rebuilt for it. The kit's README states the rule under
 [Versions](https://github.com/open-meridian/meridian-ui#linking-the-kit).
 
 It also means a deployment older than the kit a page was built against answers with the kit it
@@ -82,7 +84,9 @@ do.
 A plugin that reads accounts at a source, and names them by that source's identifiers, has a
 deployment admin link each of them to one of the firm's accounts, on the plugin's own admin page.
 `om-account-map` is that page's content: each external account beside the account it is linked to,
-or the forms to link it. It needs kit 0.3.0 and SDK 0.7.0, and no script on the page.
+or the forms to link it. It needs kit 0.3.0 and SDK 0.7.0, and no script on the page. From kit
+0.5.0 it is built for hundreds or thousands of accounts; see
+[At thousands of accounts](#at-thousands-of-accounts).
 
 Serve the page only to a deployment admin, whose `Caller.deployment_admin` is `True`, and declare
 it as one of the plugin's [admin pages](../api/python-sdk.md#interface). See
@@ -212,6 +216,84 @@ new state.
 A page with script of its own may listen for the map's `om-link` event, which carries the same
 fields, and cancel it to send the link itself.
 
+### At thousands of accounts
+
+From kit 0.5.0 the map is a dense table, one row per external account, built for a deployment with
+hundreds or thousands of them. The document holds one page of rows however many there are. Above
+the table:
+
+- **a search**, matching every word typed anywhere in the external account's name, ID, number,
+  custodian, type, detail and connection, or in the account it is linked or suggested to;
+- **Unlinked, Linked and All**, each with its count. The map opens on Unlinked while any account is
+  unlinked, because that is the work;
+- **Group by** connection or custodian, offered where the data has at least two;
+- and under the table, **pages** of rows.
+
+A row's **Link…** (**Change…** on a linked one, **Other…** beside a suggestion) opens its choices
+under that row alone: an
+existing open account, found by typing into a chooser, a new account named from the external one,
+and on a linked account, **Unlink**.
+
+Three attributes and three optional data fields shape it:
+
+| Attribute | |
+|---|---|
+| `group-by` | `connection` or `custodian`: the grouping to start with. The person may change it. |
+| `page-size` | Rows on a page, 50 by default. |
+| `link-several` | The handler at `action` takes several links in one form (below), so the map offers **Link N suggested…**. |
+
+| Field on an external account | |
+|---|---|
+| `number` | The source's account number, for matching and shown. Leave out a masked one, such as `****3003`. |
+| `connection`, `connection_id` | The connection the account is reached through, to group by. |
+
+An account in `accounts` may carry a `number` too.
+
+**Suggestions.** Where an unlinked external account's name or number matches exactly one open
+account (ignoring case, spacing and character width), the map suggests it in the row, saying why:
+"same name", "same number" or "named by its number". The row's **Link** takes it, as the plain
+`link` form. Nothing is suggested where two accounts match, where the account is linked to another
+external account already, where two unlinked accounts would claim it, or where the firm's accounts
+could not be read.
+
+**Several links in one form.** With `link-several`, **Link N suggested…** opens a review of the
+suggestions the search finds, each of which can be left out, and sends them in one form whose
+`intent` is `link-several`. It carries the token once, then `external_account_id` and `account_id`
+repeated, one pair per link, in order. The handler reads both as lists, refuses the whole form if
+they differ in length, name an external account twice or hold an empty ID, and otherwise links each
+pair as its own `link_external_account` call, so one refused leaves the others as they went. It
+answers with the page, saying how each went. Allow for a body of a few thousand pairs, about a
+hundred bytes each.
+
+```python
+from urllib.parse import parse_qs
+
+form = parse_qs(body.decode())  # every value a list, in the order the page wrote them
+if form.get("intent") == ["link-several"]:
+    externals = form.get("external_account_id", [])
+    accounts = form.get("account_id", [])
+    if (
+        not externals
+        or len(externals) != len(accounts)
+        or len(set(externals)) != len(externals)
+        or not all(externals)
+        or not all(accounts)
+    ):
+        ...  # answer 400 and send nothing
+    for external, account_id in zip(externals, accounts):
+        try:
+            await plugin.link_external_account(
+                external_account_id=external, account_id=account_id, acting_for=caller.header,
+            )
+        except meridian.MeridianError as refused:
+            ...  # say which was not linked, and why, on the page you answer with
+```
+
+Offer `link-several` only once the handler takes it: a map without it never sends that intent, and
+the one-pair `link` form stays for a suggestion taken alone. The SnapTrade plugin,
+[meridian-snaptrade](https://github.com/open-meridian/meridian-snaptrade), links its accounts this
+way. The kit's README lists every property, method and event of the map.
+
 ## To show records on a phone: `om-grid` with `narrow`
 
 A grid that is wide on a desk is cramped on a phone, or in a narrow panel. With kit 0.3.0, `narrow`
@@ -273,11 +355,15 @@ Kit 0.3.0 also fits the rest of a page to a phone, with nothing to do but use it
 
 ## Inside the dashboard's frame
 
-The dashboard shows a plugin's admin pages as tabs in its admin view of the instance, each page in
-a frame. The frame stays, because it keeps the plugin's script on the plugin's own origin, away from
-the admin's dashboard session. From kit 0.2.0 it is **seamless**: it has no border and no scrollbar
-of its own, it is as tall as the page's content, and the dashboard's heading and tab row are the only
-ones.
+The dashboard shows a plugin's admin pages as tabs in the plugin's view in **Settings** (the
+breadcrumb reads **Settings / Plugins /** and the plugin's name), each page in a frame. The frame
+stays, because it keeps the plugin's script on the plugin's own origin, away from the admin's
+dashboard session. From kit 0.2.0 it is **seamless**: it has no border and no scrollbar of its own,
+it is as tall as the page's content, and the dashboard's heading and tab row are the only ones.
+
+A plugin's own page, the one people open from the dashboard's home, is framed too, filling the
+window under the dashboard's header, but not seamlessly: it draws its own heading and any tabs it
+needs.
 
 The dashboard tells the page it is framed, and the kit does the page's half with no code. A framed
 page:
@@ -310,6 +396,38 @@ So draw the heading and tab row with the kit, in its shape, and the frame takes 
     Don't use `vh`, or `height: 100%` on `html` or `body`, to size a page. Inside the frame the
     viewport is the frame, and the frame's height follows the page, so a page sized by it chases its
     own tail. Let the content decide the height.
+
+### Header actions
+
+From kit 0.4.0 a framed page can hand the buttons in its head to the dashboard, which draws them in
+its own header, where its own buttons are. Mark each with `data-om-action` and an id, on a `button`
+(or an `input type="submit"`) inside the head's `.actions`. Most often it is a plain form's submit
+button:
+
+```html
+<header class="page-head">
+  <div><h1>Connections</h1><p>Reading the source.</p></div>
+  <div class="actions">
+    <form method="post" action="/admin/read" class="inline">
+      <input type="hidden" name="token" value="…"><button data-om-action="refresh">Refresh</button>
+    </form>
+  </div>
+</header>
+```
+
+The page writes no script for it. Framed, the kit hides the marked buttons in the page and offers
+them to the dashboard; pressing one in the dashboard's header presses the page's own, so the form
+posts from the page, to the page's server, with its own token. The dashboard never sees the form or
+its answer. Opened on its own, the page shows its buttons where they are.
+
+- The id is lower-case letters, digits and hyphens, at most 32 characters. The label is the
+  button's text, at most 40 characters.
+- `class="primary"` or `class="danger"` is its tone, and a disabled button stays disabled.
+- At most four are offered, each id once, in the page's order. A button the kit cannot offer (a bad
+  or repeated id, a fifth, no label or a long one) stays in the page.
+- A marked button anywhere but the head's `.actions` is the page's own, and stays.
+
+The kit's README gives the messages between the page and the dashboard.
 
 ## Related
 

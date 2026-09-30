@@ -15,10 +15,22 @@ mkdocs serve        # http://127.0.0.1:8000, reloading as you save
 mkdocs build --strict
 ```
 
+`mkdocs build --strict` is the whole gate: there is no Makefile here. To run it
+as CI does, with nothing installed but Docker:
+
+```sh
+docker run --rm -v "$PWD":/docs -w /docs python:3.12-slim \
+  sh -c "pip install -q -r requirements.txt && mkdocs build --strict -d /tmp/site"
+```
+
 Pages live under `docs/`, in the sections the navigation in `mkdocs.yml`
 names: getting started, concepts, how-to, tutorials, API reference and the
-developer guide. The API reference is written from the code of
+developer guide. They are written from the code of
+[meridian-core](https://github.com/open-meridian/meridian-core),
 [meridian-cli](https://github.com/open-meridian/meridian-cli),
-[meridian-python](https://github.com/open-meridian/meridian-python) and
-[meridian-schema](https://github.com/open-meridian/meridian-schema); when
-those change, it changes with them.
+[meridian-python](https://github.com/open-meridian/meridian-python),
+[meridian-schema](https://github.com/open-meridian/meridian-schema) and
+[meridian-ui](https://github.com/open-meridian/meridian-ui); when those
+change, the pages change with them. Today they describe CLI 0.1.19, SDK
+0.7.1 and kit 0.5.0. A page describes what is built, and says so where
+something is specified and not built yet.

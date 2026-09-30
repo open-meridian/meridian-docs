@@ -1,7 +1,8 @@
 # Remove or start over
 
 There are three separate things you might want to remove: the deployment from your cluster, the
-deployment's record on the platform, and the CLI from your machine. Each is its own step.
+deployment's record on the platform, and the CLI from your machine. Each is its own step. Your own
+account on the platform is a fourth; see [Projects and deployments](../concepts/projects-and-deployments.md#members-and-roles).
 
 | To | Run or do |
 |---|---|

@@ -17,9 +17,9 @@ This site is how it works. For what it is and why, see
 
 !!! note "What is live, and what is next"
     Live now: the deployment you run yourself, one identity for every
-    instrument, your own sign-in and permissions, and plugins you write in
-    Python, live as you save them. Next: broker connections, order routing and
-    execution, built in the open.
+    instrument, your own sign-in and permissions, plugins you write in Python,
+    live as you save them, and brokerage holdings read through SnapTrade. Next:
+    order routing and execution, built in the open.
 
 ## Where to start
 

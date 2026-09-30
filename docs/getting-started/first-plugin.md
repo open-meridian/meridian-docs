@@ -63,10 +63,15 @@ writes it somewhere other than `./my-plugin`. It never writes over a directory t
 |---|---|
 | `src/my_plugin/__main__.py` | Connects to the sidecar, logs who it was launched as and what it may do, serves the page, and reports itself healthy. |
 | `src/my_plugin/page.py` | The page people see through the dashboard. It shows who is asking, and the accounts they may read or write through the plugin. |
-| `pyproject.toml` | The package, pinned to the SDK (`open-meridian`). Its `[tool.meridian]` table declares the plugin's `roles` and whether it serves a page. |
-| `Dockerfile` | Builds on the SDK's base image. |
-| `AGENTS.md`, `CLAUDE.md`, `.claude/skills/develop-live/` | Instructions for coding agents. `.dockerignore` keeps them out of the image. |
+| `pyproject.toml` | The package, pinned exactly to the SDK, `open-meridian==0.7.1` from CLI 0.1.18. Its `[tool.meridian]` table declares the plugin's `roles` and whether it serves a page. |
+| `Dockerfile` | Builds on the SDK's base image of the same version, `ghcr.io/open-meridian/plugin-python:0.7.1`. |
+| `tests/test_page.py` | Tests of the page, run by `meridian plugin check --run-tests`. |
+| `.github/workflows/check.yaml` | A CI workflow that runs `meridian plugin check --run-tests` on every push. |
+| `AGENTS.md`, `CLAUDE.md`, `.claude/skills/develop-live/` | Instructions for coding agents: building pages with the kit, the live loop, and `meridian plugin check`. `.dockerignore` keeps them out of the image. |
 | `README.md`, `.gitignore`, `.dockerignore` | The usual. |
+
+`meridian plugin check` holds the plugin to the rules every plugin is built to, and a new plugin keeps
+them all. Run it after each change; see [the command line](../api/cli.md#plugin-check).
 
 The reference plugin asks for no roles:
 
@@ -130,7 +135,7 @@ meridian plugin list
 
 ```text
 Versions:
-  my-plugin 0.1.0  roles: none  page: yes  SDK 0.3.0
+  my-plugin 0.1.0  roles: none  page: yes  SDK 0.7.1
 Launches:
   my-plugin  my-plugin 0.1.0  launched
 ```
@@ -143,7 +148,7 @@ inside the dashboard, at `http://meridian.localhost/plugins/my-plugin`, served f
 name; the arrow beside the name opens the page in a window of its own.
 
 The page shows who you are signed in as and a table headed **What you may see here**. It is empty
-because nobody has been granted any part of this plugin yet.
+because nobody has been given access to this plugin on any account yet.
 
 From a terminal you can also run:
 

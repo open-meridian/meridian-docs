@@ -51,8 +51,8 @@ meridian doctor
 ```
 
 It checks the cluster and your rights in it, Helm's version, a storage class for the deployment's
-key, that the runtime image can be pulled, that the platform answers, and this machine's clock. It
-changes nothing. Each problem it finds comes with its fix.
+key, that no node is short of disk, that the runtime image can be pulled, that the platform answers,
+and this machine's clock. It changes nothing. Each problem it finds comes with its fix.
 
 The output looks something like this:
 
@@ -63,6 +63,7 @@ The output looks something like this:
   ok       this account may create secrets in meridian
   ok       this account may create jobs in meridian
   ok       1 storage class(es) for the key's volume
+  ok       node lima-rancher-desktop is not under disk pressure
   ok       the platform at https://open-meridian.com answers
   ok       this machine's clock is within 1s of the platform's
   …

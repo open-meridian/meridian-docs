@@ -32,6 +32,15 @@ symbology — which identifiers, in which schemes, have meant this instrument
 and over which window — and structure. It is administered by Open Meridian
 staff, and every deployment pulls from it.
 
+Staff may also delegate its administration to an AI agent, over OAuth, for at
+most 90 days at a time. The agent works through the platform's API or its MCP
+server, under the same rules as a person: every change it makes names the agent
+and the member of staff it acts for. A change that would alter what deployments
+already resolve to — changing or ending an active instrument's identifier,
+decommissioning, reactivating — is filed as a proposal for a person to decide,
+and applied only if the instrument has not changed since. Define and amend can be
+made in bulk, up to 500 instruments at a time, each with its own result.
+
 It changes an instrument by four verbs, and the verb is the transition:
 
 | Verb | What it does |
@@ -43,7 +52,14 @@ It changes an instrument by four verbs, and the verb is the transition:
 
 Every change increments the instrument's version, and the time a change was
 recorded is stamped by the master itself, never supplied by whoever made it,
-so what was known when cannot be back-dated.
+so what was known when cannot be back-dated. When a change takes effect in the
+world is a separate thing, which an amend may state: the date, or date and
+time, its identifiers are effective from.
+
+A scheme's name is always lower case (`figi`, `isin`, `cusip`, `sedol`), and a
+lookup matches it in any case. A global identifier already in force on another
+active instrument is warned about before a change is made, since one
+identifier should mean one instrument at a time.
 
 !!! info "Identity, not a data store"
     The security master holds no prices, yields, ratings, volumes or sector

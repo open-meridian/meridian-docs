@@ -4,6 +4,19 @@ A deployment is a Helm release of the `meridian-runtime` chart. Upgrading it mov
 newer version of that chart, in place: the database migrates, every component restarts on the new
 image, and the data, the key and the configuration stay.
 
+What people notice:
+
+- **Terminal sessions stay.** A session from `meridian connect` is kept in the deployment's database,
+  so it survives the dashboard restarting, and nobody reconnects a terminal.
+- **Browsers sign in again.** A browser's session is held in the dashboard's memory, so the
+  dashboard's restart ends it.
+- **The database stays up.** A database the deployment brought, and its plugin registry, run images
+  of their own, and an upgrade that only moves the version does not restart them. The first upgrade
+  from a chart that still labelled their pods with its version restarts them once more.
+  The migration waits for the database to answer, up to five minutes, rather than failing at once.
+- **Launched plugins keep their sidecar.** A plugin keeps the sidecar image it was launched with
+  until it is launched again. See [after an upgrade](#after-an-upgrade-relaunch-plugins).
+
 You apply an upgrade with your own cluster rights. Nothing in a deployment holds a right to change
 the cluster, and the dashboard does not upgrade itself.
 
@@ -25,6 +38,10 @@ It checks first, and changes nothing if a check fails:
 - the cluster is reachable, and you may patch Deployments and create and delete Jobs in the
   namespace;
 - your `helm` is 3.14 or newer, which an upgrade needs (see [why](#why-not-reuse-values));
+- no node is under disk pressure. An upgrade pulls new images onto the node, which would take more
+  of the disk it is short of, and its new pods would be scheduled nowhere. Free disk and wait for the
+  pressure to lift; on a laptop VM, `docker builder prune -a` often does it. Low free disk is only
+  reported, as `worth`, and does not stop it;
 - the release exists and Helm holds it as `deployed`, not `failed` or `pending-…`;
 - the version you are moving to is published, and is not older than the one installed.
 
@@ -130,6 +147,22 @@ release's labels. A pod still pending, running or terminating on the old image i
 `--yes` answers the question for a script that has already read the plan. `--release`, `-n`,
 `--chart` and `--timeout` are as for `meridian up`; see the
 [command line reference](../api/cli.md#meridian-upgrade-deployment).
+
+### After an upgrade: relaunch plugins
+
+A launched plugin keeps the sidecar it was launched with until it is launched again, so after an
+upgrade it may still run beside the old version's sidecar. From CLI 0.1.19 the report ends by naming
+each such plugin, and each plugin whose pod started while the upgrade was under way, when the old
+launcher may have launched it. For each it prints the commands that move it:
+
+```text
+meridian plugin stop snaptrade
+meridian plugin launch snaptrade <version> --instance snaptrade
+```
+
+For a plugin running live it prints `meridian plugin dev --instance <instance>` instead. The version
+is left as `<version>`: `meridian plugin list` gives it. It relaunches nothing itself.
+`meridian doctor` warns about the same plugins, as `worth`, at any time.
 
 ### If it stops
 

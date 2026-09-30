@@ -123,8 +123,7 @@ The runner found a new, empty live folder and filled it from the plugin's image,
 | `revision` | integer | The revision the folder was on, normally `0`. |
 | `at` | number | When, in seconds since the Unix epoch. |
 
-!!! note
-    `seeded` is written by the runner and returned like any other event, but the event table in the plugin template's `AGENTS.md` doesn't list it. Treat it as informational.
+It is informational: nothing waits on it.
 
 ## Following a change
 

@@ -10,10 +10,11 @@ pieces a plugin links are Apache-2.0, so a plugin you write stays yours.
 | [meridian-cli](https://github.com/open-meridian/meridian-cli) | `meridian`, the command line: checks a cluster, installs a deployment, signs in to one, and brings plugins in and develops them live | AGPL-3.0-or-later |
 | [meridian-python](https://github.com/open-meridian/meridian-python) | The Python SDK for writing plugins, and the reference plugin `meridian plugin new` starts from | Apache-2.0 |
 | [meridian-schema](https://github.com/open-meridian/meridian-schema) | The contract a plugin links: the sidecar's gRPC service, the typed operations a plugin's roles may take, and the metadata every message carries, with Rust and Python code generation | Apache-2.0 |
-| [meridian-snaptrade](https://github.com/open-meridian/meridian-snaptrade) | A plugin that will read holdings from a brokerage through SnapTrade, holding the `custody` role. **Not yet implemented** | Apache-2.0 |
+| [meridian-ui](https://github.com/open-meridian/meridian-ui) | The plugin UI kit: the brand's tokens, colour schemes, CSS components and framework-free web components, which the dashboard serves to every plugin's page | Apache-2.0 |
+| [meridian-snaptrade](https://github.com/open-meridian/meridian-snaptrade) | A plugin that reads brokerage accounts through SnapTrade, their positions, cash and freshness, and records them as the custodian's view. It holds the `custody` role, links its accounts on the kit's account map, and is the example other connectors copy | Apache-2.0 |
 | [meridian-docs](https://github.com/open-meridian/meridian-docs) | This site | — |
 
-All six are public. The organisation's other repositories are private.
+All seven are public. The organisation's other repositories are private.
 
 ## Why two licences
 
@@ -28,6 +29,9 @@ runs the binary can ask for its source.
 SDK and the contract, and nothing else from Open Meridian — a plugin talks only
 to its sidecar, and these are the whole of that interface. Apache-2.0 there is
 what lets a vendor, or a firm, keep its plugin to itself.
+
+**meridian-ui** is Apache-2.0 too: a plugin's page links the kit, from the
+plugin's own origin.
 
 **meridian-snaptrade** is Apache-2.0 like the SDK it is built on: it is meant
 as a plugin other vendors copy, so it models the promise that a vendor keeps
@@ -50,10 +54,12 @@ their plugin.
 
 | Artefact | Where |
 |---|---|
-| The runtime image, carrying every binary | `ghcr.io/open-meridian/meridian-runtime`, tagged by commit and `latest` |
-| The Helm chart | `oci://ghcr.io/open-meridian/charts/meridian-runtime` |
-| The `meridian` CLI | Releases of meridian-cli, for macOS and Linux, each binary with a `.sha256` beside it |
+| The runtime image, carrying every binary and the plugin UI kit | `ghcr.io/open-meridian/meridian-runtime`, tagged by commit and `latest`, published from every green commit on meridian-core's `main` |
+| The Helm chart | `oci://ghcr.io/open-meridian/charts/meridian-runtime`, versioned `0.1.<n>`, each naming the image it was published beside |
+| The `meridian` CLI | Releases of meridian-cli, for macOS and Linux, each binary with a `.sha256` beside it, published by a version tag |
 | The Python SDK | `open-meridian` on PyPI, imported as `meridian` |
+| The plugin base image | `ghcr.io/open-meridian/plugin-python:<SDK version>`, which a plugin's `Dockerfile` builds on |
+| The plugin UI kit | Not published on its own: the runtime image carries it, and the dashboard serves it at `/.meridian/ui/<version>/` |
 
 !!! warning "The SDK's package name"
     The SDK is published as `open-meridian`. The name `meridian-sdk` on PyPI

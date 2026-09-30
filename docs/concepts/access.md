@@ -105,13 +105,13 @@ nothing beyond what the person holds: access is evaluated per request, exactly
 as for a browser.
 
 A deployment admin can end a person's terminal sessions, all at once, from the
-**Terminal sessions** tab of the administration page; that person's browser
+**Terminal sessions** tab of Settings; that person's browser
 sessions are left alone. `meridian sign-out` ends one's own.
 
 ## The access model
 
 Access is built from four records, all held in the conductor's configuration
-store and authored on the dashboard's administration page.
+store and authored in the dashboard's **Settings**.
 
 | Record | What it is |
 |---|---|

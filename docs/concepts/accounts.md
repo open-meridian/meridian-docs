@@ -12,7 +12,7 @@ explains both, and how accounts bound what a plugin may read and write.
 ## The firm's accounts
 
 A deployment admin creates accounts on the **Accounts** tab of the dashboard's
-administration page. Each has a name and an identifier, `ACC-` followed by 26
+**Settings**. Each has a name and an identifier, `ACC-` followed by 26
 letters and digits, and may say more about itself, in free text:
 
 | Attribute | What it says | For example |

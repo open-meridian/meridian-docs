@@ -8,7 +8,7 @@ Every plugin made by `meridian plugin new` carries the instructions an agent nee
 
 | File | For |
 |---|---|
-| `AGENTS.md` | Any coding agent. It teaches the live loop: start it, change something, check the result, release. |
+| `AGENTS.md` | Any coding agent. It teaches building pages with the plugin UI kit, holding the plugin to `meridian plugin check`, and the live loop: start it, change something, check the result, release. |
 | `CLAUDE.md` | Claude Code. It points to `AGENTS.md`. |
 | `.claude/skills/develop-live/SKILL.md` | Claude Code. A skill that also leads to `AGENTS.md`. |
 
@@ -20,8 +20,8 @@ whoever works on it next has them too. `.dockerignore` keeps them out of the plu
 - A deployment installed **for development**. Development deployments run unreviewed code, so
   never use one your firm depends on. See
   [Development deployments](../concepts/development-deployments.md).
-- The `meridian` CLI, version 0.1.3 or later for `plugin dev`, and 0.1.8 or later for the Claude
-  Code files. Check with `meridian --version`; update with `meridian upgrade`.
+- The `meridian` CLI, version 0.1.15 or later, which has `plugin check`; `AGENTS.md` asks for it.
+  Check with `meridian --version`; update with `meridian upgrade`.
 - Docker on this machine. The first run builds the plugin's image.
 - A coding agent that can run shell commands in the plugin's directory.
 
@@ -94,6 +94,7 @@ events are:
 
 | Event | Means |
 |---|---|
+| `seeded` | The live folder was filled from the plugin's image, the first time it runs live |
 | `sent` | A change was sent, and given a revision number |
 | `synced` | The sidecar wrote it |
 | `restarted` | The plugin's process started on that revision |
@@ -143,8 +144,8 @@ is no `meridian status`; `meridian plugin list` shows whether the session is the
 
 ## 7. Release it
 
-When you are happy, ask the agent to release. It runs the plugin's tests if it has any, raises
-`version` in `pyproject.toml`, shows you the roles again, and then runs:
+When you are happy, ask the agent to release. It runs `meridian plugin check --run-tests` and fixes
+what fails, raises `version` in `pyproject.toml`, shows you the roles again, and then runs:
 
 ```bash
 meridian plugin dev --release --instance my-plugin --yes

@@ -13,7 +13,7 @@ A new version is also the only way to change what a plugin **may** do, or what i
 
 Use this when the plugin is running live under `meridian plugin dev`.
 
-1. Run the plugin's own tests, if it has any.
+1. Run `meridian plugin check --run-tests`, and fix what it names until it passes.
 2. Raise `version` in `pyproject.toml`, for example from `0.1.0` to `0.2.0`.
 3. From the plugin's directory, run:
 
@@ -40,7 +40,7 @@ It is now an ordinary version in the catalogue, launched the ordinary way.
 
 Use this for a deployment that is not for development, or when the plugin is not live.
 
-1. Raise `version` in `pyproject.toml`.
+1. Run `meridian plugin check --run-tests`, and raise `version` in `pyproject.toml`.
 2. Upload it:
 
     ```bash
@@ -67,6 +67,19 @@ Use this for a deployment that is not for development, or when the plugin is not
 
 Keeping the instance name keeps what was granted against it: access groups and external account
 links name the instance, not the version.
+
+## To move a plugin to a newer SDK
+
+A plugin pins one release of the SDK, in `pyproject.toml` and in its `Dockerfile`. To move it to a
+newer one, from its directory, with its changes committed:
+
+```bash
+meridian plugin migrate
+```
+
+It moves both pins, rewrites what each release in between changed, runs `meridian plugin check`, and
+lists what is left to do by hand, with the file and line. Review the diff, then release as above.
+See [`meridian plugin migrate`](../api/cli.md#plugin-migrate).
 
 ## To move a plugin to another deployment
 

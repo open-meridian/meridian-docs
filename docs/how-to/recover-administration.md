@@ -1,7 +1,7 @@
 # Recover administration
 
-Use this when nobody can open the dashboard's **Administer this deployment** page. Find your case
-below.
+Use this when nobody can open the dashboard's **Settings**, which only a deployment admin can. Find
+your case below.
 
 | What happened | Go to |
 |---|---|
@@ -31,9 +31,9 @@ To get back in:
 1. In your directory, make a group with exactly the name that was typed in the wizard, and add
    yourself to it.
 2. Sign in to the dashboard again. You now hold deployment admin.
-3. On the Administer page, open **User groups** and **Edit** the **Deployment admins** group. Add
-   the correct group on its own line under **Directory groups**, keep the misspelt one for now, and
-   choose **Save**.
+3. In Settings, open **User groups** and **Edit** the **Deployment admins** group. Add the correct
+   group on its own line under **Directory groups**, keep the misspelt one for now, and choose
+   **Save**.
 4. Make sure you are in the correct group in your directory, and sign in again. Check you still hold
    deployment admin.
 5. Edit **Deployment admins** again to remove the misspelt line, then remove the temporary group
@@ -55,8 +55,8 @@ says **Nobody administers this deployment yet**, with a **Claim it** link.
 4. Choose **Claim it**, or open `/claim`. The page is **Claim this deployment**.
 5. Enter the **Claim code** and choose **Redeem**.
 
-You become the deployment's first deployment admin, and land on the Administer page. The platform
-learns that the code was used, and not by whom.
+You become the deployment's first deployment admin, and land in Settings. The platform learns that
+the code was used, and not by whom.
 
 ## Start over
 

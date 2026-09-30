@@ -12,7 +12,7 @@ pip install open-meridian
 |---|---|
 | PyPI name | `open-meridian` |
 | Import name | `meridian` |
-| Version | 0.7.0 |
+| Version | 0.7.1 |
 | Python | 3.11 or newer |
 | Dependencies | `grpcio>=1.68,<2`, `protobuf>=5.28,<7` |
 | Licence | Apache-2.0 |
@@ -20,7 +20,11 @@ pip install open-meridian
 !!! warning "Not `meridian-sdk`"
     The PyPI package `meridian-sdk` belongs to an unrelated company. Don't install it.
 
-A plugin pins the SDK exactly, `open-meridian==0.7.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.7.0`, so move the two together. See [Plugin manifest](plugin-manifest.md).
+A plugin pins the SDK exactly, `open-meridian==0.7.1`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.7.1`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls. See [Plugin manifest](plugin-manifest.md).
+
+| Optional extra | Installs | For |
+|---|---|---|
+| `migrate` | `libcst` | Running the SDK's own migrations, `python -m meridian.migrations`, which `meridian plugin migrate` does in an image of its own. A plugin never needs it. |
 
 The package includes the wire bindings it speaks to the sidecar with, as `meridian.v1` and `meridian.plugin.v1`.
 
@@ -223,7 +227,7 @@ A page the plugin serves to people, on loopback. Only the plugin's sidecar reach
 |---|---|---|---|
 | `port` | `int` | | The loopback port the page listens on. |
 | `title` | `str` | | The page's title. |
-| `admin_pages` | `tuple[Page, ...]` | `()` | Pages for deployment admins, shown as tabs in the dashboard's admin view of the instance, in order, each framing its path. Serve them to a caller whose `deployment_admin` is `True`, and to nobody else. |
+| `admin_pages` | `tuple[Page, ...]` | `()` | Pages for deployment admins, shown as tabs in the plugin's view in the dashboard's Settings, in order, each framing its path. Serve them to a caller whose `deployment_admin` is `True`, and to nobody else. |
 
 ### `Page`
 

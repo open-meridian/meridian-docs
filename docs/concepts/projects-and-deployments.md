@@ -41,6 +41,12 @@ last one is refused.
 An owner may **close** a project once every deployment in it has been retired.
 Closing withdraws pending invitations and deletes nothing.
 
+To delete your own account on the platform, write to
+[privacy@open-meridian.com](mailto:privacy@open-meridian.com) from its address.
+It is refused while you are the only owner of an open project: make somebody
+else an owner, or close the project, first. Records of who did what then show
+"Deleted account" where your name was.
+
 !!! info "A role on the platform is not access to a deployment"
     Being an owner or admin of a project lets you manage the deployment's
     *record* on the platform. It gives you nothing inside the deployment: who

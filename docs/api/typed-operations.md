@@ -15,7 +15,7 @@ The operations are generated, not written by hand. One generator reads the contr
 - the sidecar's side of it;
 - the Python methods on [`Plugin`](python-sdk.md#plugin).
 
-This page lists every operation in SDK 0.7.0. There is no order-routing or execution operation.
+This page lists every operation in SDK 0.7.1, the same as in 0.7.0. There is no order-routing or execution operation.
 
 ## Summary
 
@@ -250,7 +250,7 @@ async def report_sync_status(
 | Workflow step | W2.1, Observe the brokerage sync state |
 | Kind | event, on `platform.custody.{instance}.event.sync-status` |
 | Role | `custody` |
-| Heard by | the dashboard, which shows it on the plugin's overview in its admin view |
+| Heard by | the dashboard, which shows it on the **Overview** tab of the plugin's view in Settings |
 
 | Name | Type | Required | Meaning |
 |---|---|---|---|
@@ -616,7 +616,7 @@ async def link_external_account(
 | `new_account_note` | `str` | no | Anything else worth knowing about the new account. At most 2,000 characters. |
 | `acting_for` | `str` or `None` | yes, by the sidecar | The `Meridian-Caller` header of the deployment admin viewing the page. |
 
-The four `new_account_*` attributes are free text, which a page may pre-fill from what the source reported, for the admin to change. They are ignored unless `new_account_name` is given: an existing account is edited only on the dashboard's **Accounts** tab.
+The four `new_account_*` attributes are free text, which a page may pre-fill from what the source reported, for the admin to change. They are ignored unless `new_account_name` is given: an existing account is edited only on the **Accounts** tab of the dashboard's Settings.
 
 **Returns** `LinkExternalAccountResult`:
 

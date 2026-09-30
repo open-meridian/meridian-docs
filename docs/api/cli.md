@@ -4,7 +4,7 @@
 
 Nothing in a cloud install depends on it. A marketplace listing's form and the deployment's own wizard are the whole path there; `meridian` makes the same things convenient from a terminal.
 
-This page describes release 0.1.14 of the command line. `meridian --version` says which one you have. For installing it, see [Install a deployment](../getting-started/installation.md).
+This page describes release 0.1.19 of the command line. `meridian --version` says which one you have. For installing it, see [Install a deployment](../getting-started/installation.md).
 
 ## Synopsis
 
@@ -282,7 +282,7 @@ If the deployment can't be reached, the session is still forgotten here and laps
 meridian plugin new <name> [--into <dir>]
 ```
 
-Writes a working plugin to start from: the Python SDK's reference plugin, renamed to `<name>`. It needs no network, because the template is compiled into the binary. It writes the plugin's code and page, a `Dockerfile`, `pyproject.toml`, `.dockerignore`, `.gitignore`, `README.md`, `AGENTS.md`, `CLAUDE.md`, and a `develop-live` skill for Claude Code, then prints the next steps. See [Your first plugin](../getting-started/first-plugin.md).
+Writes a working plugin to start from: the Python SDK's reference plugin, renamed to `<name>`. It needs no network, because the template is compiled into the binary. It writes the plugin's code and page, its tests (`tests/test_page.py`), a `Dockerfile`, `pyproject.toml`, `.dockerignore`, `.gitignore`, `README.md`, `AGENTS.md`, `CLAUDE.md`, a `develop-live` skill for Claude Code, and a CI workflow that runs `meridian plugin check --run-tests` (`.github/workflows/check.yaml`), then prints the next steps. From CLI 0.1.18 the plugin pins SDK 0.7.1 (0.1.16 and 0.1.17 pinned 0.6.1). See [Your first plugin](../getting-started/first-plugin.md).
 
 `<name>` must be lowercase letters, digits and single hyphens, starting with a letter. It becomes the package name, and, with hyphens as underscores, the module name.
 
@@ -433,6 +433,7 @@ The rewrites keep a file's formatting and comments wherever they change nothing.
 | 0.5.0 to 0.6.0: access to a plugin is read or write, and a plugin declares no tags | `tags` in `[tool.meridian]`, with the comment directly above it (`tags-undeclared`); `any(a in held.read for held in caller.access)` to `a in caller.read`, and the same for `write` (`access-any`); accounts gathered over the tags into one set to `caller.read` or `caller.write` (`access-union`); `Caller(access=(TagAccess(...), ...))` to `Caller(read=..., write=...)`, each the union over the tags (`caller-read-write`); an import of `TagAccess` nothing uses (`tag-access-import`) | `caller.access` read by a tag's own name (`access-tag-by-tag`); `TagAccess` still named (`tag-access`); `plugin.identity.tags` (`identity-tags`); tags that were declared, whose holders a deployment admin now gives read or write (`tags-granted`); a `tags` declaration it could not remove (`tags-declared`) |
 | 0.6.0 to 0.6.1 | Nothing: only the pins move | |
 | 0.6.1 to 0.7.0: the unlinked refusal is `meridian.NotLinked` | a meridian error's words tested for "not linked" (`"is not linked" in str(err)`, or in `err.detail`) to `isinstance(err, meridian.NotLinked)`, dropping the `isinstance(err, CallFailed)` and `err.kind == "refused"` beside it (`not-linked-isinstance`); `except meridian.CallFailed as err: if <that>: ... else: raise` to `except meridian.NotLinked: ...`, in a try's last handler (`not-linked-except`); a test's `CallFailed(topic, "refused", "... is not linked ...")` to `NotLinked(topic, "...")` (`not-linked-raised`) | the words "not linked" matched anywhere else in the plugin's code (`not-linked-by-text`) |
+| 0.7.0 to 0.7.1 | Nothing: only the pins move. 0.7.1 is the first release that carries the migrations | |
 
 `plugin migrate` adds two rules of its own: `pin-elsewhere`, for the old release still named in another file (a Makefile's base image, a workflow, a README), which it reports rather than moves because some of those are history; and `unreadable`, for a file that is not UTF-8, or that a step could not read as Python, which it leaves as it was.
 

@@ -1,8 +1,8 @@
 # Contributing
 
 This page is for working on Open Meridian's public repositories: meridian-core,
-meridian-cli, meridian-python, meridian-schema, meridian-snaptrade and meridian-docs. It covers how each is
-checked, the rules every change keeps, and how to raise a bug or an idea.
+meridian-cli, meridian-python, meridian-schema, meridian-ui, meridian-snaptrade and meridian-docs. It
+covers how each is checked, the rules every change keeps, and how to raise a bug or an idea.
 
 !!! note "Issues, not pull requests"
     Open Meridian is open source, and built by its team: we don't merge pull
@@ -16,11 +16,13 @@ checked, the rules every change keeps, and how to raise a bug or an idea.
 
 ## The gate: `make ci-local`
 
-Every public repository has one command that runs every check it has:
+Every public code repository has one command that runs every check it has:
 
 ```bash
 make ci-local
 ```
+
+This site, meridian-docs, is checked by `mkdocs build --strict`, which fails on a broken link.
 
 **A green local run is the completion signal.** CI is confirmation, not the
 place a failure is first discovered: every job CI runs is reachable from
@@ -46,6 +48,8 @@ produce subtly different output, so the host is never asked to have one.
 | meridian-core | `docker compose up` runs every component locally, with a database and a broker |
 | meridian-schema | `make codegen` regenerates the Rust and Python bindings, in a pinned container |
 | meridian-python | Conformance tests assert against the same pinned message bytes as the Rust runtime, so the two agree with the contract rather than with each other |
+| meridian-ui | `make serve` serves the kit's gallery, every component light and dark, in each scheme |
+| meridian-snaptrade | `make preview` writes each of its pages on synthetic data |
 
 ## Rules every change keeps
 
@@ -53,9 +57,9 @@ These are enforced in review, and several by the gate.
 
 **Exact decimal for money.** Never floating point for a quantity, a price or a
 balance, at any layer — including an adapter reading a third-party API.
-Quantities and money cross the wire as integers scaled by 10⁸; in the Python
-SDK they are `Decimal`, and a value that cannot be carried exactly is refused
-rather than rounded. Convert once, at the boundary, on the way in. This is the
+Quantities and money cross the wire as an integer and the scale they were
+stated with; in the Python SDK they are `Decimal`, and a value that cannot be
+carried exactly is refused rather than rounded. Convert once, at the boundary, on the way in. This is the
 class of code where a rounding error becomes a reconciliation break.
 
 **Plugins hold no state.** No local database, no file a plugin expects to find
@@ -102,8 +106,8 @@ that, not the other way round.
 
 ## Licences, and why a plugin stays yours
 
-meridian-core and meridian-cli are AGPL-3.0-or-later. meridian-python and
-meridian-schema are **Apache-2.0**. A plugin links only the SDK and the
+meridian-core and meridian-cli are AGPL-3.0-or-later. meridian-python,
+meridian-schema and meridian-ui are **Apache-2.0**. A plugin links only the SDK and the
 contract — it talks to nothing but its sidecar — so a plugin you write on them
 stays yours, whatever licence you choose for it. Keep that line where it is: a
 change that would make a plugin link anything AGPL is a change to that promise.

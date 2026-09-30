@@ -21,8 +21,9 @@ Allow 30 minutes.
 
 - A deployment installed with `meridian up --development`, and you are a deployment admin on it.
   See [Install a deployment](../getting-started/installation.md).
-- The `meridian` CLI, 0.1.16 or later, so that `meridian plugin new` builds on SDK 0.6.1, and
-  Docker on this machine.
+- The `meridian` CLI, 0.1.16 or later, and Docker on this machine. From CLI 0.1.18,
+  `meridian plugin new` builds on SDK 0.7.1; 0.1.16 and 0.1.17 build on 0.6.1. This tutorial runs on
+  either.
 - To have done [Change your plugin's page, live](change-the-page-live.md), or be comfortable with
   `meridian plugin dev`.
 
@@ -124,11 +125,11 @@ Every save from now on is a new revision, `r2`, `r3` and on. To read what one lo
 
 ## 4. Make an account to link to
 
-Open the dashboard, sign in, and choose **Admin** at the top right. On the **Accounts** tab, choose
-**New account**, name it `Demo brokerage account`, and choose **Create**. See
-[Give people access](../how-to/administer-access.md) for more on the tab.
+Open the dashboard, sign in, and choose the gear at the top right, **Settings**. On the
+**Accounts** tab, choose **New account**, name it `Demo brokerage account`, and choose **Create**.
+See [Give people access](../how-to/administer-access.md) for more on the tab.
 
-That is all the plugin needs from the Admin page. You do not group the account or grant a
+That is all the plugin needs from Settings. You do not group the account or grant a
 permission on it: the link you make in step 8 is the plugin's right to write it.
 
 ## 5. Report the source's accounts
@@ -200,7 +201,7 @@ from .source import ACCOUNTS as REPORTED
 from .source import CUSTODIAN
 
 TITLE = "Holdings demo"
-KIT = "/.meridian/ui/0.1.0/"  # the plugin UI kit, which the dashboard serves
+KIT = "/.meridian/ui/0.5.0/"  # the plugin UI kit, which the dashboard serves
 ACCOUNTS = "/admin/accounts"
 ADMIN_PAGES = (meridian.Page(ACCOUNTS, "Accounts"),)
 
@@ -340,7 +341,7 @@ def serve(plugin: meridian.Plugin, loop: asyncio.AbstractEventLoop, port: int) -
 What it does:
 
 - **It declares one admin page**, `ADMIN_PAGES`. The dashboard shows it as a tab in the plugin's
-  admin view, and frames its path.
+  view in Settings, and frames its path.
 - **It serves it only to a deployment admin**, whose verified `Meridian-Caller` header says
   `deployment_admin`. Anybody else gets 403, and any other path 404, so the plugin no longer has a
   page for other people.
@@ -357,17 +358,16 @@ What it does:
 - **It is built on the plugin UI kit**, as the scaffold's page was: the kit's stylesheet, script and
   classes, and no colour of its own. See the plugin's `AGENTS.md`.
 
-On SDK 0.6.1 a plugin cannot read back what its accounts are linked to, so the page does not say
-which are linked.
+This page keeps to plain forms, so that every step is in view, and it does not say which accounts
+are linked.
 
-!!! note "What SDK 0.7.0 offers instead"
+!!! note "What a real page does instead"
     From SDK 0.7.0 a plugin reads its own links, `AccountScope.links` from `account_scope()`: each
     external account it links, the account it is linked to, and that account's name, at start and
-    on every change. With kit 0.3.0, `om-account-map` draws each external account as linked or not,
-    from those links, with the link, create and unlink forms, and needs no script. Once your plugin
-    is on 0.7.0, see [Build a plugin's page](../how-to/build-a-plugin-page.md#to-link-external-accounts-om-account-map).
-    The page above links kit 0.1.0, and the dashboard answers it with the newest 0.x kit it
-    carries.
+    on every change. The kit's `om-account-map` draws each external account as linked or not, from
+    those links, with the link, create and unlink forms, and needs no script; from kit 0.5.0 it
+    searches, filters, groups and pages thousands of accounts, and suggests matches. See
+    [Build a plugin's page](../how-to/build-a-plugin-page.md#to-link-external-accounts-om-account-map).
 
 !!! note "The scaffold's tests"
     `meridian plugin new` also wrote `tests/test_page.py`, which tests the scaffold's page. This page
@@ -418,7 +418,8 @@ meridian plugin logs --instance holdings-demo --since 3
 
 ## 8. Link DEMO-ACCT-1
 
-In the dashboard, choose **Admin**, open the **Plugins** tab, and choose `holdings-demo`. Its view
+In the dashboard, choose the gear (**Settings**), open the **Plugins** tab, and choose **Manage** on
+the `holdings-demo` row. Its view
 has the tabs every plugin has, **Overview**, **Settings** and **Access**, then the plugin's own:
 **Accounts**, the page you wrote. Open it.
 
@@ -605,7 +606,7 @@ admin can tell whether it is worth linking.
 Now link it the other way. Reload the plugin's **Accounts** tab. On the `DEMO-ACCT-2` row, keep the
 name `Demo retirement`, the custodian `Demo Securities` and the type `IRA` under **Or to a new
 one**, and choose **Create and link**. The deployment creates the account and links it in one step.
-The **Accounts** tab of the Admin page shows it with that custodian and type.
+The **Accounts** tab of Settings shows it with that custodian and type.
 
 The next statement records it. Make any change to `statement.py`, a blank line will do, save, and
 read the logs after that revision: the last line is `recorded holding …` again.
@@ -624,7 +625,7 @@ Press Ctrl-C in the first terminal, then:
 meridian plugin stop holdings-demo
 ```
 
-The accounts and the links stay. Close the accounts on the Admin page's **Accounts** tab if you
+The accounts and the links stay. Close the accounts on the **Accounts** tab of Settings if you
 do not want them. This page offers no way to remove a link: a page does it by sending
 `link_external_account` naming neither account.
 

@@ -9,6 +9,7 @@ Find what you see in the left column. Each row says what it means and what to do
 | `meridian doctor` shows `stops`, or `meridian up` stops with "Nothing was installed" | Something it checked would stop the install | Do what the line under it says, and run it again. Nothing was installed. |
 | `meridian up` refuses `--id` | The identifier is not in the platform's shape | Copy it from the platform with its **Copy** button, `DEP-` included. |
 | The clock line says this machine is some seconds from the platform's | A skewed clock fails sign-in in a way that looks like a bad key | Fix this machine's time sync and run `meridian doctor` again. |
+| The disk line says a node is under disk pressure, or pods sit in `Pending` | Kubernetes evicts a node's pods when it runs short of disk, and schedules none there | Free disk on the node and wait a few minutes. On a laptop VM such as Rancher Desktop's, Docker's build cache is often most of it: `docker builder prune -a`. |
 | The chart refuses the host | You gave an IP address | Use a name. On a laptop, any name ending in `.localhost` works. |
 | `street`, `instrument` and `migrate` pods in `CreateContainerConfigError` before the wizard | Expected. They wait for the database the wizard sets up | Nothing. They start a minute or two after **Apply**. |
 
@@ -37,7 +38,7 @@ Find what you see in the left column. Each row says what it means and what to do
 |---|---|---|
 | `street`, `instrument` or `migrate` still in error | They may not have retried yet | Give them two minutes. If they stay, read the message: a key still missing there means the apply did not write the database Secret. |
 | "the directory did not say when this person authenticated" | Your OpenID Connect provider returned no `auth_time` | See [Choose how people sign in](choose-sign-in.md). On Entra ID, add `auth_time` as an optional claim. Nothing in the deployment changes. |
-| You sign in but see no **Admin** button at the top right | You are not in the administrators' group, or it was misspelt | See [Recover administration](recover-administration.md). |
+| You sign in but see no gear (**Settings**) at the top right | You are not in the administrators' group, or it was misspelt | See [Recover administration](recover-administration.md). |
 | The only administrator lost their password | Nobody else can sign in to reset it | See [Reset a lost password](reset-a-lost-password.md). |
 
 ## From the CLI, after installing
