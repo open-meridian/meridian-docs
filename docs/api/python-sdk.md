@@ -12,7 +12,7 @@ pip install open-meridian
 |---|---|
 | PyPI name | `open-meridian` |
 | Import name | `meridian` |
-| Version | 0.6.0 |
+| Version | 0.6.1 |
 | Python | 3.11 or newer |
 | Dependencies | `grpcio>=1.68,<2`, `protobuf>=5.28,<7` |
 | Licence | Apache-2.0 |
@@ -20,7 +20,7 @@ pip install open-meridian
 !!! warning "Not `meridian-sdk`"
     The PyPI package `meridian-sdk` belongs to an unrelated company. Don't install it.
 
-A plugin pins the SDK exactly, `open-meridian==0.6.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. See [Plugin manifest](plugin-manifest.md).
+A plugin pins the SDK exactly, `open-meridian==0.6.1`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. See [Plugin manifest](plugin-manifest.md).
 
 The package includes the wire bindings it speaks to the sidecar with, as `meridian.v1` and `meridian.plugin.v1`.
 
@@ -54,8 +54,11 @@ asyncio.run(main())
 |---|---|---|
 | `connect` | async function | [`meridian.connect`](#connect) |
 | `Plugin` | class | [`Plugin`](#plugin) |
-| `Identity`, `Grants`, `Interface`, `Setting`, `Settings`, `AccountScope`, `Caller` | frozen dataclasses | [Types](#types) |
+| `Identity`, `Grants`, `Interface`, `Page`, `Setting`, `Choice`, `AppliesWhen`, `Settings`, `AccountScope`, `Caller` | frozen dataclasses | [Types](#types) |
+| `Money` | frozen dataclass | [Typed operations](typed-operations.md#money) |
+| `as_decimal`, `as_money` | functions | [Typed operations](typed-operations.md#numbers-and-amounts) |
 | `Identifier`, `MissReason` | generated protobuf message and enum | [Types](#types) |
+| `ExternalAccount`, `HoldingSide`, `SyncState` | generated protobuf message and enums | [Typed operations](typed-operations.md#types) |
 | `CallerMiddleware` | ASGI middleware | [`CallerMiddleware`](#callermiddleware) |
 | `MeridianError`, `Refused`, `NoSidecar`, `NotRegistered`, `NotGranted`, `CallFailed` | exceptions | [Exceptions](#exceptions) |
 | `DEFAULT_ADDRESS` | `str` | `"127.0.0.1:9191"`, where a sidecar listens |
@@ -94,7 +97,8 @@ The contract version it sends is `SCHEMA_VERSION`. A mismatch is refused at regi
 |---|---|
 | `NoSidecar` | No sidecar answered within `wait` seconds. |
 | `Refused` | The sidecar answered and declined to admit the plugin. Its `reason` says why. Not retried. |
-| `TypeError` | A `Setting`'s `kind` is not `str`, `int` or `bool`. |
+| `TypeError` | A `Setting`'s `kind` is not `str`, `int` or `bool`; it has `choices` and a `kind` other than `str`; or its `default` is not of its `kind`. |
+| `ValueError` | A secret `Setting` declares a `default`; a `default` is not one of its `choices`; or an admin `Page`'s path does not begin with `/`. |
 | `grpc.aio.AioRpcError` | Any other gRPC failure during registration, unchanged. |
 
 When run by the development runner on a development deployment, `connect` also records the `ready` event once the plugin is admitted. See [`plugin dev` events](plugin-dev-events.md).
@@ -121,7 +125,7 @@ Built by `connect`. It is an async context manager: leaving the `async with` blo
 | `access()` | `Awaitable[PluginAccessReply]` | Who may use this plugin. |
 | `report(*, healthy, detail="")` | `Awaitable[None]` | Report liveness once, outside the heartbeat. |
 | `leave(reason="")` | `Awaitable[None]` | Say the plugin is stopping, and close the connection. |
-| Typed operations | see [Typed operations](typed-operations.md) | `report_sync_status`, `record_holdings_statement`, `record_holding`, `resolve_identifier`, `report_missing_instrument`. |
+| Typed operations | see [Typed operations](typed-operations.md) | `report_external_accounts`, `report_sync_status`, `record_holdings_statement`, `record_holding`, `resolve_identifier`, `report_missing_instrument`, `read_accounts_for_linking`, `link_external_account`. |
 
 Every method raises `NotRegistered` once the plugin has left.
 
@@ -131,7 +135,7 @@ Every method raises `NotRegistered` once the plugin has left.
 async def settings(self) -> AsyncIterator[Settings]
 ```
 
-Yields the plugin's settings as the deployment holds them, typed by what it declared at `connect`, first as they are now and then on every change. Values for names the plugin did not declare are left out. A value that does not parse as its declared kind raises `ValueError` rather than being guessed at. A boolean accepts `true`, `yes`, `1`, `on`, `false`, `no`, `0` and `off`, in any case.
+Yields the plugin's settings as the deployment holds them, typed by what it declared at `connect`, first as they are now and then on every change. Values for names the plugin did not declare are left out. A setting that declares a `default` and has no value holds its default, so the plugin uses what the form showed. A value that does not parse as its declared kind raises `ValueError` rather than being guessed at. A boolean accepts `true`, `yes`, `1`, `on`, `false`, `no`, `0` and `off`, in any case.
 
 ```python
 async for current in plugin.settings():
@@ -149,7 +153,7 @@ While a required setting has no value, the sidecar reports the plugin unhealthy 
 async def account_scope(self) -> AsyncIterator[AccountScope]
 ```
 
-Yields the plugin's account scope, now and again on every change. The scope is derived from permissions and never declared. A plugin reads its whole read scope as itself and serves each person only what their access allows. The sidecar refuses a write outside `write`, whoever it is for.
+Yields the plugin's account scope, now and again on every change. The scope is derived from permissions and from the plugin's links to accounts, and never declared: see [Accounts](../concepts/accounts.md#how-accounts-bound-a-plugin). A plugin reads its whole read scope as itself and serves each person only what their access allows. The sidecar refuses a write outside `write`, whoever it is for.
 
 #### `access()`
 
@@ -205,10 +209,26 @@ All the dataclasses are frozen.
 
 A page the plugin serves to people, on loopback. Only the plugin's sidecar reaches it, forwarding requests the dashboard vouched for.
 
+| Field | Type | Default | Meaning |
+|---|---|---|---|
+| `port` | `int` | | The loopback port the page listens on. |
+| `title` | `str` | | The page's title. |
+| `admin_pages` | `tuple[Page, ...]` | `()` | Pages for deployment admins, shown as tabs in the dashboard's admin view of the instance, in order, each framing its path. Serve them to a caller whose `deployment_admin` is `True`, and to nobody else. |
+
+### `Page`
+
+One of the plugin's pages, at a path on its own host.
+
 | Field | Type | Meaning |
 |---|---|---|
-| `port` | `int` | The loopback port the page listens on. |
-| `title` | `str` | The page's title. |
+| `path` | `str` | The path, beginning with `/`. Anything else raises `ValueError` at `connect`. |
+| `title` | `str` | The tab's title. |
+
+```python
+interface = meridian.Interface(
+    port=8000, title="Holdings", admin_pages=(meridian.Page("/admin/accounts", "Accounts"),),
+)
+```
 
 ### `Setting`
 
@@ -221,6 +241,12 @@ One setting the plugin needs, declared at `connect`.
 | `required` | `bool` | `False` | Whether the plugin needs a value to be healthy. |
 | `secret` | `bool` | `False` | A secret is set through the dashboard and never read back, displayed, logged, reported or bundled. The plugin receives it in `Settings` and nowhere else. |
 | `description` | `str` | `""` | What the setting is, sent with its declaration. |
+| `label` | `str` | `""` | The field's name on the dashboard's form. |
+| `default` | `str`, `int`, `bool` or `None` | `None` | Shown greyed in the empty field, and held in `Settings.values` while the setting is unset. Of the setting's `kind`, one of its `choices` if it has any, and never on a secret. |
+| `unit` | `str` | `""` | Shown beside a number. |
+| `choices` | `tuple[Choice, ...]` | `()` | Makes the setting a choice, one of these, shown as radio buttons. Its `kind` must be `str`. |
+| `applies_when` | `AppliesWhen` or `None` | `None` | The setting applies only while another holds one of some values. |
+| `developer` | `bool` | `False` | Shown only on a development deployment. |
 
 ```python
 plugin = await meridian.connect(
@@ -232,19 +258,53 @@ plugin = await meridian.connect(
 )
 ```
 
+### `Choice`
+
+One option of a setting that is a choice.
+
+| Field | Type | Default | Meaning |
+|---|---|---|---|
+| `value` | `str` | | The value the plugin receives. |
+| `label` | `str` | `""` | What the form shows for it. |
+| `description` | `str` | `""` | A line under it. |
+
+### `AppliesWhen`
+
+| Field | Type | Meaning |
+|---|---|---|
+| `setting` | `str` | Another setting, declared before this one. |
+| `one_of` | `tuple[str, ...]` | The values of it for which this setting applies. Only then does the form show it, and ask for it when it is required. |
+
+```python
+plugin = await meridian.connect(
+    settings=[
+        meridian.Setting(
+            "environment",
+            label="Environment",
+            default="sandbox",
+            choices=(meridian.Choice("sandbox", "Sandbox"), meridian.Choice("live", "Live")),
+        ),
+        meridian.Setting(
+            "live_account", label="Live account", required=True,
+            applies_when=meridian.AppliesWhen("environment", ("live",)),
+        ),
+    ],
+)
+```
+
 ### `Settings`
 
 | Field | Type | Meaning |
 |---|---|---|
-| `values` | `dict` of `str` to `str`, `int` or `bool` | Each declared setting the deployment holds a value for, typed by its declaration. |
+| `values` | `dict` of `str` to `str`, `int` or `bool` | Each declared setting the deployment holds a value for, typed by its declaration, and the `default` of each that has one and no value. |
 | `missing_required` | `tuple[str, ...]` | Required settings with no value yet. |
 
 ### `AccountScope`
 
 | Field | Type | Default | Meaning |
 |---|---|---|---|
-| `read` | `frozenset[str]` | empty | Every account anybody may read through this plugin. |
-| `write` | `frozenset[str]` | empty | Every account anybody may write through this plugin. |
+| `read` | `frozenset[str]` | empty | Every account anybody may read through this plugin, and every account one of its external accounts is linked to. |
+| `write` | `frozenset[str]` | empty | Every open account anybody may write through this plugin, and every open account one of its external accounts is linked to. |
 
 ### `Caller`
 
@@ -257,6 +317,7 @@ Who a request for the plugin's page came from, as the dashboard vouched and the 
 | `read` | `frozenset[str]` | The accounts this plugin may show them. |
 | `write` | `frozenset[str]` | The accounts this plugin may act on for them. Every one is also in `read`. |
 | `header` | `str` | The `Meridian-Caller` header as received. Pass it as `acting_for` on a typed command to send the command for this person. |
+| `deployment_admin` | `bool` | Whether the person is a deployment admin. A plugin serves its admin pages to them and to nobody else. |
 | `Caller.from_header(header: str) -> Caller` | classmethod | Decode a `Meridian-Caller` header: base64url, unpadded. |
 | `may_read(account_id: str) -> bool` | method | Whether they may read the account through this plugin: `account_id in read`. |
 | `may_write(account_id: str) -> bool` | method | Whether they may write the account through this plugin: `account_id in write`. |

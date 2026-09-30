@@ -137,8 +137,10 @@ Launches:
 
 ## 7. Open its page
 
-In the dashboard, the home page lists **Plugins**. Choose `my-plugin`. Its page opens on its own
-name, `http://my-plugin.plugins.meridian.localhost/`.
+In the dashboard, the home page, **Your plugins**, lists it. Choose `my-plugin`. Its page opens
+inside the dashboard, at `http://meridian.localhost/plugins/my-plugin`, served from its own name,
+`http://my-plugin.plugins.meridian.localhost/`. The breadcrumb reads **Plugins /** and the plugin's
+name; the arrow beside the name opens the page in a window of its own.
 
 The page shows who you are signed in as and a table headed **What you may see here**. It is empty
 because nobody has been granted any part of this plugin yet.

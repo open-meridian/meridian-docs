@@ -453,9 +453,15 @@ async def record_demo_statement(plugin: meridian.Plugin) -> None:
             observed_at_ns=now,
         )
 
-        # W3.1: which instrument this identifier means, if the deployment knows.
+        # W3.1: which instrument this identifier means. When nothing matches,
+        # the deployment answers its placeholder for it; only an ambiguous
+        # match is a miss.
         symbol = meridian.Identifier(scheme="symbol", value="ACME", source=SOURCE)
         resolved = await plugin.resolve_identifier(identifiers=[symbol], as_of_ns=now)
+        if resolved.found:
+            log.info(
+                "ACME is %s (placeholder: %s)", resolved.instrument_id, resolved.placeholder
+            )
 
         # W2.2: open one statement, saying how many rows will follow.
         opened = await plugin.record_holdings_statement(
@@ -471,8 +477,9 @@ async def record_demo_statement(plugin: meridian.Plugin) -> None:
             opened.already_recorded,
         )
 
-        # W2.3: one row. Resolved, it names the instrument. Unresolved, it
-        # carries what we held, and is recorded rather than dropped.
+        # W2.3: one row. Resolved, it names the instrument or the placeholder.
+        # Ambiguous, it carries what we held, and is recorded rather than
+        # dropped.
         row = await plugin.record_holding(
             statement_id=opened.statement_id,
             instrument_id=resolved.instrument_id if resolved.found else "",
@@ -532,17 +539,26 @@ Expected output:
 … INFO holdings_demo: may publish …; may subscribe …
 … INFO holdings_demo: serving its page on 127.0.0.1:8000
 … INFO holdings_demo: reported DEMO-ACCT-1, DEMO-ACCT-2
+… INFO holdings_demo: ACME is LCL-… (placeholder: True)
 … INFO holdings_demo: opened statement STMT-… (already recorded: False)
-… INFO holdings_demo: recorded holding … (resolved: False)
+… INFO holdings_demo: recorded holding HLD-… (resolved: True)
 ```
 
 What happened:
 
 - The statement was opened and given an id by the deployment.
 - The row was recorded against `Demo brokerage account`, which `DEMO-ACCT-1` is linked to.
-- `resolved: False` because the deployment does not know an instrument for the symbol `ACME`. The
-  row is kept as **unresolved**, with the identifier the plugin held. It updates no position, since
-  there is none until the deployment knows what is held.
+- The deployment knows no instrument for the symbol `ACME`, so it answered its **placeholder** for
+  it: an identifier beginning `LCL-`, made the first time anyone asked about `ACME` from this source
+  and answered every time after. The deployment reports the miss to the platform itself; the plugin
+  has nothing more to do.
+- `resolved: True` because the row names an instrument, the placeholder, and so it updates a
+  custodial position under it. When the platform's `INS-` identifier replaces the placeholder, the
+  position moves onto it.
+- Had more than one instrument matched `ACME`, the answer would have been a miss, not a pick. The
+  row would then carry the identifier it held instead, be recorded as unresolved, with
+  `resolved: False`, and update no position. See
+  [`resolve_identifier`](../api/typed-operations.md#resolve_identifier).
 - One row arrived of one expected, so the street store closed the statement.
 
 ## 12. See the rules work
@@ -597,7 +613,8 @@ do not want them. This page offers no way to remove a link: a page does it by se
   each form carries a token.
 - An external account must be linked to one of the firm's accounts before rows for it are accepted,
   and the link is the plugin's right to write that account.
-- A statement says how many rows follow; an unresolved row is recorded, never dropped.
+- A statement says how many rows follow. An instrument nobody knows is answered with the
+  deployment's placeholder, and an ambiguous one is recorded unresolved; a row is never dropped.
 - Refusals come back as `MeridianError` with the deployment's own reason.
 
 ## Next steps
