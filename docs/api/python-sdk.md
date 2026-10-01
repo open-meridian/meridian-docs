@@ -12,7 +12,7 @@ pip install open-meridian
 |---|---|
 | PyPI name | `open-meridian` |
 | Import name | `meridian` |
-| Version | 0.10.1 |
+| Version | 0.11.0 |
 | Python | 3.11 or newer |
 | Dependencies | `grpcio>=1.68,<2`, `protobuf>=5.28,<7`, `jinja2>=3.1,<4` (from 0.10.0, for [pages](#pages)) |
 | Licence | Apache-2.0 |
@@ -20,7 +20,7 @@ pip install open-meridian
 !!! warning "Not `meridian-sdk`"
     The PyPI package `meridian-sdk` belongs to an unrelated company. Don't install it.
 
-A plugin pins the SDK exactly, `open-meridian==0.10.1`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.10.1`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls. See [Plugin manifest](plugin-manifest.md).
+A plugin pins the SDK exactly, `open-meridian==0.11.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.11.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls. See [Plugin manifest](plugin-manifest.md).
 
 | Optional extra | Installs | For |
 |---|---|---|
@@ -64,13 +64,14 @@ A plugin that serves pages declares them with [`meridian.Pages`](#pages) and pas
 | `Money` | frozen dataclass | [Typed operations](typed-operations.md#money) |
 | `as_decimal`, `as_money` | functions | [Typed operations](typed-operations.md#numbers-and-amounts) |
 | `Identifier`, `MissReason` | generated protobuf message and enum | [Types](#types) |
+| `Figure`, `FigureState` | frozen dataclass, generated protobuf enum | [Figures](#figures) |
 | `AssetClass`, `ExternalAccount`, `HoldingSide`, `SyncState` | generated protobuf enums and message | [Typed operations](typed-operations.md#types) |
 | `CallerMiddleware` | ASGI middleware | [`CallerMiddleware`](#callermiddleware) |
 | `MeridianError`, `Refused`, `NoSidecar`, `NotRegistered`, `NotGranted`, `CallFailed`, `NotLinked` | exceptions | [Exceptions](#exceptions) |
 | `DEFAULT_ADDRESS` | `str` | `"127.0.0.1:9191"`, where a sidecar listens |
-| `SCHEMA_VERSION` | `str` | the contract version sent at registration: `"v5"` from 0.10.0, `"v4"` in 0.9.0, `"v3"` in 0.8.0, `"v2"` before |
+| `SCHEMA_VERSION` | `str` | the contract version sent at registration: `"v6"` from 0.11.0, `"v5"` in 0.10.0 and 0.10.1, `"v4"` in 0.9.0, `"v3"` in 0.8.0, `"v2"` before |
 
-The module `meridian.testing` holds [`PageClient`](#testing), for a plugin's own tests.
+The module `meridian.testing` holds [`PageClient`](#testing) and [`heartbeat`](#testing), for a plugin's own tests.
 
 ## `meridian.connect` { #connect }
 
@@ -91,13 +92,13 @@ Registers with the sidecar and returns the admitted plugin. A `Plugin` you hold 
 | Parameter | Type | Default | Meaning |
 |---|---|---|---|
 | `address` | `str` or `None` | `None` | The sidecar's address. When `None`, the value of `MERIDIAN_SIDECAR_ADDRESS`, then `127.0.0.1:9191`. No other configuration is read. |
-| `heartbeat` | `bool` | `True` | Send a liveness heartbeat to the sidecar every 5 seconds in the background. |
+| `heartbeat` | `bool` | `True` | Send a liveness heartbeat to the sidecar every 5 seconds in the background, carrying the health last reported and the plugin's [figures](#figures). |
 | `wait` | `float` | `60.0` | Seconds to wait for a sidecar that is not answering yet. A plugin and its sidecar start together in one pod, in no promised order. |
 | `interface` | `Interface` or `None` | `None` | The pages the plugin serves on loopback, if any. |
 | `settings` | sequence of `Setting` | `()` | The settings the plugin needs an admin of it to give it. |
 | `reads_external_accounts` | `bool` | `False` | `True` when the plugin reads accounts at an external source and names them by that source's identifiers. An admin of the plugin links those to accounts, and the sidecar translates them on the way in. |
 
-The contract version it sends is `SCHEMA_VERSION`, `"v5"` from 0.10.0. A sidecar accepts a range of versions, today v2 through v5: a plugin built for an older version it still supports registers, and one built for a newer version than the sidecar knows is refused at registration, naming both, rather than running without what it was built for. After an upgrade, relaunch plugins so they get the newer sidecar (`meridian upgrade-deployment` names the ones that need it).
+The contract version it sends is `SCHEMA_VERSION`, `"v6"` from 0.11.0. A sidecar accepts a range of versions, today v2 through v6: a plugin built for an older version it still supports registers, and one built for a newer version than the sidecar knows is refused at registration, naming both, rather than running without what it was built for. After an upgrade, relaunch plugins so they get the newer sidecar (`meridian upgrade-deployment` names the ones that need it).
 
 **Raises:**
 
@@ -121,6 +122,7 @@ Built by `connect`. It is an async context manager: leaving the `async with` blo
 |---|---|---|
 | `identity` | `Identity` | Who the plugin was launched to be: instance, roles, deployment. Read from the registration reply, never sent by the plugin. |
 | `grants` | `Grants` | What the deployment allowed, as the topic patterns it allowed them as. |
+| `figures` | sequence of `Figure` | The figures the plugin reports on its Summary, as last set. Set it to report a new list. From 0.11.0; see [Figures](#figures). |
 
 `grants` is for failing early with a good message, at startup, rather than at the first refused operation. The sidecar refuses independently of what the plugin believes, and the SDK offers no "is this allowed" check.
 
@@ -131,7 +133,7 @@ Built by `connect`. It is an async context manager: leaving the `async with` blo
 | `settings()` | `AsyncIterator[Settings]` | The settings the plugin declared, now and again on every change. |
 | `account_scope()` | `AsyncIterator[AccountScope]` | Every account anybody may read or write through this plugin, and the plugin's own links, now and again on every change. |
 | `access()` | `Awaitable[PluginAccessReply]` | Who may use this plugin. |
-| `report(*, healthy, detail="")` | `Awaitable[None]` | Report liveness once, outside the heartbeat. |
+| `report(*, healthy, detail="", figures=None)` | `Awaitable[None]` | Report the plugin's health now, outside the heartbeat. It stands until reported again. |
 | `leave(reason="")` | `Awaitable[None]` | Say the plugin is stopping, and close the connection. |
 | Typed operations | see [Typed operations](typed-operations.md) | `report_external_accounts`, `report_sync_status`, `record_holdings_statement`, `record_holding`, `resolve_identifier`, `report_missing_instrument`, `read_accounts_for_linking`, `link_external_account`. |
 
@@ -191,10 +193,14 @@ The account sets are this plugin's: what the group or person may read through it
 #### `report()`
 
 ```python
-async def report(self, *, healthy: bool, detail: str = "") -> None
+async def report(self, *, healthy: bool, detail: str = "", figures: Sequence[Figure] | None = None) -> None
 ```
 
-Reports liveness once, straight away. Ordinary liveness is already handled by the heartbeat. This is for a plugin that knows it is unwell and should say so before the next heartbeat.
+Reports the plugin's health straight away. Ordinary liveness is already handled by the heartbeat. This is for a plugin that knows it is unwell and should say so.
+
+From 0.11.0 the health reported stands, with its `detail`, on every heartbeat after, until the plugin reports again: `report(healthy=False, detail="...")` keeps it not healthy until `report(healthy=True)`. Up to 0.10.1 the next heartbeat said healthy again.
+
+It carries the plugin's [figures](#figures) as they stand. `figures`, from 0.11.0, sets them first, as setting `plugin.figures` does, and sends them now. Figures refused raise as setting them does, leave the health as it was, and send nothing.
 
 #### `leave()`
 
@@ -203,6 +209,59 @@ async def leave(self, reason: str = "") -> None
 ```
 
 Stops the heartbeat, tells the sidecar the plugin is stopping, and closes the channel. It does nothing when called a second time. A sidecar that is already gone is ignored. Saying so is what tells a planned stop apart from a failure. A crash skips it, which is why it is optional.
+
+## Figures { #figures }
+
+From 0.11.0. Manage opens on the plugin's **Summary**, which core draws: its status first (its health and why, the version running and the contract it registered with), then a few figures the plugin reports about its own work, each a tile. A plugin gives them on its heartbeat and builds no summary page of its own. See [Manage, Open and View](../concepts/plugins.md#manage-open-and-view).
+
+```python
+from datetime import datetime, timezone
+import meridian
+
+plugin.figures = [
+    meridian.Figure("Connections", 3, state="warn",
+                    why="1 connection needs attention: the brokerage asked to reconnect"),
+    meridian.Figure("Accounts reached", 7),
+    meridian.Figure("Last read", datetime.now(timezone.utc)),
+]
+```
+
+The list goes on every heartbeat from the next on, in its order, each heartbeat replacing the last; an empty list clears it. `await plugin.report(healthy=True, figures=[...])` sends it at once. A figure is about the plugin's own work: it names no account and carries none of an account's data, since Manage shows none. Report figures only where the plugin has work worth counting.
+
+### `Figure`
+
+```python
+@dataclass(frozen=True)
+class Figure:
+    label: str
+    value: int | Decimal | str | datetime
+    as_of: datetime | None = None
+    state: str | int | None = None
+    why: str | None = None
+```
+
+| Field | Meaning |
+|---|---|
+| `label` | As a person reads it, `"Connections"`. 1 to 40 characters, and given once in the list. |
+| `value` | What kind of figure it is: an `int` is a count, a `Decimal` a decimal, a `str` a text, at most 40 characters, and a timezone-aware `datetime` a time, such as `"Last read"`. Always given. |
+| `as_of` | When the value was true, where that is not the heartbeat's moment. A timezone-aware `datetime`. |
+| `state` | The tile's mark: `"ok"`, `"warn"` or `"error"`, or a `meridian.FigureState`. `None` is no state, drawn plain. |
+| `why` | The note beside the tile. At most 200 characters. |
+
+A decimal is carried exactly, as [typed operations](typed-operations.md#numbers-and-amounts) carry one: at most 18 decimal places and 38 digits, refused rather than rounded. Core writes a time as the dashboard writes every moment.
+
+### Bounds
+
+At most 8 figures; a label of 1 to 40 characters, given once; a text of at most 40; a why of at most 200; a state of ok, warn or error; a value always given; a decimal within what the wire carries. Anything past a bound is refused, never cut, at the line that sets the list, in the words the sidecar would refuse it with, and nothing is set: the last list stands.
+
+| Raises | When |
+|---|---|
+| `ValueError` | A bound is broken, for example `9 figures; a plugin reports at most 8`, `figures[0].label is 44 characters; a label is at most 40`, or `figures[0].state is 'amber', which the contract does not define`. |
+| `TypeError` | A value is none of a figure's kinds, a `datetime` has no timezone, or one `Figure` is given where a list is. |
+
+The sidecar checks them again. A heartbeat it refuses still says the plugin is alive; the plugin is then reported not healthy, the refusal as its why, with no figures. Core draws no figures for a plugin that is not registered or has fallen silent, since they would be stale; its status says why.
+
+In a plugin's tests, [`meridian.testing.heartbeat`](#testing) is the heartbeat its sidecar receives, or the refusal.
 
 ## Types
 
@@ -559,6 +618,8 @@ client.assert_no_account_data("AAPL", "125", "12,500.00")  # what the stand-in h
 | `caller(level, *, deployment_admin=None)` | The client's person, as a `Caller` in a session at `level`: a deployment admin as the client was made, unless `deployment_admin` says (from 0.10.1). |
 | `every_page()` | Each declared page, in order, under Manage, Open and View: a list of `Rendered`, each with `page`, `level` and `response`, 200 where the page serves the level and 403 where it does not. |
 | `assert_no_account_data(*held)` | Fails, naming the page and what it showed, when under Manage a page at `admin` does not answer 200, any other page does not answer 403, or a page at `admin` shows any of `held`, as given or as a template escapes it. `held` is the account data the test put where the plugin reads it: holdings, quantities, values, balances, a statement's rows. Called with nothing to look for, it raises `ValueError`. |
+
+`meridian.testing.heartbeat(*, healthy=True, detail="", figures=())`, from 0.11.0, is the heartbeat a plugin's sidecar receives from a plugin reporting these: its figures as the wire carries them, in the plugin's order. It raises as setting `plugin.figures` does, so a test of the figures a plugin computes asserts on it, or on the refusal. See [Figures](#figures).
 
 `meridian.testing.caller_header(level, *, read=(), write=(), subject=..., display_name=..., deployment_admin=False)` makes the header alone, for a test that serves the pages another way. It is unsigned: only a plugin's tests read it, never a sidecar.
 

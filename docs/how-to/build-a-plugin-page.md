@@ -28,6 +28,10 @@ Decide each page's levels by what it shows:
 - **Daily work is a page at `write` and `read`**, one path for both. It shows every account the
   person may read (`caller.read`), and offers actions only under Open (`level == "write"`), on the
   accounts in `caller.write`.
+- **A summary is not a page.** Manage opens on the plugin's **Summary**, which the dashboard draws:
+  its status, then the figures the plugin reports about its own work, each a tile. Report a few
+  there, on the heartbeat, rather than building tiles of your own, and only where the plugin has
+  work worth counting. See [Figures](../api/python-sdk.md#figures).
 
 In Python, from SDK 0.10.0, a page is a view function and a template, declared where the view is
 with [`meridian.Pages`](../api/python-sdk.md#pages):
@@ -440,11 +444,12 @@ Kit 0.3.0 also fits the rest of a page to a phone, with nothing to do but use it
 
 The dashboard shows every page of a plugin in the plugin's **area**, at `/plugins/<instance>`,
 reached from the home by **Manage**, **Open** or **View**: the plugin's name, the session's level,
-and one tab row holding the pages declared at that level, each page in a frame. The frame stays,
-because it keeps the plugin's script on the plugin's own origin, away from the person's dashboard
-session. From kit 0.2.0 it is **seamless**: it has no border and no scrollbar of its own, it is as
-tall as the page's content, and the dashboard's heading and tab row are the only ones. It is the
-same frame, on the same template, under each of the three buttons.
+and one tab row holding the pages declared at that level, after the dashboard's own **Summary** and
+**Settings** under Manage, each page in a frame. The frame stays, because it keeps the plugin's
+script on the plugin's own origin, away from the person's dashboard session. From kit 0.2.0 it is
+**seamless**: it has no border and no scrollbar of its own, it is as tall as the page's content, and
+the dashboard's heading and tab row are the only ones. It is the same frame, on the same template,
+under each of the three buttons.
 
 The dashboard tells the page it is framed, and the kit does the page's half with no code. A framed
 page:

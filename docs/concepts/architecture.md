@@ -133,7 +133,7 @@ changing.
 - Positions, holdings and statements.
 - Your accounts, user groups, account groups, access groups and permissions.
 - Who has signed in, and your directory's people and groups.
-- Plugin settings and plugins' own data.
+- Plugin settings, the figures plugins report, and plugins' own data.
 - Passwords, of any kind.
 - The deployment's private key. It is generated in your cluster and never
   leaves the conductor's volume.

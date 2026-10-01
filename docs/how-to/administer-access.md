@@ -155,10 +155,11 @@ it to **All plugins (admin)** as well.
 2. Grant it to a user group they are in: on **None** for admin alone, or on an account group for a
    data level beside it.
 
-They find the plugin on their home with **Manage**, which opens its pages at `admin`. Its settings
-are in the dashboard's admin view of the plugin, at `/admin/plugins/<instance>`, which shows them the
-tabs **Overview**, **Settings** and **Access**; they read **Access** and change nothing there, since
-only a deployment admin grants.
+They find the plugin on their home with **Manage**, which opens on its **Summary**, its status and
+the figures it reports, with its **Settings** and its pages at `admin` after it. Its settings are
+also in the dashboard's admin view of the plugin, at `/admin/plugins/<instance>`, which shows them
+the tabs **Overview**, **Settings** and **Access**; they read **Access** and change nothing there,
+since only a deployment admin grants.
 
 To make every plugin's admins one group, grant **All plugins (admin)** on **None**. To keep
 configuring plugins apart from administering the deployment, withdraw the permission first run made

@@ -4,7 +4,7 @@
 
 Nothing in a cloud install depends on it. A marketplace listing's form and the deployment's own wizard are the whole path there; `meridian` makes the same things convenient from a terminal.
 
-This page describes release 0.1.22 of the command line. `meridian --version` says which one you have. For installing it, see [Install a deployment](../getting-started/installation.md).
+This page describes release 0.1.23 of the command line. `meridian --version` says which one you have. For installing it, see [Install a deployment](../getting-started/installation.md).
 
 ## Synopsis
 
@@ -282,7 +282,7 @@ If the deployment can't be reached, the session is still forgotten here and laps
 meridian plugin new <name> [--into <dir>]
 ```
 
-Writes a working plugin to start from: the Python SDK's reference plugin, renamed to `<name>`. It needs no network, because the template is compiled into the binary. It writes the plugin's code and its pages, each a view function and a Jinja2 template declared with the levels it serves (a **Setup** page under Manage, at `admin`, and an **Accounts** page under Open and View, at `write` and `read`), its tests (`tests/test_page.py`), a `Dockerfile`, `pyproject.toml`, `.dockerignore`, `.gitignore`, `README.md`, `AGENTS.md`, `CLAUDE.md`, a `develop-live` skill for Claude Code, and a CI workflow that runs `meridian plugin check --run-tests` (`.github/workflows/check.yaml`), then prints the next steps. From CLI 0.1.22 the plugin pins SDK 0.10.1, and needs a deployment whose sidecar accepts contract v5 (0.1.20 pinned 0.9.0, 0.1.18 and 0.1.19 pinned 0.7.1, and 0.1.16 and 0.1.17 pinned 0.6.1). See [Your first plugin](../getting-started/first-plugin.md).
+Writes a working plugin to start from: the Python SDK's reference plugin, renamed to `<name>`. It needs no network, because the template is compiled into the binary. It writes the plugin's code and its pages, each a view function and a Jinja2 template declared with the levels it serves (a **Setup** page under Manage, at `admin`, and an **Accounts** page under Open and View, at `write` and `read`), its tests (`tests/test_page.py`), a `Dockerfile`, `pyproject.toml`, `.dockerignore`, `.gitignore`, `README.md`, `AGENTS.md`, `CLAUDE.md`, a `develop-live` skill for Claude Code, and a CI workflow that runs `meridian plugin check --run-tests` (`.github/workflows/check.yaml`), then prints the next steps. From CLI 0.1.23 the plugin pins SDK 0.11.0, and needs a deployment whose sidecar accepts contract v6 (0.1.22 pinned 0.10.1, 0.1.21 pinned 0.10.0, 0.1.20 pinned 0.9.0, 0.1.18 and 0.1.19 pinned 0.7.1, and 0.1.16 and 0.1.17 pinned 0.6.1). See [Your first plugin](../getting-started/first-plugin.md).
 
 `<name>` must be lowercase letters, digits and single hyphens, starting with a letter. It becomes the package name, and, with hyphens as underscores, the module name.
 
@@ -438,6 +438,7 @@ The rewrites keep a file's formatting and comments wherever they change nothing.
 | 0.8.0 to 0.9.0: the SDK declares contract v4, and the asset class a plugin reports with a miss is an enum | `report_missing_instrument`'s `asset_class`, a string naming one of the seven classes in another case or with its prefix (`"EQUITY"`, `"asset_class_cash"`), to the class's spelling (`"equity"`, `"cash"`) (`asset-class-spelling`) | an `asset_class` string naming no class, such as `"etf"` (`asset-class-unknown`); one the migration cannot read, such as a variable (`asset-class-computed`) |
 | 0.9.0 to 0.10.0: the SDK declares contract v5; pages carry their levels, and a session the level it was opened at | `Interface(admin_pages=...)` to `pages=` (`admin-pages-keyword`); a `Page(path, title)` naming no levels to `Page(path, title, levels=["admin"])` (`page-at-admin`) | `caller.deployment_admin` read to decide who is served, which opens no page since contract v5: declare the page at `admin` or ask `caller.admin` (`deployment-admin-gate`); `admin_pages` read as an attribute (`admin-pages-read`); admin pages passed as `Interface`'s third argument (`admin-pages-positional`) |
 | 0.10.0 to 0.10.1: pages answer HEAD and refuse a large body; `assert_no_account_data` looks for account data, not identities | Nothing: only the pins move | |
+| 0.10.1 to 0.11.0: the SDK declares contract v6; a plugin may report figures on its Summary, and a reported health stands until it is reported again | Nothing: only the pins move | |
 
 `plugin migrate` adds two rules of its own: `pin-elsewhere`, for the old release still named in another file (a Makefile's base image, a workflow, a README), which it reports rather than moves because some of those are history; and `unreadable`, for a file that is not UTF-8, or that a step could not read as Python, which it leaves as it was.
 
@@ -446,7 +447,7 @@ The rewrites keep a file's formatting and comments wherever they change nothing.
 In text, the pins it moved, each step with the files it rewrote and how many places each rule did, what is left by hand with what to write instead, and then the check's own report:
 
 ```text
-meridian plugin migrate: ., open-meridian 0.5.0 to 0.7.0, the steps run in ghcr.io/open-meridian/plugin-python:0.10.1
+meridian plugin migrate: ., open-meridian 0.5.0 to 0.7.0, the steps run in ghcr.io/open-meridian/plugin-python:0.11.0
 
   pins  pyproject.toml:10     open-meridian==0.5.0 -> open-meridian==0.7.0
         Dockerfile:2          ghcr.io/open-meridian/plugin-python:0.5.0 -> ghcr.io/open-meridian/plugin-python:0.7.0
@@ -476,7 +477,7 @@ With `--json`, one object. `image` is `null` when the plugin was on its target a
 ```json
 {
   "dir": ".", "meridian": "0.1.18", "sdk": "open-meridian",
-  "from": "0.5.0", "to": "0.7.0", "image": "ghcr.io/open-meridian/plugin-python:0.10.1",
+  "from": "0.5.0", "to": "0.7.0", "image": "ghcr.io/open-meridian/plugin-python:0.11.0",
   "done": false,
   "pins": [{"file": "pyproject.toml", "line": 10, "from": "open-meridian==0.5.0", "to": "open-meridian==0.7.0"}, …],
   "steps": [{"from": "0.5.0", "to": "0.6.0", "summary": "…", "breaking": true,

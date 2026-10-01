@@ -211,7 +211,7 @@ level on, `admin` included, with a button for each level held:
 
 | Button | Level | What it opens |
 |---|---|---|
-| **Manage** | `admin` | The plugin's pages at `admin`: its configuration, such as connections and account links. No account's data |
+| **Manage** | `admin` | Its **Summary** and **Settings**, and the plugin's pages at `admin`: its configuration, such as connections and account links. No account's data |
 | **Open** | `write` | Its pages at `write`, acting on the accounts the person may write |
 | **View** | `read` | Its pages at `read`, read-only. A writer is offered View too |
 
@@ -221,6 +221,25 @@ the pages the plugin declared at that level, in the order declared, with the
 page asked for in a seamless frame below. A person holding more than one
 level switches between them there, as on the home. A plugin that declares no
 page at `write` or `read` has one there, its `/`.
+
+Under Manage the dashboard draws two tabs of its own before the plugin's, and
+Manage opens on the first:
+
+- **Summary**: the plugin's status, which is core's to say (its health and
+  why, the version running and the contract it registered with), then the
+  figures the plugin reports about its own work, each a tile, such as
+  SnapTrade's Connections, Accounts reached and Last read. A figure is a
+  count, a decimal, a text or a time, with an optional as-of, a state (ok,
+  warn or error) as the tile's mark and a why as its note. A plugin reports at
+  most 8, on its heartbeat; a list past any bound is refused, never cut. A
+  figure names no account and carries none of an account's data. See
+  [Figures](../api/python-sdk.md#figures).
+- **Settings**: the plugin's settings form, the same as in the dashboard's
+  admin view of it.
+
+So a plugin builds no summary page of its own. The health a plugin reports
+stands, with its why, until it reports again: one that says it is not healthy
+stays so on Summary until it says it is.
 
 From a terminal, `meridian plugin open --level manage`, `open` or `view` does
 the same; without `--level` it opens at the first level held, Manage before

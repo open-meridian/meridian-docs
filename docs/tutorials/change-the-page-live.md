@@ -167,7 +167,8 @@ plugin's page alone, at the first level you hold, Manage. The link lands on the 
 the reference plugin serves only under Open and View, so the browser says
 `/ is not served under Manage; it is for Open and View.` Go to `/setup` on the same address,
 `http://live-demo.plugins.meridian.localhost/setup`, and reload as often as you like. The
-dashboard's home opens the plugin with **Manage** straight onto its **Setup** tab.
+dashboard's home opens the plugin with **Manage** onto its **Summary**, with its **Setup** tab after
+**Summary** and **Settings**.
 
 ## 8. Release it
 

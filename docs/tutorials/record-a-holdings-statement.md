@@ -21,8 +21,8 @@ Allow 30 minutes.
 
 - A deployment installed with `meridian up --development`, and you are a deployment admin on it.
   See [Install a deployment](../getting-started/installation.md).
-- The `meridian` CLI, 0.1.21 or later, and Docker on this machine. From CLI 0.1.21,
-  `meridian plugin new` builds on SDK 0.10.1, whose `meridian.Pages` this tutorial's page is built
+- The `meridian` CLI, 0.1.21 or later, and Docker on this machine. From CLI 0.1.23,
+  `meridian plugin new` builds on SDK 0.11.0, whose `meridian.Pages` this tutorial's page is built
   on.
 - To have done [Change your plugin's page, live](change-the-page-live.md), or be comfortable with
   `meridian plugin dev`.
@@ -389,7 +389,8 @@ meridian plugin logs --instance holdings-demo --since 5
 
 On the dashboard's home, `holdings-demo` is listed with **Manage**: as a deployment admin you are an
 admin of every plugin, through **All plugins (admin)**. Choose **Manage**. The plugin's area opens
-on its one page at `admin`, **Accounts**, the page you wrote. See
+on its **Summary**; open the tab after **Summary** and **Settings**, its one page at `admin`,
+**Accounts**, the page you wrote. See
 [Manage, Open and View](../concepts/plugins.md#manage-open-and-view).
 
 It lists `DEMO-ACCT-1` and `DEMO-ACCT-2`. On the `DEMO-ACCT-1` row, under **Link to an existing
