@@ -12,7 +12,7 @@ pip install open-meridian
 |---|---|
 | PyPI name | `open-meridian` |
 | Import name | `meridian` |
-| Version | 0.10.0 |
+| Version | 0.10.1 |
 | Python | 3.11 or newer |
 | Dependencies | `grpcio>=1.68,<2`, `protobuf>=5.28,<7`, `jinja2>=3.1,<4` (from 0.10.0, for [pages](#pages)) |
 | Licence | Apache-2.0 |
@@ -20,7 +20,7 @@ pip install open-meridian
 !!! warning "Not `meridian-sdk`"
     The PyPI package `meridian-sdk` belongs to an unrelated company. Don't install it.
 
-A plugin pins the SDK exactly, `open-meridian==0.10.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.10.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls. See [Plugin manifest](plugin-manifest.md).
+A plugin pins the SDK exactly, `open-meridian==0.10.1`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.10.1`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls. See [Plugin manifest](plugin-manifest.md).
 
 | Optional extra | Installs | For |
 |---|---|---|
@@ -97,7 +97,7 @@ Registers with the sidecar and returns the admitted plugin. A `Plugin` you hold 
 | `settings` | sequence of `Setting` | `()` | The settings the plugin needs an admin of it to give it. |
 | `reads_external_accounts` | `bool` | `False` | `True` when the plugin reads accounts at an external source and names them by that source's identifiers. An admin of the plugin links those to accounts, and the sidecar translates them on the way in. |
 
-The contract version it sends is `SCHEMA_VERSION`, `"v5"` in 0.10.0. A sidecar accepts a range of versions, today v2 through v5: a plugin built for an older version it still supports registers, and one built for a newer version than the sidecar knows is refused at registration, naming both, rather than running without what it was built for. After an upgrade, relaunch plugins so they get the newer sidecar (`meridian upgrade-deployment` names the ones that need it).
+The contract version it sends is `SCHEMA_VERSION`, `"v5"` from 0.10.0. A sidecar accepts a range of versions, today v2 through v5: a plugin built for an older version it still supports registers, and one built for a newer version than the sidecar knows is refused at registration, naming both, rather than running without what it was built for. After an upgrade, relaunch plugins so they get the newer sidecar (`meridian upgrade-deployment` names the ones that need it).
 
 **Raises:**
 
@@ -232,7 +232,7 @@ The pages the plugin serves to people, on loopback. Only the plugin's sidecar re
 | `port` | `int` | | The loopback port the pages listen on. |
 | `title` | `str` | | The plugin's title. |
 | `pages` | `Pages` or sequence of `Page` | `()` | The plugin's pages, one list in the order shown, each with the levels it serves. A [`Pages`](#pages) registry declares each where its view is and refuses a session at a level it does not serve. Keyword only. |
-| `admin_pages` | sequence of `Page` | `()` | Retired by contract v5. Still taken in 0.10.0, as pages at `admin` after `pages`, with a `DeprecationWarning`; [`meridian plugin migrate`](cli.md#plugin-migrate) rewrites it into `pages`. |
+| `admin_pages` | sequence of `Page` | `()` | Retired by contract v5. Still taken in 0.10.0 and 0.10.1, as pages at `admin` after `pages`, with a `DeprecationWarning`; [`meridian plugin migrate`](cli.md#plugin-migrate) rewrites it into `pages`. |
 
 The dashboard shows a plugin's pages in its area, under the home's button for each level a page serves: **Manage** for `admin`, **Open** for `write`, **View** for `read`. A plugin that declares no page at `write` or `read` has one there, its `/`. See [Manage, Open and View](../concepts/plugins.md#manage-open-and-view).
 
@@ -454,7 +454,7 @@ async with await meridian.connect(
 ### `Pages`
 
 ```python
-class Pages(title: str = "", *, templates: str | os.PathLike | None = None, kit: str = "0.7.0")
+class Pages(title: str = "", *, templates: str | os.PathLike | None = None, kit: str = "0.7.0", max_body: int = MAX_BODY)
 ```
 
 | Parameter | Meaning |
@@ -462,6 +462,7 @@ class Pages(title: str = "", *, templates: str | os.PathLike | None = None, kit:
 | `title` | The heading the base template draws, and the end of each page's `<title>`. |
 | `templates` | The directory `render` reads templates from. A directory that does not exist raises `FileNotFoundError`. |
 | `kit` | The kit version the base template links, at `/.meridian/ui/<kit>/`. The dashboard answers any 0.x with the newest 0.x it carries. |
+| `max_body` | The largest request body, in bytes, the pages take: `meridian.pages.MAX_BODY`, 1 MiB, unless said. A larger one is answered 413 before any view runs, so a view need not measure what it is sent. A negative number, or anything but an `int`, raises `ValueError`. From 0.10.1. |
 
 | Member | Meaning |
 |---|---|
@@ -470,11 +471,13 @@ class Pages(title: str = "", *, templates: str | os.PathLike | None = None, kit:
 | `render(template, /, **context) -> str` | `template`, from `templates`, rendered with `context`. Called from a view, while it serves a request; anywhere else raises `RuntimeError`. |
 | `csrf_token(caller) -> str` | The token a request from this person, in a session at this level, carries back when it changes something. |
 | `declared` | The tabs, in the order declared: what registration sends. |
-| `dispatch(request) -> Response` | The view at the request's path and method: 404 for no such path, 405 for a method the path does not take, 403 for a level it does not serve. |
-| `app(plugin=None)` | The pages as an ASGI application, with the caller read as [`CallerMiddleware`](#callermiddleware) reads it. A view that raises is logged and answered 500. |
-| `serve(plugin, port, *, loop=None)` | Runs `app(plugin)` on `127.0.0.1:<port>` with the standard library's threaded server, in a thread of its own; each view runs on `loop`, the running one by default, where the plugin's operations are. Returns the server, whose `shutdown()` stops it. A view taking more than 60 seconds is answered 500. |
+| `dispatch(request) -> Response` | The view at the request's path and method: 404 for no such path, 405 for a method the path does not take, 403 for a level it does not serve. A HEAD runs the GET view, where no view is declared for HEAD, and answers its headers with no body. |
+| `app(plugin=None)` | The pages as an ASGI application, with the caller read as [`CallerMiddleware`](#callermiddleware) reads it. A body over `max_body` is answered 413 without being read; a view that raises is logged and answered 500. |
+| `serve(plugin, port, *, loop=None, max_body=None)` | Runs `app(plugin)` on `127.0.0.1:<port>` with the standard library's threaded server, in a thread of its own; each view runs on `loop`, the running one by default, where the plugin's operations are. A request whose `Content-Length` is over `max_body`, the pages' own unless said, is answered 413 without its body being read (`max_body` from 0.10.1). Returns the server, whose `shutdown()` stops it. A view taking more than 60 seconds is answered 500. |
 
 `levels` takes the same values as [`Page`](#page). A path or a route with no level raises `ValueError` when it is declared, and so does the same path and method declared twice. A view is sync or async, takes a `Request`, and answers a `str`, the page's HTML, or a `Response`.
+
+From 0.10.1, HEAD is answered for every path that takes GET: the GET view runs, with `request.method` `"HEAD"`, and its answer's headers are sent, with the length of the body, and no body. A path that takes GET lists HEAD in a 405's `Allow` too.
 
 | `Request` field | Meaning |
 |---|---|
@@ -504,7 +507,7 @@ class Pages(title: str = "", *, templates: str | os.PathLike | None = None, kit:
 | `csrf_input` | The hidden field carrying the CSRF token, for inside a form. |
 | `csrf_token` | The token itself, for a script's `X-CSRF-Token` header. |
 
-A page's template extends the kit's base template, `meridian/base.html`, which `Pages` carries. It links the kit's stylesheet and script, draws the page's heading and, where more than one page is at the session's level, its tab row; the kit drops both when the dashboard frames the page, and draws them when the page is opened on its own. It has four blocks:
+A page's template extends the kit's base template, `meridian/base.html`, which `Pages` carries. It links the kit's stylesheet and script, draws the page's heading and, where more than one page is at the session's level, its tab row, marking the tab the request is for; the kit drops both when the dashboard frames the page, and draws them when the page is opened on its own. From 0.10.1, a form's action that answers by rendering a page, at a path that is no tab, marks the tab the form was posted from, by the request's `Referer`, and takes that tab's title. It has four blocks:
 
 | Block | Holds |
 |---|---|
@@ -544,24 +547,26 @@ from my_plugin.page import pages
 client = PageClient(pages, plugin=stand_in, read={"ACC-1", "ACC-2"}, write={"ACC-2"})
 assert client.get("/", "write").status == 200
 assert client.get("/", "admin").status == 403
-client.assert_no_account_data("ACC-1", "Growth fund", "12,500.00")
+client.assert_no_account_data("AAPL", "125", "12,500.00")  # what the stand-in holds for ACC-1
 ```
 
 | Member | Meaning |
 |---|---|
-| `PageClient(pages, plugin=None, *, read=(), write=(), subject=..., display_name=...)` | `plugin` is what a view reaches as `request.plugin`: a stand-in whose operations answer in the test. `read` and `write` are the accounts the person may read and write, cut to each session's level. The person is Ada Park, a local account, unless `subject` and `display_name` say otherwise. |
+| `PageClient(pages, plugin=None, *, read=(), write=(), subject=..., display_name=..., deployment_admin=False)` | `plugin` is what a view reaches as `request.plugin`: a stand-in whose operations answer in the test. `read` and `write` are the accounts the person may read and write, cut to each session's level. The person is Ada Park, a local account, unless `subject` and `display_name` say otherwise, and a deployment admin when `deployment_admin` is `True` (from 0.10.1), which every request the client sends says. |
 | `get(path, level, **query)` | A GET in a session at `level`: `"admin"`, `"write"` or `"read"`. |
-| `post(path, level, form=None)` | A form posted from the plugin's page, carrying its CSRF token back unless `form` gives one of its own. |
+| `post(path, level, form=None, *, headers=None)` | A form posted from the plugin's page, carrying its CSRF token back unless `form` gives one of its own. `headers`, from 0.10.1, sends more, such as the `Referer` of the page it was posted from. |
 | `request(method, path, level, *, form=None, query=None, headers=None)` | The request as given, with no token added: for testing that one without a token, or with somebody else's, is refused. |
-| `caller(level)` | The client's person, as a `Caller` in a session at `level`. |
+| `caller(level, *, deployment_admin=None)` | The client's person, as a `Caller` in a session at `level`: a deployment admin as the client was made, unless `deployment_admin` says (from 0.10.1). |
 | `every_page()` | Each declared page, in order, under Manage, Open and View: a list of `Rendered`, each with `page`, `level` and `response`, 200 where the page serves the level and 403 where it does not. |
-| `assert_no_account_data(*held)` | Fails, naming the page and what it showed, when a page at `admin` rendered under Manage is not served, or shows any of `held` (account IDs, names and figures the test put in the plugin) or any account the client's person may read or write. |
+| `assert_no_account_data(*held)` | Fails, naming the page and what it showed, when under Manage a page at `admin` does not answer 200, any other page does not answer 403, or a page at `admin` shows any of `held`, as given or as a template escapes it. `held` is the account data the test put where the plugin reads it: holdings, quantities, values, balances, a statement's rows. Called with nothing to look for, it raises `ValueError`. |
 
 `meridian.testing.caller_header(level, *, read=(), write=(), subject=..., display_name=..., deployment_admin=False)` makes the header alone, for a test that serves the pages another way. It is unsigned: only a plugin's tests read it, never a sidecar.
 
 The client is synchronous, for a plain pytest test, and not for use inside a running event loop. A view that raises fails the test with its traceback.
 
-A Manage session holds no account's data, and the sidecar refuses reads for the person in one. What the plugin holds as itself, such as a synced statement's rows, nothing technical keeps off a page at `admin`, so the plugin's tests do, with `assert_no_account_data`.
+A Manage session holds no account's data, and the sidecar refuses reads for the person in one. What the plugin holds for an account, such as a synced statement's holdings, quantities, values and balances, nothing technical keeps off a page at `admin`, so the plugin's tests do, with `assert_no_account_data`.
+
+An account's identity is not its data: its ID, name, custodian, type, owner and note. A Manage page may list every account of the deployment, as the accounts read answers them, as a link target, so from 0.10.1 `assert_no_account_data` no longer looks for every account the person may read or write, only for the strings the test names. A string named is looked for whatever it is, an identity too. In 0.10.0 it also looked for each account ID in `read` and `write`, looked for each string only as given, and took a call that named nothing.
 
 ## `CallerMiddleware` { #callermiddleware }
 

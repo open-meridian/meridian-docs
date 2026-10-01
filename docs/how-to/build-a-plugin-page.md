@@ -76,8 +76,10 @@ the page's CSRF token, `{{ csrf_input }}` in a form or the `X-CSRF-Token` header
 it is refused before the view runs. See the [Python SDK](../api/python-sdk.md#templates).
 
 Test each page under each level with `meridian.testing.PageClient`: `every_page()` renders each
-under Manage, Open and View, and `assert_no_account_data(...)` fails when a page at `admin` shows
-anything the plugin holds for an account. See [`meridian.testing`](../api/python-sdk.md#testing).
+under Manage, Open and View, and `assert_no_account_data(*held)`, given the account data the test
+put in the plugin (holdings, quantities, values, balances), fails when a page at `admin` shows any of
+it. An account's identity is not looked for, since a Manage page may list every account as a link
+target. See [`meridian.testing`](../api/python-sdk.md#testing).
 
 A plugin that serves its pages some other way, on an ASGI framework of its own, declares each as
 `meridian.Page(path, title, levels=[...])` in `Interface(pages=...)`, and checks the session's level

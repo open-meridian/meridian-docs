@@ -15,7 +15,7 @@ The operations are generated, not written by hand. One generator reads the contr
 - the sidecar's side of it;
 - the Python methods on [`Plugin`](python-sdk.md#plugin).
 
-This page lists every operation in SDK 0.10.0, the same as in 0.7.0. There is no order-routing or execution operation.
+This page lists every operation in SDK 0.10.1, the same as in 0.7.0. There is no order-routing or execution operation.
 
 ## Summary
 
