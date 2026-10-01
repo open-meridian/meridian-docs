@@ -67,8 +67,9 @@ docker rm "$id"
 ```
 
 Add `.e2e/` to `.gitignore` and `.dockerignore`, and remove the copy when the run ends, however it
-ends: `meridian plugin check` reads every source file under your plugin's directory, and the
-harness's runner is not your plugin.
+ends: the harness's runner is not your plugin. From CLI 0.1.24, `meridian plugin check` reads
+nothing under `.e2e/` and `meridian plugin dev` sends nothing from it; an earlier `plugin check`
+read the runner as your plugin's code, and failed it on `settings-declared`.
 
 ## 3. Give every compose command its three variables
 

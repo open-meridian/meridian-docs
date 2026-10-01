@@ -57,9 +57,21 @@ only that way**, when a deployment admin names a new account to link to; it
 may pre-fill the new account's custodian, type, owner and note from what the
 source reported, for the admin to change.
 
-The link is applied by the plugin's sidecar, on the way in. A holding naming a
-linked external account is recorded against the firm's account. One naming an
-external account nobody has linked is refused, with a code that says so, and
+**An account has one external account.** At most one external account is
+linked to an account, through whichever plugin, and the account's statements
+are that one's. So two custodians holding for one fund, such as a prime
+broker and an FCM, or a margin account and a cash one, are two accounts, and
+so are two external accounts at one custodian, kept for different purposes. A
+link naming an account that already has an external account linked is
+refused, naming that one, and nothing is linked: link the second to another
+account, or a new one. Links made before this rule are kept, never removed,
+and the conductor logs each account holding more than one, for a deployment
+admin to separate.
+
+The link is applied by the plugin's sidecar, on the way in. A statement or a
+holding naming a linked external account is recorded against the firm's
+account. One naming an external account nobody has linked is refused, with a
+code that says so, and
 the sidecar lists the unlinked accounts in its report of the plugin, so its
 admins can see what needs linking. Nothing is recorded against a
 guess. A sync status for an unlinked account is not refused: it is shown
@@ -109,9 +121,11 @@ change, within the same 30-second bound as everything else about access.
 
 - **Reads are aggregate.** A plugin reads as itself, for its whole read scope
   at once; the sidecar stamps that scope on its queries and subscriptions, and
-  the stores answer only for accounts in it. The plugin then shows each person
-  only the accounts that person's assertion allows. A person narrows what a
-  plugin shows them and never widens what the plugin holds.
+  the stores answer only for accounts in it. A read naming an account outside
+  it is refused, one naming none answers the whole scope, and a plugin whose
+  read scope is empty reads and hears nothing. The plugin then shows each
+  person only the accounts that person's assertion allows. A person narrows
+  what a plugin shows them and never widens what the plugin holds.
 - **Writes are checked per account.** A command naming an account outside the
   plugin's write scope is refused by the sidecar. A command sent for a person
   is also refused unless that person may write that account, and when it is
@@ -124,7 +138,11 @@ or change at all.
 
 Today, what custodians say is held, in the **street store**: statements,
 holdings and custodial positions, as brokerage and custody plugins report
-them. Three rules govern it.
+them. A statement is one account's, with the account's figures, such as its
+buying power and margin, a set per margin segment as the custodian reports
+them; a holding may carry its cost and its lots, as reported, and nothing is
+derived from them. An `operations` plugin reads these, and hears each change,
+within its read scope. Three rules govern it.
 
 - **A position is replaced, not accumulated.** A holding states a quantity as
   of a date; it is not a change to one. Adding holdings up would double

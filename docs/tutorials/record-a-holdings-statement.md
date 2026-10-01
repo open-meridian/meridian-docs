@@ -8,8 +8,10 @@ from the source's name for that account to yours, made on a page the plugin serv
 !!! warning "What this tutorial cannot show yet"
     Read this first. The tutorial runs end to end, but three things are not built yet:
 
-    - **You cannot read the result back.** No dashboard page and no SDK operation lists statements or
-      custodial positions yet. You confirm the recording from the replies your plugin logs.
+    - **You cannot read the result back.** No dashboard page lists statements or custodial positions
+      yet, and the SDK's reads of them, `list_statements` and `list_custodial_positions`, are an
+      `operations` plugin's, not a custody plugin's. You confirm the recording from the replies your
+      plugin logs.
     - **The data is made up.** So that you need no broker account, this plugin calls no broker. It
       reports two invented accounts and records one invented holding.
     - **Nothing here trades.** Holdings are read-only records of what a custodian says you hold.
@@ -21,9 +23,9 @@ Allow 30 minutes.
 
 - A deployment installed with `meridian up --development`, and you are a deployment admin on it.
   See [Install a deployment](../getting-started/installation.md).
-- The `meridian` CLI, 0.1.21 or later, and Docker on this machine. From CLI 0.1.23,
-  `meridian plugin new` builds on SDK 0.11.0, whose `meridian.Pages` this tutorial's page is built
-  on.
+- The `meridian` CLI, 0.1.24 or later, and Docker on this machine. From CLI 0.1.24,
+  `meridian plugin new` builds on SDK 0.12.0: its `meridian.Pages`, which this tutorial's page is
+  built on, and a statement that names its external account, as this tutorial's does.
 - To have done [Change your plugin's page, live](change-the-page-live.md), or be comfortable with
   `meridian plugin dev`.
 
@@ -43,17 +45,18 @@ role:
 | W6.4 | `link_external_account` | Links one of the source's accounts to one of the firm's, for that admin |
 | W2.1 | `report_sync_status` | Says how fresh the source's data is for one external account |
 | W3.1 | `resolve_identifier` | Asks which instrument an identifier means |
-| W2.2 | `record_holdings_statement` | Opens one statement and says how many rows will follow |
+| W2.2 | `record_holdings_statement` | Opens one statement for one external account, with its figures, and says how many rows will follow |
 | W2.3 | `record_holding` | Records one row: one account, one instrument, a side, a quantity and a value |
 
 The deployment's street store closes the statement when as many rows have arrived as it said would
 follow.
 
-Two rules decide whether a row is accepted:
+Two rules decide whether a statement or a row is accepted:
 
 1. **The external account must be linked.** The plugin names an account as the source knows it. An
    admin of the plugin links that to one of the firm's accounts, on a page the plugin serves under
-   Manage, and the plugin sends the link acting for them. A row for an unlinked account is refused.
+   Manage, and the plugin sends the link acting for them. A statement or a row for an unlinked
+   account is refused.
 2. **The account must be in the plugin's write scope.** The link puts it there: the `custody` role
    lets the plugin write to the street store, and the link gives it the one account, for as long as
    the link stands. No permission is needed for that. A permission is what lets people use a plugin
@@ -422,7 +425,7 @@ from decimal import Decimal
 
 import meridian
 
-from .source import SOURCE
+from .source import CUSTODIAN, SOURCE
 
 log = logging.getLogger("holdings_demo")
 
@@ -451,13 +454,22 @@ async def record_demo_statement(plugin: meridian.Plugin) -> None:
                 "ACME is %s (placeholder: %s)", resolved.instrument_id, resolved.placeholder
             )
 
-        # W2.2: open one statement, saying how many rows will follow.
+        # W2.2: open one statement for the account, saying how many rows will
+        # follow, with its figures as the source reported them.
         opened = await plugin.record_holdings_statement(
             source=SOURCE,
             external_statement_id=f"demo-{uuid.uuid4()}",
+            external_account_id=EXTERNAL_ACCOUNT,
+            institution=CUSTODIAN,
             as_of_date=time.strftime("%Y-%m-%d", time.gmtime()),
             read_at_ns=now,
             expected_rows=1,
+            figures=[
+                meridian.StatementFigures(
+                    segment="",  # the account as a whole
+                    buying_power=meridian.Money(Decimal("1000.00"), "USD"),
+                ),
+            ],
         )
         log.info(
             "opened statement %s (already recorded: %s)",
@@ -485,6 +497,12 @@ async def record_demo_statement(plugin: meridian.Plugin) -> None:
 Amounts are `Decimal`, never `float`, and a value is a `meridian.Money`, an amount and its currency.
 The SDK refuses a `float`, or more than 18 decimal places, rather than round it. A holding states
 its side, long here.
+
+The statement names the account it was read for, as its row does, and the institution holding it.
+Its figures are a set per margin segment, each naming its segment as the source does; the one set
+here names none, so it is the account's as a whole. Every figure is as the source reported it: a
+source that reports no buying power sends none, which is not zero. See
+[`record_holdings_statement`](../api/typed-operations.md#record_holdings_statement).
 
 !!! note "Why a fresh statement id each run"
     Each save restarts the plugin, so this records a new statement each time. A real connector uses
@@ -534,8 +552,9 @@ Expected output:
 
 What happened:
 
-- The statement was opened and given an id by the deployment.
-- The row was recorded against `Demo brokerage account`, which `DEMO-ACCT-1` is linked to.
+- The statement was opened against `Demo brokerage account`, which `DEMO-ACCT-1` is linked to, and
+  given an id by the deployment.
+- The row was recorded against the same account.
 - The deployment knows no instrument for the symbol `ACME`, so it answered its **placeholder** for
   it: an identifier beginning `LCL-`, made the first time anyone asked about `ACME` from this source
   and answered every time after. The deployment reports the miss to the platform itself; the plugin
@@ -560,12 +579,13 @@ EXTERNAL_ACCOUNT = "DEMO-ACCT-2"
 Save, wait for `ready`, and read the logs after that revision. The last line now reads:
 
 ```text
-… WARNING holdings_demo: not recorded: RecordHolding: refused: external account DEMO-ACCT-2 is not linked to an account; a deployment admin links it on the plugin's admin page (W6.4), and the next statement records it
+… WARNING holdings_demo: not recorded: RecordHoldingsStatement: refused: external account DEMO-ACCT-2 is not linked to an account; a deployment admin links it on the plugin's admin page (W6.4), and the next statement records it
 ```
 
-The statement opened, but its one row was refused, so nothing is recorded for `DEMO-ACCT-2`. The
-sync status before it was not refused: the dashboard shows it beside the unlinked account, so an
-admin can tell whether it is worth linking.
+The statement names `DEMO-ACCT-2`, so it was refused before its row was sent, and nothing is
+recorded for `DEMO-ACCT-2`. A row naming it would be refused the same way. The sync status before
+it was not refused: the dashboard shows it beside the unlinked account, so an admin can tell
+whether it is worth linking.
 
 !!! note "Telling this refusal apart"
     The words are for you, reading the log, and may change at any release: don't match them. From
@@ -580,11 +600,16 @@ to a new one**, and choose **Create and link**. The column is there because you 
 admin; a plugin admin who is not one links to existing accounts only. The deployment creates the account and links it in one step.
 The **Accounts** tab of Settings shows it with that custodian and type.
 
+Linking `DEMO-ACCT-2` to `Demo brokerage account` instead is refused: that account has
+`DEMO-ACCT-1` linked already, and an account has one external account. Two external accounts at
+one custodian are two accounts, each with its own statements. See
+[Accounts](../concepts/accounts.md#external-accounts).
+
 The next statement records it. Make any change to `statement.py`, a blank line will do, save, and
 read the logs after that revision: the last line is `recorded holding …` again.
 
-A row for a closed account is refused too, as outside the plugin's write scope, and that refusal
-also shows as a `refused` event from `meridian plugin events`.
+A statement or a row for a closed account is refused too, as outside the plugin's write scope,
+and that refusal also shows as a `refused` event from `meridian plugin events`.
 
 !!! tip "If a save still reports the old state"
     If a save made straight after you make a link still reports the old state, save again.
@@ -608,9 +633,11 @@ do not want them. This page offers no way to remove a link: a page does it by se
 - A custody plugin reports the accounts its source reaches, and links them on its own page at
   `admin`, acting for the admin viewing it under Manage. The page is declared at `admin`, so it is
   served under Manage alone, shows no account's data, and each form carries the page's CSRF token.
-- An external account must be linked to one of the firm's accounts before rows for it are accepted,
-  and the link is the plugin's right to write that account.
-- A statement says how many rows follow. An instrument nobody knows is answered with the
+- An external account must be linked to one of the firm's accounts before a statement or rows for
+  it are accepted, and the link is the plugin's right to write that account. An account has one
+  external account.
+- A statement names its external account, states its figures per margin segment as the source
+  reported them, and says how many rows follow. An instrument nobody knows is answered with the
   deployment's placeholder, and an ambiguous one is recorded unresolved; a row is never dropped.
 - Refusals come back as `MeridianError` with the deployment's own reason.
 

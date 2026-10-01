@@ -12,7 +12,7 @@ pip install open-meridian
 |---|---|
 | PyPI name | `open-meridian` |
 | Import name | `meridian` |
-| Version | 0.11.0 |
+| Version | 0.12.0 |
 | Python | 3.11 or newer |
 | Dependencies | `grpcio>=1.68,<2`, `protobuf>=5.28,<7`, `jinja2>=3.1,<4` (from 0.10.0, for [pages](#pages)) |
 | Licence | Apache-2.0 |
@@ -20,7 +20,7 @@ pip install open-meridian
 !!! warning "Not `meridian-sdk`"
     The PyPI package `meridian-sdk` belongs to an unrelated company. Don't install it.
 
-A plugin pins the SDK exactly, `open-meridian==0.11.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.11.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls. See [Plugin manifest](plugin-manifest.md).
+A plugin pins the SDK exactly, `open-meridian==0.12.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.12.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls. See [Plugin manifest](plugin-manifest.md).
 
 | Optional extra | Installs | For |
 |---|---|---|
@@ -62,14 +62,16 @@ A plugin that serves pages declares them with [`meridian.Pages`](#pages) and pas
 | `Pages`, `Request`, `Response` | class, frozen dataclasses | [Pages](#pages) |
 | `AccessLevel` | generated protobuf enum | [`AccessLevel`](#accesslevel) |
 | `Money` | frozen dataclass | [Typed operations](typed-operations.md#money) |
+| `StatementFigures`, `ReportedCollateral`, `ReportedLot` | frozen dataclasses | [Typed operations](typed-operations.md#statementfigures), from 0.12.0 |
 | `as_decimal`, `as_money` | functions | [Typed operations](typed-operations.md#numbers-and-amounts) |
 | `Identifier`, `MissReason` | generated protobuf message and enum | [Types](#types) |
 | `Figure`, `FigureState` | frozen dataclass, generated protobuf enum | [Figures](#figures) |
-| `AssetClass`, `ExternalAccount`, `HoldingSide`, `SyncState` | generated protobuf enums and message | [Typed operations](typed-operations.md#types) |
+| `AssetClass`, `CollateralDirection`, `ExternalAccount`, `HoldingSide`, `SyncState` | generated protobuf enums and message | [Typed operations](typed-operations.md#types); `CollateralDirection` from 0.12.0 |
+| `Heard` | frozen dataclass | [Receive](#receive), from 0.12.0 |
 | `CallerMiddleware` | ASGI middleware | [`CallerMiddleware`](#callermiddleware) |
 | `MeridianError`, `Refused`, `NoSidecar`, `NotRegistered`, `NotGranted`, `CallFailed`, `NotLinked` | exceptions | [Exceptions](#exceptions) |
 | `DEFAULT_ADDRESS` | `str` | `"127.0.0.1:9191"`, where a sidecar listens |
-| `SCHEMA_VERSION` | `str` | the contract version sent at registration: `"v6"` from 0.11.0, `"v5"` in 0.10.0 and 0.10.1, `"v4"` in 0.9.0, `"v3"` in 0.8.0, `"v2"` before |
+| `SCHEMA_VERSION` | `str` | the contract version sent at registration: `"v7"` from 0.12.0, `"v6"` in 0.11.0, `"v5"` in 0.10.0 and 0.10.1, `"v4"` in 0.9.0, `"v3"` in 0.8.0, `"v2"` before |
 
 The module `meridian.testing` holds [`PageClient`](#testing) and [`heartbeat`](#testing), for a plugin's own tests.
 
@@ -98,7 +100,7 @@ Registers with the sidecar and returns the admitted plugin. A `Plugin` you hold 
 | `settings` | sequence of `Setting` | `()` | The settings the plugin needs an admin of it to give it. |
 | `reads_external_accounts` | `bool` | `False` | `True` when the plugin reads accounts at an external source and names them by that source's identifiers. An admin of the plugin links those to accounts, and the sidecar translates them on the way in. |
 
-The contract version it sends is `SCHEMA_VERSION`, `"v6"` from 0.11.0. A sidecar accepts a range of versions, today v2 through v6: a plugin built for an older version it still supports registers, and one built for a newer version than the sidecar knows is refused at registration, naming both, rather than running without what it was built for. After an upgrade, relaunch plugins so they get the newer sidecar (`meridian upgrade-deployment` names the ones that need it).
+The contract version it sends is `SCHEMA_VERSION`, `"v7"` from 0.12.0. A sidecar accepts a range of versions, today v2 through v7: a plugin built for an older version it still supports registers, and one built for a newer version than the sidecar knows is refused at registration, naming both, rather than running without what it was built for. After an upgrade, relaunch plugins so they get the newer sidecar (`meridian upgrade-deployment` names the ones that need it).
 
 **Raises:**
 
@@ -135,7 +137,8 @@ Built by `connect`. It is an async context manager: leaving the `async with` blo
 | `access()` | `Awaitable[PluginAccessReply]` | Who may use this plugin. |
 | `report(*, healthy, detail="", figures=None)` | `Awaitable[None]` | Report the plugin's health now, outside the heartbeat. It stands until reported again. |
 | `leave(reason="")` | `Awaitable[None]` | Say the plugin is stopping, and close the connection. |
-| Typed operations | see [Typed operations](typed-operations.md) | `report_external_accounts`, `report_sync_status`, `record_holdings_statement`, `record_holding`, `resolve_identifier`, `report_missing_instrument`, `read_accounts_for_linking`, `link_external_account`. |
+| `receive(*, statement_recorded=None, custodial_position_updated=None, seed=True)` | `Awaitable[None]` | Hear the rows the plugin's roles hear, a handler per row, until cancelled. From 0.12.0; see [Receive](#receive). |
+| Typed operations | see [Typed operations](typed-operations.md) | `report_external_accounts`, `report_sync_status`, `record_holdings_statement`, `record_holding`, `list_custodial_positions`, `list_statements`, `resolve_identifier`, `report_missing_instrument`, `read_accounts_for_linking`, `link_external_account`. |
 
 Every method raises `NotRegistered` once the plugin has left.
 
@@ -209,6 +212,81 @@ async def leave(self, reason: str = "") -> None
 ```
 
 Stops the heartbeat, tells the sidecar the plugin is stopping, and closes the channel. It does nothing when called a second time. A sidecar that is already gone is ignored. Saying so is what tells a planned stop apart from a failure. A crash skips it, which is why it is optional.
+
+## Receive { #receive }
+
+From 0.12.0. A plugin whose roles hear rows receives them with `plugin.receive`, a handler per row. Today the rows are the street store's, heard by the `operations` role:
+
+| Handler | Row | `heard.message` | Workflow step |
+|---|---|---|---|
+| `statement_recorded` | `StatementRecorded` | A `StatementRecordedEvent`: a completed statement, with its account, external account and institution, its counts and its figures per margin segment, as the street store announced it. The same message [`list_statements`](typed-operations.md#list_statements) reads. | W2.5 |
+| `custodial_position_updated` | `CustodialPositionUpdated` | A `CustodialPositionUpdatedEvent`: the position's whole new state in `position`, `removed` set when it was removed, the statement that changed it, and its previous quantity. | W2.6 |
+
+```python
+async def receive(
+    self, *,
+    statement_recorded: Callable[[Heard[StatementRecordedEvent]], Awaitable[None]] | None = None,
+    custodial_position_updated: Callable[[Heard[CustodialPositionUpdatedEvent]], Awaitable[None]] | None = None,
+    seed: bool = True,
+) -> None
+```
+
+```python
+import meridian
+
+
+async def statement_recorded(heard: meridian.Heard) -> None:
+    statement = heard.message  # the whole statement, as the store announced it
+    ...
+
+
+async def custodial_position_updated(heard: meridian.Heard) -> None:
+    position = heard.message.position  # removed=True when it was removed
+    ...
+
+
+await plugin.receive(
+    statement_recorded=statement_recorded,
+    custodial_position_updated=custodial_position_updated,
+)
+```
+
+It runs until cancelled, so give it a task of its own beside the pages. It hears only the rows given a handler.
+
+- **Seeded.** It reads the store first, every row's records across the plugin's read scope, and hands each on, marked `caught_up`. With `seed=False` it reads the store without handing on what it holds, and hands on only what changes after.
+- **Once and in order.** Then it hands on each change heard, once, and in order for each account.
+- **Caught up.** Deliveries are at most once: the sidecar queues at most 1024 for the plugin and drops past that, and marks each drop in the stream as a `Lost`. Where one was missed (a gap in an account's changes, a `Lost`, a stream that broke, or an account entering the read scope), it reads the changes since from the store and hands them on before anything heard after, each marked `caught_up`. A stream that broke is opened again, half a second later and doubling to 15 seconds. An account leaving the read scope is heard of no more.
+
+A plugin catches up from the store, never from the bus, and the SDK does it: a handler never sees the store's numbers, and keeps nothing to catch up with. A change carries its whole new state, so one handed on twice changes nothing a handler keeps; where reading a page at a time cannot say exactly where the store was, a change may be handed on twice rather than never.
+
+Everything heard is within the plugin's read scope, as the [reads](typed-operations.md#list_custodial_positions) are, and a plugin whose read scope is empty hears nothing. It reads and hears for its whole scope, as itself: serve each person from it with `caller.read`, as always.
+
+### `Heard` { #heard }
+
+```python
+@dataclass(frozen=True)
+class Heard(Generic[Message]):
+    row: str
+    message: Message
+    caught_up: bool = False
+    own: bool = False
+    cause: ChangeCause | None = None
+    message_id: str = ""
+    correlation_id: str = ""
+    causation_id: str = ""
+    published_at_ns: int = 0
+```
+
+| Field | Meaning |
+|---|---|
+| `row` | The row, such as `"CustodialPositionUpdated"`. |
+| `message` | The row's message, from `meridian.plugin.v1.operations_pb2`, with the store's numbers taken off. |
+| `caught_up` | `True` when it was read from the store rather than heard: when the plugin started, after a gap or a `Lost`, after the stream broke, or when an account entered its read scope. |
+| `own` | `True` when the plugin's own act caused it. |
+| `cause` | Who caused it, where the store recorded it, a `ChangeCause`: `instance_id`, the instance that sent the command; `acting_for_subject`, the person it was sent for, empty when the plugin acted as itself; `correlation_id`; `causation_id`, the command's `message_id`; and `committed_at_ns`. |
+| `message_id`, `correlation_id`, `causation_id`, `published_at_ns` | From the envelope it was heard in. Empty, and `0`, for what was read. |
+
+**Raises:** `ValueError` when no handler is given. [`NotGranted`](#exceptions) for a row none of the plugin's roles hears. A read to catch up that finds nothing serving it, has no answer in time, or is refused by what serves it is tried again with the stream; any other refusal raises as the read's own would.
 
 ## Figures { #figures }
 

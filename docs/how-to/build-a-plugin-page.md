@@ -152,7 +152,7 @@ and not with nothing. So the version in a page's path says what it was built aga
 deployment decides what it gets: a brand change reaches every page at once, and no plugin is
 rebuilt for it. The kit's README states the rule under
 [Versions](https://github.com/open-meridian/meridian-ui#linking-the-kit). A page on
-`meridian/base.html` from SDK 0.11.0 links 0.7.0, and a deployment carrying 0.8.0 answers it with
+`meridian/base.html` from SDK 0.12.0 links 0.7.0, and a deployment carrying 0.8.0 answers it with
 0.8.0, so its icons are drawn.
 
 It also means a deployment older than the kit a page was built against answers with the kit it

@@ -14,7 +14,7 @@ name = "reference-plugin"
 version = "0.1.0"
 description = "A Meridian plugin"
 requires-python = ">=3.11"
-dependencies = ["open-meridian==0.11.0"]
+dependencies = ["open-meridian==0.12.0"]
 
 [project.scripts]
 reference-plugin = "reference_plugin.__main__:main"
@@ -67,7 +67,7 @@ A plugin's roles come from this list, from the deployment's contract. The templa
 | `settlement` | external settlement rails |
 | `signal` | signal generation |
 
-A role's topics are exactly the rows of the contract that name it. A role that no row names yet holds nothing. In this release, only `custody` holds any [typed operations](typed-operations.md).
+A role's topics are exactly the rows of the contract that name it. A role that no row names yet holds nothing. In this release, `custody` and `operations` hold [typed operations](typed-operations.md), `operations` from contract v7.
 
 ## Keys outside `[tool.meridian]`
 

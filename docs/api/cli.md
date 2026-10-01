@@ -4,7 +4,7 @@
 
 Nothing in a cloud install depends on it. A marketplace listing's form and the deployment's own wizard are the whole path there; `meridian` makes the same things convenient from a terminal.
 
-This page describes release 0.1.23 of the command line. `meridian --version` says which one you have. For installing it, see [Install a deployment](../getting-started/installation.md).
+This page describes release 0.1.24 of the command line. `meridian --version` says which one you have. For installing it, see [Install a deployment](../getting-started/installation.md).
 
 ## Synopsis
 
@@ -282,7 +282,7 @@ If the deployment can't be reached, the session is still forgotten here and laps
 meridian plugin new <name> [--into <dir>]
 ```
 
-Writes a working plugin to start from: the Python SDK's reference plugin, renamed to `<name>`. It needs no network, because the template is compiled into the binary. It writes the plugin's code and its pages, each a view function and a Jinja2 template declared with the levels it serves (a **Setup** page under Manage, at `admin`, and an **Accounts** page under Open and View, at `write` and `read`), its tests (`tests/test_page.py`), a `Dockerfile`, `pyproject.toml`, `.dockerignore`, `.gitignore`, `README.md`, `AGENTS.md`, `CLAUDE.md`, a `develop-live` skill for Claude Code, and a CI workflow that runs `meridian plugin check --run-tests` (`.github/workflows/check.yaml`), then prints the next steps. From CLI 0.1.23 the plugin pins SDK 0.11.0, and needs a deployment whose sidecar accepts contract v6 (0.1.22 pinned 0.10.1, 0.1.21 pinned 0.10.0, 0.1.20 pinned 0.9.0, 0.1.18 and 0.1.19 pinned 0.7.1, and 0.1.16 and 0.1.17 pinned 0.6.1). See [Your first plugin](../getting-started/first-plugin.md).
+Writes a working plugin to start from: the Python SDK's reference plugin, renamed to `<name>`. It needs no network, because the template is compiled into the binary. It writes the plugin's code and its pages, each a view function and a Jinja2 template declared with the levels it serves (a **Setup** page under Manage, at `admin`, and an **Accounts** page under Open and View, at `write` and `read`), its tests (`tests/test_page.py`), a `Dockerfile`, `pyproject.toml`, `.dockerignore`, `.gitignore`, `README.md`, `AGENTS.md`, `CLAUDE.md`, a `develop-live` skill for Claude Code, and a CI workflow that runs `meridian plugin check --run-tests` (`.github/workflows/check.yaml`), then prints the next steps. From CLI 0.1.24 the plugin pins SDK 0.12.0, and needs a deployment whose sidecar accepts contract v7 (0.1.23 pinned 0.11.0, 0.1.22 pinned 0.10.1, 0.1.21 pinned 0.10.0, 0.1.20 pinned 0.9.0, 0.1.18 and 0.1.19 pinned 0.7.1, and 0.1.16 and 0.1.17 pinned 0.6.1). See [Your first plugin](../getting-started/first-plugin.md).
 
 `<name>` must be lowercase letters, digits and single hyphens, starting with a letter. It becomes the package name, and, with hyphens as underscores, the module name.
 
@@ -324,6 +324,8 @@ Each failure names the rule, the file and line, and what to write instead, so th
 | `tests-pass` | Its tests pass. | With `--run-tests`: pytest exits non-zero, collects nothing, or is not installed. Without it the rule is reported as not run, and does not fail. |
 
 The page rules read HTML, CSS, SVG, script and templates, and the Python that renders a page, so they hold for a plugin in any language. The rules about the plugin's code read Python, the one SDK there is. Tests (`tests/`, `test_*.py`, `conftest.py`) are not held to the page and code rules: a test may name a colour to assert it is absent. Comments are not read, so a colour in a comment is on no page.
+
+Nothing a checkout, a build, a virtual environment or an agent leaves beside the plugin is read, such as `.git`, `.venv`, `build`, `dist` and `.claude`. From CLI 0.1.24 neither is `.e2e`, where [a plugin's e2e](../how-to/prove-a-plugin-against-a-released-runtime.md) copies the runtime's plugin harness: core's code, not the plugin's, which reads its own environment.
 
 The rules match what can be decided from the text: the obvious forms, not every form. A secret copied into another variable before it is logged, or a colour built from parts in a script, gets past them. They are the floor, not the review.
 
@@ -439,6 +441,7 @@ The rewrites keep a file's formatting and comments wherever they change nothing.
 | 0.9.0 to 0.10.0: the SDK declares contract v5; pages carry their levels, and a session the level it was opened at | `Interface(admin_pages=...)` to `pages=` (`admin-pages-keyword`); a `Page(path, title)` naming no levels to `Page(path, title, levels=["admin"])` (`page-at-admin`) | `caller.deployment_admin` read to decide who is served, which opens no page since contract v5: declare the page at `admin` or ask `caller.admin` (`deployment-admin-gate`); `admin_pages` read as an attribute (`admin-pages-read`); admin pages passed as `Interface`'s third argument (`admin-pages-positional`) |
 | 0.10.0 to 0.10.1: pages answer HEAD and refuse a large body; `assert_no_account_data` looks for account data, not identities | Nothing: only the pins move | |
 | 0.10.1 to 0.11.0: the SDK declares contract v6; a plugin may report figures on its Summary, and a reported health stands until it is reported again | Nothing: only the pins move | |
+| 0.11.0 to 0.12.0: the SDK declares contract v7; a plugin hears what its roles hear with `receive`, and reads within its read scope; a statement names its external account and states its figures per margin segment; a holding carries its cost, lots and margin requirement as reported | a `record_holdings_statement` call's flat `buying_power=`, `margin_requirement=` and `maintenance_excess=` to `figures=[StatementFigures(segment="", ...)]`, the account's figures as a whole, importing `StatementFigures` from `meridian` (`statement-flat-figures`) | a `record_holdings_statement` call naming no `external_account_id`, which a sidecar at v7 refuses from a plugin built for it: pass the external account the statement was read for, the one its rows name, and `institution=`, the institution holding it, where the connector says (`statement-external-account`) |
 
 `plugin migrate` adds two rules of its own: `pin-elsewhere`, for the old release still named in another file (a Makefile's base image, a workflow, a README), which it reports rather than moves because some of those are history; and `unreadable`, for a file that is not UTF-8, or that a step could not read as Python, which it leaves as it was.
 
@@ -447,7 +450,7 @@ The rewrites keep a file's formatting and comments wherever they change nothing.
 In text, the pins it moved, each step with the files it rewrote and how many places each rule did, what is left by hand with what to write instead, and then the check's own report:
 
 ```text
-meridian plugin migrate: ., open-meridian 0.5.0 to 0.7.0, the steps run in ghcr.io/open-meridian/plugin-python:0.11.0
+meridian plugin migrate: ., open-meridian 0.5.0 to 0.7.0, the steps run in ghcr.io/open-meridian/plugin-python:0.12.0
 
   pins  pyproject.toml:10     open-meridian==0.5.0 -> open-meridian==0.7.0
         Dockerfile:2          ghcr.io/open-meridian/plugin-python:0.5.0 -> ghcr.io/open-meridian/plugin-python:0.7.0
@@ -477,7 +480,7 @@ With `--json`, one object. `image` is `null` when the plugin was on its target a
 ```json
 {
   "dir": ".", "meridian": "0.1.18", "sdk": "open-meridian",
-  "from": "0.5.0", "to": "0.7.0", "image": "ghcr.io/open-meridian/plugin-python:0.11.0",
+  "from": "0.5.0", "to": "0.7.0", "image": "ghcr.io/open-meridian/plugin-python:0.12.0",
   "done": false,
   "pins": [{"file": "pyproject.toml", "line": 10, "from": "open-meridian==0.5.0", "to": "open-meridian==0.7.0"}, …],
   "steps": [{"from": "0.5.0", "to": "0.6.0", "summary": "…", "breaking": true,
@@ -489,7 +492,7 @@ With `--json`, one object. `image` is `null` when the plugin was on its target a
 }
 ```
 
-`breaking` says whether a plugin left on the old release's code fails on the new one (0.5.0 to 0.6.0, and 0.8.0 to 0.9.0), rather than keeping a form the new release no longer promises (0.6.1 to 0.7.0, whose refusal still says "is not linked" today, and 0.9.0 to 0.10.0, which still takes `admin_pages` as pages at `admin`, with a `DeprecationWarning`).
+`breaking` says whether a plugin left on the old release's code fails on the new one (0.5.0 to 0.6.0, 0.8.0 to 0.9.0, and 0.11.0 to 0.12.0), rather than keeping a form the new release no longer promises (0.6.1 to 0.7.0, whose refusal still says "is not linked" today, and 0.9.0 to 0.10.0, which still takes `admin_pages` as pages at `admin`, with a `DeprecationWarning`). It is about the code once the pins move: a plugin left on 0.11.0, pins and all, keeps working at contract v6 on a sidecar at v7, which reads its flat figures as the set with no segment and its statement's account from its rows.
 
 **Exit codes:** `0` migrated, nothing left by hand, and every rule holds; `1` something is left by hand or a rule does not hold, or it could not run (docker failed, or the SDK image carries no migrations), in which case nothing was changed; `2` asked wrongly, or refused before changing anything: `--dir` not a directory, no pins or pins that disagree, a `--to` older than the pin or not released, no recorded steps from the pinned release, or changes git does not hold yet without `--force`.
 
@@ -575,6 +578,7 @@ Without `--release`, it does the following:
 The directory is scanned four times a second, and events are polled twice a second. Some files are never sent:
 
 - `.git`, `__pycache__`, `.venv`, `venv`, `.mypy_cache`, `.pytest_cache`, `.ruff_cache`, `build`, `dist`, `.meridian`, `.DS_Store`, `*.egg-info` and `*.pyc`;
+- from CLI 0.1.24, `.e2e`, where a plugin's e2e copies the runtime's plugin harness, which `plugin check` does not read either;
 - whatever the plugin's `.dockerignore` names. Negations and patterns with wildcards other than a leading `*` are not read, and a pattern that can't be read is sent rather than guessed at.
 
 One change may carry at most 11 MiB before encoding.

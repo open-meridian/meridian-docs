@@ -15,7 +15,7 @@ The operations are generated, not written by hand. One generator reads the contr
 - the sidecar's side of it;
 - the Python methods on [`Plugin`](python-sdk.md#plugin).
 
-This page lists every operation in SDK 0.11.0, the same as in 0.7.0. There is no order-routing or execution operation.
+This page lists every operation in SDK 0.12.0, which adds the two reads, `list_custodial_positions` and `list_statements`, to those of 0.7.0, and a statement's external account and figures per margin segment and a holding's cost and lots to the two commands that record holdings. There is no order-routing or execution operation.
 
 ## Summary
 
@@ -25,19 +25,21 @@ This page lists every operation in SDK 0.11.0, the same as in 0.7.0. There is no
 | [`report_sync_status`](#report_sync_status) | `ReportSyncStatus` | W2.1 Observe the brokerage sync state | event | `custody` | `Published` |
 | [`record_holdings_statement`](#record_holdings_statement) | `RecordHoldingsStatement` | W2.2 Open a holdings statement | command | `custody` | `RecordHoldingsStatementResult` |
 | [`record_holding`](#record_holding) | `RecordHolding` | W2.3 Publish each holding | command | `custody` | `RecordHoldingResult` |
+| [`list_custodial_positions`](#list_custodial_positions) | `ListCustodialPositions` | W2.7 Read custodial positions | query | `operations` | `ListCustodialPositionsResult` |
+| [`list_statements`](#list_statements) | `ListStatements` | W2.9 Read completed statements | query | `operations` | `ListStatementsResult` |
 | [`resolve_identifier`](#resolve_identifier) | `ResolveIdentifier` | W3.1 Resolve an identifier set | query | `custody` | `ResolveIdentifierResult` |
 | [`report_missing_instrument`](#report_missing_instrument) | `ReportMissingInstrument` | W3.2 Report that a resolution missed | event | `custody` | `Published` |
 | [`read_accounts_for_linking`](#read_accounts_for_linking) | `ReadAccountsForLinking` | W6.4 Link a plugin's external account | query | `custody` | `ReadAccountsForLinkingResult` |
 | [`link_external_account`](#link_external_account) | `LinkExternalAccount` | W6.4 Link a plugin's external account | command | `custody` | `LinkExternalAccountResult` |
 
-**Role** is the plugin role that publishes the step, from the contract's matrix. A plugin can call an operation only if it holds that role, approved when it was launched. Otherwise the call raises `NotGranted`. See [Plugins, roles and grants](../concepts/plugins.md) and [Plugin manifest](plugin-manifest.md).
+**Role** is the plugin role that publishes the step, or asks the query, from the contract's matrix. A plugin can call an operation only if it holds that role, approved when it was launched. Otherwise the call raises `NotGranted`. See [Plugins, roles and grants](../concepts/plugins.md) and [Plugin manifest](plugin-manifest.md).
 
 **Kind** says what comes back:
 
 - An **event** returns `Published`, the message's identifier on the bus.
 - A **command** or a **query** returns the answer of whatever serves it.
 
-W2 is holdings ingestion from a brokerage. It is read-only throughout: nothing in it places an order. W3 is instrument resolution. W6.4 is linking the accounts a source reaches to the firm's own, which a plugin does on its own page at `admin`, for the admin of the plugin viewing it under Manage. The tutorial [Record a holdings statement](../tutorials/record-a-holdings-statement.md) walks through W2 and W6.4.
+W2 is holdings ingestion from a brokerage. It is read-only throughout: nothing in it places an order. A `custody` plugin records what the custodian says is held, and an `operations` plugin reads it, within its read scope, and hears it change with [`receive`](python-sdk.md#receive), the stream of what a plugin's roles hear (W4.3, `rpc Receive`). W3 is instrument resolution. W6.4 is linking the accounts a source reaches to the firm's own, which a plugin does on its own page at `admin`, for the admin of the plugin viewing it under Manage. The tutorial [Record a holdings statement](../tutorials/record-a-holdings-statement.md) walks through W2 and W6.4.
 
 ## Conventions
 
@@ -109,13 +111,19 @@ Some fields describe the publisher rather than the event, and only the sidecar k
 
 | Field | On | Set by the sidecar from |
 |---|---|---|
-| `account_id` | `RecordHolding` | The link an admin of the plugin made from the plugin's `external_account_id` to an account. Refused when there is none, as [`NotLinked`](#an-unlinked-external-account). |
+| `account_id` | `RecordHoldingsStatement`, `RecordHolding` | The link an admin of the plugin made from the plugin's `external_account_id` to an account. Refused when there is none, as [`NotLinked`](#an-unlinked-external-account). On a statement from 0.12.0. |
 | `account_id` | `ReportSyncStatus` | The same link, or empty when there is none. Never refused. |
 | `publisher_instance_id` | `ReportMissingInstrument` | The instance the plugin was launched as. |
 | `placeholder_instrument_id` | `ReportMissingInstrument` | Nothing: always empty from a plugin. Only the instrument store sets it. |
 | `plugin_instance_id` | `LinkExternalAccount` | The instance the plugin was launched as. |
 
 The sidecar also puts the plugin's own instance in place of `{instance}` in a topic, so a plugin can speak only as itself.
+
+### Reads are within the read scope { #reads }
+
+From 0.12.0. The sidecar stamps the plugin's [read scope](../concepts/accounts.md#how-accounts-bound-a-plugin) on every read, and the store answers only within it: a read naming an account outside it is refused with `NotGranted`, one naming none answers every account in it, and a plugin whose read scope is empty reads nothing. A plugin reads its whole scope as itself, and serves each person from it with `caller.read`. What it hears with [`receive`](python-sdk.md#receive) is held to the same scope.
+
+Each read answers a page, the next page's `cursor` in `next_cursor`, empty on the last, and `as_of`, the [`Watermark`](#watermark) it was read at. Given a watermark as `since`, a read answers only what changed after it. `receive` reads this way to seed and to catch up, so a plugin hearing a row seldom reads it itself.
 
 ### Acting for a person
 
@@ -136,7 +144,7 @@ A refusal is the call's gRPC status, chosen by what the caller should do about i
 
 | Raised | Sidecar status | Means | Your next move |
 |---|---|---|---|
-| `NotGranted` | `PERMISSION_DENIED` | None of the plugin's roles grants this operation; or the account is outside the plugin's write scope; or the person in `acting_for` may not write it, or sent it from a session not opened by Open; or an operation on the deployment's configuration without the assertion of an admin of the plugin under Manage; or a new account named by somebody who is not a deployment admin; or a link for an external account this plugin did not report. | Stop. It is configuration: a role, a permission, a link or an admin, which a person changes. |
+| `NotGranted` | `PERMISSION_DENIED` | None of the plugin's roles grants this operation; or the account is outside the plugin's write scope, or, for a read, its read scope; or the person in `acting_for` may not write it, or sent it from a session not opened by Open; or an operation on the deployment's configuration without the assertion of an admin of the plugin under Manage; or a new account named by somebody who is not a deployment admin; or a link for an external account this plugin did not report. | Stop. It is configuration: a role, a permission, a link or an admin, which a person changes. |
 | `NotLinked`, `kind="refused"` | `FAILED_PRECONDITION`, with the code `REFUSAL_REASON_EXTERNAL_ACCOUNT_NOT_LINKED` | An `external_account_id` nobody has linked to an account. See [An unlinked external account](#an-unlinked-external-account). | Offer it for linking, and stop this statement. An admin of the plugin links the account, and the next statement records it. |
 | `CallFailed`, `kind="refused"` | `FAILED_PRECONDITION`, with no code | The sidecar considers the plugin not registered, or already left. | Connect again. |
 | `CallFailed`, `kind="invalid"` | `INVALID_ARGUMENT` | A required field is empty, such as `external_account_id`; or a number outside what the wire carries, in params built by hand. | Fix the call. |
@@ -145,7 +153,7 @@ A refusal is the call's gRPC status, chosen by what the caller should do about i
 | `CallFailed`, `kind="handler error"` | `ABORTED` | What serves it answered with a refusal. `detail` is its reason. | Report it. |
 | `CallFailed`, `kind="not vouched for"` | `UNAUTHENTICATED` | The `acting_for` assertion was not accepted: expired, replayed, for another instance, or the sidecar holds none of the dashboard's keys. | Ask the person to reload the page. |
 | `NotRegistered` | none (raised by the SDK) | The plugin has called `leave()`. | Don't use it after leaving. |
-| `TypeError`, `ValueError` | none (raised by the SDK) | A number that is not a `Decimal` or an `int`, an amount that is not a `Money`, or a number that would have to be rounded. | Fix the call. |
+| `TypeError`, `ValueError` | none (raised by the SDK) | A number that is not a `Decimal` or an `int`, an amount that is not a `Money`, or a number that would have to be rounded; from 0.12.0, a statement whose figures the sidecar would refuse. | Fix the call. |
 | `grpc.aio.AioRpcError` | any other, such as `INTERNAL` | Raised unchanged. | |
 
 On `NotGranted` and `CallFailed`, `topic` holds the operation's name, such as `"RecordHolding"`. The exception's text is the operation's name, then the kind, then the sidecar's own words. For a row naming an external account nobody has linked:
@@ -170,7 +178,7 @@ The sidecar sends the code beside the status: a `meridian.v1.Refusal`, encoded, 
 | `REFUSAL_REASON_UNSPECIFIED` | 0 | | Never sent. A refusal the status already says everything about carries no code. |
 | `REFUSAL_REASON_EXTERNAL_ACCOUNT_NOT_LINKED` | 1 | `FAILED_PRECONDITION` | The operation named an external account nobody has linked to an account. Nothing was recorded, and the next statement after a link records it. |
 
-A reason is never reused for another cause, and a retired one's number stays reserved. Today only [`record_holding`](#record_holding) can be refused this way; `report_sync_status` for an unlinked account is not refused.
+A reason is never reused for another cause, and a retired one's number stays reserved. [`record_holding`](#record_holding) can be refused this way, and from 0.12.0 [`record_holdings_statement`](#record_holdings_statement), which names its external account too; `report_sync_status` for an unlinked account is not refused.
 
 The SDK reads the code and raises **`meridian.NotLinked`**. It is a `CallFailed` whose `kind` is `"refused"`, as this refusal always was, so a plugin that caught `CallFailed` still catches it. It is raised by the code alone: a refusal that carries no code is a plain `CallFailed`, whatever its words say. A sidecar from before the catalogue sends none, so on such a deployment the same refusal arrives as `CallFailed` with `kind="refused"`, which catching `CallFailed` still covers.
 
@@ -291,6 +299,8 @@ await plugin.report_sync_status(
 
 Opens one statement: the plugin's snapshot of one account, at one moment. Every holding row then attaches to it.
 
+From 0.12.0 the statement names that account, as the source knows it, and the sidecar records it against the account the external account is linked to, as it does a row. A statement is one account's: a row naming another account is refused.
+
 It carries two dates, and they are not the same thing:
 
 - `as_of_date` is the date the positions reflect.
@@ -303,7 +313,9 @@ async def record_holdings_statement(
     self, *, source: str = "", external_statement_id: str = "", as_of_date: str = "",
     read_at_ns: int = 0, expected_rows: int = 0, buying_power: Money | None = None,
     margin_requirement: Money | None = None, maintenance_excess: Money | None = None,
-    currency_assumed: bool = False, acting_for: str | None = None,
+    currency_assumed: bool = False, external_account_id: str = "",
+    figures: Sequence[StatementFigures] = (), institution: str = "",
+    acting_for: str | None = None,
 ) -> RecordHoldingsStatementResult
 ```
 
@@ -322,11 +334,14 @@ async def record_holdings_statement(
 | `as_of_date` | `str` | no | The ISO 8601 date the positions are as of. |
 | `read_at_ns` | `int` | no | When the plugin read them. |
 | `expected_rows` | `int` | yes, by the workflow | How many holding rows will follow. It is the only thing that marks the end of a statement. The street store closes the statement when this many rows have landed. A statement whose rows never all arrive stays open rather than publishing counts that are wrong. Hold the whole list before recording any of it. |
-| `buying_power` | [`Money`](#money) or `None` | no | The account's buying power, as the venue reported it. `None` where it reported none. Never derived from the holdings. |
-| `margin_requirement` | [`Money`](#money) or `None` | no | The margin requirement, as the venue reported it. |
-| `maintenance_excess` | [`Money`](#money) or `None` | no | The maintenance excess, as the venue reported it. |
-| `currency_assumed` | `bool` | no | `True` when the venue stated no currency for these figures, and the one given is the plugin's own assumption. |
+| `external_account_id` | `str` | yes, by the sidecar | The account as the rail knows it, the one the statement's rows name. The sidecar translates it through its link, and refuses it when empty or not linked. From 0.12.0. |
+| `institution` | `str` | no | The institution holding the external account, as the plugin names it: the brokerage behind an aggregator, as SnapTrade names it, or the venue itself for a plugin that reads the venue directly. Empty where the source does not say. From 0.12.0. |
+| `figures` | sequence of [`StatementFigures`](#statementfigures) | no | The account's figures, one set per margin segment the venue reports, each naming its segment as the venue does; the set with no segment is the account's as a whole. No two sets name the same segment. Every figure is as the venue reported it, and never derived from the holdings. From 0.12.0. |
+| `currency_assumed` | `bool` | no | `True` when the venue stated no currency for these figures, and the one given is the plugin's own assumption. Of every set in `figures`. |
+| `buying_power`, `margin_requirement`, `maintenance_excess` | [`Money`](#money) or `None` | no | Superseded by `figures` from 0.12.0. Sent alone, they are read as the set with no segment; sent beside `figures`, they are refused. [`meridian plugin migrate`](cli.md#plugin-migrate) rewrites them into `figures`. |
 | `acting_for` | `str` or `None` | no | The `Meridian-Caller` header of the person this is sent for. See [Acting for a person](#acting-for-a-person). |
+
+A brokerage's own total account value goes in `net_liquidation`, in the set with no segment, as the brokerage reports it: never a sum the plugin makes of the holdings.
 
 **Returns** `RecordHoldingsStatementResult`:
 
@@ -335,19 +350,40 @@ async def record_holdings_statement(
 | `statement_id` | `str` | Assigned by the deployment. Every row references it. |
 | `already_recorded` | `bool` | `True` when this statement had already been recorded and the existing one is returned. Redelivery is a no-op, not a duplicate. |
 
-**Errors:** `TypeError` or `ValueError` for an amount. `no handler`, `timeout` or `handler error` from the street store. With `acting_for`: `not vouched for`, or `NotGranted` when the person may write nothing through the plugin. `NotGranted` without the `custody` role.
+**Errors:**
+
+- `TypeError` or `ValueError` for an amount or a number, one inside `figures` named by its path (`figures[0].collateral[1].haircut`).
+- `ValueError`, before anything is sent, for two sets naming one segment, a collateral balance neither posted nor received, or a flat figure beside `figures`, in the sidecar's words: the sidecar refuses each as `invalid` too.
+- `invalid` for an empty `external_account_id`, and [`NotLinked`](#an-unlinked-external-account) for one not linked.
+- `NotGranted` when the linked account is outside the plugin's write scope, or when the person in `acting_for` may not write it.
+- `not vouched for` for an `acting_for` that is not accepted.
+- `handler error` from the street store for a statement it refuses, with its reason, such as a collateral balance naming both or neither of an instrument and identifiers. `no handler` or `timeout` from the street store.
+- `NotGranted` without the `custody` role.
 
 ```python
 import time
+from decimal import Decimal
+import meridian
 
 statement = await plugin.record_holdings_statement(
     source="snaptrade",
     external_statement_id="acct-1@2026-09-25T13:30:00Z",
+    external_account_id="acct-1",
+    institution="Interactive Brokers",
     as_of_date="2026-09-25",
     read_at_ns=time.time_ns(),
     expected_rows=len(rows),
+    figures=[
+        meridian.StatementFigures(
+            segment="",
+            buying_power=meridian.Money(Decimal("25000.00"), "USD"),
+            net_liquidation=meridian.Money(Decimal("93550.00"), "USD"),
+        ),
+    ],
 )
 ```
+
+A plugin built on SDK 0.11.0 or earlier names no external account, and sends its figures flat. While the sidecar accepts its contract version, it admits such a statement with no account, which takes its rows' account when the first lands, and reads the flat figures as the set with no segment.
 
 ## `record_holding` { #record_holding }
 
@@ -369,6 +405,8 @@ async def record_holding(
     market_value: Money | None = None, external_account_id: str = "",
     side: HoldingSide | str | None = None, settle_date_quantity: Decimal | int | None = None,
     currency_assumed: bool = False, also_counted_in_cash: bool = False,
+    cost_basis: Money | None = None, lots: Sequence[ReportedLot] = (),
+    margin_requirement: Money | None = None, average_cost: Money | None = None,
     acting_for: str | None = None,
 ) -> RecordHoldingResult
 ```
@@ -393,6 +431,10 @@ async def record_holding(
 | `settle_date_quantity` | `Decimal`, `int` or `None` | no | The settle-date quantity: what is held counting only settled trades, where the venue reports it. For cash, the settled cash. |
 | `currency_assumed` | `bool` | no | `True` when the venue stated no currency, and the one given is the plugin's own assumption: the market value's currency, and for cash the currency whose cash instrument the row names. |
 | `also_counted_in_cash` | `bool` | no | `True` when this position's value is also included in the account's cash holding as the venue reports it, as SnapTrade does with a money-market fund. The street store keeps both as reported. |
+| `cost_basis` | [`Money`](#money) or `None` | no | The holding's total cost, as the venue reports it. From 0.12.0. |
+| `average_cost` | [`Money`](#money) or `None` | no | The venue's average cost per unit, in the venue's own unit: SnapTrade's is per share, even for an option whose quantity counts contracts. Never multiplied out by the quantity or a multiplier into a cost basis, nor a cost basis divided into it: give whichever the venue reports, or both. From 0.12.0. |
+| `lots` | sequence of [`ReportedLot`](#reportedlot) | no | The holding's lots as the venue lists them. None is not one lot, and lots whose quantities do not sum to the holding's are recorded as reported. From 0.12.0. |
+| `margin_requirement` | [`Money`](#money) or `None` | no | The margin requirement on the holding, as the venue reports it. From 0.12.0. |
 | `acting_for` | `str` or `None` | no | The `Meridian-Caller` header of the person this is sent for. |
 
 **Returns** `RecordHoldingResult`:
@@ -404,11 +446,11 @@ async def record_holding(
 
 **Errors:**
 
-- `TypeError` or `ValueError` for a number or an amount.
+- `TypeError` or `ValueError` for a number or an amount, one inside `lots` named by its path (`lots[0].cost`).
 - `invalid` for an empty `external_account_id`, and [`NotLinked`](#an-unlinked-external-account), a `CallFailed` of kind `refused`, for one not linked. The sidecar counts the unlinked account in its report of the plugin, and the next statement after it is linked records it.
 - `NotGranted` when the linked account is outside the plugin's write scope, as a closed account is, or when the person in `acting_for` may not write it.
 - `not vouched for` for an `acting_for` that is not accepted.
-- `handler error` from the street store for a row it refuses, with its reason. It refuses a row that states no side, a quantity whose sign contradicts its side, both or neither of `instrument_id` and `unresolved_identifiers`, or a statement it has not opened.
+- `handler error` from the street store for a row it refuses, with its reason. It refuses a row that states no side, a quantity whose sign contradicts its side, both or neither of `instrument_id` and `unresolved_identifiers`, a statement it has not opened, or, from 0.12.0, an account other than its statement's.
 - `no handler` or `timeout` from the street store.
 
 ```python
@@ -422,6 +464,13 @@ result = await plugin.record_holding(
     quantity=Decimal("150"),
     market_value=meridian.Money(Decimal("34218.75"), "USD"),
     external_account_id="acct-1",
+    cost_basis=meridian.Money(Decimal("21000.00"), "USD"),
+    lots=[
+        meridian.ReportedLot(quantity=Decimal("100"), cost=meridian.Money(Decimal("13500.00"), "USD"),
+                             acquired_date="2025-03-14"),
+        meridian.ReportedLot(quantity=Decimal("50"), cost=meridian.Money(Decimal("7500.00"), "USD"),
+                             acquired_date="2026-01-08"),
+    ],
 )
 
 # An instrument that resolved ambiguously is still recorded. A short row's
@@ -433,6 +482,95 @@ await plugin.record_holding(
     quantity=Decimal("-10"),
     external_account_id="acct-1",
 )
+```
+
+## `list_custodial_positions` { #list_custodial_positions }
+
+From 0.12.0. Reads what the custodian says the accounts in the plugin's read scope hold, and, beside it, the holdings that could not be named, so one read answers both what is held and what could not be accounted for. See [Reads are within the read scope](#reads).
+
+```python
+async def list_custodial_positions(
+    self, *, account_id: str = "", include_unresolved: bool = False, page_size: int = 0,
+    cursor: str = "", since: Watermark | None = None,
+) -> ListCustodialPositionsResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc ListCustodialPositions(ListCustodialPositionsParams) returns (ListCustodialPositionsResult)` |
+| Workflow step | W2.7, Read custodial positions |
+| Kind | query, on `platform.street.query.list-custodial-positions` |
+| Role | `operations` |
+| Served by | the street store |
+
+| Name | Type | Required | Meaning |
+|---|---|---|---|
+| `account_id` | `str` | no | One account, which must be in the plugin's read scope. Empty for every account in it. |
+| `include_unresolved` | `bool` | no | Also answer the holdings that never resolved, with the first page only, so a read across pages sees each once. |
+| `page_size` | `int` | no | How many to a page: 100 when `0`, and never more than 500. |
+| `cursor` | `str` | no | The previous page's `next_cursor`, or empty for the first. |
+| `since` | [`Watermark`](#watermark) or `None` | no | Only the positions whose last change is after it, removed ones included. |
+
+**Returns** `ListCustodialPositionsResult`:
+
+| Field | Type | Meaning |
+|---|---|---|
+| `positions` | sequence of [`CustodialPosition`](#custodialposition) | The positions on the page. A removed one is answered only to a read given `since`. |
+| `unresolved` | sequence of [`UnresolvedHolding`](#unresolvedholding) | With `include_unresolved`, on the first page. |
+| `next_cursor` | `str` | The next page's cursor, empty on the last. |
+| `as_of` | [`Watermark`](#watermark) | The point in the store's record the page was read at. |
+
+**Errors:** `NotGranted` for an `account_id` outside the read scope, and without the `operations` role. `no handler`, `timeout` or `handler error` from the street store.
+
+```python
+page = await plugin.list_custodial_positions(include_unresolved=True)
+for position in page.positions:
+    quantity = meridian.as_decimal(position.quantity)
+```
+
+## `list_statements` { #list_statements }
+
+From 0.12.0. Reads the completed statements of the accounts in the plugin's read scope, each as the street store announced it when its last row landed. A statement's figures are on it and on no position, so this is how a plugin reads them without having heard the statement. An open statement is not listed: until all its rows have landed, it is not the custodian's whole word on the account. See [Reads are within the read scope](#reads).
+
+```python
+async def list_statements(
+    self, *, account_id: str = "", as_of_date: str = "", since: Watermark | None = None,
+    page_size: int = 0, cursor: str = "",
+) -> ListStatementsResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc ListStatements(ListStatementsParams) returns (ListStatementsResult)` |
+| Workflow step | W2.9, Read completed statements |
+| Kind | query, on `platform.street.query.list-statements` |
+| Role | `operations` |
+| Served by | the street store |
+
+| Name | Type | Required | Meaning |
+|---|---|---|---|
+| `account_id` | `str` | no | One account, which must be in the plugin's read scope. Empty for every account in it. |
+| `as_of_date` | `str` | no | Only statements as of this ISO 8601 date. Empty for any. |
+| `since` | [`Watermark`](#watermark) or `None` | no | Only the statements completed after it. |
+| `page_size` | `int` | no | How many to a page: 100 when `0`, and never more than 500. |
+| `cursor` | `str` | no | The previous page's `next_cursor`, or empty for the first. |
+
+**Returns** `ListStatementsResult`:
+
+| Field | Type | Meaning |
+|---|---|---|
+| `statements` | sequence of [`StatementRecordedEvent`](#statementrecordedevent) | The completed statements on the page. |
+| `next_cursor` | `str` | The next page's cursor, empty on the last. |
+| `as_of` | [`Watermark`](#watermark) | The point in the store's record the page was read at. |
+
+**Errors:** `NotGranted` for an `account_id` outside the read scope, and without the `operations` role. `no handler`, `timeout` or `handler error` from the street store.
+
+```python
+page = await plugin.list_statements(account_id="ACC-…")
+for statement in page.statements:
+    for figures in statement.figures:
+        if figures.HasField("net_liquidation"):
+            value = meridian.as_money(figures.net_liquidation)
 ```
 
 ## `resolve_identifier` { #resolve_identifier }
@@ -592,6 +730,8 @@ Name one of these, never both:
 
 Name neither to remove the link.
 
+An account has one external account: a link naming an account that another external account is already linked to, through this plugin or any other, is refused. Two external accounts at one custodian link to two accounts. See [Accounts](../concepts/accounts.md#external-accounts).
+
 The link is also the plugin's right to that account. The `custody` role grants the street store; the link grants the one account, which is in the plugin's read and write scope while the link stands, with no permission needed. A closed account stays readable through the link, and is not writable. Removing the link removes both.
 
 ```python
@@ -635,7 +775,7 @@ The four `new_account_*` attributes are free text, which a page may pre-fill fro
 
 - `NotGranted` without an `acting_for`, or with one from a session not opened by Manage; for a `new_account_name` from an admin who is not a deployment admin; or for an external account this plugin did not report, an empty one included.
 - `not vouched for` for an `acting_for` that is not accepted.
-- `handler error` from the conductor for a link it refuses, with its reason: both `account_id` and `new_account_name`, an account that does not exist or is closed, or an attribute that is too long.
+- `handler error` from the conductor for a link it refuses, with its reason: both `account_id` and `new_account_name`, an account that does not exist or is closed, an account that already has an external account linked, or an attribute that is too long.
 - `no handler` or `timeout` from the conductor.
 - `NotGranted` without the `custody` role.
 
@@ -662,7 +802,7 @@ await plugin.link_external_account(external_account_id="acct-2", acting_for=call
 
 ## Types { #types }
 
-The plugin-facing types these operations take and return. [`Identifier`](python-sdk.md#identifier) and [`MissReason`](python-sdk.md#missreason) are described with the Python SDK. Every type below except `Money` is a generated protobuf message or enum in `meridian.plugin.v1.operations_pb2`; `Money`, `AssetClass`, `ExternalAccount`, `HoldingSide` and `SyncState` are also exported from `meridian`.
+The plugin-facing types these operations take and return. [`Identifier`](python-sdk.md#identifier) and [`MissReason`](python-sdk.md#missreason) are described with the Python SDK. `Money`, `StatementFigures`, `ReportedCollateral` and `ReportedLot` are the SDK's frozen dataclasses, exported from `meridian`, which take their numbers as `Decimal` and their amounts as `Money`, and are converted and refused as a call's own parameters are. Every other type below is a generated protobuf message or enum in `meridian.plugin.v1.operations_pb2`, and `AssetClass`, `CollateralDirection`, `ExternalAccount`, `HoldingSide` and `SyncState` are also exported from `meridian`. What a read answers is all generated messages, `StatementFigures` among them: read a number or an amount off one with [`as_decimal` and `as_money`](#numbers-and-amounts).
 
 ### `Money` { #money }
 
@@ -724,6 +864,106 @@ Why a connection's data is, or is not, current. Each asks something different of
 | `SYNC_STATE_DELAYED_BY_DESIGN` | 5 | Late on purpose, such as by a business day. Expected; nothing to do. |
 | `SYNC_STATE_HOLDINGS_UNAVAILABLE` | 6 | The venue does not provide holdings through this connection. Waiting changes nothing. |
 
+### `StatementFigures` { #statementfigures }
+
+A statement's figures for one margin segment, `meridian.StatementFigures(...)`, keyword only. Each is as the venue reported it and `None` where it reported none, which is not zero; none is derived. From 0.12.0.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `segment` | `str` | The segment as the venue names it, verbatim, such as Interactive Brokers' `"securities"` and `"commodities"`, or an FCM's class. Empty, the default, for the account as a whole. |
+| `buying_power` | [`Money`](#money) or `None` | The buying power. |
+| `margin_requirement` | [`Money`](#money) or `None` | The margin requirement. |
+| `maintenance_excess` | [`Money`](#money) or `None` | The maintenance excess. Negative is a deficit. |
+| `initial_margin` | [`Money`](#money) or `None` | The initial margin. |
+| `variation_margin` | [`Money`](#money) or `None` | The variation margin. |
+| `net_liquidation` | [`Money`](#money) or `None` | A brokerage's own total account value, as it reports it. Never a sum of the holdings. |
+| `collateral` | sequence of [`ReportedCollateral`](#reportedcollateral) | The collateral held under this segment. |
+
+### `ReportedCollateral` { #reportedcollateral }
+
+One collateral balance under a margin segment, `meridian.ReportedCollateral(...)`, keyword only, each field as the venue reports it and unset where it does not. A balance moves nothing: posted collateral the custodian also lists as a holding is a holding row as well, and collateral received under a security interest is never a holding. From 0.12.0.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `direction` | [`CollateralDirection`](#collateraldirection), `str` or `None` | Posted by the account or received by it. Refused when not said. |
+| `instrument_id` | `str` | The instrument, resolved as a holding's is: an instrument, the deployment's placeholder, or the currency's cash instrument for cash. |
+| `unresolved_identifiers` | sequence of `Identifier` | The identifiers the plugin held, when the resolve was ambiguous. Exactly one of these two. |
+| `quantity` | `Decimal` or `int` | The quantity. Required. |
+| `value` | [`Money`](#money) or `None` | Its value. |
+| `haircut` | `Decimal`, `int` or `None` | A fraction of the value: `Decimal("0.15")` is 15%, a venue's percentage written as its fraction. |
+| `value_after_haircut` | [`Money`](#money) or `None` | Its value after the haircut. |
+| `held_at` | `str` | Where it is held, as the venue names it: the FCM, the dealer, a third-party custodian. Empty where it does not say. |
+
+### `CollateralDirection` { #collateraldirection }
+
+| Value | Number | Meaning |
+|---|---|---|
+| `COLLATERAL_DIRECTION_UNSPECIFIED` | 0 | Not said. Refused: collateral is posted or received. |
+| `COLLATERAL_DIRECTION_POSTED` | 1 | `posted`: posted by the account. |
+| `COLLATERAL_DIRECTION_RECEIVED` | 2 | `received`: received by it. |
+
+### `ReportedLot` { #reportedlot }
+
+One lot of a holding, as the custodian lists it, `meridian.ReportedLot(...)`, keyword only. From 0.12.0.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `quantity` | `Decimal` or `int` | Signed as the holding's quantity: a short holding's lots are short, their quantities negative. Required. |
+| `cost` | [`Money`](#money) or `None` | The lot's total cost, with its sign as the venue reports it, never flipped to match. `None` where not reported. |
+| `acquired_date` | `str` | When it was acquired, an ISO 8601 date. Empty where not reported. |
+
+### `CustodialPosition` { #custodialposition }
+
+What the custodian says an account holds of an instrument, on one side. It is the custodian's belief, read from its statements, and not what the deployment calculates from its own activity.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `account_id` | `str` | The account. |
+| `instrument_id` | `str` | An instrument, or the deployment's `LCL-` placeholder awaiting identity, which the platform's `INS-` identifier replaces when it arrives. |
+| `side` | [`HoldingSide`](#holdingside) | Long or short. |
+| `quantity` | `Decimal` message | The trade-date quantity, signed to match `side`. |
+| `settle_date_quantity` | `Decimal` message | The settle-date quantity, where the custodian reported one. |
+| `market_value` | `Money` message | Unset where the custodian reported no value, which is not zero. |
+| `also_counted_in_cash` | `bool` | Its value is also in the account's cash holding as the custodian reports it. |
+| `cost_basis`, `average_cost`, `lots`, `margin_requirement` | as on [`record_holding`](#record_holding) | As the custodian reported them on the row that last stated the position, unset or empty where it reported none. |
+| `last_statement_id`, `as_of_date`, `updated_at_ns` | `str`, `str`, `int` | The statement that last stated it, and when. |
+| `last_change` | `JournalRef` | Where its last change sits in the store's record, which [`receive`](python-sdk.md#receive) reads to catch up. A handler is handed none. |
+| `removed` | `bool` | Removed, as when a placeholder's replacement moved it: answered only to a read given `since`, and heard once. |
+
+### `UnresolvedHolding` { #unresolvedholding }
+
+A holding the deployment received but could not name.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `holding_id` | `str` | The recorded row. |
+| `account_id` | `str` | The account. |
+| `identifiers` | sequence of `Identifier` | What the plugin held. |
+| `quantity` | `Decimal` message | Signed, as the row stated it: negative is a short row. |
+| `market_value` | `Money` message | Unset where the custodian reported no value. |
+| `source`, `as_of_date` | `str` | As on its statement. |
+| `escalated` | `bool` | Whether the miss has already been raised, so nobody having looked at it is told apart from its being with an administrator. |
+
+### `StatementRecordedEvent` { #statementrecordedevent }
+
+A completed statement, as the street store announced it when its last row landed. The `statement_recorded` handler of [`receive`](python-sdk.md#receive) is handed one, and [`list_statements`](#list_statements) answers them.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `statement_id` | `str` | The statement. |
+| `account_id` | `str` | The account it is of: its external account's, or, from a plugin built before contract v7, its rows'. |
+| `external_account_id`, `institution` | `str` | As the statement named them. Empty from a plugin built before contract v7. |
+| `source`, `as_of_date` | `str` | As the statement named them. |
+| `rows_received`, `rows_resolved`, `rows_unresolved` | `int` | Its counts. The unresolved count is the one an operator watches. |
+| `figures` | sequence of `StatementFigures` | Its figures as recorded, one set per segment. |
+| `currency_assumed` | `bool` | As the statement said. |
+| `recorded_at_ns` | `int` | When it was completed. |
+| `journal`, `cause` | `JournalRef`, `ChangeCause` | Where its completion sits in the store's record, and who caused it. A handler is handed `cause` as [`Heard.cause`](python-sdk.md#heard), and no `journal`. |
+
+### `Watermark` { #watermark }
+
+A point in a store's record: `partitions`, each a `partition` and its `sequence`. A read answers the one it was read at, as `as_of`, and takes one, as `since`, to answer what changed after it. A plugin passes back what a read answered, and reads nothing into it.
+
 ### `AccountRecord` { #accountrecord }
 
 One of the firm's accounts. See [Accounts](../concepts/accounts.md).
@@ -749,11 +989,14 @@ service PluginOperations {
   rpc ReportSyncStatus(ReportSyncStatusParams) returns (Published);
   rpc RecordHoldingsStatement(RecordHoldingsStatementParams) returns (RecordHoldingsStatementResult);
   rpc RecordHolding(RecordHoldingParams) returns (RecordHoldingResult);
+  rpc ListCustodialPositions(ListCustodialPositionsParams) returns (ListCustodialPositionsResult);
+  rpc ListStatements(ListStatementsParams) returns (ListStatementsResult);
   rpc ResolveIdentifier(ResolveIdentifierParams) returns (ResolveIdentifierResult);
   rpc ReportMissingInstrument(ReportMissingInstrumentParams) returns (Published);
   rpc LinkExternalAccount(LinkExternalAccountParams) returns (LinkExternalAccountResult);
   rpc ReadAccountsForLinking(ReadAccountsForLinkingParams) returns (ReadAccountsForLinkingResult);
+  rpc Receive(ReceiveRequest) returns (stream Delivery);
 }
 ```
 
-Each `…Params` message keeps the field numbers of the domain message it stands for and drops the fields the sidecar stamps, so its encoding is the domain message's. `acting_for` is field 1000 on the four operations that take it, a `meridian.v1.CallerAssertion`. The SDK decodes it from the base64url `Meridian-Caller` header you pass. A number is a `Decimal` message, `high` and `low` halves of a 128-bit integer and a `scale` of 0 to 18, and an amount a `Money` message, a `Decimal` and a `currency_code`. `Identifier`, `MissReason` and the other types are plugin-facing mirrors of the domain types.
+Each `…Params` message keeps the field numbers of the domain message it stands for and drops the fields the sidecar stamps, so its encoding is the domain message's. `acting_for` is field 1000 on the four operations that take it, a `meridian.v1.CallerAssertion`. The SDK decodes it from the base64url `Meridian-Caller` header you pass. A number is a `Decimal` message, `high` and `low` halves of a 128-bit integer and a `scale` of 0 to 18, and an amount a `Money` message, a `Decimal` and a `currency_code`. `Identifier`, `MissReason` and the other types are plugin-facing mirrors of the domain types. `Receive`, from 0.12.0, is a stream: each item a `Delivery`, a row's message beside what is known of it, or a `Lost` where the sidecar dropped deliveries. The SDK's [`receive`](python-sdk.md#receive) reads it, and catches up from the store where it missed something.

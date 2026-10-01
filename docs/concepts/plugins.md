@@ -75,11 +75,13 @@ person's, on a plugin, and has nothing to do with roles.
 
 !!! note "Most roles hold nothing yet"
     A role holds exactly the topics a workflow in Open Meridian's contract
-    names it for. Today that is `custody`, for holdings ingestion: recording a
-    statement and its holdings, reporting sync status, resolving an instrument
-    and reporting a missing one. The other twelve are reserved names that hold
-    no topics until their workflows are built — order routing and execution
-    among them, which are on the roadmap. A plugin holding only such roles, or
+    names it for. Today two do. `custody` is for holdings ingestion: recording
+    a statement and its holdings, reporting sync status, resolving an
+    instrument and reporting a missing one. `operations`, from contract v7,
+    reads the statements and custodial positions custody plugins record, and
+    hears them change, within its read scope. The other eleven are reserved
+    names that hold no topics until their workflows are built — order routing
+    and execution among them, which are on the roadmap. A plugin holding only such roles, or
     naming no role at all, is admitted with no topics rather than refused. It
     can still serve a page.
 
