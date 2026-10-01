@@ -216,11 +216,22 @@ level on, `admin` included, with a button for each level held:
 | **View** | `read` | Its pages at `read`, read-only. A writer is offered View too |
 
 A button opens the plugin's **area**, at `/plugins/<instance>?level=admin`,
-`write` or `read`: one heading, the level's button, and one tab row holding
-the pages the plugin declared at that level, in the order declared, with the
-page asked for in a seamless frame below. A person holding more than one
-level switches between them there, as on the home. A plugin that declares no
-page at `write` or `read` has one there, its `/`.
+`write` or `read`: one head, and one tab row holding the pages the plugin
+declared at that level, in the order declared, with the page asked for in a
+seamless frame below. A plugin that declares no page at `write` or `read` has
+one there, its `/`.
+
+The head is the same on every tab and at every level. On the left are the
+house, back to the home, the plugin's name and its status dot. On the right
+are the page's actions, such as a Refresh drawn as a circular arrow, then the
+**Manage** | **Open** | **View** switch of the levels the person holds, by
+which they move between them, as on the home; the switch is always the
+rightmost, so an action never moves it. Under Manage the dot is the plugin's
+health on the dashboard's own tabs and on any page that tells none; at Open
+and View it is the page's. On a phone the head stays one row: the switch is a
+menu naming the session's level and listing the levels held, and a long name
+is cut with an ellipsis. See
+[Inside the dashboard's frame](../how-to/build-a-plugin-page.md#inside-the-dashboards-frame).
 
 Under Manage the dashboard draws two tabs of its own before the plugin's, and
 Manage opens on the first:

@@ -572,7 +572,7 @@ A page's template extends the kit's base template, `meridian/base.html`, which `
 |---|---|
 | `title` | The document's `<title>`: by default the page's title and the plugin's, as `Statements · Holdings`. |
 | `status` | An `om-status` marked `data-om-header`, which the dashboard draws beside the plugin's name (kit 0.7.0). |
-| `head_actions` | Buttons marked `data-om-action`, which the dashboard draws in its header (kit 0.4.0). |
+| `head_actions` | Buttons marked `data-om-action`, which the dashboard draws in its header, left of the level switch (kit 0.4.0); one also marked `data-om-icon="refresh"` is drawn as a circular arrow (kit 0.8.0). |
 | `content` | The page. |
 
 ```html+jinja

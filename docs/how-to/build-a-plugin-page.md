@@ -5,7 +5,7 @@ host. Linking it gives the page the platform's look, each person's colour scheme
 convention, and web components for what trading pages need. This guide covers declaring a plugin's
 pages with the levels they serve, linking the kit, which version answers, linking external accounts
 with `om-account-map` (at thousands of accounts too), grids that read well on a phone, and how a
-page behaves inside the dashboard's frame, header actions and status included.
+page behaves inside the dashboard's frame, header actions, their icons and status included.
 
 The kit is framework-free: CSS and custom elements, used the same way from plain HTML, React, Vue
 or Svelte, from a plugin in any language. Every class, component, attribute and event is listed in
@@ -66,7 +66,7 @@ session at any other level before the view runs. Each template extends the kit's
 {% extends "meridian/base.html" %}
 {% block status %}<om-status data-om-header state="ok" label="Read"></om-status>{% endblock %}
 {% block head_actions %}{% if level == "write" %}
-  <form class="inline" method="post" action="/refresh">{{ csrf_input }}<button data-om-action="refresh">Refresh</button></form>
+  <form class="inline" method="post" action="/refresh">{{ csrf_input }}<button data-om-action="refresh" data-om-icon="refresh" title="Refresh">Refresh</button></form>
 {% endif %}{% endblock %}
 {% block content %}
   <om-grid row-key="id"><script type="application/json">{{ grid | tojson }}</script></om-grid>
@@ -102,8 +102,8 @@ stylesheet and script in `<head>`, and draw the page inside `<main class="page">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Accounts</title>
-  <link rel="stylesheet" href="/.meridian/ui/0.7.0/meridian.css">
-  <script src="/.meridian/ui/0.7.0/meridian.js"></script>
+  <link rel="stylesheet" href="/.meridian/ui/0.8.0/meridian.css">
+  <script src="/.meridian/ui/0.8.0/meridian.js"></script>
 </head>
 <body>
   <main class="page">
@@ -141,6 +141,7 @@ market-direction convention, and the kit applies them.
 | 0.5.0 | `om-account-map` at scale: a dense table with search, filters, grouping, pages, a chooser found by typing, suggestions, and several links in one form (`link-several`). See [At thousands of accounts](#at-thousands-of-accounts). |
 | 0.6.0 | `om-status`, a status dot with its note on hover, focus or a tap; and in `om-account-map`, each account's optional `status` and `values`, a Status column and a filter by state |
 | 0.7.0 | Header status: a framed page's head `om-status` marked `data-om-header`, drawn by the dashboard beside the plugin's name. See [Header status](#header-status). |
+| 0.8.0 | Icon actions: a button marked `data-om-icon="refresh"` is drawn as a circular arrow, in the page and as a header action in the dashboard's header. See [Icon actions](#icon-actions). |
 
 **A 0.x release only adds.** Nothing in the kit is removed or renamed within 0.x, so a page built
 against an earlier 0.x keeps working on a later one.
@@ -150,7 +151,9 @@ against an earlier 0.x keeps working on a later one.
 and not with nothing. So the version in a page's path says what it was built against, and the
 deployment decides what it gets: a brand change reaches every page at once, and no plugin is
 rebuilt for it. The kit's README states the rule under
-[Versions](https://github.com/open-meridian/meridian-ui#linking-the-kit).
+[Versions](https://github.com/open-meridian/meridian-ui#linking-the-kit). A page on
+`meridian/base.html` from SDK 0.11.0 links 0.7.0, and a deployment carrying 0.8.0 answers it with
+0.8.0, so its icons are drawn.
 
 It also means a deployment older than the kit a page was built against answers with the kit it
 has. A component that kit does not know stays an unknown element and shows what the page put inside
@@ -443,9 +446,13 @@ Kit 0.3.0 also fits the rest of a page to a phone, with nothing to do but use it
 ## Inside the dashboard's frame
 
 The dashboard shows every page of a plugin in the plugin's **area**, at `/plugins/<instance>`,
-reached from the home by **Manage**, **Open** or **View**: the plugin's name, the session's level,
-and one tab row holding the pages declared at that level, after the dashboard's own **Summary** and
-**Settings** under Manage, each page in a frame. The frame stays, because it keeps the plugin's
+reached from the home by **Manage**, **Open** or **View**: a head, and one tab row holding the pages
+declared at that level, after the dashboard's own **Summary** and **Settings** under Manage, each
+page in a frame. The head is the same on every tab and at every level: on the left the house, the
+plugin's name and its status dot; on the right the page's [actions](#header-actions), then the
+**Manage** | **Open** | **View** switch of the levels the person holds, always the rightmost. On a
+phone the head stays one row: the switch is a menu naming the session's level and listing the levels
+held, and a long name is cut with an ellipsis. The frame stays, because it keeps the plugin's
 script on the plugin's own origin, away from the person's dashboard session. From kit 0.2.0 it is
 **seamless**: it has no border and no scrollbar of its own, it is as tall as the page's content, and
 the dashboard's heading and tab row are the only ones. It is the same frame, on the same template,
@@ -486,9 +493,9 @@ So draw the heading and tab row with the kit, in its shape, and the frame takes 
 ### Header actions
 
 From kit 0.4.0 a framed page can hand the buttons in its head to the dashboard, which draws them in
-its own header, where its own buttons are. Mark each with `data-om-action` and an id, on a `button`
-(or an `input type="submit"`) inside the head's `.actions`. Most often it is a plain form's submit
-button:
+its own header, immediately left of the level switch. The switch stays the rightmost, so an action
+never moves it. Mark each with `data-om-action` and an id, on a `button` (or an
+`input type="submit"`) inside the head's `.actions`. Most often it is a plain form's submit button:
 
 ```html
 <header class="page-head">
@@ -513,6 +520,30 @@ its answer. Opened on its own, the page shows its buttons where they are.
   or repeated id, a fifth, no label or a long one) stays in the page.
 - A marked button anywhere but the head's `.actions` is the page's own, and stays.
 
+#### Icon actions
+
+From kit 0.8.0 a button can be an icon: mark it `data-om-icon` with a name the kit knows. The kit
+draws it square, as tall as a button of words, with the icon in place of its words, in the page and,
+as a header action, in the dashboard's header. Its words stay: they are its accessible name and the
+label the dashboard is told, so give it a `title` of the same words, for a pointer's tooltip. The kit
+knows one icon:
+
+| Name | Icon |
+|---|---|
+| `refresh` | A circular arrow, clockwise: read again |
+
+```html
+<form method="post" action="/read" class="inline">
+  <input type="hidden" name="csrf" value="…">
+  <button data-om-action="refresh" data-om-icon="refresh" title="Refresh">Refresh</button>
+</form>
+```
+
+Any other name is no icon, and the button is drawn with its words; an `input` is never an icon. A
+deployment whose kit is older than 0.8.0 draws the button with its words, in the page and in the
+header. SnapTrade's Statements page, under Open, hands the dashboard its Refresh as this icon; its
+Connections page keeps a Refresh in words, in the page.
+
 ### Header status
 
 From kit 0.7.0 a framed page can hand the dashboard its status dot, which it draws beside the
@@ -530,6 +561,10 @@ The first marked one in the head is offered; its `state` is `ok`, `busy`, `warn`
 unmarked `om-status` stays in the page. Opened on its own, the page shows the dot where it is. A head
 left with nothing to show, once the dashboard draws its heading, actions and status, is dropped
 whole, so the page starts right under the dashboard's tabs.
+
+Under Manage every tab has a dot: on the dashboard's own tabs, and on a page that tells none, the
+dashboard draws the plugin's health as it knows it; a page that tells its own shows its own. At Open
+and View the dot is the page's alone.
 
 The kit's README gives the messages between the page and the dashboard.
 
