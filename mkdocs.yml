@@ -97,6 +97,7 @@ nav:
       - Reset a lost password: how-to/reset-a-lost-password.md
       - Recover administration: how-to/recover-administration.md
       - Build a plugin's page: how-to/build-a-plugin-page.md
+      - Prove a plugin against a released runtime: how-to/prove-a-plugin-against-a-released-runtime.md
       - Release a plugin version: how-to/release-a-plugin.md
       - Upgrade a deployment: how-to/upgrade-a-deployment.md
       - Remove or start over: how-to/remove-or-start-over.md

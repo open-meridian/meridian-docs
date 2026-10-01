@@ -175,3 +175,5 @@ meridian plugin stop my-plugin
 - [Record a holdings statement](../tutorials/record-a-holdings-statement.md): a plugin that writes
   to the deployment, with the roles and grants that takes.
 - [Typed operations](../api/typed-operations.md): what a plugin's roles let it do.
+- [Prove your plugin against a released runtime](../how-to/prove-a-plugin-against-a-released-runtime.md):
+  an e2e check the agent can run with `make e2e`.

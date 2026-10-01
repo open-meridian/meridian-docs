@@ -190,5 +190,7 @@ The version stays in the catalogue. Launch it again whenever you like.
 
 - [Build with an AI agent](build-with-an-ai-agent.md): change the plugin with a coding agent, live.
 - [Give people access](../how-to/administer-access.md): give your firm's people admin, read or write on a plugin.
+- [Prove your plugin against a released runtime](../how-to/prove-a-plugin-against-a-released-runtime.md):
+  run it on a pinned runtime image from `make e2e` and CI, and check what reached the street store.
 - [Release a plugin version](../how-to/release-a-plugin.md): ship a change as a new version.
 - [Python SDK](../api/python-sdk.md): what a plugin can call.

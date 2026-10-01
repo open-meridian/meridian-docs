@@ -106,3 +106,5 @@ The firm's deployment admin approves the roles at launch.
 - [Plugin manifest](../api/plugin-manifest.md): the keys in `[tool.meridian]`.
 - [Command line](../api/cli.md): every `meridian plugin` flag.
 - [Build with an AI agent](../getting-started/build-with-an-ai-agent.md): the live loop.
+- [Prove your plugin against a released runtime](prove-a-plugin-against-a-released-runtime.md):
+  an e2e check of the version before you release it.

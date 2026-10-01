@@ -618,4 +618,6 @@ do not want them. This page offers no way to remove a link: a page does it by se
 
 - [Python SDK](../api/python-sdk.md) and [Typed operations](../api/typed-operations.md): every
   parameter of these calls.
+- [Prove your plugin against a released runtime](../how-to/prove-a-plugin-against-a-released-runtime.md):
+  link an account through this page and compare the street store with what you expect, in CI.
 - [Release a plugin version](../how-to/release-a-plugin.md): turn it into a version.
