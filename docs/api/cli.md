@@ -4,7 +4,7 @@
 
 Nothing in a cloud install depends on it. A marketplace listing's form and the deployment's own wizard are the whole path there; `meridian` makes the same things convenient from a terminal.
 
-This page describes release 0.1.21 of the command line. `meridian --version` says which one you have. For installing it, see [Install a deployment](../getting-started/installation.md).
+This page describes release 0.1.22 of the command line. `meridian --version` says which one you have. For installing it, see [Install a deployment](../getting-started/installation.md).
 
 ## Synopsis
 
@@ -282,7 +282,7 @@ If the deployment can't be reached, the session is still forgotten here and laps
 meridian plugin new <name> [--into <dir>]
 ```
 
-Writes a working plugin to start from: the Python SDK's reference plugin, renamed to `<name>`. It needs no network, because the template is compiled into the binary. It writes the plugin's code and its pages, each a view function and a Jinja2 template declared with the levels it serves (a **Setup** page under Manage, at `admin`, and an **Accounts** page under Open and View, at `write` and `read`), its tests (`tests/test_page.py`), a `Dockerfile`, `pyproject.toml`, `.dockerignore`, `.gitignore`, `README.md`, `AGENTS.md`, `CLAUDE.md`, a `develop-live` skill for Claude Code, and a CI workflow that runs `meridian plugin check --run-tests` (`.github/workflows/check.yaml`), then prints the next steps. From CLI 0.1.21 the plugin pins SDK 0.10.0, and needs a deployment whose sidecar accepts contract v5 (0.1.20 pinned 0.9.0, 0.1.18 and 0.1.19 pinned 0.7.1, and 0.1.16 and 0.1.17 pinned 0.6.1). See [Your first plugin](../getting-started/first-plugin.md).
+Writes a working plugin to start from: the Python SDK's reference plugin, renamed to `<name>`. It needs no network, because the template is compiled into the binary. It writes the plugin's code and its pages, each a view function and a Jinja2 template declared with the levels it serves (a **Setup** page under Manage, at `admin`, and an **Accounts** page under Open and View, at `write` and `read`), its tests (`tests/test_page.py`), a `Dockerfile`, `pyproject.toml`, `.dockerignore`, `.gitignore`, `README.md`, `AGENTS.md`, `CLAUDE.md`, a `develop-live` skill for Claude Code, and a CI workflow that runs `meridian plugin check --run-tests` (`.github/workflows/check.yaml`), then prints the next steps. From CLI 0.1.22 the plugin pins SDK 0.10.1, and needs a deployment whose sidecar accepts contract v5 (0.1.20 pinned 0.9.0, 0.1.18 and 0.1.19 pinned 0.7.1, and 0.1.16 and 0.1.17 pinned 0.6.1). See [Your first plugin](../getting-started/first-plugin.md).
 
 `<name>` must be lowercase letters, digits and single hyphens, starting with a letter. It becomes the package name, and, with hyphens as underscores, the module name.
 

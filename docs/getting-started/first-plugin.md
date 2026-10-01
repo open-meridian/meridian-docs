@@ -66,8 +66,8 @@ writes it somewhere other than `./my-plugin`. It never writes over a directory t
 | `src/my_plugin/__main__.py` | Connects to the sidecar, declaring its pages, logs who it was launched as and what it may do, serves the pages, and reports itself healthy. |
 | `src/my_plugin/page.py` | The pages people see through the dashboard, each a view function declared with the levels it serves: **Setup** (`/setup`), at `admin`, says what the plugin is and what the deployment lets it do, and shows no account's data; **Accounts** (`/`), at `write` and `read`, shows the accounts the person may read and write through the plugin, and under Open one action that writes for them. |
 | `src/my_plugin/templates/` | The pages' Jinja2 templates, `setup.html` and `accounts.html`, each extending the kit's base template. |
-| `pyproject.toml` | The package, pinned exactly to the SDK, `open-meridian==0.10.0` from CLI 0.1.21. Its `[tool.meridian]` table declares the plugin's `roles` and whether it serves a page. |
-| `Dockerfile` | Builds on the SDK's base image of the same version, `ghcr.io/open-meridian/plugin-python:0.10.0`. |
+| `pyproject.toml` | The package, pinned exactly to the SDK, `open-meridian==0.10.1` from CLI 0.1.22. Its `[tool.meridian]` table declares the plugin's `roles` and whether it serves a page. |
+| `Dockerfile` | Builds on the SDK's base image of the same version, `ghcr.io/open-meridian/plugin-python:0.10.1`. |
 | `tests/test_page.py` | Tests of the pages, run by `meridian plugin check --run-tests`: each page under each level, no account data under Manage, and the action sent for the person. |
 | `.github/workflows/check.yaml` | A CI workflow that runs `meridian plugin check --run-tests` on every push. |
 | `AGENTS.md`, `CLAUDE.md`, `.claude/skills/develop-live/` | Instructions for coding agents: building pages with the kit, the live loop, and `meridian plugin check`. `.dockerignore` keeps them out of the image. |
@@ -138,7 +138,7 @@ meridian plugin list
 
 ```text
 Versions:
-  my-plugin 0.1.0  roles: none  page: yes  SDK 0.10.0
+  my-plugin 0.1.0  roles: none  page: yes  SDK 0.10.1
 Launches:
   my-plugin  my-plugin 0.1.0  launched
 ```

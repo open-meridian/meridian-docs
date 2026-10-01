@@ -22,7 +22,7 @@ Allow 30 minutes.
 - A deployment installed with `meridian up --development`, and you are a deployment admin on it.
   See [Install a deployment](../getting-started/installation.md).
 - The `meridian` CLI, 0.1.21 or later, and Docker on this machine. From CLI 0.1.21,
-  `meridian plugin new` builds on SDK 0.10.0, whose `meridian.Pages` this tutorial's page is built
+  `meridian plugin new` builds on SDK 0.10.1, whose `meridian.Pages` this tutorial's page is built
   on.
 - To have done [Change your plugin's page, live](change-the-page-live.md), or be comfortable with
   `meridian plugin dev`.
