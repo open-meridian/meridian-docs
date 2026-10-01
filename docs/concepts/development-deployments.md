@@ -50,7 +50,7 @@ From a terminal signed in with `meridian connect`:
 | `meridian plugin dev --instance <id>` | Uploads the plugin if its version is not uploaded yet, launches it live once you approve its roles, then sends each save and reports what happens — `synced`, `restarted`, `ready`, `crashed` with the traceback — each with a revision number |
 | `meridian plugin logs` | What the plugin printed, since a revision |
 | `meridian plugin events` | Its traffic as it happens: what it published and received, and what its sidecar refused it |
-| `meridian plugin open` | A one-time link to its page for one browser, or with `--print <path>`, the page itself as you are served it |
+| `meridian plugin open` | A one-time link to its page for one browser, or with `--print <path>`, the page itself as you are served it, at the level `--level` names: `manage`, `open` or `view` |
 | `meridian plugin dev --release` | Turns the code as it is into an ordinary recorded version, uploaded and launched the ordinary way |
 
 Every one of these takes `--json` and exits non-zero on failure, so a coding

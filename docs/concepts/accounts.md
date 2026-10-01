@@ -36,10 +36,11 @@ business, never its owner's.
   linked to it.
 
 Accounts are given to people through **account groups**: explicit lists of
-accounts, which a permission names. There is no "all accounts" group and no
-nesting. An account in no account group is visible to deployment admins and
-to nobody else, and it is in no plugin's scope except through a link. See
-[Access](access.md).
+accounts, which a permission names, with no nesting. One is built in, **All
+accounts**, which holds every account, those opened later included. An
+account no other group lists is reached only through a permission naming All
+accounts, or by a plugin through a link; nobody reaches it by being an admin.
+See [Access](access.md).
 
 The platform never receives an account, its name, or anything recorded
 against it.
@@ -47,19 +48,20 @@ against it.
 ## External accounts
 
 A plugin that brings data from outside — a brokerage connector reading
-holdings, say — sees the source's own name for each account. A deployment
-admin links each external account to one of the firm's accounts, on the
-plugin's own admin pages: the plugin offers the firm's accounts, and sends the
-link acting for the admin. **A plugin creates an account only that way**, when
-the admin names a new account to link to; it may pre-fill the new account's
-custodian, type, owner and note from what the source reported, for the admin
-to change.
+holdings, say — sees the source's own name for each account. An admin of the
+plugin links each external account to one of the firm's accounts, on the
+plugin's own pages at `admin`, under Manage: the plugin offers the firm's
+accounts, by their identities alone, and sends the link acting for the admin.
+A plugin admin links to any existing account. **A plugin creates an account
+only that way**, when a deployment admin names a new account to link to; it
+may pre-fill the new account's custodian, type, owner and note from what the
+source reported, for the admin to change.
 
 The link is applied by the plugin's sidecar, on the way in. A holding naming a
 linked external account is recorded against the firm's account. One naming an
 external account nobody has linked is refused, with a code that says so, and
-the sidecar lists the unlinked accounts in its report of the plugin, so a
-deployment admin can see what needs linking. Nothing is recorded against a
+the sidecar lists the unlinked accounts in its report of the plugin, so its
+admins can see what needs linking. Nothing is recorded against a
 guess. A sync status for an unlinked account is not refused: it is shown
 beside the account, so an admin can tell whether it is worth linking.
 
@@ -87,9 +89,10 @@ from two things: the permissions that name it, and its own links.
 | **Read scope** | Every account some person may read through this plugin, and every account one of its external accounts is linked to |
 | **Write scope** | Every open account some person may write through this plugin, and every open account one of its external accounts is linked to |
 
-A person's access to a plugin is `read` or `write`, the same for every
+A person's data level on a plugin is `read` or `write`, the same for every
 plugin, and `write` includes `read`. A permission gives it on the accounts of
-an account group; see [Access](access.md).
+an account group; see [Access](access.md). `admin` on a plugin reaches no
+account, and adds nothing to its scope.
 
 **A link is the plugin's right to the account it names.** The plugin's role
 grants it the store, such as the street store for `custody`, and the link

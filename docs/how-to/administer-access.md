@@ -9,7 +9,7 @@ A **permission** joins three things:
 |---|---|---|
 | User group | Who | Directory groups, or logins |
 | Account group | On which accounts | The firm's accounts |
-| Access group | Using what | Plugins, each at `read` or `write` |
+| Access group | Using what | Plugins, each at `admin`, `read` or `write` |
 
 So a permission reads: *the people in this user group, using these plugins, on these accounts.* See [Access](../concepts/access.md) and [Accounts](../concepts/accounts.md) for the model.
 
@@ -62,6 +62,10 @@ are never deleted.
 
 To change it later, choose **Edit** on its row, and **Save**.
 
+**All accounts** is built in, and marked **built in** on its row. It holds every account, those
+opened later included, so a permission naming it covers accounts nobody has grouped. It cannot be
+edited.
+
 ## To say who: make a user group
 
 1. Open **User groups** and choose **+ Add**. The dialog is headed **New user group**.
@@ -89,9 +93,10 @@ the first part of their entry's name (`ada` of `uid=ada,ou=people,…`).
 
 ## To say what: make an access group
 
-An access group lists plugins, each at `read` or `write`. It is the same two levels for every
-plugin:
+An access group lists plugins, each at a level. It is the same three levels for every plugin:
 
+- `admin`: the person configures the plugin, its settings and its own pages at `admin`, and sees no
+  account's data. See [A plugin's admins](../concepts/access.md#a-plugins-admins).
 - `read`: the plugin may show the person what it reads, on the accounts they may read.
 - `write`, which includes `read`: the plugin may also act for the person, on the accounts they may
   write.
@@ -102,33 +107,63 @@ nothing to do with who may use it.
 1. Open **Access groups** and choose **+ Add**. The dialog is headed **New access group**.
 2. Enter a **Name**.
 3. Under **Plugins**, choose each plugin the group gives, from the searchable list of the
-   deployment's plugin instances, and beside each choose its one level: **Read**, or **Write
-   (includes read)**.
+   deployment's plugin instances, and beside each choose one of:
+    - **Read**
+    - **Write (includes read)**
+    - **Admin (configures it, no account)**
+    - **Admin and read**
+    - **Admin and write**
 4. Choose **Create**.
 
 The plugin instance must be running and have reported to the deployment. If not, the page says so.
 
-**Deployment admin** is a built-in access group. It gives the dashboard and every account, and it
-cannot be edited.
+Two access groups are built in, and neither can be edited:
+
+- **Deployment admin** gives the deployment's own capabilities, and no plugin and no account.
+- **All plugins (admin)** gives `admin` on every plugin, those launched later included, and no
+  account.
 
 ## To grant a permission
 
 1. Open **Permissions** and choose **+ Add**. The dialog is headed **Grant a permission**.
 2. Choose the **User group**.
-3. Choose **On accounts**: an account group, or **Every account (deployment admin only)**.
+3. Choose **On accounts**: an account group, **All accounts** among them, or **None (admin only, and
+   the built-in access groups)**.
 4. Choose the **Access** group.
 5. Choose **Grant**.
 
-Deployment admin is granted on every account. Any other access group is granted on an account group.
-The same permission cannot be granted twice.
+A permission to **Deployment admin**, to **All plugins (admin)**, or to an access group that gives
+only `admin`, is granted on no account group: configuring is not an act on an account. Any other
+access group is granted on an account group. The same permission cannot be granted twice.
+
+An access group already granted on no account group cannot gain a `read` or `write` entry, which
+would need one: the page says which permission to withdraw, or give the data level in another group.
 
 ## To make someone a deployment admin
 
-Grant a permission with **Access** set to **Deployment admin** and **On accounts** set to
-**Every account (deployment admin only)**, to a user group they are in.
+Grant a permission with **Access** set to **Deployment admin** and **On accounts** set to **None**,
+to a user group they are in.
 
 With a directory, the simpler route is usually the group you named in the wizard: add the person to
-it in your directory. The wizard made a user group called **Deployment admins** for it.
+it in your directory. The wizard made a user group called **Deployment admins** for it, and linked
+it to **All plugins (admin)** as well.
+
+## To make someone a plugin's admin
+
+1. Make an access group giving the plugin at **Admin (configures it, no account)**, or at **Admin
+   and read** or **Admin and write** if they also work in it.
+2. Grant it to a user group they are in: on **None** for admin alone, or on an account group for a
+   data level beside it.
+
+They find the plugin on their home with **Manage**, which opens its pages at `admin`. Its settings
+are in the dashboard's admin view of the plugin, at `/admin/plugins/<instance>`, which shows them the
+tabs **Overview**, **Settings** and **Access**; they read **Access** and change nothing there, since
+only a deployment admin grants.
+
+To make every plugin's admins one group, grant **All plugins (admin)** on **None**. To keep
+configuring plugins apart from administering the deployment, withdraw the permission first run made
+from **Deployment admins** to **All plugins (admin)**: deployment admins then configure no plugin
+unless granted.
 
 ## To withdraw a permission
 
@@ -141,26 +176,28 @@ A plugin that reads a broker or custodian names accounts as that source does. Li
 deployment which of your accounts that is. Until a source's account is linked, the deployment
 refuses the plugin's rows for it.
 
-Each plugin links its own external accounts, on its own admin pages, because only the plugin
-knows what its accounts mean. For SnapTrade:
+Each plugin links its own external accounts, on its own pages at `admin`, because only the plugin
+knows what its accounts mean. An admin of the plugin links them, under **Manage**. For SnapTrade:
 
-1. Open **Plugins**, choose **Manage** on the plugin's row, and open its **Account links** tab.
+1. On the dashboard's home, choose **Manage** on the plugin, and open its **Account links** tab.
 2. The table opens on the accounts not yet linked. Search it by name, number, custodian or type,
    or group it by connection.
-3. On an account's row, choose **Link…**. Link it to an existing account, found by typing its name,
-   or create a new account for it and link it in one step. A linked account offers **Change…**,
-   and **Unlink**.
+3. On an account's row, choose **Link…**. Link it to an existing account, found by typing its name.
+   A deployment admin may instead create a new account for it and link it in one step. A linked
+   account offers **Change…**, and **Unlink**.
 
 Where an account's name or number matches exactly one of yours, the row suggests it: **Link**
-takes it, and **Other…** opens the same choices. **Link N suggested…** reviews every suggestion the search finds, and links those you keep
-in one go.
+takes it, and **Other…** opens the same choices. **Link N suggested…** reviews every suggestion the
+search finds, and links those you keep in one go.
 
 A new account's custodian starts as the connection's brokerage and its type as the account type
 SnapTrade reports; change or clear either before you create it. Give it an owner or a note
 afterwards, with **Edit** on the **Accounts** tab.
 
-The plugin sends the link for you, and the deployment checks you are a deployment admin and that
-the plugin reported that account. A plugin's health on the **Plugins** tab counts the accounts it
+The plugin sends the link for you. The deployment checks that you opened the plugin by **Manage**,
+that the plugin reported that account, and, for a new account, that you are a deployment admin.
+Under Manage the plugin reads your accounts' identities only: their names, custodians and types,
+never their holdings. The **Plugins** tab of Settings counts, for each plugin, the accounts it
 reaches that nothing links.
 
 ## To end someone's terminal sessions
@@ -170,9 +207,11 @@ The **Terminal sessions** tab lists who is signed in from a terminal with `merid
 
 ## What people see
 
-On the dashboard's home page, each person sees the plugins they hold access to. A deployment admin
-sees every launched plugin. A plugin page opens only for someone with access to at least one
-account through it, or a deployment admin.
+On the dashboard's home, each person sees the plugins they hold a level on, with a button for each:
+**Manage** for `admin`, **Open** for `write`, **View** for `read` (a writer gets View too). A
+deployment admin linked to **All plugins (admin)** sees every launched plugin, with **Manage**, and
+**Open** or **View** only where a permission gives them `write` or `read`. A plugin opens only at a
+level the person holds. See [Manage, Open and View](../concepts/plugins.md#manage-open-and-view).
 
 ## Related
 

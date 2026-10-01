@@ -254,7 +254,8 @@ Applying takes a couple of minutes and restarts what changed.
 
 1. If you used a port-forward, stop it with Ctrl-C.
 2. Open the dashboard at the address you gave it and sign in. The administrators you named hold
-   deployment admin from their first sign-in.
+   deployment admin from their first sign-in, and `admin` on every plugin through **All plugins
+   (admin)**: configuring plugins, not reading their data. See [Access](../concepts/access.md).
 3. Sign the CLI in as yourself, so you can bring in plugins from a terminal:
 
     ```bash

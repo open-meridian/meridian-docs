@@ -11,8 +11,9 @@ your agent is doing. Allow 15 minutes.
 
 - A deployment installed with `meridian up --development`. See
   [Install a deployment](../getting-started/installation.md).
-- You are a deployment admin on it.
-- The `meridian` CLI, 0.1.3 or later (`meridian --version`).
+- You are a deployment admin on it, and so an admin of every plugin through **All plugins (admin)**.
+- The `meridian` CLI, 0.1.21 or later (`meridian --version`), which scaffolds the pages shown here and
+  takes `--level`.
 - Docker on this machine.
 - Two terminals.
 
@@ -58,24 +59,30 @@ Leave this terminal running.
 
 ## 3. Look at the page
 
+The reference plugin has two pages: **Setup**, at `/setup`, under Manage, and **Accounts**, at `/`,
+under Open and View. You hold `admin` on it, so you look at Setup, at Manage.
+
 In the second terminal, from `live-demo/`:
 
 ```bash
-meridian plugin open --instance live-demo --print /
+meridian plugin open --instance live-demo --level manage --print /setup
 ```
 
-This prints the page at `/` exactly as you are served it. Among the HTML you should see:
+This prints the page at `/setup` exactly as you are served it in a Manage session. Among the HTML you
+should see:
 
 ```html
-<h1>Reference plugin</h1><p>Signed in as <strong>…</strong>.</p>
+<div><h1>Reference plugin</h1></div>
 ```
 
 `--print` needs no browser and gives the same answer every time, so it is the best way to check a
-change.
+change. Name the level: without `--level` it asks at the first level you hold, and a page serves
+only the levels it is declared with, so `--print /` at Manage is refused with 403.
 
 ## 4. Change the page
 
-Open `src/live_demo/page.py` and change the title:
+Open `src/live_demo/page.py` and change the title, which the kit's base template draws as every
+page's heading:
 
 ```python title="src/live_demo/page.py"
 TITLE = "My live page"
@@ -93,11 +100,11 @@ r2 ready
 Print the page again:
 
 ```bash
-meridian plugin open --instance live-demo --print /
+meridian plugin open --instance live-demo --level manage --print /setup
 ```
 
 ```html
-<h1>My live page</h1><p>Signed in as <strong>…</strong>.</p>
+<div><h1>My live page</h1></div>
 ```
 
 !!! tip
@@ -156,8 +163,11 @@ meridian plugin open --instance live-demo
 ```
 
 It prints a link. Open it within a minute; it works once and signs that one browser in to this
-plugin's page alone. Reload as often as you like. You can also open the plugin from the dashboard's
-home page.
+plugin's page alone, at the first level you hold, Manage. The link lands on the plugin's `/`, which
+the reference plugin serves only under Open and View, so the browser says
+`/ is not served under Manage; it is for Open and View.` Go to `/setup` on the same address,
+`http://live-demo.plugins.meridian.localhost/setup`, and reload as often as you like. The
+dashboard's home opens the plugin with **Manage** straight onto its **Setup** tab.
 
 ## 8. Release it
 

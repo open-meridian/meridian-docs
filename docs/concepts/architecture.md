@@ -69,7 +69,7 @@ published image, `ghcr.io/open-meridian/meridian-runtime`.
 
 | Component | What it does |
 |---|---|
-| **dashboard** | The one address your staff use. It signs people in — through your OpenID Connect provider, your LDAP, or accounts it holds itself — runs the first-run wizard and Settings, where a deployment admin administers it, and serves each plugin's page on its own name, `<instance>.plugins.<host>`. It signs what it tells a plugin about a person with a key of its own, which is not the deployment's key. |
+| **dashboard** | The one address your staff use. It signs people in — through your OpenID Connect provider, your LDAP, or accounts it holds itself — runs the first-run wizard and Settings, where a deployment admin administers it, and serves each plugin's pages on its own name, `<instance>.plugins.<host>`, opened by Manage, Open or View at a level the person holds. It signs what it tells a plugin about a person with a key of its own, which is not the deployment's key. |
 | **conductor** | The only component that holds the deployment's private key, and so the only one that reaches the platform. It also holds the configuration store: accounts, who may reach what, and the plugin catalogue. There is one conductor; redundancy means a standby, not a second one. |
 | **instrument store** | What this deployment knows about instruments, and the answer to every instrument question, locally. It holds a copy of the identity the platform publishes, so resolution keeps working when the platform cannot be reached. |
 | **street store** | What custodians say is held: statements, holdings and custodial positions. The one store whose contents nothing else can rebuild. |

@@ -31,6 +31,6 @@ developer guide. They are written from the code of
 [meridian-python](https://github.com/open-meridian/meridian-python),
 [meridian-schema](https://github.com/open-meridian/meridian-schema) and
 [meridian-ui](https://github.com/open-meridian/meridian-ui); when those
-change, the pages change with them. Today they describe CLI 0.1.19, SDK
-0.7.1 and kit 0.5.0. A page describes what is built, and says so where
+change, the pages change with them. Today they describe CLI 0.1.21, SDK
+0.10.0 (contract v5) and kit 0.7.0. A page describes what is built, and says so where
 something is specified and not built yet.

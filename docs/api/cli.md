@@ -4,7 +4,7 @@
 
 Nothing in a cloud install depends on it. A marketplace listing's form and the deployment's own wizard are the whole path there; `meridian` makes the same things convenient from a terminal.
 
-This page describes release 0.1.19 of the command line. `meridian --version` says which one you have. For installing it, see [Install a deployment](../getting-started/installation.md).
+This page describes release 0.1.21 of the command line. `meridian --version` says which one you have. For installing it, see [Install a deployment](../getting-started/installation.md).
 
 ## Synopsis
 
@@ -25,7 +25,7 @@ meridian plugin stop <id>
 meridian plugin dev --instance <id> [--dir <dir>] [--yes] [--json] [--release]
 meridian plugin logs --instance <id> [--since <revision>] [--json]
 meridian plugin events --instance <id> [--since <revision>] [--follow] [--json]
-meridian plugin open --instance <id> [--print <path>] [--json]
+meridian plugin open --instance <id> [--level manage|open|view] [--print <path>] [--json]
 meridian upgrade [--to <version>]
 meridian uninstall [--yes]
 meridian --version
@@ -282,7 +282,7 @@ If the deployment can't be reached, the session is still forgotten here and laps
 meridian plugin new <name> [--into <dir>]
 ```
 
-Writes a working plugin to start from: the Python SDK's reference plugin, renamed to `<name>`. It needs no network, because the template is compiled into the binary. It writes the plugin's code and page, its tests (`tests/test_page.py`), a `Dockerfile`, `pyproject.toml`, `.dockerignore`, `.gitignore`, `README.md`, `AGENTS.md`, `CLAUDE.md`, a `develop-live` skill for Claude Code, and a CI workflow that runs `meridian plugin check --run-tests` (`.github/workflows/check.yaml`), then prints the next steps. From CLI 0.1.18 the plugin pins SDK 0.7.1 (0.1.16 and 0.1.17 pinned 0.6.1). See [Your first plugin](../getting-started/first-plugin.md).
+Writes a working plugin to start from: the Python SDK's reference plugin, renamed to `<name>`. It needs no network, because the template is compiled into the binary. It writes the plugin's code and its pages, each a view function and a Jinja2 template declared with the levels it serves (a **Setup** page under Manage, at `admin`, and an **Accounts** page under Open and View, at `write` and `read`), its tests (`tests/test_page.py`), a `Dockerfile`, `pyproject.toml`, `.dockerignore`, `.gitignore`, `README.md`, `AGENTS.md`, `CLAUDE.md`, a `develop-live` skill for Claude Code, and a CI workflow that runs `meridian plugin check --run-tests` (`.github/workflows/check.yaml`), then prints the next steps. From CLI 0.1.21 the plugin pins SDK 0.10.0, and needs a deployment whose sidecar accepts contract v5 (0.1.20 pinned 0.9.0, 0.1.18 and 0.1.19 pinned 0.7.1, and 0.1.16 and 0.1.17 pinned 0.6.1). See [Your first plugin](../getting-started/first-plugin.md).
 
 `<name>` must be lowercase letters, digits and single hyphens, starting with a letter. It becomes the package name, and, with hyphens as underscores, the module name.
 
@@ -434,6 +434,9 @@ The rewrites keep a file's formatting and comments wherever they change nothing.
 | 0.6.0 to 0.6.1 | Nothing: only the pins move | |
 | 0.6.1 to 0.7.0: the unlinked refusal is `meridian.NotLinked` | a meridian error's words tested for "not linked" (`"is not linked" in str(err)`, or in `err.detail`) to `isinstance(err, meridian.NotLinked)`, dropping the `isinstance(err, CallFailed)` and `err.kind == "refused"` beside it (`not-linked-isinstance`); `except meridian.CallFailed as err: if <that>: ... else: raise` to `except meridian.NotLinked: ...`, in a try's last handler (`not-linked-except`); a test's `CallFailed(topic, "refused", "... is not linked ...")` to `NotLinked(topic, "...")` (`not-linked-raised`) | the words "not linked" matched anywhere else in the plugin's code (`not-linked-by-text`) |
 | 0.7.0 to 0.7.1 | Nothing: only the pins move. 0.7.1 is the first release that carries the migrations | |
+| 0.7.1 to 0.8.0: the SDK declares contract v3 | Nothing: only the pins move | |
+| 0.8.0 to 0.9.0: the SDK declares contract v4, and the asset class a plugin reports with a miss is an enum | `report_missing_instrument`'s `asset_class`, a string naming one of the seven classes in another case or with its prefix (`"EQUITY"`, `"asset_class_cash"`), to the class's spelling (`"equity"`, `"cash"`) (`asset-class-spelling`) | an `asset_class` string naming no class, such as `"etf"` (`asset-class-unknown`); one the migration cannot read, such as a variable (`asset-class-computed`) |
+| 0.9.0 to 0.10.0: the SDK declares contract v5; pages carry their levels, and a session the level it was opened at | `Interface(admin_pages=...)` to `pages=` (`admin-pages-keyword`); a `Page(path, title)` naming no levels to `Page(path, title, levels=["admin"])` (`page-at-admin`) | `caller.deployment_admin` read to decide who is served, which opens no page since contract v5: declare the page at `admin` or ask `caller.admin` (`deployment-admin-gate`); `admin_pages` read as an attribute (`admin-pages-read`); admin pages passed as `Interface`'s third argument (`admin-pages-positional`) |
 
 `plugin migrate` adds two rules of its own: `pin-elsewhere`, for the old release still named in another file (a Makefile's base image, a workflow, a README), which it reports rather than moves because some of those are history; and `unreadable`, for a file that is not UTF-8, or that a step could not read as Python, which it leaves as it was.
 
@@ -442,7 +445,7 @@ The rewrites keep a file's formatting and comments wherever they change nothing.
 In text, the pins it moved, each step with the files it rewrote and how many places each rule did, what is left by hand with what to write instead, and then the check's own report:
 
 ```text
-meridian plugin migrate: ., open-meridian 0.5.0 to 0.7.0, the steps run in ghcr.io/open-meridian/plugin-python:0.7.1
+meridian plugin migrate: ., open-meridian 0.5.0 to 0.7.0, the steps run in ghcr.io/open-meridian/plugin-python:0.10.0
 
   pins  pyproject.toml:10     open-meridian==0.5.0 -> open-meridian==0.7.0
         Dockerfile:2          ghcr.io/open-meridian/plugin-python:0.5.0 -> ghcr.io/open-meridian/plugin-python:0.7.0
@@ -472,7 +475,7 @@ With `--json`, one object. `image` is `null` when the plugin was on its target a
 ```json
 {
   "dir": ".", "meridian": "0.1.18", "sdk": "open-meridian",
-  "from": "0.5.0", "to": "0.7.0", "image": "ghcr.io/open-meridian/plugin-python:0.7.1",
+  "from": "0.5.0", "to": "0.7.0", "image": "ghcr.io/open-meridian/plugin-python:0.10.0",
   "done": false,
   "pins": [{"file": "pyproject.toml", "line": 10, "from": "open-meridian==0.5.0", "to": "open-meridian==0.7.0"}, …],
   "steps": [{"from": "0.5.0", "to": "0.6.0", "summary": "…", "breaking": true,
@@ -484,13 +487,13 @@ With `--json`, one object. `image` is `null` when the plugin was on its target a
 }
 ```
 
-`breaking` says whether a plugin left on the old release's code fails on the new one (0.5.0 to 0.6.0), rather than keeping a form the new release no longer promises (0.6.1 to 0.7.0, whose refusal still says "is not linked" today).
+`breaking` says whether a plugin left on the old release's code fails on the new one (0.5.0 to 0.6.0, and 0.8.0 to 0.9.0), rather than keeping a form the new release no longer promises (0.6.1 to 0.7.0, whose refusal still says "is not linked" today, and 0.9.0 to 0.10.0, which still takes `admin_pages` as pages at `admin`, with a `DeprecationWarning`).
 
 **Exit codes:** `0` migrated, nothing left by hand, and every rule holds; `1` something is left by hand or a rule does not hold, or it could not run (docker failed, or the SDK image carries no migrations), in which case nothing was changed; `2` asked wrongly, or refused before changing anything: `--dir` not a directory, no pins or pins that disagree, a `--to` older than the pin or not released, no recorded steps from the pinned release, or changes git does not hold yet without `--force`.
 
 ## Plugin commands on a deployment
 
-`plugin upload`, `list`, `launch`, `stop`, `dev`, `logs`, `events` and `open` act through the session `meridian connect` keeps. The deployment answers `upload`, `list`, `launch`, `stop`, `dev`, `logs` and `events` for a deployment admin only. It answers `open` for anybody who holds access on that plugin. See [Access](../concepts/access.md).
+`plugin upload`, `list`, `launch`, `stop`, `dev`, `logs`, `events` and `open` act through the session `meridian connect` keeps. The deployment answers `upload`, `list`, `launch`, `stop`, `dev`, `logs` and `events` for a deployment admin only. It answers `open` for anybody who holds a level on that plugin, at a level they hold. See [Access](../concepts/access.md).
 
 These flags are shared among them:
 
@@ -505,6 +508,7 @@ These flags are shared among them:
 | `--since` | `<revision>` | none | `logs`, `events` | Only what came after that revision, a whole number. |
 | `--follow` | | off | `events` | Keep reporting events as they happen, until interrupted. |
 | `--print` | `<path>` | none | `open` | The page at that path on the plugin's host, as you are served it, instead of a link. |
+| `--level` | `manage`, `open` or `view` | the first level you hold | `open` | The level the session is opened at, as the dashboard's buttons: `manage` (`admin`), `open` (`write`) or `view` (`read`). From CLI 0.1.21. |
 
 **Exit codes** for all of them: `0` done, `1` refused or failed, `2` asked wrongly, `3` no session or it has lapsed.
 
@@ -516,7 +520,7 @@ meridian plugin upload [--dir <dir>] [--deployment <addr>]
 
 Builds the plugin's image on this machine and puts it in the deployment's catalogue as a version. The steps:
 
-1. Read `pyproject.toml` and check its [plugin manifest](plugin-manifest.md). From CLI 0.1.14, a `[tool.meridian]` that declares `tags` is refused here, before anything is built: a plugin declares none, since access to a plugin is `read` or `write` in the deployment's access groups.
+1. Read `pyproject.toml` and check its [plugin manifest](plugin-manifest.md). From CLI 0.1.14, a `[tool.meridian]` that declares `tags` is refused here, before anything is built: a plugin declares none, since a person's level on a plugin is `admin`, `read` or `write`, in the deployment's access groups.
 2. Build the image with `docker build`, tagged `meridian-plugin/<name>:<version>`.
 3. Read the image back with `docker save`.
 4. Push it into the deployment's registry through the dashboard. A layer the registry already holds is not sent again, and one another plugin's repository holds is mounted from there.
@@ -632,28 +636,45 @@ With `--json` and no `--follow`, one object: `{"revision": <now>, "events": [ �
 ### `meridian plugin open`
 
 ```text
-meridian plugin open --instance <id> [--print <path>] [--json] [--deployment <addr>]
+meridian plugin open --instance <id> [--level manage|open|view] [--print <path>] [--json] [--deployment <addr>]
 ```
 
-Without `--print`, it prints a link to the plugin's page. The first browser that opens the link, within a minute, is signed in to that plugin's page alone, for as long as your terminal session lasts. Run `open` again for another browser. With `--json`:
+A session on a plugin carries one level, as the dashboard home's buttons do: **Manage** at `admin`, **Open** at `write`, **View** at `read`. See [Manage, Open and View](../concepts/plugins.md#manage-open-and-view).
+
+`--level` names it: `manage`, `open` or `view`, or the level's own name, `admin`, `write` or `read`, in any case. Anything else is refused before anything is asked, and so is a level you do not hold, by the deployment, naming the levels you do. Without `--level`, the session is opened at the first level you hold, Manage before Open before View, as the home's first button is. From CLI 0.1.21; an earlier CLI names no level, and the dashboard opens at the first held.
+
+A page serves only the levels it is declared with. So the first level you hold may well be refused the page you ask for: as a plugin's admin, which a deployment admin is on every plugin through All plugins (admin), the scaffold's Accounts page at `/` is refused at Manage. Name the level the page is for:
+
+```bash
+meridian plugin open --instance my-plugin --level manage --print /setup   # the Setup page
+meridian plugin open --instance my-plugin --level open --print /          # the Accounts page, if you hold write
+```
+
+Without `--print`, it prints a link to the plugin's page, at that level. The first browser that opens the link, within a minute, is signed in to that plugin's page alone, for as long as your terminal session lasts, and lands on its `/`; any other path on the same host is then open to it at that level. Run `open` again for another browser. With `--json`, the level the dashboard opened it at comes too:
 
 ```json
-{"instance_id": "my-plugin", "url": "https://…"}
+{"instance_id": "my-plugin", "url": "https://…", "level": "admin"}
 ```
 
-With `--print <path>`, it prints the page at that path on the plugin's host, as you would be served it, instead of a link:
+With `--print <path>`, it prints the page at that path on the plugin's host, as you would be served it in a session at that level, instead of a link:
 
 - `<path>` starts with a single `/`, and may not be under `/.meridian`.
 - A page is at most 8 MiB, and redirects are not followed.
-- It exits 1 when the plugin answers with a status outside 200–299, after printing what the plugin answered.
+- It exits 1 when the plugin answers with a status outside 200–299, after printing what the plugin answered. The message on stderr names the level it was asked at. A 403 at the first level you hold, with no `--level` given, says so, and which `--level` asks at another:
+
+```text
+meridian plugin open: my-plugin answered 403 for / at Manage (admin), the first level you hold; a page serves only the levels it is declared with, and `--level open` or `--level view` asks at another
+```
+
+A page built on `meridian.Pages` answers such a request with why, such as `/ is not served under Manage; it is for Open and View.`
 
 With `--json`, one object:
 
 ```json
-{"instance_id": "my-plugin", "status": 200, "content_type": "text/html; charset=utf-8", "body": "…"}
+{"instance_id": "my-plugin", "status": 200, "level": "write", "content_type": "text/html; charset=utf-8", "body": "…"}
 ```
 
-A body that is not UTF-8 text comes as `body_base64` instead of `body`.
+A body that is not UTF-8 text comes as `body_base64` instead of `body`. `level` is left out by a dashboard older than levels.
 
 ## `meridian upgrade`
 

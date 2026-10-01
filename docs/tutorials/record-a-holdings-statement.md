@@ -3,7 +3,7 @@
 In this tutorial you build a small **custody** plugin. It records a holdings statement, one read of
 one source at one moment, and a holding in it, against one of your firm's accounts. On the way you
 set up everything a plugin needs before a deployment lets it write: a role, an account, and a link
-from the source's name for that account to yours, made on an admin page the plugin serves.
+from the source's name for that account to yours, made on a page the plugin serves under Manage.
 
 !!! warning "What this tutorial cannot show yet"
     Read this first. The tutorial runs end to end, but three things are not built yet:
@@ -21,9 +21,9 @@ Allow 30 minutes.
 
 - A deployment installed with `meridian up --development`, and you are a deployment admin on it.
   See [Install a deployment](../getting-started/installation.md).
-- The `meridian` CLI, 0.1.16 or later, and Docker on this machine. From CLI 0.1.18,
-  `meridian plugin new` builds on SDK 0.7.1; 0.1.16 and 0.1.17 build on 0.6.1. This tutorial runs on
-  either.
+- The `meridian` CLI, 0.1.21 or later, and Docker on this machine. From CLI 0.1.21,
+  `meridian plugin new` builds on SDK 0.10.0, whose `meridian.Pages` this tutorial's page is built
+  on.
 - To have done [Change your plugin's page, live](change-the-page-live.md), or be comfortable with
   `meridian plugin dev`.
 
@@ -39,7 +39,7 @@ role:
 | Step | SDK call | What it does |
 |---|---|---|
 | W2.8 | `report_external_accounts` | Says which accounts the source reaches, as the source names them |
-| W6.4 | `read_accounts_for_linking` | Reads the firm's accounts, for a deployment admin on the plugin's page |
+| W6.4 | `read_accounts_for_linking` | Reads the firm's accounts, their identities alone, for the admin viewing the plugin's page under Manage |
 | W6.4 | `link_external_account` | Links one of the source's accounts to one of the firm's, for that admin |
 | W2.1 | `report_sync_status` | Says how fresh the source's data is for one external account |
 | W3.1 | `resolve_identifier` | Asks which instrument an identifier means |
@@ -51,9 +51,9 @@ follow.
 
 Two rules decide whether a row is accepted:
 
-1. **The external account must be linked.** The plugin names an account as the source knows it. A
-   deployment admin links that to one of the firm's accounts, on an admin page the plugin serves,
-   and the plugin sends the link acting for them. A row for an unlinked account is refused.
+1. **The external account must be linked.** The plugin names an account as the source knows it. An
+   admin of the plugin links that to one of the firm's accounts, on a page the plugin serves under
+   Manage, and the plugin sends the link acting for them. A row for an unlinked account is refused.
 2. **The account must be in the plugin's write scope.** The link puts it there: the `custody` role
    lets the plugin write to the street store, and the link gives it the one account, for as long as
    the link stands. No permission is needed for that. A permission is what lets people use a plugin
@@ -115,7 +115,7 @@ meridian plugin logs --instance holdings-demo
 ```text
 … INFO holdings_demo: registered as holdings-demo, roles custody
 … INFO holdings_demo: may publish …; may subscribe …
-… INFO holdings_demo: serving its page on 127.0.0.1:8000
+… INFO holdings_demo: serving its pages on 127.0.0.1:8000
 ```
 
 The `may publish` list is what the `custody` role grants.
@@ -174,25 +174,18 @@ custodian.
 
 ## 6. Serve an Accounts page
 
-Linking is done on the plugin's own admin page, because only the plugin knows what its accounts
-are. Replace `src/holdings_demo/page.py`, the scaffold's page, with this one:
+Linking is done on one of the plugin's own pages, at `admin`, because only the plugin knows what its
+accounts are. A page at `admin` is shown and served under **Manage** alone, and shows no account's
+data: the accounts' identities and links are configuration. Replace `src/holdings_demo/page.py`, the
+scaffold's pages, with this one:
 
 ```python title="src/holdings_demo/page.py"
-"""The plugin's Accounts page, for deployment admins only: link each account
-the source reaches to one of the deployment's accounts (W6.4)."""
+"""The plugin's Accounts page, under Manage: link each account the source
+reaches to one of the deployment's accounts (W6.4)."""
 
 from __future__ import annotations
 
-import asyncio
-import hashlib
-import hmac
-import html
-import http.server
-import secrets
-import threading
-from collections.abc import Sequence
-from typing import Any
-from urllib.parse import parse_qs
+from pathlib import Path
 
 import meridian
 from meridian.plugin.v1 import operations_pb2 as ops
@@ -201,162 +194,134 @@ from .source import ACCOUNTS as REPORTED
 from .source import CUSTODIAN
 
 TITLE = "Holdings demo"
-KIT = "/.meridian/ui/0.5.0/"  # the plugin UI kit, which the dashboard serves
 ACCOUNTS = "/admin/accounts"
-ADMIN_PAGES = (meridian.Page(ACCOUNTS, "Accounts"),)
 
-# A secret only this process knows, for the forms' tokens.
-_SECRET = secrets.token_bytes(32)
+pages = meridian.Pages(TITLE, templates=Path(__file__).parent / "templates")
 
 
-def form_token(caller: meridian.Caller) -> str:
-    return hmac.new(_SECRET, caller.subject.encode(), hashlib.sha256).hexdigest()
+@pages.page(ACCOUNTS, "Accounts", levels="admin")
+async def accounts(request: meridian.Request) -> str:
+    return await show(request)
 
 
-def render(
-    caller: meridian.Caller,
-    offered: Sequence[ops.AccountRecord],
-    notice: str = "",
-    bad: bool = False,
-) -> str:
-    e = html.escape
-    choices = "".join(
-        f'<option value="{e(a.account_id)}">{e(a.name)}</option>'
-        for a in offered
-        if a.state != ops.ACCOUNT_STATE_CLOSED
+@pages.route(ACCOUNTS, levels="admin", methods=["POST"])
+async def link(request: meridian.Request) -> str:
+    caller, form = request.caller, request.form
+    external = form.get("external_account_id", "")
+    account_id = form.get("account_id", "")
+    # Only a deployment admin names a new account; the sidecar refuses anybody else.
+    new_name = form.get("new_account_name", "") if caller.deployment_admin else ""
+    if not (account_id or new_name):  # neither would remove the link
+        return await show(request, "Choose an account, or name a new one.", bad=True)
+    try:
+        # Sent for the admin: the sidecar checks this is a Manage session,
+        # and that this plugin reported the account.
+        await request.plugin.link_external_account(
+            external_account_id=external,
+            account_id=account_id,
+            new_account_name="" if account_id else new_name,
+            # Pre-filled from the source, and ignored with no new name.
+            new_account_custodian=form.get("new_account_custodian", ""),
+            new_account_type=form.get("new_account_type", ""),
+            acting_for=caller.header,
+        )
+    except meridian.MeridianError as refused:
+        return await show(request, f"Refused: {refused}", bad=True)
+    return await show(request, f"Linked {external}.")
+
+
+async def show(request: meridian.Request, notice: str = "", bad: bool = False) -> str:
+    try:
+        # The deployment's accounts, their identities alone, read for the admin.
+        read = await request.plugin.read_accounts_for_linking(acting_for=request.caller.header)
+        offered = [a for a in read.accounts if a.state != ops.ACCOUNT_STATE_CLOSED]
+    except meridian.MeridianError as failed:
+        offered, notice, bad = [], f"Refused: {failed}", True
+    return pages.render(
+        "link.html",
+        reported=REPORTED,
+        offered=offered,
+        custodian=CUSTODIAN,
+        notice=notice,
+        tone="bad" if bad else "good",
     )
-    hidden = f'<input type="hidden" name="token" value="{form_token(caller)}">'
-    rows = "".join(
-        f"<tr><td><code>{e(a.external_account_id)}</code><br>{e(a.name)}</td><td>"
-        f'<form method="post" action="{ACCOUNTS}" class="inline">{hidden}'
-        f'<input type="hidden" name="external_account_id" value="{e(a.external_account_id)}">'
-        f'<select name="account_id" required><option value="">Choose an account</option>'
-        f"{choices}</select> <button>Link</button></form></td><td>"
-        f'<form method="post" action="{ACCOUNTS}" class="inline">{hidden}'
-        f'<input type="hidden" name="external_account_id" value="{e(a.external_account_id)}">'
-        f'<input name="new_account_name" value="{e(a.name)}" required> '
-        f'<input name="new_account_custodian" value="{e(CUSTODIAN)}" aria-label="Custodian"> '
-        f'<input name="new_account_type" value="{e(a.venue_account_type)}" aria-label="Type"> '
-        '<button class="primary">Create and link</button></form></td></tr>'
-        for a in REPORTED
-    )
-    tone = "bad" if bad else "good"
-    said = f'<div class="notice {tone}" role="status">{e(notice)}</div>' if notice else ""
-    return (
-        '<!doctype html><html lang="en"><head><meta charset="utf-8">'
-        '<meta name="viewport" content="width=device-width, initial-scale=1">'
-        f'<title>Accounts</title><link rel="stylesheet" href="{KIT}meridian.css">'
-        f'<script src="{KIT}meridian.js"></script></head><body><main class="page">'
-        '<header class="page-head"><div><h1>Accounts</h1>'
-        "<p>Link each account the source reaches to one of yours.</p></div></header>"
-        f'{said}<section class="panel"><table><thead><tr><th>At the source</th>'
-        "<th>Link to an existing account</th><th>Or to a new one</th></tr></thead>"
-        f"<tbody>{rows}</tbody></table></section></main></body></html>"
-    )
+```
 
+And give it its template, in the scaffold's `templates/` directory:
 
-def serve(plugin: meridian.Plugin, loop: asyncio.AbstractEventLoop, port: int) -> Any:
-    """Serve the page on 127.0.0.1:`port`, in a thread; operations run on `loop`."""
+```html+jinja title="src/holdings_demo/templates/link.html"
+{% extends "meridian/base.html" %}
+{% block content %}
+<p class="muted">Link each account the source reaches to one of yours.</p>
+{% if notice %}
+<div class="notice {{ tone }}" role="status">{{ notice }}</div>
+{% endif %}
+<section class="panel">
+  <table>
+    <thead><tr>
+      <th>At the source</th><th>Link to an existing account</th>
+      {% if caller.deployment_admin %}<th>Or to a new one</th>{% endif %}
+    </tr></thead>
+    <tbody>
+    {% for a in reported %}
+      <tr>
+        <td><code>{{ a.external_account_id }}</code><br>{{ a.name }}</td>
+        <td>
+          <form method="post" action="/admin/accounts" class="inline">{{ csrf_input }}
+            <input type="hidden" name="external_account_id" value="{{ a.external_account_id }}">
+            <select name="account_id" required aria-label="Account">
+              <option value="">Choose an account</option>
+              {% for o in offered %}<option value="{{ o.account_id }}">{{ o.name }}</option>{% endfor %}
+            </select>
+            <button>Link</button>
+          </form>
+        </td>
+        {% if caller.deployment_admin %}
+        <td>
+          <form method="post" action="/admin/accounts" class="inline">{{ csrf_input }}
+            <input type="hidden" name="external_account_id" value="{{ a.external_account_id }}">
+            <input name="new_account_name" value="{{ a.name }}" required aria-label="Name">
+            <input name="new_account_custodian" value="{{ custodian }}" aria-label="Custodian">
+            <input name="new_account_type" value="{{ a.venue_account_type }}" aria-label="Type">
+            <button class="primary">Create and link</button>
+          </form>
+        </td>
+        {% endif %}
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}
+```
 
-    def on_loop(work: Any) -> Any:
-        return asyncio.run_coroutine_threadsafe(work, loop).result(timeout=15)
+The scaffold's own templates, `setup.html` and `accounts.html`, are no longer used. Remove them:
 
-    class Page(http.server.BaseHTTPRequestHandler):
-        def _admin(self) -> meridian.Caller | None:
-            """The caller, when this is the Accounts page and they are a deployment admin."""
-            presented = self.headers.get_all("Meridian-Caller") or []
-            caller = meridian.Caller.from_header(presented[0]) if len(presented) == 1 else None
-            if self.path.partition("?")[0] != ACCOUNTS:
-                self._send(404, "No such page.")
-            elif caller is None or not caller.deployment_admin:
-                self._send(403, "This page is for deployment admins.")
-            else:
-                return caller
-            return None
-
-        def _send(self, status: int, body: str) -> None:
-            data = body.encode()
-            self.send_response(status)
-            self.send_header("Content-Type", "text/html; charset=utf-8")
-            self.send_header("Content-Length", str(len(data)))
-            self.end_headers()
-            self.wfile.write(data)
-
-        def _show(self, caller: meridian.Caller, notice: str = "", bad: bool = False) -> None:
-            try:
-                # The deployment's accounts, read for the admin viewing the page.
-                read = on_loop(plugin.read_accounts_for_linking(acting_for=caller.header))
-                offered = read.accounts
-            except meridian.MeridianError as failed:
-                offered, notice, bad = [], f"Refused: {failed}", True
-            self._send(200, render(caller, offered, notice, bad))
-
-        def do_GET(self) -> None:  # noqa: N802
-            caller = self._admin()
-            if caller is not None:
-                self._show(caller)
-
-        def do_POST(self) -> None:  # noqa: N802
-            body = self.rfile.read(int(self.headers.get("Content-Length") or 0))
-            form = {name: values[0] for name, values in parse_qs(body.decode()).items()}
-            caller = self._admin()
-            if caller is None:
-                return
-            token = form.get("token", "").encode()
-            if not hmac.compare_digest(token, form_token(caller).encode()):
-                self._send(403, "This form is out of date. Reload the page.")
-                return
-            external = form.get("external_account_id", "")
-            account_id = form.get("account_id", "")
-            new_name = form.get("new_account_name", "")
-            if not (account_id or new_name):  # neither would remove the link
-                self._show(caller, "Choose an account, or name a new one.", bad=True)
-                return
-            try:
-                # Sent for the admin: the sidecar checks they are a deployment
-                # admin, and that this plugin reported the account.
-                on_loop(
-                    plugin.link_external_account(
-                        external_account_id=external,
-                        account_id=account_id,
-                        new_account_name="" if account_id else new_name,
-                        # Pre-filled from the source, and ignored with no new name.
-                        new_account_custodian=form.get("new_account_custodian", ""),
-                        new_account_type=form.get("new_account_type", ""),
-                        acting_for=caller.header,
-                    )
-                )
-                self._show(caller, f"Linked {external}.")
-            except meridian.MeridianError as refused:
-                self._show(caller, f"Refused: {refused}", bad=True)
-
-        def log_message(self, format: str, *args: Any) -> None:  # noqa: A002
-            pass
-
-    server = http.server.ThreadingHTTPServer(("127.0.0.1", port), Page)
-    threading.Thread(target=server.serve_forever, daemon=True).start()
-    return server
+```bash
+rm src/holdings_demo/templates/setup.html src/holdings_demo/templates/accounts.html
 ```
 
 What it does:
 
-- **It declares one admin page**, `ADMIN_PAGES`. The dashboard shows it as a tab in the plugin's
-  view in Settings, and frames its path.
-- **It serves it only to a deployment admin**, whose verified `Meridian-Caller` header says
-  `deployment_admin`. Anybody else gets 403, and any other path 404, so the plugin no longer has a
-  page for other people.
+- **It declares one page, at `admin`**: `@pages.page(ACCOUNTS, "Accounts", levels="admin")`. The
+  dashboard shows it as a tab of the plugin's area under **Manage**, and `Pages` answers 403 to a
+  session at any other level before the view runs. Its form posts to the same path, declared with
+  `@pages.route` at `admin` too.
 - **It reads the firm's accounts, and sends each link, acting for the admin**: `acting_for` is their
-  header, handed back. The sidecar admits both only for a deployment admin, and a link only for an
-  account this plugin reported.
+  header, handed back. The sidecar admits both only in a session opened by Manage, answers the
+  accounts' identities alone, and admits a link only for an account this plugin reported.
 - **Each link names an existing account or a new account's name.** A new one is created and linked
   in one step, with the custodian and type the source reported, which the admin may change first.
-  A link naming neither removes it, so the page refuses an empty form rather than send one.
-- **Every form carries a token**, made from the admin's identity and a secret only this process
-  holds. The plugin's page has its own sign-in cookie, so without the token a page elsewhere could
-  make an admin's browser post the form. Each save restarts the process with a new secret, so reload
-  the page before linking after a save.
-- **It is built on the plugin UI kit**, as the scaffold's page was: the kit's stylesheet, script and
-  classes, and no colour of its own. See the plugin's `AGENTS.md`.
+  Only a deployment admin may name a new account, so the page offers that column to one alone,
+  as `caller.deployment_admin` says, and the sidecar refuses one from anybody else. A link naming
+  neither removes it, so the page refuses an empty form rather than send one.
+- **Every form carries the page's CSRF token**, `{{ csrf_input }}`. The plugin's page has its own
+  sign-in cookie, so without the token a page elsewhere could make an admin's browser post the
+  form; `Pages` refuses a form without it before the view runs. Each save restarts the process with
+  a new secret, so reload the page before linking after a save.
+- **It is built on the plugin UI kit**: the template extends the kit's base template,
+  `meridian/base.html`, which links the kit and draws the heading, and the page uses the kit's
+  classes and no colour of its own. See the plugin's `AGENTS.md`.
 
 This page keeps to plain forms, so that every step is in view, and it does not say which accounts
 are linked.
@@ -370,26 +335,30 @@ are linked.
     [Build a plugin's page](../how-to/build-a-plugin-page.md#to-link-external-accounts-om-account-map).
 
 !!! note "The scaffold's tests"
-    `meridian plugin new` also wrote `tests/test_page.py`, which tests the scaffold's page. This page
-    replaces it, so those tests now fail under `meridian plugin check --run-tests` and the
-    scaffold's CI workflow. Nothing in this tutorial runs them. Replace them as you replace the page,
-    as the file itself says, before you rely on either.
+    `meridian plugin new` also wrote `tests/test_page.py`, which tests the scaffold's pages. This page
+    replaces them, so those tests now fail under `meridian plugin check --run-tests` and the
+    scaffold's CI workflow. Nothing in this tutorial runs them. Replace them as you replace the
+    pages, as the file itself says, with `meridian.testing.PageClient`: at least the page under
+    each level, and `assert_no_account_data` under Manage. See
+    [`meridian.testing`](../api/python-sdk.md#testing).
 
-## 7. Declare the page and report on start
+## 7. Declare that it reads external accounts, and report them on start
 
-Open `src/holdings_demo/__main__.py`. Import the new names next to the page import:
+Open `src/holdings_demo/__main__.py`. The scaffold already declares its pages, with
+`Interface(..., pages=pages)`, and serves them with `pages.serve`, so the new page is declared and
+served as it is. Import the new function next to the page import:
 
 ```python title="src/holdings_demo/__main__.py"
-from .page import ADMIN_PAGES, TITLE, serve
+from .page import TITLE, pages
 from .source import report_accounts
 ```
 
-Declare the admin page, and that the plugin names accounts by a source's identifiers, which an
-admin links. Change the `connect` call to:
+Declare that the plugin names accounts by a source's identifiers, which an admin links. Change the
+`connect` call to:
 
 ```python title="src/holdings_demo/__main__.py"
     async with await meridian.connect(
-        interface=meridian.Interface(port=port, title=TITLE, admin_pages=ADMIN_PAGES),
+        interface=meridian.Interface(port=port, title=TITLE, pages=pages),
         reads_external_accounts=True,
     ) as plugin:
 ```
@@ -403,25 +372,25 @@ Then report the accounts just after the plugin reports itself healthy:
 ```
 
 Save. The first terminal shows a new revision for each file you saved. Wait for `ready` on the
-last one, then read what it logged. If it was `r4`:
+last one, then read what it logged. If it was `r6`:
 
 ```bash
-meridian plugin logs --instance holdings-demo --since 3
+meridian plugin logs --instance holdings-demo --since 5
 ```
 
 ```text
 … INFO holdings_demo: registered as holdings-demo, roles custody
 … INFO holdings_demo: may publish …; may subscribe …
-… INFO holdings_demo: serving its page on 127.0.0.1:8000
+… INFO holdings_demo: serving its pages on 127.0.0.1:8000
 … INFO holdings_demo: reported DEMO-ACCT-1, DEMO-ACCT-2
 ```
 
 ## 8. Link DEMO-ACCT-1
 
-In the dashboard, choose the gear (**Settings**), open the **Plugins** tab, and choose **Manage** on
-the `holdings-demo` row. Its view
-has the tabs every plugin has, **Overview**, **Settings** and **Access**, then the plugin's own:
-**Accounts**, the page you wrote. Open it.
+On the dashboard's home, `holdings-demo` is listed with **Manage**: as a deployment admin you are an
+admin of every plugin, through **All plugins (admin)**. Choose **Manage**. The plugin's area opens
+on its one page at `admin`, **Accounts**, the page you wrote. See
+[Manage, Open and View](../concepts/plugins.md#manage-open-and-view).
 
 It lists `DEMO-ACCT-1` and `DEMO-ACCT-2`. On the `DEMO-ACCT-1` row, under **Link to an existing
 account**, choose `Demo brokerage account`, then **Link**. The page says:
@@ -432,8 +401,9 @@ Linked DEMO-ACCT-1.
 
 Leave `DEMO-ACCT-2` unlinked for now.
 
-If the page says `This form is out of date`, the plugin restarted since you opened it: reload it and
-link again. If it says `Refused:`, the reason is the sidecar's own.
+If the page says `This form has expired or did not come from this plugin's page`, the plugin
+restarted since you opened it: reload it and link again. If it says `Refused:`, the reason is the
+sidecar's own.
 
 ## 9. Write the recording code
 
@@ -525,7 +495,7 @@ its side, long here.
 Open `src/holdings_demo/__main__.py` again. Import the new function:
 
 ```python title="src/holdings_demo/__main__.py"
-from .page import ADMIN_PAGES, TITLE, serve
+from .page import TITLE, pages
 from .source import report_accounts
 from .statement import record_demo_statement
 ```
@@ -543,10 +513,10 @@ Save, and wait for `ready` on the last revision.
 
 ## 11. Check the result
 
-Read what the last revision logged. If it was `r6`:
+Read what the last revision logged. If it was `r8`:
 
 ```bash
-meridian plugin logs --instance holdings-demo --since 5
+meridian plugin logs --instance holdings-demo --since 7
 ```
 
 Expected output:
@@ -554,7 +524,7 @@ Expected output:
 ```text
 … INFO holdings_demo: registered as holdings-demo, roles custody
 … INFO holdings_demo: may publish …; may subscribe …
-… INFO holdings_demo: serving its page on 127.0.0.1:8000
+… INFO holdings_demo: serving its pages on 127.0.0.1:8000
 … INFO holdings_demo: reported DEMO-ACCT-1, DEMO-ACCT-2
 … INFO holdings_demo: ACME is LCL-… (placeholder: True)
 … INFO holdings_demo: opened statement STMT-… (already recorded: False)
@@ -603,9 +573,10 @@ admin can tell whether it is worth linking.
     `except meridian.MeridianError` above still catches it. See
     [An unlinked external account](../api/typed-operations.md#an-unlinked-external-account).
 
-Now link it the other way. Reload the plugin's **Accounts** tab. On the `DEMO-ACCT-2` row, keep the
-name `Demo retirement`, the custodian `Demo Securities` and the type `IRA` under **Or to a new
-one**, and choose **Create and link**. The deployment creates the account and links it in one step.
+Now link it the other way. Reload the plugin's **Accounts** tab, under Manage. On the `DEMO-ACCT-2`
+row, keep the name `Demo retirement`, the custodian `Demo Securities` and the type `IRA` under **Or
+to a new one**, and choose **Create and link**. The column is there because you are a deployment
+admin; a plugin admin who is not one links to existing accounts only. The deployment creates the account and links it in one step.
 The **Accounts** tab of Settings shows it with that custodian and type.
 
 The next statement records it. Make any change to `statement.py`, a blank line will do, save, and
@@ -633,9 +604,9 @@ do not want them. This page offers no way to remove a link: a page does it by se
 
 - A plugin writes only through its role's typed operations, and only on accounts in its write
   scope.
-- A custody plugin reports the accounts its source reaches, and links them on its own admin page,
-  acting for the deployment admin viewing it. The page is served to deployment admins only, and
-  each form carries a token.
+- A custody plugin reports the accounts its source reaches, and links them on its own page at
+  `admin`, acting for the admin viewing it under Manage. The page is declared at `admin`, so it is
+  served under Manage alone, shows no account's data, and each form carries the page's CSRF token.
 - An external account must be linked to one of the firm's accounts before rows for it are accepted,
   and the link is the plugin's right to write that account.
 - A statement says how many rows follow. An instrument nobody knows is answered with the

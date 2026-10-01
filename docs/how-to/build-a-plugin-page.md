@@ -2,10 +2,10 @@
 
 A plugin's page is built on the **plugin UI kit**, which the dashboard serves on the plugin's own
 host. Linking it gives the page the platform's look, each person's colour scheme and market-direction
-convention, and web components for what trading pages need. This guide covers linking the kit,
-which version answers, linking external accounts with `om-account-map` (at thousands of accounts
-too), grids that read well on a phone, and how a page behaves inside the dashboard's frame,
-header actions included.
+convention, and web components for what trading pages need. This guide covers declaring a plugin's
+pages with the levels they serve, linking the kit, which version answers, linking external accounts
+with `om-account-map` (at thousands of accounts too), grids that read well on a phone, and how a
+page behaves inside the dashboard's frame, header actions and status included.
 
 The kit is framework-free: CSS and custom elements, used the same way from plain HTML, React, Vue
 or Svelte, from a plugin in any language. Every class, component, attribute and event is listed in
@@ -13,11 +13,81 @@ the kit's own reference, the
 [meridian-ui README](https://github.com/open-meridian/meridian-ui#readme). The page
 `meridian plugin new` writes is already built on it.
 
+## To declare a page and the levels it serves
+
+A plugin's pages are one list, each a path, a title and the levels it serves: `admin`, `write` or
+`read`, one or several. A person opens the plugin by the dashboard's **Manage** (`admin`), **Open**
+(`write`) or **View** (`read`), and the plugin's area shows, in one tab row, the pages whose levels
+include the session's. See [Manage, Open and View](../concepts/plugins.md#manage-open-and-view).
+
+Decide each page's levels by what it shows:
+
+- **Configuration is a page at `admin`**: connections, account links, setup. Under Manage the
+  session holds no account's data, so such a page shows none of what the plugin holds for an
+  account, no holdings, rows or balances; external identities and links are configuration.
+- **Daily work is a page at `write` and `read`**, one path for both. It shows every account the
+  person may read (`caller.read`), and offers actions only under Open (`level == "write"`), on the
+  accounts in `caller.write`.
+
+In Python, from SDK 0.10.0, a page is a view function and a template, declared where the view is
+with [`meridian.Pages`](../api/python-sdk.md#pages):
+
+```python title="src/my_plugin/page.py"
+from pathlib import Path
+
+import meridian
+
+pages = meridian.Pages("Holdings", templates=Path(__file__).parent / "templates")
+
+
+@pages.page("/admin/accounts", "Account links", levels="admin")
+async def account_links(request: meridian.Request) -> str:
+    return pages.render("links.html", ...)  # identities and links, no account's data
+
+
+@pages.page("/", "Statements", levels=["write", "read"])
+async def statements(request: meridian.Request) -> str:
+    rows = [...]  # every account in request.caller.read
+    return pages.render("statements.html", rows=rows)
+
+
+@pages.route("/refresh", levels="write", methods=["POST"])
+async def refresh(request: meridian.Request) -> str: ...
+```
+
+`Pages` sends the list when the plugin registers (`Interface(pages=pages)`), and answers 403 to a
+session at any other level before the view runs. Each template extends the kit's base template:
+
+```html+jinja title="src/my_plugin/templates/statements.html"
+{% extends "meridian/base.html" %}
+{% block status %}<om-status data-om-header state="ok" label="Read"></om-status>{% endblock %}
+{% block head_actions %}{% if level == "write" %}
+  <form class="inline" method="post" action="/refresh">{{ csrf_input }}<button data-om-action="refresh">Refresh</button></form>
+{% endif %}{% endblock %}
+{% block content %}
+  <om-grid row-key="id"><script type="application/json">{{ grid | tojson }}</script></om-grid>
+{% endblock %}
+```
+
+`meridian/base.html` links the kit and draws the page's heading and tab row, which the kit drops when
+the dashboard frames the page. Its blocks are `title`, `status`, `head_actions` and `content`, and
+`caller` and `level` are always in the template's context. Every request but GET and HEAD must carry
+the page's CSRF token, `{{ csrf_input }}` in a form or the `X-CSRF-Token` header from a script, or
+it is refused before the view runs. See the [Python SDK](../api/python-sdk.md#templates).
+
+Test each page under each level with `meridian.testing.PageClient`: `every_page()` renders each
+under Manage, Open and View, and `assert_no_account_data(...)` fails when a page at `admin` shows
+anything the plugin holds for an account. See [`meridian.testing`](../api/python-sdk.md#testing).
+
+A plugin that serves its pages some other way, on an ASGI framework of its own, declares each as
+`meridian.Page(path, title, levels=[...])` in `Interface(pages=...)`, and checks the session's level
+itself with `page.serves(caller)`.
+
 ## To link the kit
 
 The dashboard serves the kit at `/.meridian/ui/<version>/` on every plugin host, so it is on the
-page's own origin. Link its stylesheet and script in `<head>`, and draw the page inside
-`<main class="page">`:
+page's own origin. A page extending `meridian/base.html` links it already. Otherwise, link its
+stylesheet and script in `<head>`, and draw the page inside `<main class="page">`:
 
 ```html
 <!doctype html>
@@ -26,8 +96,8 @@ page's own origin. Link its stylesheet and script in `<head>`, and draw the page
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Accounts</title>
-  <link rel="stylesheet" href="/.meridian/ui/0.5.0/meridian.css">
-  <script src="/.meridian/ui/0.5.0/meridian.js"></script>
+  <link rel="stylesheet" href="/.meridian/ui/0.7.0/meridian.css">
+  <script src="/.meridian/ui/0.7.0/meridian.js"></script>
 </head>
 <body>
   <main class="page">
@@ -63,6 +133,8 @@ market-direction convention, and the kit applies them.
 | 0.3.0 | `om-account-map`; `om-moment`; the grid's declared JSON, rich cells and narrow layouts; list rows that wrap; option and field-row styles, and a select as tall as an input |
 | 0.4.0 | Header actions: a framed page's head buttons, drawn by the dashboard in its own header. See [Header actions](#header-actions). |
 | 0.5.0 | `om-account-map` at scale: a dense table with search, filters, grouping, pages, a chooser found by typing, suggestions, and several links in one form (`link-several`). See [At thousands of accounts](#at-thousands-of-accounts). |
+| 0.6.0 | `om-status`, a status dot with its note on hover, focus or a tap; and in `om-account-map`, each account's optional `status` and `values`, a Status column and a filter by state |
+| 0.7.0 | Header status: a framed page's head `om-status` marked `data-om-header`, drawn by the dashboard beside the plugin's name. See [Header status](#header-status). |
 
 **A 0.x release only adds.** Nothing in the kit is removed or renamed within 0.x, so a page built
 against an earlier 0.x keeps working on a later one.
@@ -81,15 +153,20 @@ do.
 
 ## To link external accounts: `om-account-map`
 
-A plugin that reads accounts at a source, and names them by that source's identifiers, has a
-deployment admin link each of them to one of the firm's accounts, on the plugin's own admin page.
-`om-account-map` is that page's content: each external account beside the account it is linked to,
-or the forms to link it. It needs kit 0.3.0 and SDK 0.7.0, and no script on the page. From kit
-0.5.0 it is built for hundreds or thousands of accounts; see
+A plugin that reads accounts at a source, and names them by that source's identifiers, has an admin
+of the plugin link each of them to one of the firm's accounts, on one of the plugin's pages at
+`admin`. `om-account-map` is that page's content: each external account beside the account it is
+linked to, or the forms to link it. It needs kit 0.3.0 and SDK 0.7.0, and no script on the page.
+From kit 0.5.0 it is built for hundreds or thousands of accounts; see
 [At thousands of accounts](#at-thousands-of-accounts).
 
-Serve the page only to a deployment admin, whose `Caller.deployment_admin` is `True`, and declare
-it as one of the plugin's [admin pages](../api/python-sdk.md#interface). See
+Declare the page at `admin`, so it is shown and served under Manage alone:
+`@pages.page("/admin/accounts", "Account links", levels="admin")`. A plugin admin is account
+agnostic: they link to any existing account, and the page shows identities and links, never an
+account's holdings or values. Only a deployment admin may name a new account, which
+`caller.deployment_admin` says; the sidecar refuses a new account from anybody else. From kit 0.6.0
+an external account in the map may carry a `status` and `values`; on a page at `admin`, give it
+neither, since they are an account's data. See
 [Accounts](../concepts/accounts.md#external-accounts) for what a link is.
 
 ### Give it its data
@@ -97,7 +174,7 @@ it as one of the plugin's [admin pages](../api/python-sdk.md#interface). See
 The map takes three lists, as JSON inside the element:
 
 ```html
-<om-account-map action="/admin/accounts" token-name="token" token="3f9c…" empty="No accounts yet.">
+<om-account-map action="/admin/accounts" token-name="csrf" token="3f9c…" empty="No accounts yet.">
   <script type="application/json">{
     "external_accounts": [
       {"external_account_id": "DEMO-ACCT-1", "name": "Demo brokerage", "detail": "Demo Securities · Individual",
@@ -114,7 +191,7 @@ The map takes three lists, as JSON inside the element:
 | Data | Where it comes from |
 |---|---|
 | `external_accounts` | The accounts the plugin reported with [`report_external_accounts`](../api/typed-operations.md#report_external_accounts): `external_account_id` (required), `name`, `detail` (a line under the name), `custodian` and `account_type` (to pre-fill a new account), and `note` (a hint). |
-| `accounts` | The firm's accounts, from [`read_accounts_for_linking`](../api/typed-operations.md#read_accounts_for_linking), acting for the admin viewing the page: `account_id`, `name`, `custodian`, `account_type`, and `open` (default `true`). Only open accounts are offered. `null` says they could not be read. |
+| `accounts` | The firm's accounts, from [`read_accounts_for_linking`](../api/typed-operations.md#read_accounts_for_linking), acting for the admin viewing the page under Manage: `account_id`, `name`, `custodian`, `account_type`, and `open` (default `true`). Only open accounts are offered. `null` says they could not be read. |
 | `links` | The plugin's links, exactly as [`AccountScope.links`](../api/python-sdk.md#accountscope) gives them: `external_account_id`, `account_id`, `account_name`. An external account in this list is linked, to that account; one not in it is not linked. |
 
 The links are read, never guessed: the plugin holds the latest `AccountScope` from
@@ -173,41 +250,44 @@ line does, so that no account name can end the `<script>` early.
 
 Each form the map draws is a plain `<form method="post">` to `action` (by default the page's own
 address). Every form carries the page's token, in a hidden field named by `token-name`, and an
-`intent`, and names its fields as `link_external_account` takes them:
+`intent`, and names its fields as `link_external_account` takes them. With `meridian.Pages`, the
+token is the page's CSRF token: `token-name="csrf" token="{{ csrf_token }}"` in the template.
 
 | `intent` | Fields | Shown as |
 |---|---|---|
 | `link` | `external_account_id`, `account_id` | A picker of the open accounts, and **Link** |
-| `create` | `external_account_id`, `new_account_name`, `new_account_custodian`, `new_account_type` | A new account's name (the external account's to start), its custodian and type pre-filled, and **Create and link** |
+| `create` | `external_account_id`, `new_account_name`, `new_account_custodian`, `new_account_type` | A new account's name (the external account's to start), its custodian and type pre-filled, and **Create and link**. Only a deployment admin's is admitted |
 | `unlink` | `external_account_id` | **Unlink**, on a linked account |
 
-The server checks the token, then does what `intent` says, acting for the admin, and answers with
-the page again:
+The server does what `intent` says, acting for the admin, and answers with the page again.
+`Pages` has checked the level and the token before the view runs:
 
 ```python
-caller = request.state.caller  # from CallerMiddleware; a deployment admin
-external = form["external_account_id"]
-if form["intent"] == "link":
-    await plugin.link_external_account(
-        external_account_id=external, account_id=form["account_id"], acting_for=caller.header,
-    )
-elif form["intent"] == "create":
-    await plugin.link_external_account(
-        external_account_id=external,
-        new_account_name=form["new_account_name"],
-        new_account_custodian=form.get("new_account_custodian", ""),
-        new_account_type=form.get("new_account_type", ""),
-        acting_for=caller.header,
-    )
-elif form["intent"] == "unlink":
-    await plugin.link_external_account(external_account_id=external, acting_for=caller.header)
+@pages.route("/admin/accounts", levels="admin", methods=["POST"])
+async def link(request: meridian.Request) -> str:
+    caller, form, plugin = request.caller, request.form, request.plugin
+    external = form["external_account_id"]
+    if form["intent"] == "link":
+        await plugin.link_external_account(
+            external_account_id=external, account_id=form["account_id"], acting_for=caller.header,
+        )
+    elif form["intent"] == "create" and caller.deployment_admin:
+        await plugin.link_external_account(
+            external_account_id=external,
+            new_account_name=form["new_account_name"],
+            new_account_custodian=form.get("new_account_custodian", ""),
+            new_account_type=form.get("new_account_type", ""),
+            acting_for=caller.header,
+        )
+    elif form["intent"] == "unlink":
+        await plugin.link_external_account(external_account_id=external, acting_for=caller.header)
+    return ...  # the page again, saying what was done
 ```
 
 The token matters: the plugin's page has a sign-in cookie of its own, so without one a page
-elsewhere could make an admin's browser post the form. Make it from the admin's identity and a
-secret only the plugin's process holds, as
-[Record a holdings statement](../tutorials/record-a-holdings-statement.md#6-serve-an-accounts-page)
-does.
+elsewhere could make an admin's browser post the form. `Pages` makes it from the person, the
+session's level and a secret only the plugin's process holds, and refuses a form without it. A page
+served another way does the same itself.
 
 The change reaches `AccountScope.links` with the next delivery of the account scope, which the link
 itself causes. Say what was done in a `.notice` on the page you answer with, rather than guess the
@@ -268,7 +348,7 @@ hundred bytes each.
 ```python
 from urllib.parse import parse_qs
 
-form = parse_qs(body.decode())  # every value a list, in the order the page wrote them
+form = parse_qs(request.body.decode())  # every value a list, in the order the page wrote them
 if form.get("intent") == ["link-several"]:
     externals = form.get("external_account_id", [])
     accounts = form.get("account_id", [])
@@ -282,8 +362,9 @@ if form.get("intent") == ["link-several"]:
         ...  # answer 400 and send nothing
     for external, account_id in zip(externals, accounts):
         try:
-            await plugin.link_external_account(
-                external_account_id=external, account_id=account_id, acting_for=caller.header,
+            await request.plugin.link_external_account(
+                external_account_id=external, account_id=account_id,
+                acting_for=request.caller.header,
             )
         except meridian.MeridianError as refused:
             ...  # say which was not linked, and why, on the page you answer with
@@ -355,15 +436,13 @@ Kit 0.3.0 also fits the rest of a page to a phone, with nothing to do but use it
 
 ## Inside the dashboard's frame
 
-The dashboard shows a plugin's admin pages as tabs in the plugin's view in **Settings** (the
-breadcrumb reads **Settings / Plugins /** and the plugin's name), each page in a frame. The frame
-stays, because it keeps the plugin's script on the plugin's own origin, away from the admin's
-dashboard session. From kit 0.2.0 it is **seamless**: it has no border and no scrollbar of its own,
-it is as tall as the page's content, and the dashboard's heading and tab row are the only ones.
-
-A plugin's own page, the one people open from the dashboard's home, is framed too, filling the
-window under the dashboard's header, but not seamlessly: it draws its own heading and any tabs it
-needs.
+The dashboard shows every page of a plugin in the plugin's **area**, at `/plugins/<instance>`,
+reached from the home by **Manage**, **Open** or **View**: the plugin's name, the session's level,
+and one tab row holding the pages declared at that level, each page in a frame. The frame stays,
+because it keeps the plugin's script on the plugin's own origin, away from the person's dashboard
+session. From kit 0.2.0 it is **seamless**: it has no border and no scrollbar of its own, it is as
+tall as the page's content, and the dashboard's heading and tab row are the only ones. It is the
+same frame, on the same template, under each of the three buttons.
 
 The dashboard tells the page it is framed, and the kit does the page's half with no code. A framed
 page:
@@ -409,7 +488,7 @@ button:
   <div><h1>Connections</h1><p>Reading the source.</p></div>
   <div class="actions">
     <form method="post" action="/admin/read" class="inline">
-      <input type="hidden" name="token" value="…"><button data-om-action="refresh">Refresh</button>
+      <input type="hidden" name="csrf" value="…"><button data-om-action="refresh">Refresh</button>
     </form>
   </div>
 </header>
@@ -427,6 +506,24 @@ its answer. Opened on its own, the page shows its buttons where they are.
   or repeated id, a fifth, no label or a long one) stays in the page.
 - A marked button anywhere but the head's `.actions` is the page's own, and stays.
 
+### Header status
+
+From kit 0.7.0 a framed page can hand the dashboard its status dot, which it draws beside the
+plugin's name, so the dot takes no line of the page's. Mark an `om-status` in the head with
+`data-om-header`; in a template on `meridian/base.html`, put it in the `status` block:
+
+```html
+<header class="page-head">
+  <div><h1>Account links</h1>
+    <p><om-status data-om-header state="ok" label="Read" at="2026-09-30T13:12:00Z" at-label="Last read">Read. Last read 2026-09-30 13:12 UTC.</om-status></p></div>
+</header>
+```
+
+The first marked one in the head is offered; its `state` is `ok`, `busy`, `warn` or `error`. An
+unmarked `om-status` stays in the page. Opened on its own, the page shows the dot where it is. A head
+left with nothing to show, once the dashboard draws its heading, actions and status, is dropped
+whole, so the page starts right under the dashboard's tabs.
+
 The kit's README gives the messages between the page and the dashboard.
 
 ## Related
@@ -434,5 +531,6 @@ The kit's README gives the messages between the page and the dashboard.
 - [Plugins, roles and grants](../concepts/plugins.md#a-plugins-page): how a person reaches a page,
   and what the plugin learns about them.
 - [Record a holdings statement](../tutorials/record-a-holdings-statement.md): a custody plugin with
-  an admin page for linking accounts.
-- [Python SDK](../api/python-sdk.md): `Interface`, `Page`, `Caller` and `CallerMiddleware`.
+  a page at `admin` for linking accounts.
+- [Python SDK](../api/python-sdk.md): `Pages`, `Interface`, `Page`, `Caller` and
+  `meridian.testing`.

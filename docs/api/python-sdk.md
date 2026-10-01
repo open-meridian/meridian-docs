@@ -12,15 +12,15 @@ pip install open-meridian
 |---|---|
 | PyPI name | `open-meridian` |
 | Import name | `meridian` |
-| Version | 0.7.1 |
+| Version | 0.10.0 |
 | Python | 3.11 or newer |
-| Dependencies | `grpcio>=1.68,<2`, `protobuf>=5.28,<7` |
+| Dependencies | `grpcio>=1.68,<2`, `protobuf>=5.28,<7`, `jinja2>=3.1,<4` (from 0.10.0, for [pages](#pages)) |
 | Licence | Apache-2.0 |
 
 !!! warning "Not `meridian-sdk`"
     The PyPI package `meridian-sdk` belongs to an unrelated company. Don't install it.
 
-A plugin pins the SDK exactly, `open-meridian==0.7.1`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.7.1`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls. See [Plugin manifest](plugin-manifest.md).
+A plugin pins the SDK exactly, `open-meridian==0.10.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.10.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls. See [Plugin manifest](plugin-manifest.md).
 
 | Optional extra | Installs | For |
 |---|---|---|
@@ -48,7 +48,7 @@ async def main() -> None:
 asyncio.run(main())
 ```
 
-`meridian plugin new` writes a complete plugin built this way. See [Your first plugin](../getting-started/first-plugin.md).
+A plugin that serves pages declares them with [`meridian.Pages`](#pages) and passes it as `Interface(pages=...)`. `meridian plugin new` writes a complete plugin built this way, with one page under Manage and one under Open and View. See [Your first plugin](../getting-started/first-plugin.md).
 
 ## What the package exports
 
@@ -59,6 +59,8 @@ asyncio.run(main())
 | `connect` | async function | [`meridian.connect`](#connect) |
 | `Plugin` | class | [`Plugin`](#plugin) |
 | `Identity`, `Grants`, `Interface`, `Page`, `Setting`, `Choice`, `AppliesWhen`, `Settings`, `AccountScope`, `LinkedExternalAccount`, `Caller` | frozen dataclasses | [Types](#types) |
+| `Pages`, `Request`, `Response` | class, frozen dataclasses | [Pages](#pages) |
+| `AccessLevel` | generated protobuf enum | [`AccessLevel`](#accesslevel) |
 | `Money` | frozen dataclass | [Typed operations](typed-operations.md#money) |
 | `as_decimal`, `as_money` | functions | [Typed operations](typed-operations.md#numbers-and-amounts) |
 | `Identifier`, `MissReason` | generated protobuf message and enum | [Types](#types) |
@@ -66,7 +68,9 @@ asyncio.run(main())
 | `CallerMiddleware` | ASGI middleware | [`CallerMiddleware`](#callermiddleware) |
 | `MeridianError`, `Refused`, `NoSidecar`, `NotRegistered`, `NotGranted`, `CallFailed`, `NotLinked` | exceptions | [Exceptions](#exceptions) |
 | `DEFAULT_ADDRESS` | `str` | `"127.0.0.1:9191"`, where a sidecar listens |
-| `SCHEMA_VERSION` | `str` | the contract version sent at registration: `"v4"` from the release after 0.8.0, `"v3"` in 0.8.0, `"v2"` before |
+| `SCHEMA_VERSION` | `str` | the contract version sent at registration: `"v5"` from 0.10.0, `"v4"` in 0.9.0, `"v3"` in 0.8.0, `"v2"` before |
+
+The module `meridian.testing` holds [`PageClient`](#testing), for a plugin's own tests.
 
 ## `meridian.connect` { #connect }
 
@@ -89,11 +93,11 @@ Registers with the sidecar and returns the admitted plugin. A `Plugin` you hold 
 | `address` | `str` or `None` | `None` | The sidecar's address. When `None`, the value of `MERIDIAN_SIDECAR_ADDRESS`, then `127.0.0.1:9191`. No other configuration is read. |
 | `heartbeat` | `bool` | `True` | Send a liveness heartbeat to the sidecar every 5 seconds in the background. |
 | `wait` | `float` | `60.0` | Seconds to wait for a sidecar that is not answering yet. A plugin and its sidecar start together in one pod, in no promised order. |
-| `interface` | `Interface` or `None` | `None` | The page the plugin serves on loopback, if any. |
-| `settings` | sequence of `Setting` | `()` | The settings the plugin needs a deployment admin to give it. |
-| `reads_external_accounts` | `bool` | `False` | `True` when the plugin reads accounts at an external source and names them by that source's identifiers. A deployment admin links those to accounts, and the sidecar translates them on the way in. |
+| `interface` | `Interface` or `None` | `None` | The pages the plugin serves on loopback, if any. |
+| `settings` | sequence of `Setting` | `()` | The settings the plugin needs an admin of it to give it. |
+| `reads_external_accounts` | `bool` | `False` | `True` when the plugin reads accounts at an external source and names them by that source's identifiers. An admin of the plugin links those to accounts, and the sidecar translates them on the way in. |
 
-The contract version it sends is `SCHEMA_VERSION`. A sidecar accepts a range of versions: a plugin built for an older version it still supports registers, and one built for a newer version than the sidecar knows is refused at registration, naming both, rather than running without what it was built for. After an upgrade, relaunch plugins so they get the newer sidecar (`meridian upgrade-deployment` names the ones that need it).
+The contract version it sends is `SCHEMA_VERSION`, `"v5"` in 0.10.0. A sidecar accepts a range of versions, today v2 through v5: a plugin built for an older version it still supports registers, and one built for a newer version than the sidecar knows is refused at registration, naming both, rather than running without what it was built for. After an upgrade, relaunch plugins so they get the newer sidecar (`meridian upgrade-deployment` names the ones that need it).
 
 **Raises:**
 
@@ -102,7 +106,7 @@ The contract version it sends is `SCHEMA_VERSION`. A sidecar accepts a range of 
 | `NoSidecar` | No sidecar answered within `wait` seconds. |
 | `Refused` | The sidecar answered and declined to admit the plugin. Its `reason` says why. Not retried. |
 | `TypeError` | A `Setting`'s `kind` is not `str`, `int` or `bool`; it has `choices` and a `kind` other than `str`; or its `default` is not of its `kind`. |
-| `ValueError` | A secret `Setting` declares a `default`; a `default` is not one of its `choices`; or an admin `Page`'s path does not begin with `/`. |
+| `ValueError` | A secret `Setting` declares a `default`; a `default` is not one of its `choices`; or a `Page`'s path does not begin with `/`, or it names no level. |
 | `grpc.aio.AioRpcError` | Any other gRPC failure during registration, unchanged. |
 
 When run by the development runner on a development deployment, `connect` also records the `ready` event once the plugin is admitted. See [`plugin dev` events](plugin-dev-events.md).
@@ -159,7 +163,7 @@ async def account_scope(self) -> AsyncIterator[AccountScope]
 
 Yields the plugin's account scope, now and again on every change. The scope is derived from permissions and from the plugin's links to accounts, and never declared: see [Accounts](../concepts/accounts.md#how-accounts-bound-a-plugin). A plugin reads its whole read scope as itself and serves each person only what their access allows. The sidecar refuses a write outside `write`, whoever it is for.
 
-Beside the scope come the plugin's own **links**: which of its external accounts a deployment admin has linked, to which account, and that account's name as the deployment holds it now. They are read as the plugin itself, for nobody. The first delivery comes at once, so a plugin that has just started has every link. Another comes whenever a permission changes, a link is made or removed, or a linked account is renamed or closed. Hold the latest one: a plugin keeps nothing of its own across a restart.
+Beside the scope come the plugin's own **links**: which of its external accounts an admin has linked, to which account, and that account's name as the deployment holds it now. They are read as the plugin itself, for nobody. The first delivery comes at once, so a plugin that has just started has every link. Another comes whenever a permission changes, a link is made or removed, or a linked account is renamed or closed. Hold the latest one: a plugin keeps nothing of its own across a restart.
 
 ```python
 async for scope in plugin.account_scope():
@@ -221,28 +225,52 @@ All the dataclasses are frozen.
 
 ### `Interface`
 
-A page the plugin serves to people, on loopback. Only the plugin's sidecar reaches it, forwarding requests the dashboard vouched for.
+The pages the plugin serves to people, on loopback. Only the plugin's sidecar reaches them, forwarding requests the dashboard vouched for.
 
 | Field | Type | Default | Meaning |
 |---|---|---|---|
-| `port` | `int` | | The loopback port the page listens on. |
-| `title` | `str` | | The page's title. |
-| `admin_pages` | `tuple[Page, ...]` | `()` | Pages for deployment admins, shown as tabs in the plugin's view in the dashboard's Settings, in order, each framing its path. Serve them to a caller whose `deployment_admin` is `True`, and to nobody else. |
+| `port` | `int` | | The loopback port the pages listen on. |
+| `title` | `str` | | The plugin's title. |
+| `pages` | `Pages` or sequence of `Page` | `()` | The plugin's pages, one list in the order shown, each with the levels it serves. A [`Pages`](#pages) registry declares each where its view is and refuses a session at a level it does not serve. Keyword only. |
+| `admin_pages` | sequence of `Page` | `()` | Retired by contract v5. Still taken in 0.10.0, as pages at `admin` after `pages`, with a `DeprecationWarning`; [`meridian plugin migrate`](cli.md#plugin-migrate) rewrites it into `pages`. |
+
+The dashboard shows a plugin's pages in its area, under the home's button for each level a page serves: **Manage** for `admin`, **Open** for `write`, **View** for `read`. A plugin that declares no page at `write` or `read` has one there, its `/`. See [Manage, Open and View](../concepts/plugins.md#manage-open-and-view).
+
+A plugin built before contract v5, on SDK 0.9.0 or earlier, keeps its admin pages: while the sidecar accepts its contract version, it reads the plugin's `admin_pages` as pages at `admin`, shown under Manage. Such a plugin still serves them by `caller.deployment_admin`, so of its admins only a deployment admin gets past it until it is migrated.
+
+```python
+interface = meridian.Interface(port=8000, title="Statements", pages=pages)
+```
 
 ### `Page`
 
-One of the plugin's pages, at a path on its own host.
+One of the plugin's pages, at a path on its own host, and the levels it serves. `Pages` makes one for each `@pages.page`; build one yourself only for a page served some other way.
 
-| Field | Type | Meaning |
+| Member | Type | Meaning |
 |---|---|---|
 | `path` | `str` | The path, beginning with `/`. Anything else raises `ValueError` at `connect`. |
 | `title` | `str` | The tab's title. |
+| `levels` | sequence of `str` or `AccessLevel` | The levels it serves: one or several of `"admin"`, `"write"` and `"read"`, an `AccessLevel`, or its name (`"ACCESS_LEVEL_ADMIN"`). A string alone is one level. Anything else raises `ValueError`, and a page with none raises it at `connect`. |
+| `serves(caller: Caller) -> bool` | method | Whether the caller's session is at one of its levels. A session at no level is served nothing. |
 
 ```python
-interface = meridian.Interface(
-    port=8000, title="Holdings", admin_pages=(meridian.Page("/admin/accounts", "Accounts"),),
-)
+statements = meridian.Page("/statements", "Statements", levels=["write", "read"])
+if not statements.serves(caller):
+    ...  # answer 403
 ```
+
+One path may serve several levels, and adapts by `caller.level`: the dashboard frames the same path under Open and under View.
+
+### `AccessLevel` { #accesslevel }
+
+The generated protobuf enum `meridian.v1.sidecar_pb2.AccessLevel`: a person's level on a plugin, the same three for every plugin.
+
+| Value | Number | Button | Spelling |
+|---|---|---|---|
+| `ACCESS_LEVEL_UNSPECIFIED` | 0 | | A session at no level, which holds nothing. |
+| `ACCESS_LEVEL_READ` | 1 | View | `"read"` |
+| `ACCESS_LEVEL_WRITE` | 2 | Open | `"write"` |
+| `ACCESS_LEVEL_ADMIN` | 3 | Manage | `"admin"` |
 
 ### `Setting`
 
@@ -329,7 +357,7 @@ A link puts its account in both `read` and `write` while it stands. A closed acc
 
 ### `LinkedExternalAccount`
 
-One of the plugin's external accounts, linked to one of the deployment's accounts by a deployment admin. Added in 0.7.0.
+One of the plugin's external accounts, linked to one of the deployment's accounts by an admin of the plugin. Added in 0.7.0.
 
 | Field | Type | Default | Meaning |
 |---|---|---|---|
@@ -341,19 +369,26 @@ One of the plugin's external accounts, linked to one of the deployment's account
 
 Who a request for the plugin's page came from, as the dashboard vouched and the sidecar checked before forwarding it. It is read, not checked, by the SDK: only the sidecar can reach the page, and the sidecar removes every other claim the request arrived with.
 
+A person opens a plugin at one level they hold, by a button on the dashboard's home: **Manage** at `admin`, **Open** at `write`, **View** at `read`. The session carries only that level, and the accounts are cut to it: under Open, `read` and `write`; under View, `read` alone; under Manage, neither, since admin configures a plugin and sees no account's data.
+
 | Member | Type | Meaning |
 |---|---|---|
 | `subject` | `str` | The person, as the deployment's directory names them. Deployment-local, never an address. |
 | `display_name` | `str` | Their name, for display. |
-| `read` | `frozenset[str]` | The accounts this plugin may show them. |
-| `write` | `frozenset[str]` | The accounts this plugin may act on for them. Every one is also in `read`. |
-| `header` | `str` | The `Meridian-Caller` header as received. Pass it as `acting_for` on a typed command to send the command for this person. |
-| `deployment_admin` | `bool` | Whether the person is a deployment admin. A plugin serves its admin pages to them and to nobody else. |
+| `level` | `int`, an [`AccessLevel`](#accesslevel) | The level the session was opened at. `ACCESS_LEVEL_UNSPECIFIED` is a session that holds nothing. Added in 0.10.0. |
+| `admin` | `bool` property | Whether the session was opened by Manage: `level` is `ACCESS_LEVEL_ADMIN`. Added in 0.10.0. |
+| `read` | `frozenset[str]` | The accounts this plugin may show them in this session. Empty under Manage. |
+| `write` | `frozenset[str]` | The accounts this plugin may act on for them in this session. Every one is also in `read`. Empty under View and Manage. |
+| `header` | `str` | The `Meridian-Caller` header as received. Pass it as `acting_for` on a typed operation to send it for this person. |
+| `deployment_admin` | `bool` | Whether the person is a deployment admin. It opens no page and reaches no account. It says only that, linking an external account under Manage, they may name a new account rather than an existing one. |
 | `Caller.from_header(header: str) -> Caller` | classmethod | Decode a `Meridian-Caller` header: base64url, unpadded. |
-| `may_read(account_id: str) -> bool` | method | Whether they may read the account through this plugin: `account_id in read`. |
-| `may_write(account_id: str) -> bool` | method | Whether they may write the account through this plugin: `account_id in write`. |
+| `may_read(account_id: str) -> bool` | method | Whether they may read the account through this plugin in this session: `account_id in read`. |
+| `may_write(account_id: str) -> bool` | method | Whether they may write the account through this plugin in this session: `account_id in write`. |
 
-A person's access to a plugin is `read` or `write`, the same for every plugin, granted in the deployment's access groups. A plugin names no parts of itself, so there is nothing finer to ask. See [Access](../concepts/access.md).
+The levels are the same for every plugin, granted in the deployment's access groups. A plugin names no parts of itself, so there is nothing finer to ask. The sidecar checks every command sent for a person again, whatever the plugin believes: it admits one only in a session at `write`. See [Access](../concepts/access.md).
+
+!!! note "`deployment_admin` opens no page since 0.10.0"
+    Up to 0.9.0 a plugin served its admin pages to a caller whose `deployment_admin` was `True`. Since contract v5 a deployment admin holds on a plugin what their grants give, and a plugin's admin need not be one. Serve a page at `admin` by the session's level: declare it with `levels=["admin"]`, or ask `caller.admin`.
 
 !!! note "`Caller.access` and `TagAccess` are gone"
     Releases up to 0.5.0 gave access tag by tag, as `Caller.access`, a tuple of `TagAccess`, and `Identity.tags`. Tags were retired in 0.6.0: `Caller.access` raises an `AttributeError`, and `from meridian import TagAccess` an `ImportError`, each saying to read `Caller.read` and `Caller.write`, or ask `may_read` and `may_write`, which keep their names.
@@ -382,6 +417,151 @@ The generated protobuf enum `meridian.plugin.v1.operations_pb2.MissReason`: why 
 | `MISS_REASON_UNSPECIFIED` | 0 | Not set. |
 | `MISS_REASON_NOT_FOUND` | 1 | No instrument matched. |
 | `MISS_REASON_AMBIGUOUS` | 2 | More than one matched. It is reported as a miss rather than resolved by picking one. |
+
+## Pages { #pages }
+
+From 0.10.0. A plugin's pages are declared and enforced in one place: each page is a view function and a template, declared where the view is with the levels it serves. `meridian.Pages` sends the list at registration and answers 403 to a session at any other level before the view runs, so the dashboard's tab row and the plugin agree by the same declaration.
+
+```python
+from pathlib import Path
+
+import meridian
+
+pages = meridian.Pages("Statements", templates=Path(__file__).parent / "templates")
+
+
+@pages.page("/connections", "Connections", levels="admin")
+async def connections(request: meridian.Request) -> str:
+    return pages.render("connections.html", linked=...)  # no account's data
+
+
+@pages.page("/", "Statements", levels=["write", "read"])
+async def statements(request: meridian.Request) -> str:
+    rows = [...]  # cut to request.caller.read
+    return pages.render("statements.html", rows=rows)
+
+
+@pages.route("/sync", levels="write", methods=["POST"])  # an endpoint, not a tab
+async def sync(request: meridian.Request) -> str: ...
+
+
+async with await meridian.connect(
+    interface=meridian.Interface(port=8000, title="Statements", pages=pages),
+) as plugin:
+    server = pages.serve(plugin, 8000)
+```
+
+### `Pages`
+
+```python
+class Pages(title: str = "", *, templates: str | os.PathLike | None = None, kit: str = "0.7.0")
+```
+
+| Parameter | Meaning |
+|---|---|
+| `title` | The heading the base template draws, and the end of each page's `<title>`. |
+| `templates` | The directory `render` reads templates from. A directory that does not exist raises `FileNotFoundError`. |
+| `kit` | The kit version the base template links, at `/.meridian/ui/<kit>/`. The dashboard answers any 0.x with the newest 0.x it carries. |
+
+| Member | Meaning |
+|---|---|
+| `page(path, title, *, levels, methods=("GET",))` | Decorator. A tab, shown under the home's button for each of `levels`, in the order declared, and served only in a session at one of them. |
+| `route(path, *, levels, methods=("GET",))` | Decorator. An endpoint that is not a tab, such as a form's action or a page's data, served only in a session at one of `levels`. |
+| `render(template, /, **context) -> str` | `template`, from `templates`, rendered with `context`. Called from a view, while it serves a request; anywhere else raises `RuntimeError`. |
+| `csrf_token(caller) -> str` | The token a request from this person, in a session at this level, carries back when it changes something. |
+| `declared` | The tabs, in the order declared: what registration sends. |
+| `dispatch(request) -> Response` | The view at the request's path and method: 404 for no such path, 405 for a method the path does not take, 403 for a level it does not serve. |
+| `app(plugin=None)` | The pages as an ASGI application, with the caller read as [`CallerMiddleware`](#callermiddleware) reads it. A view that raises is logged and answered 500. |
+| `serve(plugin, port, *, loop=None)` | Runs `app(plugin)` on `127.0.0.1:<port>` with the standard library's threaded server, in a thread of its own; each view runs on `loop`, the running one by default, where the plugin's operations are. Returns the server, whose `shutdown()` stops it. A view taking more than 60 seconds is answered 500. |
+
+`levels` takes the same values as [`Page`](#page). A path or a route with no level raises `ValueError` when it is declared, and so does the same path and method declared twice. A view is sync or async, takes a `Request`, and answers a `str`, the page's HTML, or a `Response`.
+
+| `Request` field | Meaning |
+|---|---|
+| `method`, `path` | As asked. |
+| `caller` | The [`Caller`](#caller), with the session's level. |
+| `plugin` | The registered `Plugin` the pages serve, whose operations a view calls, with `acting_for=request.caller.header` to act for the person. |
+| `query`, `form` | The query string's and a urlencoded form's fields, the last of each name. |
+| `headers` | By lower-case name. |
+| `body` | The body as sent. |
+| `csrf_token` | The token a request that changes something carries back, set before the view runs. |
+
+| `Response` field | Default | Meaning |
+|---|---|---|
+| `body` | `""` | `str` or `bytes`. `text` reads it as text. |
+| `status` | `200` | |
+| `content_type` | `"text/html; charset=utf-8"` | |
+| `headers` | `()` | More headers, as `(name, value)` pairs. |
+
+### Templates
+
+`render` renders a [Jinja2](https://jinja.palletsprojects.com) template, autoescaped, so every value is escaped unless it is `meridian.pages.Markup`, text that is HTML already. Beside what the view passes, the context always holds:
+
+| Name | What it is |
+|---|---|
+| `caller` | The `Caller` asking. |
+| `level` | The session's level, as `"admin"`, `"write"` or `"read"`. A template adapts by it: `{% if level == "write" %}`. |
+| `csrf_input` | The hidden field carrying the CSRF token, for inside a form. |
+| `csrf_token` | The token itself, for a script's `X-CSRF-Token` header. |
+
+A page's template extends the kit's base template, `meridian/base.html`, which `Pages` carries. It links the kit's stylesheet and script, draws the page's heading and, where more than one page is at the session's level, its tab row; the kit drops both when the dashboard frames the page, and draws them when the page is opened on its own. It has four blocks:
+
+| Block | Holds |
+|---|---|
+| `title` | The document's `<title>`: by default the page's title and the plugin's, as `Statements · Holdings`. |
+| `status` | An `om-status` marked `data-om-header`, which the dashboard draws beside the plugin's name (kit 0.7.0). |
+| `head_actions` | Buttons marked `data-om-action`, which the dashboard draws in its header (kit 0.4.0). |
+| `content` | The page. |
+
+```html+jinja
+{% extends "meridian/base.html" %}
+{% block status %}<om-status data-om-header state="ok" label="Synced"></om-status>{% endblock %}
+{% block head_actions %}{% if level == "write" %}
+  <form class="inline" method="post" action="/sync">{{ csrf_input }}<button data-om-action="sync">Sync</button></form>
+{% endif %}{% endblock %}
+{% block content %}
+  <om-grid row-key="id"><script type="application/json">{{ grid | tojson }}</script></om-grid>
+{% endblock %}
+```
+
+`tojson` writes a kit component's data safely inside its `<script>`. `{% include %}` and macros compose a page from pieces. See [Build a plugin's page](../how-to/build-a-plugin-page.md).
+
+### CSRF
+
+A request that changes something carries this plugin's CSRF token. The plugin's host keeps the person's session in a cookie, and every plugin's host is the same site as the dashboard, so the cookie's SameSite does not stop another plugin's page from posting here as the person, and the plugin never sees the host it is reached at to check an `Origin` against. So `Pages` refuses every request but `GET` and `HEAD` with 403, before the view runs, unless it carries the token back: `{{ csrf_input }}` inside a form, which sends a field named `csrf`, or the `X-CSRF-Token` header from a script.
+
+The token is an HMAC of the person and the session's level, under a secret the process makes when it starts. A restart, which each save on a development deployment is, makes a page open before it stale until it is reloaded.
+
+## `meridian.testing` { #testing }
+
+From 0.10.0. `PageClient` asks a plugin's pages in its own tests, in process, as its sidecar would forward them: each request carries a `Meridian-Caller` header for a session at one level, its accounts cut to that level as the dashboard cuts them.
+
+```python
+from meridian.testing import PageClient
+
+from my_plugin.page import pages
+
+client = PageClient(pages, plugin=stand_in, read={"ACC-1", "ACC-2"}, write={"ACC-2"})
+assert client.get("/", "write").status == 200
+assert client.get("/", "admin").status == 403
+client.assert_no_account_data("ACC-1", "Growth fund", "12,500.00")
+```
+
+| Member | Meaning |
+|---|---|
+| `PageClient(pages, plugin=None, *, read=(), write=(), subject=..., display_name=...)` | `plugin` is what a view reaches as `request.plugin`: a stand-in whose operations answer in the test. `read` and `write` are the accounts the person may read and write, cut to each session's level. The person is Ada Park, a local account, unless `subject` and `display_name` say otherwise. |
+| `get(path, level, **query)` | A GET in a session at `level`: `"admin"`, `"write"` or `"read"`. |
+| `post(path, level, form=None)` | A form posted from the plugin's page, carrying its CSRF token back unless `form` gives one of its own. |
+| `request(method, path, level, *, form=None, query=None, headers=None)` | The request as given, with no token added: for testing that one without a token, or with somebody else's, is refused. |
+| `caller(level)` | The client's person, as a `Caller` in a session at `level`. |
+| `every_page()` | Each declared page, in order, under Manage, Open and View: a list of `Rendered`, each with `page`, `level` and `response`, 200 where the page serves the level and 403 where it does not. |
+| `assert_no_account_data(*held)` | Fails, naming the page and what it showed, when a page at `admin` rendered under Manage is not served, or shows any of `held` (account IDs, names and figures the test put in the plugin) or any account the client's person may read or write. |
+
+`meridian.testing.caller_header(level, *, read=(), write=(), subject=..., display_name=..., deployment_admin=False)` makes the header alone, for a test that serves the pages another way. It is unsigned: only a plugin's tests read it, never a sidecar.
+
+The client is synchronous, for a plain pytest test, and not for use inside a running event loop. A view that raises fails the test with its traceback.
+
+A Manage session holds no account's data, and the sidecar refuses reads for the person in one. What the plugin holds as itself, such as a synced statement's rows, nothing technical keeps off a page at `admin`, so the plugin's tests do, with `assert_no_account_data`.
 
 ## `CallerMiddleware` { #callermiddleware }
 
@@ -414,7 +594,7 @@ Every exception carries the sidecar's own words, so a log line says whether the 
 | `NotRegistered` | | Any method, after `leave()`. |
 | `NotGranted` | `topic: str`, `reason: str` | A typed operation was refused permission. `topic` holds the operation's name (for example `"RecordHolding"`), and `reason` names what was missing. |
 | `CallFailed` | `topic: str`, `kind: str`, `detail: str` | A typed operation did not produce an answer. `topic` holds the operation's name. `kind` says which failure it was; see [Typed operations](typed-operations.md#errors). |
-| `NotLinked` | as `CallFailed`, with `kind="refused"` | A typed operation named an external account nobody has linked to an account, so nothing was recorded for it. A subclass of `CallFailed`, so code that caught `CallFailed` still catches it. Raised only when the refusal carries the code `REFUSAL_REASON_EXTERNAL_ACCOUNT_NOT_LINKED`. Not worth retrying: the next statement after a deployment admin links the account records it. Added in 0.7.0; see [Typed operations](typed-operations.md#an-unlinked-external-account). |
+| `NotLinked` | as `CallFailed`, with `kind="refused"` | A typed operation named an external account nobody has linked to an account, so nothing was recorded for it. A subclass of `CallFailed`, so code that caught `CallFailed` still catches it. Raised only when the refusal carries the code `REFUSAL_REASON_EXTERNAL_ACCOUNT_NOT_LINKED`. Not worth retrying: the next statement after an admin links the account records it. Added in 0.7.0; see [Typed operations](typed-operations.md#an-unlinked-external-account). |
 
 The sidecar's status is mapped onto these for typed operations:
 

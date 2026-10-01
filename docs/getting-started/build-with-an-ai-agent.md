@@ -20,8 +20,9 @@ whoever works on it next has them too. `.dockerignore` keeps them out of the plu
 - A deployment installed **for development**. Development deployments run unreviewed code, so
   never use one your firm depends on. See
   [Development deployments](../concepts/development-deployments.md).
-- The `meridian` CLI, version 0.1.15 or later, which has `plugin check`; `AGENTS.md` asks for it.
-  Check with `meridian --version`; update with `meridian upgrade`.
+- The `meridian` CLI, version 0.1.21 or later: 0.1.15 brought `plugin check`, which `AGENTS.md`
+  asks for, and 0.1.21 `plugin open --level`, which the checks below use. Check with
+  `meridian --version`; update with `meridian upgrade`.
 - Docker on this machine. The first run builds the plugin's image.
 - A coding agent that can run shell commands in the plugin's directory.
 
@@ -62,9 +63,16 @@ say you want to see it running. For example:
 
 ```text
 Read AGENTS.md. Start the live loop for the instance my-plugin, then add a
-section to the page that shows today's date. Check the page with
-`meridian plugin open --print /` and tell me when it is running.
+section to the Setup page that shows today's date. Check the page with
+`meridian plugin open --instance my-plugin --level manage --print /setup`
+and tell me when it is running.
 ```
+
+Name the level the page is for. A session on a plugin carries one level, as the dashboard's
+**Manage**, **Open** and **View** do, and a page serves only the levels it is declared with. As a
+deployment admin you are an admin of every plugin, so without `--level` the CLI asks at Manage, and
+the scaffold's Accounts page at `/`, which is for Open and View, is refused. See
+[Manage, Open and View](../concepts/plugins.md#manage-open-and-view).
 
 Claude Code reads `CLAUDE.md` by itself. Other agents need to be told to read `AGENTS.md`, or pick
 it up by their own convention.
@@ -107,7 +115,7 @@ The agent checks its work with the command that answers the question:
 
 | To know | It runs |
 |---|---|
-| What the page shows | `meridian plugin open --instance my-plugin --print /` |
+| What a page shows | `meridian plugin open --instance my-plugin --level manage --print /setup`, or `--level open --print /` for a page at `write` |
 | What the plugin printed | `meridian plugin logs --instance my-plugin --since <revision>` |
 | What was refused | `meridian plugin events --instance my-plugin --since <revision> --json` |
 | What you see in a browser | `meridian plugin open --instance my-plugin`, a link for one browser |

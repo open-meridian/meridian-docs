@@ -70,7 +70,8 @@ Nothing else is a role. The deployment's own components — the conductor, the
 dashboard, the street and instrument stores, first-run and the launcher — are
 not roles, and no plugin may declare one. In particular there is no `admin`
 role: administering a deployment is the dashboard's, and no plugin can
-administer the deployment it was installed into.
+administer the deployment it was installed into. The `admin` level below is a
+person's, on a plugin, and has nothing to do with roles.
 
 !!! note "Most roles hold nothing yet"
     A role holds exactly the topics a workflow in Open Meridian's contract
@@ -93,20 +94,22 @@ mount, and no second policy that could disagree with the first.
 This is also why a role is never a code path. The sidecar enforces a role's
 grants and nothing in the runtime behaves differently because of it.
 
-## Who may use a plugin: read or write
+## Who may use a plugin: admin, read or write
 
 Roles decide what a plugin may do on the bus. Who may use it is decided
-separately, by the deployment, and it is the same two levels for every
+separately, by the deployment, and it is the same three levels for every
 plugin:
 
+- **`admin`**: the person configures the plugin, its settings and its own
+  pages at `admin`, and sees no account's data.
 - **`read`**: the plugin may show the person what it reads, cut to the
   accounts they may read.
 - **`write`**, which includes `read`: the plugin may also act for the person,
   sending commands for them, on the accounts they may write.
 
-A deployment admin grants these in the deployment's access groups: an entry
-names a plugin and a level. How that is granted is described in
-[Access](access.md).
+A person may hold `admin` and, beside it, `read` or `write`. A deployment
+admin grants these in the deployment's access groups: an entry names a plugin
+and a level. How that is granted is described in [Access](access.md).
 
 A plugin names no parts of itself for people. Earlier versions let a plugin
 declare **tags** for that; they were retired, so that every plugin is
@@ -179,34 +182,71 @@ deployment needs a wildcard name, `*.plugins.<host>`, and why its address must
 be a name rather than an IP address. On a laptop, any name under `.localhost`
 works with nothing set up.
 
-A person opens a plugin from the dashboard's home, which lists the plugins
-they hold access on. The dashboard hands the browser a one-time code, which
-the plugin's host exchanges for a session of its own, ending when the
-dashboard session it came from ends. On every request after that:
+A person opens a plugin from the dashboard's home, at one of the levels they
+hold (see [Manage, Open and View](#manage-open-and-view)). The dashboard hands
+the browser a one-time code, which the plugin's host exchanges for a session
+of its own, carrying that level and ending when the dashboard session it came
+from ends. On every request after that:
 
 1. The dashboard checks the person's access against the records as they are
-   now.
-2. It signs an assertion: who the person is, and what they hold on this plugin
-   — the accounts they may read and the accounts they may write through it
-   — for this instance only, valid for 60 seconds.
+   now, and that they still hold the session's level.
+2. It signs an assertion: who the person is, the session's level, and what
+   that level reaches on this plugin — none of their accounts under `admin`,
+   the accounts they may read and the accounts they may write under `write`,
+   the accounts they may read under `read` — for this instance only, valid
+   for 60 seconds.
 3. The plugin's sidecar verifies the assertion and hands the plugin the
    verified claims. A request that fails verification never reaches the
    plugin, and anything the request carried claiming to be the caller is
    removed.
 
 The plugin can refuse more than it was handed; it has no way to permit more.
-A deployment admin can open the page of any running plugin, but opening is not
-access: the assertion still carries only what they hold on that plugin.
+Being a deployment admin opens no plugin: the home offers a plugin only at a
+level the person holds on it.
+
+### Manage, Open and View
+
+The dashboard's home, **Your plugins**, lists every plugin the person holds a
+level on, `admin` included, with a button for each level held:
+
+| Button | Level | What it opens |
+|---|---|---|
+| **Manage** | `admin` | The plugin's pages at `admin`: its configuration, such as connections and account links. No account's data |
+| **Open** | `write` | Its pages at `write`, acting on the accounts the person may write |
+| **View** | `read` | Its pages at `read`, read-only. A writer is offered View too |
+
+A button opens the plugin's **area**, at `/plugins/<instance>?level=admin`,
+`write` or `read`: one heading, the level's button, and one tab row holding
+the pages the plugin declared at that level, in the order declared, with the
+page asked for in a seamless frame below. A person holding more than one
+level switches between them there, as on the home. A plugin that declares no
+page at `write` or `read` has one there, its `/`.
+
+From a terminal, `meridian plugin open --level manage`, `open` or `view` does
+the same; without `--level` it opens at the first level held, Manage before
+Open before View. See [`meridian plugin open`](../api/cli.md#meridian-plugin-open).
+
+Each session carries one level, so Manage, Open and View are separate
+sessions, and a person moves between them by the buttons. A page serves only
+the levels it is declared with: a page at `write` and `read` asked for in a
+Manage session is refused.
 
 A page looks like the rest of Open Meridian because it is built on the
 **plugin UI kit**, which the dashboard serves on the plugin's own host at
 `/.meridian/ui/<version>/`, answering any 0.x version with the newest 0.x
 kit it carries. The kit brings the brand's type and spacing, each person's
 colour scheme, and components such as a data grid and the map a plugin links
-its external accounts with. A plugin's admin pages appear as tabs
-in the plugin's view in the dashboard's Settings, each in a seamless frame: the
-page keeps its own origin, and the frame has no border or scrollbar of its own
-and is as tall as the page. See [Build a plugin's page](../how-to/build-a-plugin-page.md).
+its external accounts with. Every page sits in the area in a seamless frame:
+the page keeps its own origin, and the frame has no border or scrollbar of
+its own and is as tall as the page. See
+[Build a plugin's page](../how-to/build-a-plugin-page.md).
+
+What every plugin has, whatever its pages, is in the dashboard's admin view of
+it, at `/admin/plugins/<instance>`: **Overview** (its health, what its
+settings still need and its external accounts' sync state), **Settings** (its
+form, for its admins) and **Access** (who holds which level on it). Its own
+pages are not there: they are in its area, reached from the home, its
+configuration pages under Manage.
 
 ### Reads and writes on behalf of people
 

@@ -12,6 +12,8 @@ It works on any deployment. For the faster loop where each save runs at once, se
 
 - A deployment you installed with [Install a deployment](installation.md).
 - You hold **deployment admin** on it. Only a deployment admin brings plugins in.
+- The `meridian` CLI, 0.1.21 or later (`meridian --version`), for the pages and the `--level` this
+  page shows. Update with `meridian upgrade`.
 - Docker on this machine. `meridian plugin upload` builds the plugin's image here, from its own
   `Dockerfile`.
 
@@ -61,11 +63,12 @@ writes it somewhere other than `./my-plugin`. It never writes over a directory t
 
 | File | What it is |
 |---|---|
-| `src/my_plugin/__main__.py` | Connects to the sidecar, logs who it was launched as and what it may do, serves the page, and reports itself healthy. |
-| `src/my_plugin/page.py` | The page people see through the dashboard. It shows who is asking, and the accounts they may read or write through the plugin. |
-| `pyproject.toml` | The package, pinned exactly to the SDK, `open-meridian==0.7.1` from CLI 0.1.18. Its `[tool.meridian]` table declares the plugin's `roles` and whether it serves a page. |
-| `Dockerfile` | Builds on the SDK's base image of the same version, `ghcr.io/open-meridian/plugin-python:0.7.1`. |
-| `tests/test_page.py` | Tests of the page, run by `meridian plugin check --run-tests`. |
+| `src/my_plugin/__main__.py` | Connects to the sidecar, declaring its pages, logs who it was launched as and what it may do, serves the pages, and reports itself healthy. |
+| `src/my_plugin/page.py` | The pages people see through the dashboard, each a view function declared with the levels it serves: **Setup** (`/setup`), at `admin`, says what the plugin is and what the deployment lets it do, and shows no account's data; **Accounts** (`/`), at `write` and `read`, shows the accounts the person may read and write through the plugin, and under Open one action that writes for them. |
+| `src/my_plugin/templates/` | The pages' Jinja2 templates, `setup.html` and `accounts.html`, each extending the kit's base template. |
+| `pyproject.toml` | The package, pinned exactly to the SDK, `open-meridian==0.10.0` from CLI 0.1.21. Its `[tool.meridian]` table declares the plugin's `roles` and whether it serves a page. |
+| `Dockerfile` | Builds on the SDK's base image of the same version, `ghcr.io/open-meridian/plugin-python:0.10.0`. |
+| `tests/test_page.py` | Tests of the pages, run by `meridian plugin check --run-tests`: each page under each level, no account data under Manage, and the action sent for the person. |
 | `.github/workflows/check.yaml` | A CI workflow that runs `meridian plugin check --run-tests` on every push. |
 | `AGENTS.md`, `CLAUDE.md`, `.claude/skills/develop-live/` | Instructions for coding agents: building pages with the kit, the live loop, and `meridian plugin check`. `.dockerignore` keeps them out of the image. |
 | `README.md`, `.gitignore`, `.dockerignore` | The usual. |
@@ -81,9 +84,9 @@ roles = []
 interface = true
 ```
 
-That is a plugin admitted with no topics. It can serve a page and read who is asking, and nothing
-more. Who may use it is not declared here: a person's access to a plugin is `read` or `write`, the
-same for every plugin, and a deployment admin grants it (see
+That is a plugin admitted with no topics. It can serve pages and read who is asking, and nothing
+more. Who may use it is not declared here: a person's level on a plugin is `admin`, `read` or
+`write`, the same for every plugin, and a deployment admin grants it (see
 [Give people access](../how-to/administer-access.md)). See [Plugin manifest](../api/plugin-manifest.md) for every key.
 
 ## 4. Upload it
@@ -135,20 +138,28 @@ meridian plugin list
 
 ```text
 Versions:
-  my-plugin 0.1.0  roles: none  page: yes  SDK 0.7.1
+  my-plugin 0.1.0  roles: none  page: yes  SDK 0.10.0
 Launches:
   my-plugin  my-plugin 0.1.0  launched
 ```
 
 ## 7. Open its page
 
-In the dashboard, the home page, **Your plugins**, lists it. Choose `my-plugin`. Its page opens
-inside the dashboard, at `http://meridian.localhost/plugins/my-plugin`, served from its own name,
-`http://my-plugin.plugins.meridian.localhost/`. The breadcrumb reads **Plugins /** and the plugin's
-name; the arrow beside the name opens the page in a window of its own.
+In the dashboard, the home page, **Your plugins**, lists it with a **Manage** button. A deployment's
+administrators are admins of every plugin, through **All plugins (admin)**, so that is the level you
+hold on it; see [Manage, Open and View](../concepts/plugins.md#manage-open-and-view).
 
-The page shows who you are signed in as and a table headed **What you may see here**. It is empty
-because nobody has been given access to this plugin on any account yet.
+Choose **Manage**. The plugin's area opens, at `http://meridian.localhost/plugins/my-plugin?level=admin`,
+with its pages at `admin`: here one, **Setup**, served from the plugin's own name,
+`http://my-plugin.plugins.meridian.localhost/`. It shows who you are signed in as, the instance, its
+roles, and what it may publish and subscribe to. Manage is configuration, so it shows no account's
+data.
+
+The **Accounts** page is at `write` and `read`, for the people who work in the plugin. To see it,
+give yourself `write` on `my-plugin` in an access group, on an account group holding an account (see
+[Give people access](../how-to/administer-access.md)). The home then offers **Open** and **View**
+beside **Manage**, and **Open** shows a table headed **What you may see here**: the accounts you may
+read through the plugin, and which of them you may write.
 
 From a terminal you can also run:
 
@@ -156,8 +167,14 @@ From a terminal you can also run:
 meridian plugin open --instance my-plugin
 ```
 
-It prints a link that signs one browser in to this plugin's page alone. The link works once, within
-a minute.
+It prints a link that signs one browser in to this plugin's page alone, at the first level you hold.
+The link works once, within a minute, and lands on the plugin's `/`: at Manage, that is the
+Accounts page refusing you, so go to `/setup` on the same address. `--level open` or `--level view`
+opens it at another level you hold, and `--print <path>` prints a page instead:
+
+```bash
+meridian plugin open --instance my-plugin --level manage --print /setup
+```
 
 ## 8. Stop it
 
@@ -170,6 +187,6 @@ The version stays in the catalogue. Launch it again whenever you like.
 ## Next steps
 
 - [Build with an AI agent](build-with-an-ai-agent.md): change the plugin with a coding agent, live.
-- [Give people access](../how-to/administer-access.md): give your firm's people read or write on a plugin.
+- [Give people access](../how-to/administer-access.md): give your firm's people admin, read or write on a plugin.
 - [Release a plugin version](../how-to/release-a-plugin.md): ship a change as a new version.
 - [Python SDK](../api/python-sdk.md): what a plugin can call.

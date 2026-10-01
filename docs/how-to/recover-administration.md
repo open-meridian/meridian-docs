@@ -55,8 +55,9 @@ says **Nobody administers this deployment yet**, with a **Claim it** link.
 4. Choose **Claim it**, or open `/claim`. The page is **Claim this deployment**.
 5. Enter the **Claim code** and choose **Redeem**.
 
-You become the deployment's first deployment admin, and land in Settings. The platform learns that
-the code was used, and not by whom.
+You become the deployment's first deployment admin, and land in Settings. As first run does, the
+code also makes you `admin` on every plugin, through **All plugins (admin)**. The platform learns
+that the code was used, and not by whom.
 
 ## Start over
 

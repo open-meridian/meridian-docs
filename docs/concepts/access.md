@@ -81,7 +81,9 @@ signs in through a provider that has it.
 A session is held by the dashboard, keyed by an opaque, HTTP-only cookie, and
 records who the person is and the directory groups they presented. It records
 nothing about what they may do: access is evaluated from the records on every
-request.
+request. Opening a plugin starts a session on that plugin's own host, which
+ends with the dashboard session and carries the one level it was opened at;
+see [One level per session](#one-level-per-session-manage-open-and-view).
 
 Sessions end after **30 minutes idle** and **12 hours** at most. Both are fixed
 by Open Meridian's contract rather than configuration. A browser's session is
@@ -116,40 +118,119 @@ store and authored in the dashboard's **Settings**.
 | Record | What it is |
 |---|---|
 | **User group** | A set of directory groups and individual logins. A person belongs to it when their login is listed, or when, at sign-in, their directory says they are in one of its groups |
-| **Account group** | An explicit list of the firm's [accounts](accounts.md). There is no "all accounts" group and no nesting, and an empty group reaches nothing |
-| **Access group** | A list of entries, each naming one plugin instance and a level: `read` or `write`. `write` includes `read`. The levels are the same for every plugin; a plugin names no parts of itself |
+| **Account group** | An explicit list of the firm's [accounts](accounts.md), with no nesting; an empty group reaches nothing. One is built in, **All accounts** |
+| **Access group** | A list of entries, each naming one plugin instance and a level: `admin`, `read` or `write`. The levels are the same for every plugin; a plugin names no parts of itself |
 | **Permission** | Joins one user group, one account group and one access group: *these people* may use *these plugins* on *these accounts* |
 
 A person's access is the union of every permission whose user group they
 belong to. There are no deny rules: access only adds up.
 
-Access is combined **permission by permission**, never dimension by dimension.
-For each plugin, a person holds a set of accounts they may read and a set they
-may write, and each permission contributes only its own accounts at
-its own level. Write on one account group through one permission and read on
-another through a second is write on the first and read on the second — never
-write on both.
+### Three levels
+
+| Level | What it gives on the plugin |
+|---|---|
+| `admin` | Its configuration: its settings, and its own pages at `admin`, such as connections and account links. **No account's data**, and no account group |
+| `read` | What the plugin shows, on the accounts the person may read |
+| `write` | `read`, and acting through the plugin, on the accounts the person may write |
+
+`write` includes `read`. `admin` includes neither, and neither includes
+`admin`: it is configuration, kept apart from the data. A person may hold
+`admin` on a plugin and, beside it, one data level, `read` or `write`, the
+higher one granted. An access group may name a plugin at `admin` and at one
+data level; naming it at both `read` and `write` is refused, since `write`
+already includes `read`.
 
 `read` covers queries and receiving events; `write` covers commands. Each
 access entry names a single plugin, so each plugin's access is granted, and
 can be counted, on its own.
 
+The data levels are combined **permission by permission**, never dimension by
+dimension. For each plugin, a person holds a set of accounts they may read and
+a set they may write, and each permission contributes only its own accounts
+at its own level. Write on one account group through one permission and read
+on another through a second is write on the first and read on the second —
+never write on both.
+
+A permission to an access group that gives only `admin` names no account
+group: configuring a plugin is not an act on an account. One with a `read` or
+`write` entry names one.
+
+### One level per session: Manage, Open and View
+
+A person opens a plugin at one of the levels they hold, by a button on the
+dashboard's home: **Manage** for `admin`, **Open** for `write`, **View** for
+`read`. A writer is offered View too. See
+[Manage, Open and View](plugins.md#manage-open-and-view).
+
+A plugin's session carries only the level it was opened at, and what the
+dashboard tells the plugin about the person is cut to it:
+
+| Button | The plugin is told | The person may |
+|---|---|---|
+| **Manage** | `admin`, and no account | Configure the plugin. The plugin's sidecar refuses every read and command sent for them but two: reading the deployment's accounts, answered with their identities alone (name, state, custodian, type, owner and note, never holdings or balances), and linking an external account |
+| **Open** | `write`, every account they may read, and the accounts they may write | See every account they may read, and act on those their `write` grants name |
+| **View** | `read`, and every account they may read | See every account they may read, and act on nothing |
+
+The dashboard opens nothing at a level the person does not hold. Nothing
+conflicts between the levels, so no grant is refused for giving a person a
+second one: separation of duties is per session. A firm that needs it per
+person grants nobody both.
+
+A plugin holds data as itself, and nothing technical stops it showing that on
+a page at `admin`. That is the trust already placed in a plugin to cut what
+it shows under Open and View. The SDK's test client fails a plugin's tests
+when a page at `admin` shows account data; see
+[Python SDK](../api/python-sdk.md#testing).
+
+### A plugin's admins
+
+A person holding `admin` on a plugin is one of its **admins**. They configure
+it: its settings, in the dashboard's admin view of the plugin, and its own
+pages at `admin`, under Manage. A plugin admin is **account agnostic**: they
+see every account's identity, and link the plugin's external accounts to any
+existing account, but reach no account's data. The barrier between business
+lines is the `read` and `write` levels', and their account groups. Only a
+deployment admin names a new account, and only a deployment admin grants.
+
 ### Deployment admin
 
-**Deployment admin** is a built-in access group. It holds the dashboard's own
-capabilities — accounts, groups, permissions, and bringing plugins in — and
-reaches every account, including accounts in no account group, so a permission
-to it names no account group. It cannot be edited or deleted, and the last
-permission to it cannot be withdrawn: a deployment is never left without an
-administrator.
+**Deployment admin** is a built-in access group. It holds the deployment's
+own capabilities — accounts, account and user groups, access groups,
+permissions, the deployment's settings, and bringing plugins in — and reaches
+no account's data, so a permission to it names no account group. Being a
+deployment admin makes nobody admin on a plugin, and lets nobody read or act
+through one: that takes a grant, as it does for anybody. A deployment admin
+who also works in a plugin is granted `read` or `write` on it, on the record.
+
+It cannot be edited or deleted, and the last permission to it cannot be
+withdrawn: a deployment is never left without an administrator.
 
 The first administrators are named in the first-run wizard: a directory group,
 whose members hold deployment admin from their first sign-in, or the local
 account the wizard creates. A deployment that somehow has none gets one back
 with a first-admin code from the platform, redeemed at `/claim`.
 
-An account in no account group is visible to deployment admins and to nobody
-else.
+### All plugins (admin)
+
+**All plugins (admin)** is a second built-in access group. It gives `admin` on
+every plugin, those launched later included, and names no account group.
+First run links the user group holding deployment admin to it, and so does a
+first-admin code, so a deployment's administrators start as admins of every
+plugin. The link is an ordinary permission, and may be withdrawn, for a firm
+that keeps configuring plugins apart from administering the deployment.
+Deployments installed before levels gained it when they were upgraded: every
+user group holding deployment admin was linked to it then.
+
+### All accounts
+
+**All accounts** is a built-in account group. It holds every account, those
+no other group lists and those opened later included, and a permission may
+name it like any other: a compliance plugin's scope can cover accounts nobody
+has grouped. It cannot be edited or deleted.
+
+An account no account group lists is reached only through a permission naming
+All accounts, or by a plugin whose link names it. Nobody reaches it by being
+an admin.
 
 ### How fast a change applies
 

@@ -15,7 +15,7 @@ The operations are generated, not written by hand. One generator reads the contr
 - the sidecar's side of it;
 - the Python methods on [`Plugin`](python-sdk.md#plugin).
 
-This page lists every operation in SDK 0.7.1, the same as in 0.7.0. There is no order-routing or execution operation.
+This page lists every operation in SDK 0.10.0, the same as in 0.7.0. There is no order-routing or execution operation.
 
 ## Summary
 
@@ -37,7 +37,7 @@ This page lists every operation in SDK 0.7.1, the same as in 0.7.0. There is no 
 - An **event** returns `Published`, the message's identifier on the bus.
 - A **command** or a **query** returns the answer of whatever serves it.
 
-W2 is holdings ingestion from a brokerage. It is read-only throughout: nothing in it places an order. W3 is instrument resolution. W6.4 is linking the accounts a source reaches to the firm's own, which a plugin does on its own admin page, for the deployment admin viewing it. The tutorial [Record a holdings statement](../tutorials/record-a-holdings-statement.md) walks through W2 and W6.4.
+W2 is holdings ingestion from a brokerage. It is read-only throughout: nothing in it places an order. W3 is instrument resolution. W6.4 is linking the accounts a source reaches to the firm's own, which a plugin does on its own page at `admin`, for the admin of the plugin viewing it under Manage. The tutorial [Record a holdings statement](../tutorials/record-a-holdings-statement.md) walks through W2 and W6.4.
 
 ## Conventions
 
@@ -109,7 +109,7 @@ Some fields describe the publisher rather than the event, and only the sidecar k
 
 | Field | On | Set by the sidecar from |
 |---|---|---|
-| `account_id` | `RecordHolding` | The link a deployment admin made from the plugin's `external_account_id` to an account. Refused when there is none, as [`NotLinked`](#an-unlinked-external-account). |
+| `account_id` | `RecordHolding` | The link an admin of the plugin made from the plugin's `external_account_id` to an account. Refused when there is none, as [`NotLinked`](#an-unlinked-external-account). |
 | `account_id` | `ReportSyncStatus` | The same link, or empty when there is none. Never refused. |
 | `publisher_instance_id` | `ReportMissingInstrument` | The instance the plugin was launched as. |
 | `placeholder_instrument_id` | `ReportMissingInstrument` | Nothing: always empty from a plugin. Only the instrument store sets it. |
@@ -119,16 +119,16 @@ The sidecar also puts the plugin's own instance in place of `{instance}` in a to
 
 ### Acting for a person
 
-Four operations take `acting_for`: the two commands that record holdings, and the two that link accounts. Pass the `Meridian-Caller` header of the page request you are serving; with [`CallerMiddleware`](python-sdk.md#callermiddleware) that is `request.state.caller.header`.
+Four operations take `acting_for`: the two commands that record holdings, and the two that link accounts. Pass the `Meridian-Caller` header of the page request you are serving: in a view on [`meridian.Pages`](python-sdk.md#pages), `request.caller.header`; with [`CallerMiddleware`](python-sdk.md#callermiddleware), `request.state.caller.header`.
 
 For `record_holdings_statement` and `record_holding`, it is optional:
 
 - **Unset:** the plugin acts as itself.
-- **Set:** the sidecar checks the assertion, admits the command only when that person may write the account it names, and stamps the person on it. For a command that names no account, the person must be able to write something through the plugin.
+- **Set:** the sidecar checks the assertion, admits the command only in a session opened by **Open**, at `write`, and only when that person may write the account it names, and stamps the person on it. For a command that names no account, the person must be able to write something through the plugin. A command sent for a person in a session opened by Manage or View is refused with `NotGranted`, naming the session.
 
 A person narrows what a plugin may do and never widens it.
 
-For `read_accounts_for_linking` and `link_external_account`, it is required. They touch the deployment's configuration, which a plugin reaches only acting for a deployment admin, and never as itself. Without an assertion, or with one for somebody who is not a deployment admin, the sidecar refuses the call with `NotGranted`.
+For `read_accounts_for_linking` and `link_external_account`, it is required. They touch the deployment's configuration, which a plugin reaches only acting for an admin of the plugin in a session opened by **Manage**, at `admin`, and never as itself. Without an assertion, or with one from a session at any other level, the sidecar refuses the call with `NotGranted`. They are the only reads and commands the sidecar admits for a person in a Manage session: that session reaches no account's data.
 
 ## Errors { #errors }
 
@@ -136,8 +136,8 @@ A refusal is the call's gRPC status, chosen by what the caller should do about i
 
 | Raised | Sidecar status | Means | Your next move |
 |---|---|---|---|
-| `NotGranted` | `PERMISSION_DENIED` | None of the plugin's roles grants this operation; or the account is outside the plugin's write scope; or the person in `acting_for` may not write it; or an operation on the deployment's configuration without a deployment admin's assertion; or a link for an external account this plugin did not report. | Stop. It is configuration: a role, a permission, a link or an admin, which a person changes. |
-| `NotLinked`, `kind="refused"` | `FAILED_PRECONDITION`, with the code `REFUSAL_REASON_EXTERNAL_ACCOUNT_NOT_LINKED` | An `external_account_id` nobody has linked to an account. See [An unlinked external account](#an-unlinked-external-account). | Offer it for linking, and stop this statement. A deployment admin links the account, and the next statement records it. |
+| `NotGranted` | `PERMISSION_DENIED` | None of the plugin's roles grants this operation; or the account is outside the plugin's write scope; or the person in `acting_for` may not write it, or sent it from a session not opened by Open; or an operation on the deployment's configuration without the assertion of an admin of the plugin under Manage; or a new account named by somebody who is not a deployment admin; or a link for an external account this plugin did not report. | Stop. It is configuration: a role, a permission, a link or an admin, which a person changes. |
+| `NotLinked`, `kind="refused"` | `FAILED_PRECONDITION`, with the code `REFUSAL_REASON_EXTERNAL_ACCOUNT_NOT_LINKED` | An `external_account_id` nobody has linked to an account. See [An unlinked external account](#an-unlinked-external-account). | Offer it for linking, and stop this statement. An admin of the plugin links the account, and the next statement records it. |
 | `CallFailed`, `kind="refused"` | `FAILED_PRECONDITION`, with no code | The sidecar considers the plugin not registered, or already left. | Connect again. |
 | `CallFailed`, `kind="invalid"` | `INVALID_ARGUMENT` | A required field is empty, such as `external_account_id`; or a number outside what the wire carries, in params built by hand. | Fix the call. |
 | `CallFailed`, `kind="no handler"` | `UNAVAILABLE` | Nothing serves the topic right now. | Retry later. |
@@ -161,7 +161,7 @@ Match on the exception's class, and on `kind`, never on these words: they are fo
 
 ### An unlinked external account { #an-unlinked-external-account }
 
-A row naming an external account that no deployment admin has linked is refused, and nothing is recorded for it. From SDK 0.7.0 that refusal carries a code, so a plugin can tell it apart from the other refusal with the same status, a plugin that is not registered.
+A row naming an external account that nobody has linked is refused, and nothing is recorded for it. From SDK 0.7.0 that refusal carries a code, so a plugin can tell it apart from the other refusal with the same status, a plugin that is not registered.
 
 The sidecar sends the code beside the status: a `meridian.v1.Refusal`, encoded, in the call's trailing metadata `meridian-refusal-bin`. Its `reason` comes from the refusal catalogue, the `RefusalReason` enum in `meridian/v1/sidecar.proto`:
 
@@ -193,7 +193,7 @@ On a development deployment, a refusal by the sidecar itself, for a grant, the w
 
 ## `report_external_accounts` { #report_external_accounts }
 
-Reports every external account the plugin's connection reaches, as the source presents them. A custody plugin sends it before it records anything, and again whenever the list changes. One connection can reach several accounts, and a deployment admin can link only an account the plugin reported.
+Reports every external account the plugin's connection reaches, as the source presents them. A custody plugin sends it before it records anything, and again whenever the list changes. One connection can reach several accounts, and an admin can link only an account the plugin reported.
 
 It is the whole list each time. An account missing from it is one the connection no longer reaches.
 
@@ -544,7 +544,7 @@ await plugin.report_missing_instrument(
 
 ## `read_accounts_for_linking` { #read_accounts_for_linking }
 
-Reads the deployment's accounts, so the plugin's own admin page can offer the ones an external account may be linked to. It is read only for a deployment admin, the one viewing the page.
+Reads the deployment's accounts, so the plugin's own page at `admin` can offer the ones an external account may be linked to. It is read only for an admin of the plugin, the one viewing the page under Manage, and is answered every account's identity: a plugin admin is account agnostic, and links to any existing account.
 
 ```python
 async def read_accounts_for_linking(
@@ -562,7 +562,7 @@ async def read_accounts_for_linking(
 
 | Name | Type | Required | Meaning |
 |---|---|---|---|
-| `acting_for` | `str` or `None` | yes, by the sidecar | The `Meridian-Caller` header of the deployment admin viewing the page. See [Acting for a person](#acting-for-a-person). |
+| `acting_for` | `str` or `None` | yes, by the sidecar | The `Meridian-Caller` header of the admin viewing the page, in a session opened by Manage. See [Acting for a person](#acting-for-a-person). |
 
 **Returns** `ReadAccountsForLinkingResult`:
 
@@ -572,7 +572,7 @@ async def read_accounts_for_linking(
 
 Offer only open accounts. A link to a closed account is refused.
 
-**Errors:** `NotGranted` without an `acting_for`, or when the person is not a deployment admin. `not vouched for` for an `acting_for` that is not accepted. `no handler`, `timeout` or `handler error` from the conductor. `NotGranted` without the `custody` role.
+**Errors:** `NotGranted` without an `acting_for`, or with one from a session not opened by Manage. `not vouched for` for an `acting_for` that is not accepted. `no handler`, `timeout` or `handler error` from the conductor. `NotGranted` without the `custody` role.
 
 ```python
 from meridian.plugin.v1 import operations_pb2 as ops
@@ -583,12 +583,12 @@ offered = [a for a in read.accounts if a.state != ops.ACCOUNT_STATE_CLOSED]
 
 ## `link_external_account` { #link_external_account }
 
-Links an external account the plugin reported to one of the firm's accounts, or removes its link. The plugin sends it from its own admin page, for the deployment admin viewing it.
+Links an external account the plugin reported to one of the firm's accounts, or removes its link. The plugin sends it from its own page at `admin`, for the admin of the plugin viewing it under Manage.
 
 Name one of these, never both:
 
 - `account_id`, to link to an existing account;
-- `new_account_name`, to create an account and link to it in one step, so nothing is left half-done.
+- `new_account_name`, to create an account and link to it in one step, so nothing is left half-done. Only a deployment admin names a new account.
 
 Name neither to remove the link.
 
@@ -608,18 +608,18 @@ async def link_external_account(
 | Workflow step | W6.4, Link a plugin's external account |
 | Kind | command, on `platform.config.command.link-external-account` |
 | Role | `custody` |
-| Served by | the conductor, which records the deployment admin as the one who made the link |
+| Served by | the conductor, which records the admin as the one who made the link |
 
 | Name | Type | Required | Meaning |
 |---|---|---|---|
 | `external_account_id` | `str` | yes, by the sidecar | The account as the source knows it. It must be one this plugin reported with `report_external_accounts`, or, to remove a link, one it already links. |
 | `account_id` | `str` | one of these two, or neither | An existing, open account to link to. |
-| `new_account_name` | `str` | one of these two, or neither | A new account's name, for the conductor to create and link in one step. |
+| `new_account_name` | `str` | one of these two, or neither | A new account's name, for the conductor to create and link in one step. Only for a deployment admin. |
 | `new_account_custodian` | `str` | no | The new account's custodian, such as `"Fidelity"`. At most 200 characters. |
 | `new_account_type` | `str` | no | The new account's type, such as `"Roth IRA"`. At most 200 characters. |
 | `new_account_owner` | `str` | no | One ownership or grouping label for the new account. At most 200 characters. |
 | `new_account_note` | `str` | no | Anything else worth knowing about the new account. At most 2,000 characters. |
-| `acting_for` | `str` or `None` | yes, by the sidecar | The `Meridian-Caller` header of the deployment admin viewing the page. |
+| `acting_for` | `str` or `None` | yes, by the sidecar | The `Meridian-Caller` header of the admin viewing the page, in a session opened by Manage. |
 
 The four `new_account_*` attributes are free text, which a page may pre-fill from what the source reported, for the admin to change. They are ignored unless `new_account_name` is given: an existing account is edited only on the **Accounts** tab of the dashboard's Settings.
 
@@ -633,7 +633,7 @@ The four `new_account_*` attributes are free text, which a page may pre-fill fro
 
 **Errors:**
 
-- `NotGranted` without an `acting_for`, or when the person is not a deployment admin; or for an external account this plugin did not report, an empty one included.
+- `NotGranted` without an `acting_for`, or with one from a session not opened by Manage; for a `new_account_name` from an admin who is not a deployment admin; or for an external account this plugin did not report, an empty one included.
 - `not vouched for` for an `acting_for` that is not accepted.
 - `handler error` from the conductor for a link it refuses, with its reason: both `account_id` and `new_account_name`, an account that does not exist or is closed, or an attribute that is too long.
 - `no handler` or `timeout` from the conductor.

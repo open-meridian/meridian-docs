@@ -14,7 +14,7 @@ name = "reference-plugin"
 version = "0.1.0"
 description = "A Meridian plugin"
 requires-python = ">=3.11"
-dependencies = ["open-meridian==0.7.1"]
+dependencies = ["open-meridian==0.10.0"]
 
 [project.scripts]
 reference-plugin = "reference_plugin.__main__:main"
@@ -81,7 +81,7 @@ The command line also reads these, and refuses an upload without them.
 | `[project.scripts]` | table | On a development deployment, the live runner starts the first entry point named here, as `module:function`. |
 
 !!! note "Settings are not declared here"
-    A plugin's settings, and the page it serves, are declared in code when it connects, through `meridian.connect(settings=..., interface=...)`. See the [Python SDK](python-sdk.md#connect). The manifest's `interface` flag and the `interface=` argument are separate: nothing in the command line or the recording checks that they agree.
+    A plugin's settings, and the pages it serves with the levels each serves, are declared in code when it connects, through `meridian.connect(settings=..., interface=...)`. See the [Python SDK](python-sdk.md#connect). The manifest's `interface` flag and the `interface=` argument are separate: nothing in the command line or the recording checks that they agree.
 
 ## Changing the manifest
 
@@ -100,6 +100,6 @@ The command line also reads these, and refuses an upload without them.
 
 ## Who may use a plugin is not declared here
 
-A plugin declares no `tags`, and nothing else in the manifest says who may use it. A person's access to a plugin is `read` or `write`, the same for every plugin, granted by a deployment admin in the deployment's access groups; the plugin reads what the person may do from [`Caller`](python-sdk.md#caller). See [Access](../concepts/access.md).
+A plugin declares no `tags`, and nothing else in the manifest says who may use it. A person's level on a plugin is `admin`, `read` or `write`, the same for every plugin, granted by a deployment admin in the deployment's access groups; the plugin reads the session's level, and the accounts it reaches, from [`Caller`](python-sdk.md#caller). Which levels each page serves is declared in code, with [`meridian.Pages`](python-sdk.md#pages). See [Access](../concepts/access.md).
 
 A manifest written for an earlier release, with `tags = [...]` in `[tool.meridian]`, needs that line removed. `meridian plugin upload` from CLI 0.1.14 refuses it, citing the reason, before anything is built.
