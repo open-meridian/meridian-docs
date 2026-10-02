@@ -1283,8 +1283,15 @@
       "needs": [
         {
           "role": "reporting",
-          "what": "the book's positions",
-          "pending": "contract v8, the book's revision"
+          "row": "ListPositions",
+          "as": "reads",
+          "granted": "v8"
+        },
+        {
+          "role": "reporting",
+          "row": "PositionChanged",
+          "as": "hears",
+          "granted": "v8"
         },
         {
           "role": "reporting",
@@ -1292,7 +1299,7 @@
           "pending": "the market data revision, after the book's"
         }
       ],
-      "available": "Not at v6 or v7: nothing a reporting plugin reads gives positions until the book's positions arrive at v8, and prices after them. An agent says so."
+      "available": "The book's positions from v8, each lot with its cost and acquisition date from v9; prices with the market data revision. Until then a value cannot be shown from the platform's own prices, and an agent says so."
     },
     {
       "request": "Rebalance my accounts to a model",
@@ -1306,8 +1313,9 @@
       "needs": [
         {
           "role": "portfolio",
-          "what": "the book's positions",
-          "pending": "contract v8, the book's revision"
+          "row": "ListPositions",
+          "as": "reads",
+          "granted": "v8"
         },
         {
           "role": "portfolio",
@@ -1394,11 +1402,30 @@
         },
         {
           "role": "operations",
-          "what": "the book's positions and breaks",
-          "pending": "contract v8, the book's revision"
+          "row": "RecordOpeningBalance",
+          "as": "publishes",
+          "granted": "v8"
+        },
+        {
+          "role": "operations",
+          "row": "ListPositions",
+          "as": "reads",
+          "granted": "v8"
+        },
+        {
+          "role": "operations",
+          "row": "ListBreaks",
+          "as": "reads",
+          "granted": "v8"
+        },
+        {
+          "role": "operations",
+          "row": "RecordBreak",
+          "as": "publishes",
+          "granted": "v8"
         }
       ],
-      "available": "The street's statements and positions at v7; the book at v8."
+      "available": "The street's statements and positions at v7; the book at v8, its opening balance refused from v9 until every required field is supplied."
     },
     {
       "request": "Post-trade compliance alerts",
@@ -1436,8 +1463,15 @@
         },
         {
           "role": "operations",
-          "what": "recording breaks and adjustments in the book",
-          "pending": "contract v8, the book's revision"
+          "row": "RecordBreak",
+          "as": "publishes",
+          "granted": "v8"
+        },
+        {
+          "role": "operations",
+          "row": "ResolveBreak",
+          "as": "publishes",
+          "granted": "v8"
         }
       ],
       "available": "v7 and v8."
