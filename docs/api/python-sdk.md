@@ -12,7 +12,7 @@ pip install open-meridian
 |---|---|
 | PyPI name | `open-meridian` |
 | Import name | `meridian` |
-| Version | 0.12.0 |
+| Version | 0.13.0 |
 | Python | 3.11 or newer |
 | Dependencies | `grpcio>=1.68,<2`, `protobuf>=5.28,<7`, `jinja2>=3.1,<4` (from 0.10.0, for [pages](#pages)) |
 | Licence | Apache-2.0 |
@@ -20,7 +20,7 @@ pip install open-meridian
 !!! warning "Not `meridian-sdk`"
     The PyPI package `meridian-sdk` belongs to an unrelated company. Don't install it.
 
-A plugin pins the SDK exactly, `open-meridian==0.12.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.12.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls. See [Plugin manifest](plugin-manifest.md).
+A plugin pins the SDK exactly, `open-meridian==0.13.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.13.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls; from 0.12.0 to 0.13.0 only the pins move. `meridian plugin new` in CLI 0.1.25 still writes a plugin pinned to 0.12.0. See [Plugin manifest](plugin-manifest.md).
 
 | Optional extra | Installs | For |
 |---|---|---|
@@ -63,15 +63,18 @@ A plugin that serves pages declares them with [`meridian.Pages`](#pages) and pas
 | `AccessLevel` | generated protobuf enum | [`AccessLevel`](#accesslevel) |
 | `Money` | frozen dataclass | [Typed operations](typed-operations.md#money) |
 | `StatementFigures`, `ReportedCollateral`, `ReportedLot` | frozen dataclasses | [Typed operations](typed-operations.md#statementfigures), from 0.12.0 |
+| `ReportedEncumbrance` | frozen dataclass | [Typed operations](typed-operations.md#reportedencumbrance), from 0.13.0 |
+| `OpeningSource`, `OpeningPosition`, `OpeningLot`, `PendingSettlement`, `LotTerms`, `PositionKey`, `BreakDifference`, `BreakValue`, `BreakCause`, `PendingSettlementRef`, `AgreementFigures`, `ReportedPositionValue`, `PositionEncumbrances`, `Encumbrance`, `Adjustment`, `MovementLine`, `BasisAdjustment` | frozen dataclasses | [Typed operations](typed-operations.md#types), the book's, from 0.13.0 |
+| `BreakCategory`, `BreakCauseCategory`, `BreakState`, `LotReliefMethod`, `LotSource`, `OpeningSourceKind`, `PositionBasis`, `SettlementBucket`, `BreakHandling`, `FigureKey`, `MarginAgreementRef`, `PendingState`, `ResolvedByEntries`, `Reversal`, `StatementSegmentRef`, `StreetRecordRef` | generated protobuf enums and messages | [Typed operations](typed-operations.md#types), the book's, from 0.13.0 |
 | `as_decimal`, `as_money` | functions | [Typed operations](typed-operations.md#numbers-and-amounts) |
 | `Identifier`, `MissReason` | generated protobuf message and enum | [Types](#types) |
 | `Figure`, `FigureState` | frozen dataclass, generated protobuf enum | [Figures](#figures) |
 | `AssetClass`, `CollateralDirection`, `ExternalAccount`, `HoldingSide`, `SyncState` | generated protobuf enums and message | [Typed operations](typed-operations.md#types); `CollateralDirection` from 0.12.0 |
 | `Heard` | frozen dataclass | [Receive](#receive), from 0.12.0 |
 | `CallerMiddleware` | ASGI middleware | [`CallerMiddleware`](#callermiddleware) |
-| `MeridianError`, `Refused`, `NoSidecar`, `NotRegistered`, `NotGranted`, `CallFailed`, `NotLinked` | exceptions | [Exceptions](#exceptions) |
+| `MeridianError`, `Refused`, `NoSidecar`, `NotRegistered`, `NotGranted`, `CallFailed`, `NotLinked`, `CommandRefused` | exceptions | [Exceptions](#exceptions); `CommandRefused` from 0.13.0 |
 | `DEFAULT_ADDRESS` | `str` | `"127.0.0.1:9191"`, where a sidecar listens |
-| `SCHEMA_VERSION` | `str` | the contract version sent at registration: `"v7"` from 0.12.0, `"v6"` in 0.11.0, `"v5"` in 0.10.0 and 0.10.1, `"v4"` in 0.9.0, `"v3"` in 0.8.0, `"v2"` before |
+| `SCHEMA_VERSION` | `str` | the contract version sent at registration: `"v8"` from 0.13.0, `"v7"` in 0.12.0, `"v6"` in 0.11.0, `"v5"` in 0.10.0 and 0.10.1, `"v4"` in 0.9.0, `"v3"` in 0.8.0, `"v2"` before |
 
 The module `meridian.testing` holds [`PageClient`](#testing) and [`heartbeat`](#testing), for a plugin's own tests.
 
@@ -100,7 +103,7 @@ Registers with the sidecar and returns the admitted plugin. A `Plugin` you hold 
 | `settings` | sequence of `Setting` | `()` | The settings the plugin needs an admin of it to give it. |
 | `reads_external_accounts` | `bool` | `False` | `True` when the plugin reads accounts at an external source and names them by that source's identifiers. An admin of the plugin links those to accounts, and the sidecar translates them on the way in. |
 
-The contract version it sends is `SCHEMA_VERSION`, `"v7"` from 0.12.0. A sidecar accepts a range of versions, today v2 through v7: a plugin built for an older version it still supports registers, and one built for a newer version than the sidecar knows is refused at registration, naming both, rather than running without what it was built for. After an upgrade, relaunch plugins so they get the newer sidecar (`meridian upgrade-deployment` names the ones that need it).
+The contract version it sends is `SCHEMA_VERSION`, `"v8"` from 0.13.0. A sidecar accepts a range of versions, today v2 through v8: a plugin built for an older version it still supports registers, and one built for a newer version than the sidecar knows is refused at registration, naming both, rather than running without what it was built for. After an upgrade, relaunch plugins so they get the newer sidecar (`meridian upgrade-deployment` names the ones that need it).
 
 **Raises:**
 
@@ -137,8 +140,8 @@ Built by `connect`. It is an async context manager: leaving the `async with` blo
 | `access()` | `Awaitable[PluginAccessReply]` | Who may use this plugin. |
 | `report(*, healthy, detail="", figures=None)` | `Awaitable[None]` | Report the plugin's health now, outside the heartbeat. It stands until reported again. |
 | `leave(reason="")` | `Awaitable[None]` | Say the plugin is stopping, and close the connection. |
-| `receive(*, statement_recorded=None, custodial_position_updated=None, seed=True)` | `Awaitable[None]` | Hear the rows the plugin's roles hear, a handler per row, until cancelled. From 0.12.0; see [Receive](#receive). |
-| Typed operations | see [Typed operations](typed-operations.md) | `report_external_accounts`, `report_sync_status`, `record_holdings_statement`, `record_holding`, `list_custodial_positions`, `list_statements`, `resolve_identifier`, `report_missing_instrument`, `read_accounts_for_linking`, `link_external_account`. |
+| `receive(*, statement_recorded=None, custodial_position_updated=None, position_changed=None, break_changed=None, account_figures_recorded=None, account_attribute_changed=None, seed=True)` | `Awaitable[None]` | Hear the rows the plugin's roles hear, a handler per row, until cancelled. From 0.12.0, the book's rows from 0.13.0; see [Receive](#receive). |
+| Typed operations | see [Typed operations](typed-operations.md) | `report_external_accounts`, `report_sync_status`, `record_holdings_statement`, `record_holding`, `list_custodial_positions`, `list_statements`, `resolve_identifier`, `report_missing_instrument`, `read_accounts_for_linking`, `link_external_account`; from 0.13.0, `resolve_instrument` and the book's `record_opening_balance`, `record_break`, `record_account_figures`, `record_encumbrances`, `handle_break`, `resolve_break`, `close_breaks_as_cleared`, `list_positions`, `list_breaks`, `list_account_figures` and `list_account_attributes`. |
 
 Every method raises `NotRegistered` once the plugin has left.
 
@@ -215,18 +218,26 @@ Stops the heartbeat, tells the sidecar the plugin is stopping, and closes the ch
 
 ## Receive { #receive }
 
-From 0.12.0. A plugin whose roles hear rows receives them with `plugin.receive`, a handler per row. Today the rows are the street store's, heard by the `operations` role:
+From 0.12.0. A plugin whose roles hear rows receives them with `plugin.receive`, a handler per row. The street store's rows are heard by the `operations` role; from 0.13.0, the book of record's are heard by the roles that read the book:
 
 | Handler | Row | `heard.message` | Workflow step |
 |---|---|---|---|
 | `statement_recorded` | `StatementRecorded` | A `StatementRecordedEvent`: a completed statement, with its account, external account and institution, its counts and its figures per margin segment, as the street store announced it. The same message [`list_statements`](typed-operations.md#list_statements) reads. | W2.5 |
 | `custodial_position_updated` | `CustodialPositionUpdated` | A `CustodialPositionUpdatedEvent`: the position's whole new state in `position`, `removed` set when it was removed, the statement that changed it, and its previous quantity. | W2.6 |
+| `position_changed` | `PositionChanged` | A `PositionChangedEvent`: the book's position whole in `position`, a [`BookPosition`](typed-operations.md#bookposition) with its lots, pending settlements and encumbrances, `removed` set when it was moved off a placeholder; its `previous_trade_date_quantity`; and the `entry` that changed it. Heard by `portfolio`, `reporting`, `compliance`, `oms` and `operations`. From 0.13.0. | W9.8 |
+| `break_changed` | `BreakChanged` | A `BreakChangedEvent`: the [`Break`](typed-operations.md#break) whole in `break_record`, and the `entry`. Heard by `operations`, `oms`, `compliance`, `portfolio` and `reporting`. From 0.13.0. | W9.8 |
+| `account_figures_recorded` | `AccountFiguresRecorded` | An `AccountFiguresRecordedEvent`: one agreement's [`AccountFigures`](typed-operations.md#accountfigures) in `figures`, and the `entry`. Heard by `operations`, `portfolio`, `compliance` and `reporting`. From 0.13.0. | W9.8 |
+| `account_attribute_changed` | `AccountAttributeChanged` | An `AccountAttributeChangedEvent`: the account's [`AccountAttributes`](typed-operations.md#accountattributes) in `attributes`, its standing opening balance among them, and the `entry`. Heard by `portfolio`, `reporting`, `compliance`, `oms` and `operations`. From 0.13.0. | W9.8 |
 
 ```python
 async def receive(
     self, *,
     statement_recorded: Callable[[Heard[StatementRecordedEvent]], Awaitable[None]] | None = None,
     custodial_position_updated: Callable[[Heard[CustodialPositionUpdatedEvent]], Awaitable[None]] | None = None,
+    position_changed: Callable[[Heard[PositionChangedEvent]], Awaitable[None]] | None = None,
+    break_changed: Callable[[Heard[BreakChangedEvent]], Awaitable[None]] | None = None,
+    account_figures_recorded: Callable[[Heard[AccountFiguresRecordedEvent]], Awaitable[None]] | None = None,
+    account_attribute_changed: Callable[[Heard[AccountAttributeChangedEvent]], Awaitable[None]] | None = None,
     seed: bool = True,
 ) -> None
 ```
@@ -728,7 +739,7 @@ It checks nothing about the caller. That is the sidecar's job, and only the side
 
 ## Exceptions
 
-Every exception carries the sidecar's own words, so a log line says whether the fix is the plugin author's, the operator's, or nobody's. The words are for a person, and may be reworded at any release. Where a plugin must act on which refusal it met, the SDK raises a class of its own for it, chosen by the code the sidecar sends beside the refusal and never by the words. `NotLinked` is the one such class so far.
+Every exception carries the sidecar's own words, so a log line says whether the fix is the plugin author's, the operator's, or nobody's. The words are for a person, and may be reworded at any release. Where a plugin must act on which refusal it met, the SDK raises a class of its own for it, chosen by the code the sidecar sends beside the refusal and never by the words: `NotLinked`, and from 0.13.0 `CommandRefused`.
 
 | Exception | Attributes | Raised when |
 |---|---|---|
@@ -739,6 +750,7 @@ Every exception carries the sidecar's own words, so a log line says whether the 
 | `NotGranted` | `topic: str`, `reason: str` | A typed operation was refused permission. `topic` holds the operation's name (for example `"RecordHolding"`), and `reason` names what was missing. |
 | `CallFailed` | `topic: str`, `kind: str`, `detail: str` | A typed operation did not produce an answer. `topic` holds the operation's name. `kind` says which failure it was; see [Typed operations](typed-operations.md#errors). |
 | `NotLinked` | as `CallFailed`, with `kind="refused"` | A typed operation named an external account nobody has linked to an account, so nothing was recorded for it. A subclass of `CallFailed`, so code that caught `CallFailed` still catches it. Raised only when the refusal carries the code `REFUSAL_REASON_EXTERNAL_ACCOUNT_NOT_LINKED`. Not worth retrying: the next statement after an admin links the account records it. Added in 0.7.0; see [Typed operations](typed-operations.md#an-unlinked-external-account). |
+| `CommandRefused` | as `CallFailed`, with `kind="refused"`; `reason: int`, `reason_name: str` | The book of record refused a command with a code of its own, such as `REFUSAL_REASON_OPENING_BALANCE_RECORDED`; `reason` is the code's number and `reason_name` its name. A subclass of `CallFailed`. Not retried: the same command meets the same refusal. Added in 0.13.0; see [Typed operations](typed-operations.md#the-books-refusals). |
 
 The sidecar's status is mapped onto these for typed operations:
 
@@ -749,7 +761,8 @@ The sidecar's status is mapped onto these for typed operations:
 | `FAILED_PRECONDITION`, any other | `CallFailed`, `kind="refused"` |
 | `UNAVAILABLE` | `CallFailed`, `kind="no handler"` |
 | `DEADLINE_EXCEEDED` | `CallFailed`, `kind="timeout"` |
-| `ABORTED` | `CallFailed`, `kind="handler error"` |
+| `ABORTED` carrying a code | `CommandRefused`, `kind="refused"` |
+| `ABORTED`, with no code | `CallFailed`, `kind="handler error"` |
 | `INVALID_ARGUMENT` | `CallFailed`, `kind="invalid"` |
 | `UNAUTHENTICATED` | `CallFailed`, `kind="not vouched for"` |
 | any other | `grpc.aio.AioRpcError`, unchanged |

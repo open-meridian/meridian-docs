@@ -67,7 +67,7 @@ A plugin's roles come from this list, from the deployment's contract. The templa
 | `settlement` | external settlement rails |
 | `signal` | signal generation |
 
-A role's topics are exactly the rows of the contract that name it. A role that no row names yet holds nothing. In this release, `custody` and `operations` hold [typed operations](typed-operations.md), `operations` from contract v7.
+A role's topics are exactly the rows of the contract that name it. A role that no row names yet holds nothing. In this release, `custody`, `operations`, `portfolio`, `reporting`, `compliance` and `oms` hold [typed operations](typed-operations.md): `operations` from contract v7, and from contract v8 the book of record's, which `operations` writes and the other four read.
 
 ## Keys outside `[tool.meridian]`
 
