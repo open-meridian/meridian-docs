@@ -5,7 +5,7 @@
   "roles": [
     {
       "name": "ccm",
-      "status": "proposed",
+      "status": "ruled",
       "persona": "the desk's connection to a broker or venue",
       "archetype": "Venue connectivity, an edge",
       "summary": "Connects the firm to a broker or venue, sending placements in the venue's own form and reporting what the venue says.",
@@ -67,16 +67,19 @@
     },
     {
       "name": "compliance",
-      "status": "proposed",
+      "status": "ruled",
       "persona": "the compliance officer",
       "archetype": "Pre- and post-trade rules",
-      "summary": "Checks acts against the firm's rules before and after the trade, each verdict naming what it checked.",
+      "summary": "Checks acts against the firm's rules before and after the trade, each verdict naming what it checked, and posts standing approved limits execution may act within.",
       "duties": [
         {
           "duty": "Records a verdict on each act it checks, naming the version of the order or placement it checked."
         },
         {
           "duty": "Sets the limits of a mandate and the firm-wide credit limits a market-access ccm enforces."
+        },
+        {
+          "duty": "In the fast and high-frequency tiers, posts standing approved limits execution may act within, in place of a verdict on each order."
         },
         {
           "duty": "Raises post-trade alerts, which are the kernel's records, not its own storage.",
@@ -112,13 +115,24 @@
       "edge": false,
       "scope": {
         "publishes": [],
-        "reads": [],
-        "hears": []
+        "reads": [
+          "ResolveInstrument",
+          "ListPositions",
+          "ListBreaks",
+          "ListAccountFigures",
+          "ListAccountAttributes"
+        ],
+        "hears": [
+          "PositionChanged",
+          "BreakChanged",
+          "AccountFiguresRecorded",
+          "AccountAttributeChanged"
+        ]
       }
     },
     {
       "name": "custody",
-      "status": "proposed",
+      "status": "ruled",
       "persona": "the operations staff who rely on what a custodian, prime broker or broker says",
       "archetype": "Custodial data, an edge",
       "summary": "Brings a custodian's, prime broker's or broker's statements, positions and cash into the street store, and keeps its own connection complete.",
@@ -197,7 +211,7 @@
     },
     {
       "name": "dgm",
-      "status": "proposed",
+      "status": "ruled",
       "persona": "the firm's data management",
       "archetype": "External data ingress, an edge",
       "summary": "Puts market, reference and alternative data into the lake, its vendor's codes converted into the platform's attributes.",
@@ -235,7 +249,7 @@
     },
     {
       "name": "ems",
-      "status": "proposed",
+      "status": "ruled",
       "persona": "the execution trader",
       "archetype": "Execution management",
       "summary": "Works orders across venues, creating placements and coordinating requests for quote.",
@@ -286,7 +300,7 @@
     },
     {
       "name": "match",
-      "status": "proposed",
+      "status": "ruled",
       "persona": "the middle office",
       "archetype": "Confirmation and affirmation, an edge",
       "summary": "Confirms and affirms trades with external matching services.",
@@ -324,7 +338,7 @@
     },
     {
       "name": "oms",
-      "status": "proposed",
+      "status": "ruled",
       "persona": "the trader or desk managing orders",
       "archetype": "Order management, with tax-lot selection",
       "summary": "Works committed orders -- merging and splitting, coordinating compliance checks, setting execution instructions -- and books and hands them off.",
@@ -371,13 +385,22 @@
       "edge": false,
       "scope": {
         "publishes": [],
-        "reads": [],
-        "hears": []
+        "reads": [
+          "ResolveInstrument",
+          "ListPositions",
+          "ListBreaks",
+          "ListAccountAttributes"
+        ],
+        "hears": [
+          "PositionChanged",
+          "BreakChanged",
+          "AccountAttributeChanged"
+        ]
       }
     },
     {
       "name": "operations",
-      "status": "proposed",
+      "status": "ruled",
       "persona": "the middle and back office",
       "archetype": "The post-trade pipeline",
       "summary": "Keeps the book right after the trade -- opening balances, adjustments, reconciliation with the street, allocations after the hand-off and transfers.",
@@ -419,23 +442,40 @@
       ],
       "edge": false,
       "scope": {
-        "publishes": [],
+        "publishes": [
+          "RecordOpeningBalance",
+          "RecordBreak",
+          "RecordAccountFigures",
+          "RecordEncumbrances",
+          "HandleBreak",
+          "ResolveBreak",
+          "CloseBreaksAsCleared"
+        ],
         "reads": [
           "ListCustodialPositions",
-          "ListStatements"
+          "ListStatements",
+          "ResolveInstrument",
+          "ListPositions",
+          "ListBreaks",
+          "ListAccountFigures",
+          "ListAccountAttributes"
         ],
         "hears": [
           "StatementRecorded",
-          "CustodialPositionUpdated"
+          "CustodialPositionUpdated",
+          "PositionChanged",
+          "BreakChanged",
+          "AccountFiguresRecorded",
+          "AccountAttributeChanged"
         ]
       }
     },
     {
       "name": "portfolio",
-      "status": "proposed",
+      "status": "ruled",
       "persona": "the portfolio manager; on the sell side, the salesperson as the client's manager's proxy; a market-making strategy",
       "archetype": "Portfolio construction: the investment decision",
-      "summary": "Makes the investment decision -- what and how much -- and proposes orders and allocation instructions.",
+      "summary": "Makes the investment decision -- what and how much -- specifying portfolio parameters, risk analytics and proposed trades' overlap with the common optimiser and analytics components, and proposes orders and allocation instructions.",
       "duties": [
         {
           "duty": "Decides what to trade and how much, and proposes orders."
@@ -470,16 +510,27 @@
       "edge": false,
       "scope": {
         "publishes": [],
-        "reads": [],
-        "hears": []
+        "reads": [
+          "ResolveInstrument",
+          "ListPositions",
+          "ListBreaks",
+          "ListAccountFigures",
+          "ListAccountAttributes"
+        ],
+        "hears": [
+          "PositionChanged",
+          "BreakChanged",
+          "AccountFiguresRecorded",
+          "AccountAttributeChanged"
+        ]
       }
     },
     {
       "name": "reporting",
-      "status": "proposed",
+      "status": "ruled",
       "persona": "whoever reads results: managers, clients, risk, regulators",
       "archetype": "Reporting, analytics and valuation, and an outbound edge",
-      "summary": "Reports, analyses and values results, and sends reports and regulatory submissions out, keeping them as sent.",
+      "summary": "Specifies and shows reports and analyses, the common analytics component computing them; sends reports and regulatory submissions out, keeping them as sent.",
       "duties": [
         {
           "duty": "Values and reports what the firm holds and did."
@@ -517,22 +568,30 @@
       "edge": true,
       "scope": {
         "publishes": [],
-        "reads": [],
-        "hears": []
+        "reads": [
+          "ResolveInstrument",
+          "ListPositions",
+          "ListBreaks",
+          "ListAccountFigures",
+          "ListAccountAttributes"
+        ],
+        "hears": [
+          "PositionChanged",
+          "BreakChanged",
+          "AccountFiguresRecorded",
+          "AccountAttributeChanged"
+        ]
       }
     },
     {
       "name": "servicing",
-      "status": "proposed",
+      "status": "ruled",
       "persona": "asset servicing",
       "archetype": "Non-trading transactions, an edge",
-      "summary": "Handles corporate actions, lifecycle events and coupons, and runs a template's calculation package.",
+      "summary": "Handles corporate actions, lifecycle events and coupons.",
       "duties": [
         {
           "duty": "Announces corporate actions, lifecycle events and coupons, in a later slice."
-        },
-        {
-          "duty": "Runs a template's calculation package."
         },
         {
           "duty": "Keeps its sources' raw notices in its own storage.",
@@ -559,7 +618,7 @@
     },
     {
       "name": "settlement",
-      "status": "proposed",
+      "status": "ruled",
       "persona": "the settlements team",
       "archetype": "External settlement rails, an edge",
       "summary": "Transmits a transfer it is named on over an external settlement rail and reports the outcome.",
@@ -591,7 +650,7 @@
     },
     {
       "name": "signal",
-      "status": "proposed",
+      "status": "ruled",
       "persona": "research, a quant, an enterprise data manager -- a person's or an agent's",
       "archetype": "Signal generation",
       "summary": "Generates signals, masters data in the lake from several sources and creates scenario definitions.",
@@ -624,6 +683,65 @@
   ],
   "operations": [
     {
+      "name": "AccountAttributeChanged",
+      "step": "W9.8",
+      "title": "Journal each act and publish its changes",
+      "kind": "event",
+      "topic": "platform.book.event.account-attribute-changed",
+      "roles": {
+        "hears": [
+          "compliance",
+          "oms",
+          "operations",
+          "portfolio",
+          "reporting"
+        ]
+      }
+    },
+    {
+      "name": "AccountFiguresRecorded",
+      "step": "W9.8",
+      "title": "Journal each act and publish its changes",
+      "kind": "event",
+      "topic": "platform.book.event.account-figures-recorded",
+      "roles": {
+        "hears": [
+          "compliance",
+          "operations",
+          "portfolio",
+          "reporting"
+        ]
+      }
+    },
+    {
+      "name": "BreakChanged",
+      "step": "W9.8",
+      "title": "Journal each act and publish its changes",
+      "kind": "event",
+      "topic": "platform.book.event.break-changed",
+      "roles": {
+        "hears": [
+          "compliance",
+          "oms",
+          "operations",
+          "portfolio",
+          "reporting"
+        ]
+      }
+    },
+    {
+      "name": "CloseBreaksAsCleared",
+      "step": "W9.7",
+      "title": "Resolve or close a break",
+      "kind": "command",
+      "topic": "platform.book.command.close-breaks-as-cleared",
+      "roles": {
+        "publishes": [
+          "operations"
+        ]
+      }
+    },
+    {
       "name": "CustodialPositionUpdated",
       "step": "W2.6",
       "title": "Publish custodial position updates",
@@ -631,6 +749,18 @@
       "topic": "platform.street.event.custodial-position-updated",
       "roles": {
         "hears": [
+          "operations"
+        ]
+      }
+    },
+    {
+      "name": "HandleBreak",
+      "step": "W9.6",
+      "title": "Set a break's cause and handling",
+      "kind": "command",
+      "topic": "platform.book.command.handle-break",
+      "roles": {
+        "publishes": [
           "operations"
         ]
       }
@@ -648,6 +778,53 @@
       }
     },
     {
+      "name": "ListAccountAttributes",
+      "step": "W9.14",
+      "title": "Read an account's attributes",
+      "kind": "query",
+      "topic": "platform.book.query.list-account-attributes",
+      "roles": {
+        "reads": [
+          "compliance",
+          "oms",
+          "operations",
+          "portfolio",
+          "reporting"
+        ]
+      }
+    },
+    {
+      "name": "ListAccountFigures",
+      "step": "W9.12",
+      "title": "Read the account's figures",
+      "kind": "query",
+      "topic": "platform.book.query.list-account-figures",
+      "roles": {
+        "reads": [
+          "compliance",
+          "operations",
+          "portfolio",
+          "reporting"
+        ]
+      }
+    },
+    {
+      "name": "ListBreaks",
+      "step": "W9.11",
+      "title": "Read breaks",
+      "kind": "query",
+      "topic": "platform.book.query.list-breaks",
+      "roles": {
+        "reads": [
+          "compliance",
+          "oms",
+          "operations",
+          "portfolio",
+          "reporting"
+        ]
+      }
+    },
+    {
       "name": "ListCustodialPositions",
       "step": "W2.7",
       "title": "Read custodial positions",
@@ -656,6 +833,22 @@
       "roles": {
         "reads": [
           "operations"
+        ]
+      }
+    },
+    {
+      "name": "ListPositions",
+      "step": "W9.10",
+      "title": "Read positions",
+      "kind": "query",
+      "topic": "platform.book.query.list-positions",
+      "roles": {
+        "reads": [
+          "compliance",
+          "oms",
+          "operations",
+          "portfolio",
+          "reporting"
         ]
       }
     },
@@ -672,6 +865,22 @@
       }
     },
     {
+      "name": "PositionChanged",
+      "step": "W9.8",
+      "title": "Journal each act and publish its changes",
+      "kind": "event",
+      "topic": "platform.book.event.position-changed",
+      "roles": {
+        "hears": [
+          "compliance",
+          "oms",
+          "operations",
+          "portfolio",
+          "reporting"
+        ]
+      }
+    },
+    {
       "name": "ReadAccountsForLinking",
       "step": "W6.4",
       "title": "Link a plugin's external account",
@@ -680,6 +889,42 @@
       "roles": {
         "reads": [
           "custody"
+        ]
+      }
+    },
+    {
+      "name": "RecordAccountFigures",
+      "step": "W9.5",
+      "title": "Record the account's figures",
+      "kind": "command",
+      "topic": "platform.book.command.record-account-figures",
+      "roles": {
+        "publishes": [
+          "operations"
+        ]
+      }
+    },
+    {
+      "name": "RecordBreak",
+      "step": "W9.4",
+      "title": "Record a break",
+      "kind": "command",
+      "topic": "platform.book.command.record-break",
+      "roles": {
+        "publishes": [
+          "operations"
+        ]
+      }
+    },
+    {
+      "name": "RecordEncumbrances",
+      "step": "W9.15",
+      "title": "Record a position's encumbrances",
+      "kind": "command",
+      "topic": "platform.book.command.record-encumbrances",
+      "roles": {
+        "publishes": [
+          "operations"
         ]
       }
     },
@@ -704,6 +949,18 @@
       "roles": {
         "publishes": [
           "custody"
+        ]
+      }
+    },
+    {
+      "name": "RecordOpeningBalance",
+      "step": "W9.1",
+      "title": "Record an account's opening balance",
+      "kind": "command",
+      "topic": "platform.book.command.record-opening-balance",
+      "roles": {
+        "publishes": [
+          "operations"
         ]
       }
     },
@@ -744,6 +1001,18 @@
       }
     },
     {
+      "name": "ResolveBreak",
+      "step": "W9.7",
+      "title": "Resolve or close a break",
+      "kind": "command",
+      "topic": "platform.book.command.resolve-break",
+      "roles": {
+        "publishes": [
+          "operations"
+        ]
+      }
+    },
+    {
       "name": "ResolveIdentifier",
       "step": "W3.1",
       "title": "Resolve an identifier set",
@@ -752,6 +1021,22 @@
       "roles": {
         "reads": [
           "custody"
+        ]
+      }
+    },
+    {
+      "name": "ResolveInstrument",
+      "step": "W3.6",
+      "title": "Resolve an instrument for display",
+      "kind": "query",
+      "topic": "platform.reference.query.resolve-instrument",
+      "roles": {
+        "reads": [
+          "compliance",
+          "oms",
+          "operations",
+          "portfolio",
+          "reporting"
         ]
       }
     },
@@ -942,6 +1227,11 @@
       "number": 13,
       "principle": "A plugin sees only the accounts and the users granted access to it.",
       "says": "No plugin reads the firm's whole account list or user list; each sees the accounts in its own scope, and the people granted access to it on them."
+    },
+    {
+      "number": 14,
+      "principle": "The common data model sets the standard; a plugin conforms to it.",
+      "says": "Specific, accurate and interpretable: a plugin sends what its source states, in the model's fields, and leaves a field empty rather than guess; the model does not loosen to fit a vendor."
     }
   ],
   "method": [
