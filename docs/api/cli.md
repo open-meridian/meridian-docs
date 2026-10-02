@@ -4,7 +4,7 @@
 
 Nothing in a cloud install depends on it. A marketplace listing's form and the deployment's own wizard are the whole path there; `meridian` makes the same things convenient from a terminal.
 
-This page describes release 0.1.25 of the command line. `meridian --version` says which one you have. For installing it, see [Install a deployment](../getting-started/installation.md).
+This page describes release 0.1.26 of the command line. `meridian --version` says which one you have. For installing it, see [Install a deployment](../getting-started/installation.md).
 
 ## Synopsis
 
@@ -318,7 +318,7 @@ If the deployment can't be reached, the delegation is still forgotten here. It s
 meridian plugin new <name> [--into <dir>]
 ```
 
-Writes a working plugin to start from: the Python SDK's reference plugin, renamed to `<name>`. It needs no network, because the template is compiled into the binary. It writes the plugin's code and its pages, each a view function and a Jinja2 template declared with the levels it serves (a **Setup** page under Manage, at `admin`, and an **Accounts** page under Open and View, at `write` and `read`), its tests (`tests/test_page.py`), a `Dockerfile`, `pyproject.toml`, `.dockerignore`, `.gitignore`, `README.md`, `AGENTS.md`, `CLAUDE.md`, a `develop-live` skill for Claude Code, and a CI workflow that runs `meridian plugin check --run-tests` (`.github/workflows/check.yaml`), then prints the next steps. From CLI 0.1.24 the plugin pins SDK 0.12.0, and needs a deployment whose sidecar accepts contract v7 (0.1.23 pinned 0.11.0, 0.1.22 pinned 0.10.1, 0.1.21 pinned 0.10.0, 0.1.20 pinned 0.9.0, 0.1.18 and 0.1.19 pinned 0.7.1, and 0.1.16 and 0.1.17 pinned 0.6.1). See [Your first plugin](../getting-started/first-plugin.md).
+Writes a working plugin to start from: the Python SDK's reference plugin, renamed to `<name>`. It needs no network, because the template is compiled into the binary. It writes the plugin's code and its pages, each a view function and a Jinja2 template declared with the levels it serves (a **Setup** page under Manage, at `admin`, and an **Accounts** page under Open and View, at `write` and `read`), its tests (`tests/test_page.py`), a `Dockerfile`, `pyproject.toml`, `.dockerignore`, `.gitignore`, `README.md`, `AGENTS.md`, `CLAUDE.md`, a `develop-live` skill for Claude Code, and a CI workflow that runs `meridian plugin check --run-tests` (`.github/workflows/check.yaml`), then prints the next steps. From CLI 0.1.26 the plugin pins SDK 0.14.0, and needs a deployment whose sidecar accepts contract v9 (0.1.24 and 0.1.25 pinned 0.12.0, 0.1.23 pinned 0.11.0, 0.1.22 pinned 0.10.1, 0.1.21 pinned 0.10.0, 0.1.20 pinned 0.9.0, 0.1.18 and 0.1.19 pinned 0.7.1, and 0.1.16 and 0.1.17 pinned 0.6.1). See [Your first plugin](../getting-started/first-plugin.md).
 
 `<name>` must be lowercase letters, digits and single hyphens, starting with a letter. It becomes the package name, and, with hyphens as underscores, the module name.
 
@@ -478,6 +478,8 @@ The rewrites keep a file's formatting and comments wherever they change nothing.
 | 0.10.0 to 0.10.1: pages answer HEAD and refuse a large body; `assert_no_account_data` looks for account data, not identities | Nothing: only the pins move | |
 | 0.10.1 to 0.11.0: the SDK declares contract v6; a plugin may report figures on its Summary, and a reported health stands until it is reported again | Nothing: only the pins move | |
 | 0.11.0 to 0.12.0: the SDK declares contract v7; a plugin hears what its roles hear with `receive`, and reads within its read scope; a statement names its external account and states its figures per margin segment; a holding carries its cost, lots and margin requirement as reported | a `record_holdings_statement` call's flat `buying_power=`, `margin_requirement=` and `maintenance_excess=` to `figures=[StatementFigures(segment="", ...)]`, the account's figures as a whole, importing `StatementFigures` from `meridian` (`statement-flat-figures`) | a `record_holdings_statement` call naming no `external_account_id`, which a sidecar at v7 refuses from a plugin built for it: pass the external account the statement was read for, the one its rows name, and `institution=`, the institution holding it, where the connector says (`statement-external-account`) |
+| 0.12.0 to 0.13.0: the SDK declares contract v8; the book of record's operations, reads and deliveries, and what of a holding cannot move | Nothing: only the pins move | |
+| 0.13.0 to 0.14.0: the SDK declares contract v9; the book refuses an incomplete entry, naming each missing field in `CommandRefused.fields`, and a `Caller` names the delegation it came through | Nothing: only the pins move. A plugin that sent a lot of unknown cost or the "not stated" settlement bucket completes the entry first, whatever SDK it is built on: see [What the book requires](typed-operations.md#what-the-book-requires) | |
 
 `plugin migrate` adds two rules of its own: `pin-elsewhere`, for the old release still named in another file (a Makefile's base image, a workflow, a README), which it reports rather than moves because some of those are history; and `unreadable`, for a file that is not UTF-8, or that a step could not read as Python, which it leaves as it was.
 

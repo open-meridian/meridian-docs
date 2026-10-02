@@ -15,7 +15,7 @@ The operations are generated, not written by hand. One generator reads the contr
 - the sidecar's side of it;
 - the Python methods on [`Plugin`](python-sdk.md#plugin).
 
-This page lists every operation in SDK 0.13.0, which declares contract v8. It adds the [book of record](../concepts/the-book-of-record.md)'s seven commands and four reads, and `resolve_instrument`, to those of 0.12.0, and what of a holding cannot move to the commands that record holdings. A plugin built on 0.12.0 keeps working. There is no order-routing or execution operation.
+This page lists every operation in SDK 0.14.0, which declares contract v9. It has the operations of 0.13.0, which added the [book of record](../concepts/the-book-of-record.md)'s seven commands and four reads, and `resolve_instrument`, to those of 0.12.0, and what of a holding cannot move to the commands that record holdings. What 0.14.0 adds is the book's refusal of an entry missing what it requires, `REFUSAL_REASON_INCOMPLETE`, naming each missing field (see [What the book requires](#what-the-book-requires)). A plugin built on 0.12.0 or 0.13.0 keeps working, and the book refuses an incomplete entry from it all the same. There is no order-routing or execution operation.
 
 ## Summary
 
@@ -53,7 +53,7 @@ This page lists every operation in SDK 0.13.0, which declares contract v8. It ad
 
 W2 is holdings ingestion from a brokerage. It is read-only throughout: nothing in it places an order. A `custody` plugin records what the custodian says is held, and an `operations` plugin reads it, within its read scope, and hears it change with [`receive`](python-sdk.md#receive), the stream of what a plugin's roles hear (W4.3, `rpc Receive`). W3 is instrument resolution. W6.4 is linking the accounts a source reaches to the firm's own, which a plugin does on its own page at `admin`, for the admin of the plugin viewing it under Manage. The tutorial [Record a holdings statement](../tutorials/record-a-holdings-statement.md) walks through W2 and W6.4.
 
-W9, from 0.13.0, is the [book of record](../concepts/the-book-of-record.md): the firm's own record of what each account holds, which an `operations` plugin opens with an opening balance a person confirms, reconciles with the street on each statement, and corrects only by entries that resolve its breaks. `portfolio`, `reporting`, `compliance` and `oms` read it, and hear it change with `receive`. W3.6 is forward resolution, by which those roles join a book position to its instrument.
+W9, from 0.13.0, is the [book of record](../concepts/the-book-of-record.md): the firm's own record of what each account holds, which an `operations` plugin opens with an opening balance a person confirms, reconciles with the street on each statement, and corrects only by entries that resolve its breaks. `portfolio`, `reporting`, `compliance` and `oms` read it, and hear it change with `receive`. W3.6 is forward resolution, by which those roles join a book position to its instrument. From 0.14.0, contract v9, the book refuses an entry missing what tax tracking, valuation, confirmation or settlement need, and names each field it lacks.
 
 ## Conventions
 
@@ -160,7 +160,7 @@ From 0.13.0. Every command of the book answers after its entry commits, with eve
 
 - **A finding or a person's act.** A break, the figures and the encumbrances are findings, which the plugin may send as itself, acting for nobody. An opening balance, a break's cause and handling, its resolution and closing it as cleared are a person's: send them `acting_for` that person, with their `reason`, or the book refuses them with `REFUSAL_REASON_ACTOR_REQUIRED` or `REFUSAL_REASON_REASON_REQUIRED`. The book records the person, or the plugin's instance, as the entry's actor.
 - **One arm of a oneof, by keyword.** Where a message holds one of several things, the method takes each as a keyword: a break's `position=` or `figure=`, a resolution's `adjustment=`, `reversal=`, `entries=` or `explanation=`, a basis adjustment's `cost_change=` or `stated_cost=`, a cause's item. Two at once raise `ValueError` naming the oneof, before anything is sent.
-- **The book's own refusals** carry a code, and the SDK raises them as [`CommandRefused`](#the-books-refusals).
+- **The book's own refusals** carry a code, and the SDK raises them as [`CommandRefused`](#the-books-refusals). From 0.14.0 an incomplete entry's refusal also names each field it lacks: see [What the book requires](#what-the-book-requires).
 
 ### Idempotency keys { #idempotency-keys }
 
@@ -180,7 +180,7 @@ A refusal is the call's gRPC status, chosen by what the caller should do about i
 | `CallFailed`, `kind="invalid"` | `INVALID_ARGUMENT` | A required field is empty, such as `external_account_id`; or a number outside what the wire carries, in params built by hand. | Fix the call. |
 | `CallFailed`, `kind="no handler"` | `UNAVAILABLE` | Nothing serves the topic right now. | Retry later. |
 | `CallFailed`, `kind="timeout"` | `DEADLINE_EXCEEDED` | What serves it did not answer in time. | Retry. |
-| `CommandRefused`, `kind="refused"` | `ABORTED`, with a code | From 0.13.0: the book refused the command with a code of its own, such as `REFUSAL_REASON_BREAK_STATE`. See [The book's refusals](#the-books-refusals). | Act on the code: read the book again and say what stands, or ask the person for what was missing. Not retried. |
+| `CommandRefused`, `kind="refused"` | `ABORTED`, with a code | From 0.13.0: the book refused the command with a code of its own, such as `REFUSAL_REASON_BREAK_STATE`; from 0.14.0, `REFUSAL_REASON_INCOMPLETE` with each missing field in `fields`. See [The book's refusals](#the-books-refusals). | Act on the code: read the book again and say what stands, or ask the person for what was missing, which `fields` names. Not retried. |
 | `CallFailed`, `kind="handler error"` | `ABORTED`, with no code | What serves it answered with a refusal. `detail` is its reason. | Report it. |
 | `CallFailed`, `kind="not vouched for"` | `UNAUTHENTICATED` | The `acting_for` assertion was not accepted: expired, replayed, for another instance, or the sidecar holds none of the dashboard's keys. | Ask the person to reload the page. |
 | `NotRegistered` | none (raised by the SDK) | The plugin has called `leave()`. | Don't use it after leaving. |
@@ -208,7 +208,7 @@ The sidecar sends the code beside the status: a `meridian.v1.Refusal`, encoded, 
 |---|---|---|---|
 | `REFUSAL_REASON_UNSPECIFIED` | 0 | | Never sent. A refusal the status already says everything about carries no code. |
 | `REFUSAL_REASON_EXTERNAL_ACCOUNT_NOT_LINKED` | 1 | `FAILED_PRECONDITION` | The operation named an external account nobody has linked to an account. Nothing was recorded, and the next statement after a link records it. |
-| `REFUSAL_REASON_ACTOR_REQUIRED` … `REFUSAL_REASON_IDEMPOTENCY_CONFLICT` | 2 to 10 | `ABORTED` | The book's refusals, from 0.13.0. See [The book's refusals](#the-books-refusals). |
+| `REFUSAL_REASON_ACTOR_REQUIRED` … `REFUSAL_REASON_INCOMPLETE` | 2 to 11 | `ABORTED` | The book's refusals: 2 to 10 from 0.13.0, and 11 from 0.14.0. See [The book's refusals](#the-books-refusals). |
 
 A reason is never reused for another cause, and a retired one's number stays reserved. [`record_holding`](#record_holding) can be refused this way, and from 0.12.0 [`record_holdings_statement`](#record_holdings_statement), which names its external account too; `report_sync_status` for an unlinked account is not refused.
 
@@ -229,7 +229,7 @@ A plugin written in another language reads the same trailer: decode the `Refusal
 
 ### The book's refusals { #the-books-refusals }
 
-From 0.13.0. The book of record refuses with a code, which the sidecar carries beside `ABORTED` in the same trailer, `meridian-refusal-bin`. The SDK raises **`meridian.CommandRefused`**: a `CallFailed` whose `kind` is `"refused"`, with `reason`, the code's number, and `reason_name`, its name. Match the code, never the words.
+From 0.13.0. The book of record refuses with a code, which the sidecar carries beside `ABORTED` in the same trailer, `meridian-refusal-bin`. The SDK raises **`meridian.CommandRefused`**: a `CallFailed` whose `kind` is `"refused"`, with `reason`, the code's number, and `reason_name`, its name. From 0.14.0 it also has `fields`, a tuple of each field the command left out, by its path in the call, read from the same `Refusal`'s `fields`; only `REFUSAL_REASON_INCOMPLETE` carries any, and every other refusal has none. Match the code and the paths, never the words.
 
 | Reason | Number | Sent when |
 |---|---|---|
@@ -242,6 +242,7 @@ From 0.13.0. The book of record refuses with a code, which the sidecar carries b
 | `REFUSAL_REASON_BREAK_STATE` | 8 | Updating, handling, resolving or closing a break that is not open. |
 | `REFUSAL_REASON_LATER_ENTRIES_STAND` | 9 | A reversal of an opening balance while a later entry moving the account's positions stands. |
 | `REFUSAL_REASON_IDEMPOTENCY_CONFLICT` | 10 | A key the account's book holds for a different command. |
+| `REFUSAL_REASON_INCOMPLETE` | 11 | From 0.14.0: an opening balance, or an adjustment opening a lot, missing a field the book requires, nothing applied. Each missing field is in `fields`. See [What the book requires](#what-the-book-requires). |
 
 ```python
 try:
@@ -249,7 +250,35 @@ try:
 except meridian.CommandRefused as refused:
     if refused.reason_name == "REFUSAL_REASON_OPENING_BALANCE_RECORDED":
         ...  # already recorded: read it back with list_account_attributes and say so
+    elif refused.reason_name == "REFUSAL_REASON_INCOMPLETE":
+        ...  # show the person what to supply: ("positions[0].settled_quantity", ...)
 ```
+
+A plugin built on 0.13.0 meets the same refusal from a book at contract v9 as a `CommandRefused` whose `reason` is 11 and whose `reason_name` is `"11"`, since its SDK does not know the name, and it does not read the fields.
+
+### What the book requires { #what-the-book-requires }
+
+From 0.14.0, contract v9. The book refuses an entry missing what its downstream activities need, tax tracking, valuation, confirmation and settlement, with `REFUSAL_REASON_INCOMPLETE`, nothing applied, and names every missing field in `CommandRefused.fields` by its path in the call's parameters. The refusal applies to every plugin, whatever SDK it was built on. See [What the book requires](../concepts/the-book-of-record.md#what-the-book-requires) for why.
+
+Of an opening balance ([`record_opening_balance`](#record_opening_balance)):
+
+| Path | Missing when |
+|---|---|
+| `as_of_date` | Empty. |
+| `sources` | No source at all, even for an account entering holding nothing. |
+| `sources[n].name` | A source naming no custodian or system, on a balance holding positions. |
+| `positions[n].instrument_id`, `positions[n].side`, `positions[n].trade_date_quantity` | Unset. |
+| `positions[n].settled_quantity` | Unset. Where the source states none, a person supplies it. |
+| `positions[n].pending[m].quantity`, `positions[n].pending[m].value_date` | Unset or empty: every pending quantity has its value date. |
+| `positions[n].pending` | The settled quantity and the pending quantities do not account for the whole trade-date quantity: the rest, neither settled nor pending on a date, is pending nobody has given. |
+| `positions[n].lots` | No lots, on a position whose instrument's record says it is not cash. |
+| `positions[n].lots[m].quantity`, `positions[n].lots[m].terms.cost`, `positions[n].lots[m].terms.acquired_date` | Unset or empty: every lot carries its quantity, its cost in all, and its acquisition date. |
+
+Of an adjustment ([`resolve_break`](#resolve_break)): `adjustment.lines[n].opens_lot.cost` and `adjustment.lines[n].opens_lot.acquired_date`, on a line that opens a lot without them.
+
+The book reads whether an instrument is cash from its record: its asset class, or a currency identifier. Cash has no lots. Where the record cannot say, because the position is held under a placeholder, the record names no asset class and no currency identifier, or the instrument store does not answer in time, the book does not require its lots, for now, and still refuses any lot sent incomplete. An `operations` plugin flags such a position, and it does not hold the confirmation back.
+
+A lot of unknown cost and the settlement bucket "not stated" are no longer admitted. They stay on the wire for what a book at contract v8 recorded: `BookPosition.not_stated_quantity` is zero on every position v9 records, and its `settled_quantity` is set.
 
 ### Refusals on a development deployment
 
@@ -903,7 +932,7 @@ if answer.found:
 
 ## `record_opening_balance` { #record_opening_balance }
 
-From 0.13.0. Records what an account holds when it enters the [book of record](../concepts/the-book-of-record.md), once, as of a business date: its positions, each with its trade-date quantity, its settled quantity where the source states it, its pending settlements and its lots, as the custodian or the prior system reports them, naming that source. An account holding nothing enters with no positions.
+From 0.13.0. Records what an account holds when it enters the [book of record](../concepts/the-book-of-record.md), once, as of a business date: its positions, each with its trade-date quantity, its settled quantity, its pending settlements by value date and its lots, each lot with its quantity, cost and acquisition date, as the custodian or the prior system reports them and a person completes them, naming that source. An account holding nothing enters with no positions. From contract v9 the book refuses one missing any of what it requires, naming each missing field: see [What the book requires](#what-the-book-requires).
 
 It is a person's act, the fact every later break inherits: send it `acting_for` the person confirming it, with their reason. See [The book's commands](#the-books-commands).
 
@@ -927,20 +956,20 @@ async def record_opening_balance(
 |---|---|---|---|
 | `account_id` | `str` | yes | The account. It must be in the plugin's write scope, and one the person may write. |
 | `as_of_date` | `str` | yes | The ISO 8601 business date it stands for. |
-| `sources` | sequence of [`OpeningSource`](#openingsource) | no | One per custodian or system it was composed from, each with the street records it was composed from. |
+| `sources` | sequence of [`OpeningSource`](#openingsource) | yes, by the book from contract v9 | One per custodian or system it was composed from, each naming it and the street records it was composed from. |
 | `positions` | sequence of [`OpeningPosition`](#openingposition) | no | What the account holds. Empty: it enters holding nothing. |
 | `reason` | `str` | yes, by the book | The person's own words. |
 | `replaces_entry_id` | `str` | no | The reversed opening balance this one replaces. Empty for the first. |
 | `idempotency_key` | `str` | no | See [Idempotency keys](#idempotency-keys). |
 | `acting_for` | `str` or `None` | yes, by the book | The `Meridian-Caller` header of the person confirming it. |
 
-A position held under a placeholder instrument enters under the placeholder, flagged `placeholder` on the [`BookPosition`](#bookposition), and the book moves it onto the instrument when the instrument is identified. Its lots must sum to its trade-date quantity; cash sends none.
+A position held under a placeholder instrument enters under the placeholder, flagged `placeholder` on the [`BookPosition`](#bookposition), and the book moves it onto the instrument when the instrument is identified. Its settled quantity and its pending quantities must account for its trade-date quantity, and its lots must sum to it; cash sends none.
 
 **Returns** `RecordOpeningBalanceResult`, a [book entry's result](#book-entry-result): the positions it opened, and the account's attributes naming the standing opening balance.
 
 **Errors:**
 
-- [`CommandRefused`](#the-books-refusals): `REFUSAL_REASON_ACTOR_REQUIRED` with no person, `REFUSAL_REASON_REASON_REQUIRED` with no reason, `REFUSAL_REASON_OPENING_BALANCE_RECORDED` while one stands, `REFUSAL_REASON_LOTS_UNBALANCED` for lots that do not sum to their position, `REFUSAL_REASON_IDEMPOTENCY_CONFLICT` for a key used by a different command.
+- [`CommandRefused`](#the-books-refusals): `REFUSAL_REASON_ACTOR_REQUIRED` with no person, `REFUSAL_REASON_REASON_REQUIRED` with no reason, `REFUSAL_REASON_OPENING_BALANCE_RECORDED` while one stands, `REFUSAL_REASON_INCOMPLETE` from 0.14.0 for a field the book requires left out, each in `fields` (`positions[0].settled_quantity`, `positions[1].lots[0].terms.cost`), `REFUSAL_REASON_LOTS_UNBALANCED` for lots that do not sum to their position, `REFUSAL_REASON_IDEMPOTENCY_CONFLICT` for a key used by a different command.
 - `TypeError` or `ValueError` for a number, an amount or an enum, named by its path (`positions[0].lots[1].terms.cost`).
 - `NotGranted` for an account outside the write scope, a person who may not write it, or a session not opened by Open. `not vouched for` for an `acting_for` that is not accepted.
 - `handler error` from the book for anything else it refuses, such as a position that states no side, with its reason. `no handler` or `timeout` from the book.
@@ -954,7 +983,7 @@ reply = await plugin.record_opening_balance(
     as_of_date="2026-09-08",
     sources=[meridian.OpeningSource(kind="custodian", name="Interactive Brokers",
                                     as_of_date="2026-09-08", basis="trade_date")],
-    positions=positions,               # each with its lots, as the custodian reports them
+    positions=positions,               # each complete: settled, pending by date, lots with cost and date
     reason=reason,                     # the person's own words
     idempotency_key=f"opening/{account}/{statement_id}",
     acting_for=request.caller.header,  # the person confirming it
@@ -1162,7 +1191,7 @@ async def resolve_break(
 
 **Errors:**
 
-- `CommandRefused`: `REFUSAL_REASON_ACTOR_REQUIRED`, `REFUSAL_REASON_REASON_REQUIRED`, `REFUSAL_REASON_BREAK_STATE` for a break that is not open, `REFUSAL_REASON_BEFORE_OPENING_BALANCE` for an entry effective on or before the opening balance's date, `REFUSAL_REASON_LOTS_UNBALANCED` for an entry that would leave a position's open lots not summing to it, `REFUSAL_REASON_LATER_ENTRIES_STAND` for a reversal of the opening balance while a later entry moves the account's positions, `REFUSAL_REASON_IDEMPOTENCY_CONFLICT`.
+- `CommandRefused`: `REFUSAL_REASON_ACTOR_REQUIRED`, `REFUSAL_REASON_REASON_REQUIRED`, `REFUSAL_REASON_BREAK_STATE` for a break that is not open, `REFUSAL_REASON_INCOMPLETE` from 0.14.0 for an adjustment's line opening a lot without its cost or acquisition date (`adjustment.lines[0].opens_lot.cost`, `adjustment.lines[0].opens_lot.acquired_date`), `REFUSAL_REASON_BEFORE_OPENING_BALANCE` for an entry effective on or before the opening balance's date, `REFUSAL_REASON_LOTS_UNBALANCED` for an entry that would leave a position's open lots not summing to it, `REFUSAL_REASON_LATER_ENTRIES_STAND` for a reversal of the opening balance while a later entry moves the account's positions, `REFUSAL_REASON_IDEMPOTENCY_CONFLICT`.
 - `ValueError` for more than one of the four, and `TypeError` or `ValueError` for a number or an amount, named by its path.
 - `NotGranted` for an account outside the write scope, a person who may not write it, a session not opened by Open, or without the `operations` role. `not vouched for`, `handler error`, `no handler` or `timeout`.
 
@@ -1634,9 +1663,9 @@ A position in the book. From 0.13.0.
 | Field | Type | Meaning |
 |---|---|---|
 | `account_id`, `instrument_id`, `side` | `str`, `str`, [`HoldingSide`](#holdingside) | Whose, of what, and which side. |
-| `trade_date_quantity` | `Decimal` message | The settled quantity, plus what is pending, plus what is not stated: by construction. |
-| `settled_quantity` | `Decimal` message, optional | Unset while any of the quantity is not stated: unknown, never zero. |
-| `not_stated_quantity` | `Decimal` message | What the opening balance's source did not say was settled or pending. |
+| `trade_date_quantity` | `Decimal` message | The settled quantity plus what is pending: by construction. On a position a contract v8 opening balance opened with some of it not stated, that too. |
+| `settled_quantity` | `Decimal` message, optional | Set on every position contract v9 records. Unset only while some of the quantity is in the not-stated bucket a v8 opening balance opened: unknown, never zero. |
+| `not_stated_quantity` | `Decimal` message | Retired in contract v9: zero on every position v9 records. What a v8 opening balance's source did not say was settled or pending. |
 | `pending` | sequence of [`PendingSettlement`](#pendingsettlement) | What is pending, by value date. |
 | `lots` | sequence of [`Lot`](#lot) | Its open lots, whose open quantities sum to its trade-date quantity; cash has none. |
 | `opened_from` | sequence of [`OpeningSource`](#openingsource) | Its opening balance's sources. |
@@ -1699,9 +1728,9 @@ One position of an opening balance, `meridian.OpeningPosition(...)`, keyword onl
 | `instrument_id` | `str` | An instrument, a placeholder, or a currency's cash instrument. |
 | `side` | [`HoldingSide`](#holdingside), `str` or `None` | Long or short. |
 | `trade_date_quantity` | `Decimal` or `int` | Required. |
-| `settled_quantity` | `Decimal`, `int` or `None` | `None` where the source states none. |
-| `pending` | sequence of [`PendingSettlement`](#pendingsettlement) | Its pending settlements, by value date. |
-| `lots` | sequence of `OpeningLot` | As reported, each `meridian.OpeningLot(quantity=..., terms=LotTerms(...))`; they must sum to the trade-date quantity. Cash sends none. |
+| `settled_quantity` | `Decimal`, `int` or `None` | Required by the book from contract v9: where the source states none, a person supplies it. `None` is refused as `positions[n].settled_quantity`. |
+| `pending` | sequence of [`PendingSettlement`](#pendingsettlement) | Its pending settlements, each with its value date. With the settled quantity they account for the whole trade-date quantity, or the book refuses it as `positions[n].pending`. |
+| `lots` | sequence of `OpeningLot` | As reported and completed by a person, each `meridian.OpeningLot(quantity=..., terms=LotTerms(...))` with its quantity, and its terms' `cost` and `acquired_date` from contract v9; they must sum to the trade-date quantity. Required but on cash, which sends none. |
 
 ### `PendingSettlement` { #pendingsettlement }
 
@@ -1709,13 +1738,13 @@ Quantity pending on a value date, `meridian.PendingSettlement(...)`. From 0.13.0
 
 | Field | Type | Meaning |
 |---|---|---|
-| `value_date` | `str` | ISO 8601, which may be years out. Empty only for "date not stated" at an opening balance. |
+| `value_date` | `str` | ISO 8601, which may be years out. Required at an opening balance from contract v9. Empty on a position only for "date not stated", from a contract v8 opening balance or an adjustment the street gave no date for. |
 | `quantity` | `Decimal` or `int` | Required. |
 | `state` | `PendingState` or `None` | Where the source reports a fail: `failing`, `fail_reason` as reported, and `expected_date`, when it is now expected. |
 
 ### `LotTerms` { #lotterms }
 
-A lot's terms, `meridian.LotTerms(...)`, each unset where not known and never derived one from another. From 0.13.0.
+A lot's terms, `meridian.LotTerms(...)`, each unset where not known and never derived one from another. From 0.13.0. From contract v9 a lot the book opens, at an opening balance or by an adjustment, carries its `cost` and `acquired_date`, or the book refuses it; a lot a contract v8 book opened may lack them.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -1821,8 +1850,8 @@ An adjustment that resolves a break, `meridian.Adjustment(...)`. From 0.13.0.
 | Field | Type | Meaning |
 |---|---|---|
 | `effective_date` | `str` | After the opening balance's date. |
-| `lines` | sequence of `meridian.MovementLine` | Each an `instrument_id` and `side`, a `bucket` (`settled`, or `pending` with its `value_date`), a signed `quantity` added to the position, and the `lot_id` it adds to or relieves, or `opens_lot`, the [`LotTerms`](#lotterms) of a lot it opens. |
-| `basis_adjustments` | sequence of `meridian.BasisAdjustment` | Each a `lot_id`, and one of `cost_change`, added to a known cost, or `stated_cost`, the cost of a lot whose cost was unknown; and `holding_period_start`, where it moves. |
+| `lines` | sequence of `meridian.MovementLine` | Each an `instrument_id` and `side`, a `bucket` (`settled`, or `pending` with its `value_date`, which may be empty where the street gave none), a signed `quantity` added to the position, and the `lot_id` it adds to or relieves, or `opens_lot`, the [`LotTerms`](#lotterms) of a lot it opens, with its `cost` and `acquired_date` from contract v9. |
+| `basis_adjustments` | sequence of `meridian.BasisAdjustment` | Each a `lot_id`, and one of `cost_change`, added to a known cost, or `stated_cost`, the cost of a lot a contract v8 book opened with its cost unknown, from contract v9 the only such lots; and `holding_period_start`, where it moves. |
 | `event_reference` | `str` | A corporate action's reference, as reported, where it records one. |
 
 ### `Reversal` { #reversal }

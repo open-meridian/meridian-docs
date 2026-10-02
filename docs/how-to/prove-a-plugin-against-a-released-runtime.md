@@ -246,9 +246,10 @@ entry|<account>|<kind>|<effective date>|<actor>
 - `<account>` and `<instrument>` as the street store prints them. No identifier the book mints, of
   an entry, a lot or a break, and no partition number or time is printed, so a file from one run
   compares with the next.
-- `<settled>` is empty while any of the quantity is not stated: unknown, never zero. A `pending`
-  line with no value date is "date not stated", from an opening balance whose source gave a settled
-  quantity.
+- `<not stated>` is 0 on every position a book at contract v9 records, and `<settled>` is set; on
+  a position a v8 opening balance opened with some of its quantity not stated, `<settled>` is empty:
+  unknown, never zero. A `pending` line with no value date is "date not stated", from a v8 opening
+  balance or an adjustment the street gave no date for.
 - An enum is printed as its number, 0 for none: `<lot relief>`, `<category>`, `<state>` (1 open,
   2 resolved, 3 closed), `<confirmed cause>` and `<source>`. `<resolved by>` is `entries`,
   `explanation` or `cleared`, empty while the break is open.

@@ -43,8 +43,8 @@ value a source did not state is unset, never zero.
 
 | Record | What it is |
 |---|---|
-| **Position** | An instrument and a side in one account. Its trade-date quantity is its settled quantity, plus what is pending on each value date, plus what its source did not say was settled or pending, by construction. Its settled quantity is unknown, never zero, while any of it is not stated. A position held under a placeholder instrument is flagged. |
-| **Lot** | The book's own record of how a position was acquired: its open and original quantity, its cost and currency, its acquisition date, and where it came from. A position's open lots sum to its trade-date quantity; cash has none. |
+| **Position** | An instrument and a side in one account. Its trade-date quantity is its settled quantity plus what is pending on each value date, by construction. A position held under a placeholder instrument is flagged. |
+| **Lot** | The book's own record of how a position was acquired: its open and original quantity, its cost and currency, its acquisition date, and where it came from. A position's open lots sum to its trade-date quantity; cash has none. From contract v9 every lot the book opens carries its cost and its acquisition date. |
 | **Pending settlement** | Quantity pending on a value date, which may be years out, with whether it is failing and its new expected date where the source reports a fail. |
 | **Encumbrance** | What of a position cannot move, as the latest statement states it: its kind (pledged, posted, on loan, blocked, restricted, in transit, or other with the source's own code), its quantity, to whom and where, and the margin agreement where the source names one. An attribute of the position, never a movement: its quantities do not change. |
 | **Free quantity** | Derived, never reported: the settled quantity less the encumbrances. Unset while the settled quantity is unknown. It is what is free to trade. |
@@ -75,11 +75,12 @@ journal, and `meridian-bor rebuild` makes them again from the journal alone.
 
 An account enters once, with an **opening balance**: as of a business date,
 what it holds, position by position, with each position's trade-date
-quantity, its settled quantity where the source states it, its pending
-settlements and its lots, as the custodian or the prior system reports them.
-It names its source, the date the source's figures are as of, whether they
-are trade-date or settled, and the street records it was composed from. An
-account holding nothing enters with an empty balance.
+quantity, its settled quantity, its pending settlements by value date, and its
+lots, each with its quantity, cost and acquisition date, as the custodian or
+the prior system reports them and a person completes them. It names its
+source, the date the source's figures are as of, whether they are trade-date
+or settled, and the street records it was composed from. An account holding
+nothing enters with an empty balance.
 
 An opening balance is the fact every later break inherits, so **a person
 confirms it**. An `operations` plugin composes it, typically from the
@@ -91,6 +92,9 @@ reason, and the book records that person as having made it. The book refuses:
   reason (`REFUSAL_REASON_REASON_REQUIRED`);
 - a second one for an account that has one standing
   (`REFUSAL_REASON_OPENING_BALANCE_RECORDED`);
+- from contract v9, one missing anything the book requires
+  (`REFUSAL_REASON_INCOMPLETE`), naming each missing field: see
+  [What the book requires](#what-the-book-requires);
 - lots that do not sum to their position (`REFUSAL_REASON_LOTS_UNBALANCED`).
 
 A holding the street records under a placeholder enters under that
@@ -100,6 +104,67 @@ onto the instrument, as an entry of its own. An error in an opening balance is
 corrected by an adjustment with its reason, or, while no later entry moves the
 account's positions, by reversing it and recording a new one naming the
 reversed one.
+
+### What the book requires { #what-the-book-requires }
+
+The edge keeps what the custodian sent as it was sent, and the street keeps
+the custodian's view as reported, gaps and all. The book alone holds the
+minimum that what comes after it needs: tax tracking, valuation, confirmation
+and settlement. From contract v9 it refuses an entry missing any of it, with
+`REFUSAL_REASON_INCOMPLETE`, records nothing, and names every missing field by
+its path in the command, such as `positions[0].settled_quantity` or
+`positions[1].lots[0].terms.cost`, so the plugin can show, position by
+position, what is missing.
+
+Of every position, whatever its asset class:
+
+- the instrument and the side, and the trade-date quantity, as of the opening
+  balance's date;
+- the settled quantity. Where the source states none, a person supplies it;
+- each pending quantity, with its value date. The settled quantity and the
+  pending quantities account for the whole trade-date quantity: a remainder
+  neither settled nor pending on a date is missing;
+- where it is held: the account the opening balance is for, and a named
+  source, the custodian or the prior system.
+
+And its lots, by asset class:
+
+| Asset class | Lots |
+|---|---|
+| Equity, fund and ETF; crypto; option | At least one. Each with its quantity, its cost in all, and its acquisition date. They sum to the trade-date quantity. |
+| Money market fund | One lot at its stable value: cost is the quantity × 1. A lot like any other here. |
+| Cash | None. |
+
+The book reads whether an instrument is cash from its record: its asset class,
+or a currency identifier. Where the record cannot say, because the position
+is held under a placeholder, the record names no asset class and no currency
+identifier, or the instrument store does not answer in time, the book does not
+require the position's lots, for now, and still refuses any lot sent
+incomplete. An `operations` plugin flags such a position, and it does not
+hold the confirmation back; the security master completing its records
+removes the cause.
+
+The same holds after the opening balance: a lot an adjustment opens carries
+its cost and acquisition date, or the adjustment is refused
+(`adjustment.lines[0].opens_lot.cost`).
+
+**An `operations` plugin gates Confirm.** It offers a person the opening
+balance to confirm only when every required field is populated and
+validated, and shows, per position, what is missing. The person supplies what
+the source lacks, typed, or loaded from a cost-basis export or a statement,
+each value recorded with its source and the person; the plugin checks it: the
+lots sum to the quantity, the dates fall on or before the opening balance's,
+the costs are plausible. The book's refusal is the second line, not the form.
+
+!!! note "Retired in contract v9"
+    A contract v8 book admitted a lot of unknown cost, for a position whose
+    source reported no lots or for the remainder of lots that did not sum,
+    and a settlement bucket "not stated", for a position whose source gave no
+    settled quantity. Neither is admitted now. They stay on the wire for what
+    a v8 book recorded: a position's not-stated quantity is zero on every
+    position v9 records, and its settled quantity is set. A lot a v8 book
+    opened with its cost unknown is given its cost by an adjustment, once it
+    is known.
 
 ## Reconciling each statement
 
@@ -137,9 +202,10 @@ confirms one, and sets who owns the break, its escalation level and its due
 date. Then a person ends it, with a reason, in one of three ways:
 
 - **Resolved**, by the entry that corrects the book in the same act: an
-  adjustment with its movement lines, or a reversal of an entry. The book moves
-  only by that entry, which names the break, so a correction traces back to
-  what caused it.
+  adjustment with its movement lines, each lot it opens with its cost and
+  acquisition date, or a reversal of an entry. The book moves only by that
+  entry, which names the break, so a correction traces back to what caused
+  it.
 - **Closed** with an explanation, moving nothing: a custodian's error, say.
 - **Closed as cleared**, citing the statement where the difference was gone,
   moving nothing: a settlement landing, or the custodian catching up.

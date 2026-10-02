@@ -12,7 +12,7 @@ pip install open-meridian
 |---|---|
 | PyPI name | `open-meridian` |
 | Import name | `meridian` |
-| Version | 0.13.0 |
+| Version | 0.14.0 |
 | Python | 3.11 or newer |
 | Dependencies | `grpcio>=1.68,<2`, `protobuf>=5.28,<7`, `jinja2>=3.1,<4` (from 0.10.0, for [pages](#pages)) |
 | Licence | Apache-2.0 |
@@ -20,7 +20,7 @@ pip install open-meridian
 !!! warning "Not `meridian-sdk`"
     The PyPI package `meridian-sdk` belongs to an unrelated company. Don't install it.
 
-A plugin pins the SDK exactly, `open-meridian==0.13.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.13.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls; from 0.12.0 to 0.13.0 only the pins move. `meridian plugin new` in CLI 0.1.25 still writes a plugin pinned to 0.12.0. See [Plugin manifest](plugin-manifest.md).
+A plugin pins the SDK exactly, `open-meridian==0.14.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.14.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls; from 0.12.0 to 0.13.0, and from 0.13.0 to 0.14.0, only the pins move. `meridian plugin new` writes a plugin pinned to 0.14.0 from CLI 0.1.26. See [Plugin manifest](plugin-manifest.md).
 
 | Optional extra | Installs | For |
 |---|---|---|
@@ -72,9 +72,9 @@ A plugin that serves pages declares them with [`meridian.Pages`](#pages) and pas
 | `AssetClass`, `CollateralDirection`, `ExternalAccount`, `HoldingSide`, `SyncState` | generated protobuf enums and message | [Typed operations](typed-operations.md#types); `CollateralDirection` from 0.12.0 |
 | `Heard` | frozen dataclass | [Receive](#receive), from 0.12.0 |
 | `CallerMiddleware` | ASGI middleware | [`CallerMiddleware`](#callermiddleware) |
-| `MeridianError`, `Refused`, `NoSidecar`, `NotRegistered`, `NotGranted`, `CallFailed`, `NotLinked`, `CommandRefused` | exceptions | [Exceptions](#exceptions); `CommandRefused` from 0.13.0 |
+| `MeridianError`, `Refused`, `NoSidecar`, `NotRegistered`, `NotGranted`, `CallFailed`, `NotLinked`, `CommandRefused` | exceptions | [Exceptions](#exceptions); `CommandRefused` from 0.13.0, its `fields` from 0.14.0 |
 | `DEFAULT_ADDRESS` | `str` | `"127.0.0.1:9191"`, where a sidecar listens |
-| `SCHEMA_VERSION` | `str` | the contract version sent at registration: `"v8"` from 0.13.0, `"v7"` in 0.12.0, `"v6"` in 0.11.0, `"v5"` in 0.10.0 and 0.10.1, `"v4"` in 0.9.0, `"v3"` in 0.8.0, `"v2"` before |
+| `SCHEMA_VERSION` | `str` | the contract version sent at registration: `"v9"` from 0.14.0, `"v8"` in 0.13.0, `"v7"` in 0.12.0, `"v6"` in 0.11.0, `"v5"` in 0.10.0 and 0.10.1, `"v4"` in 0.9.0, `"v3"` in 0.8.0, `"v2"` before |
 
 The module `meridian.testing` holds [`PageClient`](#testing) and [`heartbeat`](#testing), for a plugin's own tests.
 
@@ -103,7 +103,7 @@ Registers with the sidecar and returns the admitted plugin. A `Plugin` you hold 
 | `settings` | sequence of `Setting` | `()` | The settings the plugin needs an admin of it to give it. |
 | `reads_external_accounts` | `bool` | `False` | `True` when the plugin reads accounts at an external source and names them by that source's identifiers. An admin of the plugin links those to accounts, and the sidecar translates them on the way in. |
 
-The contract version it sends is `SCHEMA_VERSION`, `"v8"` from 0.13.0. A sidecar accepts a range of versions, today v2 through v8: a plugin built for an older version it still supports registers, and one built for a newer version than the sidecar knows is refused at registration, naming both, rather than running without what it was built for. After an upgrade, relaunch plugins so they get the newer sidecar (`meridian upgrade-deployment` names the ones that need it).
+The contract version it sends is `SCHEMA_VERSION`, `"v9"` from 0.14.0. A sidecar accepts a range of versions, today v2 through v9: a plugin built for an older version it still supports registers, and one built for a newer version than the sidecar knows is refused at registration, naming both, rather than running without what it was built for. After an upgrade, relaunch plugins so they get the newer sidecar (`meridian upgrade-deployment` names the ones that need it).
 
 **Raises:**
 
@@ -529,11 +529,16 @@ A person opens a plugin at one level they hold, by a button on the dashboard's h
 | `write` | `frozenset[str]` | The accounts this plugin may act on for them in this session. Every one is also in `read`. Empty under View and Manage. |
 | `header` | `str` | The `Meridian-Caller` header as received. Pass it as `acting_for` on a typed operation to send it for this person. |
 | `deployment_admin` | `bool` | Whether the person is a deployment admin. It opens no page and reaches no account. It says only that, linking an external account under Manage, they may name a new account rather than an existing one. |
+| `delegation_id` | `str` | The delegation the person acted through, when they came through a client, such as the CLI, their own agent or an MCP client, rather than a browser. Empty for a browser. Added in 0.14.0. |
+| `client_name` | `str` | That client's registered name. Empty for a browser. Added in 0.14.0. |
+| `through_a_client` | `bool` property | Whether the person came through a client on a delegation: `delegation_id` is not empty. Added in 0.14.0. |
 | `Caller.from_header(header: str) -> Caller` | classmethod | Decode a `Meridian-Caller` header: base64url, unpadded. |
 | `may_read(account_id: str) -> bool` | method | Whether they may read the account through this plugin in this session: `account_id in read`. |
 | `may_write(account_id: str) -> bool` | method | Whether they may write the account through this plugin in this session: `account_id in write`. |
 
 The levels are the same for every plugin, granted in the deployment's access groups. A plugin names no parts of itself, so there is nothing finer to ask. The sidecar checks every command sent for a person again, whatever the plugin believes: it admits one only in a session at `write`. See [Access](../concepts/access.md).
+
+A person who came through a client on a delegation stays the actor: `delegation_id` and `client_name` say only through what, for the plugin to show and record as it chooses. From contract v9 the sidecar stamps the delegation beside the person on every command sent for them. See [The delegation](cli.md#the-delegation).
 
 !!! note "`deployment_admin` opens no page since 0.10.0"
     Up to 0.9.0 a plugin served its admin pages to a caller whose `deployment_admin` was `True`. Since contract v5 a deployment admin holds on a plugin what their grants give, and a plugin's admin need not be one. Serve a page at `admin` by the session's level: declare it with `levels=["admin"]`, or ask `caller.admin`.
@@ -710,7 +715,7 @@ client.assert_no_account_data("AAPL", "125", "12,500.00")  # what the stand-in h
 
 `meridian.testing.heartbeat(*, healthy=True, detail="", figures=())`, from 0.11.0, is the heartbeat a plugin's sidecar receives from a plugin reporting these: its figures as the wire carries them, in the plugin's order. It raises as setting `plugin.figures` does, so a test of the figures a plugin computes asserts on it, or on the refusal. See [Figures](#figures).
 
-`meridian.testing.caller_header(level, *, read=(), write=(), subject=..., display_name=..., deployment_admin=False)` makes the header alone, for a test that serves the pages another way. It is unsigned: only a plugin's tests read it, never a sidecar.
+`meridian.testing.caller_header(level, *, read=(), write=(), subject=..., display_name=..., deployment_admin=False, delegation_id="", client_name="")` makes the header alone, for a test that serves the pages another way. `delegation_id` and `client_name`, from 0.14.0, are a person's who came through a client rather than a browser. It is unsigned: only a plugin's tests read it, never a sidecar.
 
 The client is synchronous, for a plain pytest test, and not for use inside a running event loop. A view that raises fails the test with its traceback.
 
@@ -750,7 +755,7 @@ Every exception carries the sidecar's own words, so a log line says whether the 
 | `NotGranted` | `topic: str`, `reason: str` | A typed operation was refused permission. `topic` holds the operation's name (for example `"RecordHolding"`), and `reason` names what was missing. |
 | `CallFailed` | `topic: str`, `kind: str`, `detail: str` | A typed operation did not produce an answer. `topic` holds the operation's name. `kind` says which failure it was; see [Typed operations](typed-operations.md#errors). |
 | `NotLinked` | as `CallFailed`, with `kind="refused"` | A typed operation named an external account nobody has linked to an account, so nothing was recorded for it. A subclass of `CallFailed`, so code that caught `CallFailed` still catches it. Raised only when the refusal carries the code `REFUSAL_REASON_EXTERNAL_ACCOUNT_NOT_LINKED`. Not worth retrying: the next statement after an admin links the account records it. Added in 0.7.0; see [Typed operations](typed-operations.md#an-unlinked-external-account). |
-| `CommandRefused` | as `CallFailed`, with `kind="refused"`; `reason: int`, `reason_name: str` | The book of record refused a command with a code of its own, such as `REFUSAL_REASON_OPENING_BALANCE_RECORDED`; `reason` is the code's number and `reason_name` its name. A subclass of `CallFailed`. Not retried: the same command meets the same refusal. Added in 0.13.0; see [Typed operations](typed-operations.md#the-books-refusals). |
+| `CommandRefused` | as `CallFailed`, with `kind="refused"`; `reason: int`, `reason_name: str`, `fields: tuple[str, ...]` | The book of record refused a command with a code of its own, such as `REFUSAL_REASON_OPENING_BALANCE_RECORDED`; `reason` is the code's number and `reason_name` its name. `fields`, from 0.14.0, names each field an incomplete entry left out, by its path in the call (`positions[0].settled_quantity`, `positions[1].lots[0].terms.cost`), for `REFUSAL_REASON_INCOMPLETE`, and is empty for every other refusal. A subclass of `CallFailed`. Not retried: the same command meets the same refusal. Added in 0.13.0; see [Typed operations](typed-operations.md#the-books-refusals). |
 
 The sidecar's status is mapped onto these for typed operations:
 
