@@ -6,8 +6,12 @@ image, and the data, the key and the configuration stay.
 
 What people notice:
 
-- **Terminal sessions stay.** A session from `meridian connect` is kept in the deployment's database,
-  so it survives the dashboard restarting, and nobody reconnects a terminal.
+- **The CLI stays connected.** A delegation from `meridian connect`, and a session an earlier CLI
+  kept, are kept in the deployment's database, so they survive the dashboard restarting, and nobody
+  reconnects a terminal.
+- **CLI 0.1.25 needs chart 0.1.223 or later.** Against an older dashboard, `meridian connect`
+  says it does not take delegations yet. Upgrade the deployment, or connect with CLI 0.1.24 until you
+  do.
 - **Browsers sign in again.** A browser's session is held in the dashboard's memory, so the
   dashboard's restart ends it.
 - **The database stays up.** A database the deployment brought, and its plugin registry, run images

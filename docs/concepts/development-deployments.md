@@ -65,10 +65,10 @@ agent reads results rather than scraping them. `meridian plugin new` writes an
   within its grants, never the grants.
 - **Who may do it.** Developing live is launching, so it is for whoever may
   launch plugins on that deployment — today, a deployment admin — on their own
-  terminal session, with its usual bounds. When the session lapses, the CLI
-  says so and what to run.
+  delegation to the CLI, with its usual bounds. When it lapses or is revoked,
+  the CLI says so and what to run.
 - **The way in.** Code reaches the pod only through the dashboard, on that
-  person's session. Nobody needs a credential for the cluster.
+  person's delegation. Nobody needs a credential for the cluster.
 - **Dependencies.** Live code runs on the image the plugin was launched from.
   A change to a plugin's dependencies needs a new version.
 
@@ -88,6 +88,6 @@ live shape has no development endpoint at all.
 - **Following a repository.** Having a development deployment follow a
   branch, so that each push is running within seconds without anybody's
   terminal, is specified and not built.
-- **Agents without a person.** The loop runs on a person's own session, signed
-  in through a browser on the same machine as the CLI. A coding agent running
+- **Agents without a person.** The loop runs on a person's own delegation,
+  made by signing in through a browser on the same machine as the CLI. A coding agent running
   in the cloud, with no browser beside it, cannot sign in yet.

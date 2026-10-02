@@ -22,11 +22,11 @@ Only a deployment admin sees the button. In Settings it is a house, named **Home
 back to your plugins. The breadcrumb beside the mark reads **Settings**, and in a plugin's view
 **Settings / Plugins /** and the plugin's name.
 
-Settings has seven tabs: **Plugins**, **Permissions**, **User groups**, **Account groups**,
-**Access groups**, **Accounts** and **Terminal sessions**. Each lists its records in a table with a
-search box above it, which keeps the rows holding every word you type, and headings that sort it. On
-the three group tabs the section is headed **User**, **Account** or **Access**. Where a tab makes
-records, **+ Add** beside its heading opens a dialog headed with what it makes, such as **New
+Settings' tabs include **Plugins**, **Permissions**, **User groups**, **Account groups**,
+**Access groups**, **Accounts**, **Connected clients** and **Terminal sessions**. Each lists its
+records in a table with a search box above it, which keeps the rows holding every word you type,
+and headings that sort it. On the three group tabs the section is headed **User**, **Account** or
+**Access**. Where a tab makes records, **+ Add** beside its heading opens a dialog headed with what it makes, such as **New
 account**. A record is changed with **Edit** on its own row, in a dialog that already holds it;
 nobody types an identifier. Every change is recorded with who made it. If a change is refused, the
 page says why; choose **Back** to return to what you typed.
@@ -201,10 +201,23 @@ Under Manage the plugin reads your accounts' identities only: their names, custo
 never their holdings. The **Plugins** tab of Settings counts, for each plugin, the accounts it
 reaches that nothing links.
 
+## To revoke someone's connected clients
+
+The **Connected clients** tab lists everybody who has delegated to a client, such as the `meridian`
+command on one of their computers, with how many clients each has. To revoke all of a person's
+delegations, choose **Revoke them all** on their row and confirm. To revoke one, choose **See them**:
+the page lists each client with what it covers, when it was made, until when, and when it was last
+used and last refused. Choose **Revoke** on its row. Each client stops at its next request, and the
+person's browser sessions are untouched. Their CLI has to connect again.
+
+A person revokes their own the same way, from **Connected clients** in the menu under their name.
+See [Delegations to the CLI](../concepts/access.md#delegations-to-the-cli).
+
 ## To end someone's terminal sessions
 
-The **Terminal sessions** tab lists who is signed in from a terminal with `meridian connect`. Choose
-**End them** on a person's row and confirm. Their CLI has to sign in again.
+The **Terminal sessions** tab lists who is signed in from a terminal by a CLI from before
+delegations, 0.1.24 or earlier, each session honoured until it lapses. Choose **End them** on a
+person's row and confirm. Their CLI has to sign in again.
 
 ## What people see
 

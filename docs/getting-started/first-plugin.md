@@ -25,7 +25,9 @@ meridian connect
 
 With no address it signs in to the deployment on this machine, `http://meridian.localhost`. For any
 other, give its address: `meridian connect https://meridian.firm.example`. Your browser opens the
-deployment's sign-in. The CLI keeps the session: 30 minutes idle, 12 hours at most.
+deployment's sign-in. From CLI 0.1.25 it then asks you to let the CLI on this computer act as you;
+choose **Allow**. The CLI holds that delegation for up to 90 days, and nothing asks for a browser
+again until it lapses. An earlier CLI keeps a session of 30 minutes idle and 12 hours at most.
 
 ## 2. Make the plugin
 

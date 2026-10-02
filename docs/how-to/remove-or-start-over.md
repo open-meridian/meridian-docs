@@ -10,7 +10,7 @@ account on the platform is a fourth; see [Projects and deployments](../concepts/
 | Uninstall and delete everything in the namespace | `meridian down --delete-namespace` |
 | Take the deployment out of service | **Retire** it on the platform |
 | Stop one plugin | `meridian plugin stop <instance>` |
-| End the CLI's session with a deployment | `meridian sign-out` |
+| Revoke the CLI's delegation at a deployment | `meridian sign-out` |
 | Remove the CLI | `meridian uninstall` |
 
 ## To uninstall, keeping the data
@@ -38,7 +38,7 @@ meridian down --delete-namespace
     nothing backs it up. The deployment's private key goes too. It lived only in that cluster, and
     there is no copy anywhere. `meridian down` never touches the cluster itself.
 
-A session this machine held with the deployment is forgotten either way.
+A delegation this machine held at the deployment is forgotten either way.
 
 ## To install again after deleting the namespace
 
@@ -86,8 +86,8 @@ again. Codes are refused while it is retired.
 meridian uninstall
 ```
 
-It ends every session it holds, at each deployment it can reach, and removes itself. It asks first;
-`--yes` answers for a script. Not to be confused with `meridian down`, which removes a deployment.
+It revokes every delegation it holds, at each deployment it can reach, and removes itself. It asks
+first; `--yes` answers for a script. Not to be confused with `meridian down`, which removes a deployment.
 
 ## What to back up
 

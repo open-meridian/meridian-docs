@@ -264,8 +264,10 @@ Applying takes a couple of minutes and restarts what changed.
 
     On a laptop, just `meridian connect`: with no address it signs in to
     `http://meridian.localhost`, where `meridian up` puts a deployment. It opens the deployment's own sign-in
-    in your browser and never takes a password. The session lasts 30 minutes idle and 12 hours at
-    most.
+    in your browser and never takes a password. From CLI 0.1.25 it then asks you to let the CLI on
+    this computer act as you: choose **Allow**. That is a delegation of everything you hold, for 90
+    days unless you choose less, and the CLI keeps its access fresh by itself until then. See
+    [`meridian connect`](../api/cli.md#meridian-connect).
 
 That is the install finished.
 

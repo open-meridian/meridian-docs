@@ -43,8 +43,11 @@ Every page of this deployment says **Development deployment**.
 meridian connect
 ```
 
-Only you can do this. It signs in through your browser, so an agent cannot run it for you. Every
-command the agent runs later uses this session.
+Only you can do this. It signs in through your browser, so an agent cannot run it for you. From CLI
+0.1.25 it then asks you to let the CLI on this computer act as you; choose **Allow**. Every command
+the agent runs later acts on this delegation, recorded as yours, through the CLI. It lasts up to 90
+days and the CLI keeps its access fresh by itself, so the agent can work overnight; an earlier CLI's
+session lasts 12 hours at most.
 
 ## 3. Make the plugin
 
@@ -153,7 +156,7 @@ A save changes what the plugin **does**, never what it is **allowed** to do.
 A `refused` event is the plugin's grants working, not a bug. A good agent tells you when a change
 needs either of these, rather than looking for a way round.
 
-## When the session lapses
+## When the delegation lapses
 
 Every command exits with a code an agent can act on:
 
@@ -162,10 +165,11 @@ Every command exits with a code an agent can act on:
 | 0 | Done |
 | 1 | Refused or failed |
 | 2 | Asked wrongly |
-| 3 | No session, or it has lapsed |
+| 3 | Not connected, or the delegation was revoked or has lapsed |
 
 On exit 3 the agent should stop and ask you to run the `meridian connect` the command printed. There
-is no `meridian status`; `meridian plugin list` shows whether the session is there.
+is no `meridian status`; `meridian plugin list` shows whether you are connected. Within a week of the
+lapse, every command says when; `meridian connect` renews it.
 
 ## 7. Release it
 

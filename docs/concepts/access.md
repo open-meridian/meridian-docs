@@ -71,7 +71,8 @@ the deployment's administrator. Its login, as permissions name it, is
   who works at the firm.
 - **A lost password** is reset with a password-reset code from the platform;
   see [Reset a lost password](../how-to/reset-a-lost-password.md). Resetting
-  clears the lock and ends every session the account held.
+  clears the lock, ends every session the account held, and revokes its
+  delegations.
 
 There is no multi-factor authentication on this route. A firm that needs it
 signs in through a provider that has it.
@@ -88,27 +89,68 @@ see [One level per session](#one-level-per-session-manage-open-and-view).
 Sessions end after **30 minutes idle** and **12 hours** at most. Both are fixed
 by Open Meridian's contract rather than configuration. A browser's session is
 held in the dashboard's memory, so restarting the dashboard signs browsers out.
-A terminal's session (`meridian connect`) is kept, by a hash of its token, in
-the dashboard's own table in the deployment's database, so it survives the
-dashboard restarting or being upgraded.
 
 Directory groups are read at sign-in and never copied or synchronised into the
-deployment. So a person removed from a directory group keeps access until
-their session ends — at most 12 hours — and no longer. That is the price of
-never holding a copy of your firm's staff, and it is a stated number.
+deployment. So a person removed from a directory group keeps access in a
+browser until their session ends — at most 12 hours — and no longer. That is
+the price of never holding a copy of your firm's staff, and it is a stated
+number. A delegation, which outlasts a session, has bounds of its own.
 
-### Terminal sessions
+### Delegations to the CLI
 
-The CLI signs in with `meridian connect`, given the deployment's address unless it is the local one. It opens the deployment's
-own sign-in in a browser, always as a fresh sign-in, and receives a session of
-its own through a one-time code on a loopback address. It never takes a
-password. A terminal session has the same bounds as a browser's, and grants
-nothing beyond what the person holds: access is evaluated per request, exactly
-as for a browser.
+From CLI 0.1.25 and chart 0.1.223, the CLI holds no session. `meridian
+connect`, given the deployment's address unless it is the local one, opens the
+deployment's own sign-in in a browser, always as a fresh sign-in, and then
+asks the person to let the CLI on that computer act as them: a
+**delegation**, their own access or a narrower part of it, lent to that one
+client for 7, 30 or 90 days. It never takes a password.
 
-A deployment admin can end a person's terminal sessions, all at once, from the
-**Terminal sessions** tab of Settings; that person's browser
-sessions are left alone. `meridian sign-out` ends one's own.
+The page, **Allow a client to act as you**, names the client (`meridian on`
+and the computer's host name) and offers **everything you hold, as that
+changes**, or only what the person ticks from what they hold: plugins at their
+levels, the account groups their permissions name, and the deployment admin's
+capabilities, which never include changing who holds access. For the CLI it
+starts at everything and 90 days. A narrowed delegation never grows; to widen
+it, connect again.
+
+The CLI then holds a ten-minute access token, accepted only on the CLI's own
+paths and never where a browser's cookie is, and a single-use refresh token,
+which it spends for the next pair without asking anybody. Presenting a spent
+refresh token revokes the delegation. The deployment keeps a one-way
+fingerprint of each token, never the token, in the dashboard's own tables in
+the deployment's database, so a delegation survives the dashboard restarting
+or being upgraded.
+
+A delegation grants nothing beyond what the person holds. Every request reads
+it and evaluates the person's access as for a browser, cut to what the
+delegation covers, so revoking it stops the client at its next request, and
+withdrawing the person's access reaches it within 30 seconds. Its directory
+groups are kept as fresh as the deployment can keep them without the person:
+
+- **LDAP:** read again, as the account the deployment searches as, whenever
+  an access token is issued. A person the directory no longer finds has their
+  delegations revoked.
+- **Accounts the deployment holds:** looked up whenever an access token is
+  issued. An account the deployment no longer holds has its delegations
+  revoked, and so does one whose password is reset.
+- **Your provider:** the groups of the person's latest fresh sign-in, in a
+  browser or by `meridian connect`. A delegation whose groups are more than 7
+  days old is refused, not revoked, until the person signs in again.
+
+The person is told a week before a delegation lapses, on their dashboard's
+home and by the CLI on every command. Connecting again renews it.
+
+**Connected clients**, in the menu under the person's name at the top right of
+the dashboard, lists each client acting for them: what it covers, when it was
+made, until when, when it was last used and last refused, each with
+**Revoke**. A deployment admin sees who has delegated in the **Connected
+clients** tab of Settings, and revokes one of a person's delegations or all of
+them; that person's browser sessions are left alone. `meridian sign-out`
+revokes one's own.
+
+A session an earlier CLI kept, a terminal session, is still accepted until it
+lapses, with a browser session's bounds. A deployment admin ends a person's
+terminal sessions from the **Terminal sessions** tab of Settings.
 
 ## The access model
 

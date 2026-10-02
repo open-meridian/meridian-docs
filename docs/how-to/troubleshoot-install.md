@@ -49,7 +49,7 @@ Every `meridian plugin` command exits with a code that says what kind of failure
 |---|---|---|
 | 1 | Refused or failed | Read the message. It names the cause. |
 | 2 | Asked wrongly | Check the command and its flags against `meridian --help`. |
-| 3 | No session, or it lapsed | Run the `meridian connect` it prints. Sessions last 30 minutes idle and 12 hours at most. |
+| 3 | Not connected, or the delegation was revoked or has lapsed | Run the `meridian connect` it prints. A delegation lasts up to 90 days, and a session an earlier CLI kept 12 hours at most. |
 
 | What you see | What to do |
 |---|---|

@@ -4,7 +4,7 @@
 
 Nothing in a cloud install depends on it. A marketplace listing's form and the deployment's own wizard are the whole path there; `meridian` makes the same things convenient from a terminal.
 
-This page describes release 0.1.24 of the command line. `meridian --version` says which one you have. For installing it, see [Install a deployment](../getting-started/installation.md).
+This page describes release 0.1.25 of the command line. `meridian --version` says which one you have. For installing it, see [Install a deployment](../getting-started/installation.md).
 
 ## Synopsis
 
@@ -61,12 +61,15 @@ Every command exits 0 when it succeeds. What a non-zero code means depends on th
 | `0` | Done. |
 | `1` | Refused or failed. The reason is on stderr. |
 | `2` | Asked wrongly: an unknown command or flag, a missing argument, or an argument of the wrong form. Nothing was done. |
-| `3` | `plugin` commands that act on a deployment (`upload`, `list`, `launch`, `stop`, `dev`, `logs`, `events`, `open`): there is no session, or it has lapsed. The message names the `meridian connect` to run. |
+| `3` | `plugin` commands that act on a deployment (`upload`, `list`, `launch`, `stop`, `dev`, `logs`, `events`, `open`): this computer is not connected to the deployment, or its delegation was revoked or has lapsed. The message names the `meridian connect` to run. |
 
-A `plugin` command exits 3 in two cases:
+A `plugin` command exits 3 in three cases:
 
-- when no session is held for the deployment, or you hold several and `--deployment` does not pick one;
-- when the deployment answers `401 Unauthorized`: the session lapsed, was ended, or is one the deployment does not know (before core kept terminal sessions across restarts, this was what a dashboard restart caused). That includes the deployment's registry, which `plugin upload` pushes through. The message says which, and ends with the `meridian connect` to run, for example ``http://meridian.localhost does not know your session; it may have restarted: `meridian connect` to sign in again``. Before CLI 0.1.15, `plugin upload` reported a lapsed session met at the registry as `the registry did not start an upload: 401 Unauthorized: invalid_token` and exited 1.
+- when this computer is not connected to the deployment, or is connected to several and `--deployment` does not pick one;
+- when the deployment answers `401 Unauthorized`: the delegation was revoked or has lapsed, its directory groups are older than the deployment allows, or it is one the deployment does not know; or, for a session an earlier CLI kept, the session lapsed or was ended. That includes the deployment's registry, which `plugin upload` pushes through. The message says which, and ends with the `meridian connect` to run, for example ``your delegation to this computer at http://meridian.localhost was revoked: `meridian connect` to sign in again``. Before CLI 0.1.15, `plugin upload` reported a lapsed session met at the registry as `the registry did not start an upload: 401 Unauthorized: invalid_token` and exited 1;
+- from CLI 0.1.25, when refreshing the access token is refused: the delegation was revoked or has lapsed, its directory groups are too old, or a refresh token was presented twice, which revokes it (see [The delegation](#the-delegation)).
+
+An access token that has only expired never exits 3: the command refreshes it and asks again.
 
 A script or an AI agent should treat 3 as "ask the person to connect again". Retrying won't help.
 
@@ -247,7 +250,7 @@ It never prints the deployment's values, which hold its enrolment code. The one 
 meridian connect [<address>]
 ```
 
-Signs you in to a deployment's dashboard in your browser, however that deployment signs people in, and keeps the session on this machine. It never takes a password.
+Signs you in to a deployment's dashboard in your browser, however that deployment signs people in, and asks you to let the CLI on this computer act as you there: a delegation, for up to 90 days. It never takes a password. From CLI 0.1.25; an earlier CLI kept a session of 12 hours at most (see [With an older dashboard or an older CLI](#with-an-older-dashboard-or-an-older-cli)).
 
 With no address it signs in to `http://meridian.localhost`, the deployment `meridian up` installs on this machine by default. Give an address for any other.
 
@@ -256,13 +259,46 @@ With no address it signs in to `http://meridian.localhost`, the deployment `meri
 - `https://<host>`;
 - `http://` only for this machine: `127.0.0.1`, `[::1]`, `localhost`, or a name under `.localhost` such as `http://meridian.localhost`.
 
-Plain HTTP to any other machine is refused, because it would send your session in the clear.
+Plain HTTP to any other machine is refused, because it would send your sign-in and your tokens in the clear.
 
-The command prints the sign-in link and opens it in your browser, then waits up to 5 minutes for the sign-in to come back. A session lasts 30 minutes unused, and ends at a fixed time at the latest; the command prints that time. The README gives the maximum as 12 hours.
+It does this:
 
-This machine holds one session per deployment. Connecting again ends the earlier one at the deployment. Sessions are kept in files readable only by you, in `$XDG_CONFIG_HOME/meridian/sessions`, `%APPDATA%\meridian\sessions`, or `~/.config/meridian/sessions`, whichever is found first.
+1. **Registers this computer** with the dashboard, the first time it connects there, as a client named `meridian on <host>`, after this computer's host name. Each computer is its own client, listed and revoked apart. Registering grants nothing.
+2. **Signs you in.** It prints the sign-in link and opens it in your browser, then waits up to 5 minutes for the sign-in to come back to a loopback address on this machine. The sign-in is always made afresh, never taken from a browser already signed in.
+3. **Asks you.** The dashboard then shows **Allow a client to act as you**: the client's name, that its codes go to this computer, and:
+    - **What it may do:** **Everything you hold, as that changes**, or **Only what is ticked below**, ticked from what you hold: each plugin at each level you hold on it (Manage, Open, View), the account groups your permissions name, and, if you hold it, **Deployment admin**: the deployment's own settings, accounts and plugins, but never who holds access.
+    - **Until:** 7, 30 or 90 days.
 
-**Exit codes:** `0` connected; `1` the sign-in was declined, timed out, or failed, or the session could not be kept; `2` no address, or an address of the wrong form.
+    For the CLI the page starts at everything and 90 days. Choose **Allow**, or **Don't allow**. Allow it only if you started it yourself, just now.
+
+4. **Keeps the delegation.** It exchanges the one-time code for a ten-minute access token and a single-use refresh token, keeps them, and prints who you are connected as and when the delegation lapses.
+
+### The delegation
+
+Every command presents the access token. When it has under a minute left, the command refreshes it first, and when the deployment refuses it as expired, the command refreshes it once and asks again. Refreshing spends the refresh token and keeps the next pair. Nothing asks for a browser again until the delegation lapses or is revoked, so `plugin dev` can watch overnight.
+
+A refresh token is single use, and the deployment revokes the delegation when a spent one is presented, because that only happens when somebody else holds it too. So refreshing takes an exclusive lock on that deployment's sessions file and reads it again under the lock: a second command finds the pair the first wrote, and `plugin dev` in one terminal and `plugin list` in another never revoke your CLI.
+
+What a command may reach is what you hold at that moment, cut to what the delegation covers. `plugin upload`, `list`, `launch`, `stop`, `dev`, `logs` and `events` need it to cover the deployment admin's capabilities, and a delegation that does not is refused, saying to connect again to widen it; `plugin open` needs it to cover the level it opens at. Everything the CLI does is recorded as yours, through it.
+
+Within a week of the lapse, every command says when, once:
+
+```text
+Your delegation to this computer at https://meridian.firm.example lapses at <time>. `meridian connect https://meridian.firm.example` renews it.
+```
+
+The dashboard's home says so too. Connecting again renews it: this computer keeps its registration, and the page says you delegated to it before. You see the delegation, and can revoke it, in **Connected clients** on the dashboard; see [Access](../concepts/access.md#delegations-to-the-cli).
+
+It ends when you run `meridian sign-out`, when you or a deployment admin revoke it from Connected clients, when it lapses, or when the account's password is reset. The next command then exits 3, saying why and naming the `meridian connect` to run.
+
+This computer holds one delegation per deployment. Each is kept in a file readable only by you, in `$XDG_CONFIG_HOME/meridian/sessions`, `%APPDATA%\meridian\sessions`, or `~/.config/meridian/sessions`, whichever is found first. Connecting again replaces what the file holds; a session an earlier CLI left there is ended at the deployment.
+
+### With an older dashboard or an older CLI
+
+- **CLI 0.1.25 needs a dashboard that takes delegations,** chart 0.1.223 or later. An older dashboard answers the registration with `404 Not Found`, and `connect` says so and exits 1: upgrade the deployment ([Upgrade a deployment](../how-to/upgrade-a-deployment.md)), or connect with 0.1.24, the last release that signs in the old way (`meridian upgrade --to 0.1.24`).
+- **A session an earlier CLI kept keeps working** after you upgrade the CLI, until it lapses: 30 minutes unused, 12 hours at most. Then `meridian connect` makes a delegation in its place. Chart 0.1.223 still accepts such sessions.
+
+**Exit codes:** `0` connected; `1` the sign-in was declined, timed out, or failed, the dashboard does not take delegations, or the delegation could not be kept, in which case it is revoked; `2` no address, or an address of the wrong form.
 
 ## `meridian sign-out`
 
@@ -270,11 +306,11 @@ This machine holds one session per deployment. Connecting again ends the earlier
 meridian sign-out [<address>]
 ```
 
-Ends a session at the deployment and forgets it here. With no address, it signs out of the one deployment you are connected to. If you are connected to more than one, it lists the commands to run and exits 2.
+Revokes this computer's delegation at the deployment and forgets it here. With no address, it signs out of the one deployment you are connected to. If you are connected to more than one, it lists the commands to run and exits 2.
 
-If the deployment can't be reached, the session is still forgotten here and lapses there within 30 minutes.
+If the deployment can't be reached, the delegation is still forgotten here. It says so, with when the delegation lapses: revoke it from Connected clients on the dashboard, or it lapses then. A session an earlier CLI kept is ended at the deployment instead, and if the deployment can't be reached, lapses there within 30 minutes.
 
-**Exit codes:** `0` signed out, or not connected to begin with; `1` the session file could not be removed; `2` a malformed address, more than one address, or no address when several sessions are held.
+**Exit codes:** `0` signed out, or not connected to begin with; `1` the sessions file could not be removed; `2` a malformed address, more than one address, or no address when connected to several.
 
 ## `meridian plugin new`
 
@@ -498,13 +534,13 @@ With `--json`, one object. `image` is `null` when the plugin was on its target a
 
 ## Plugin commands on a deployment
 
-`plugin upload`, `list`, `launch`, `stop`, `dev`, `logs`, `events` and `open` act through the session `meridian connect` keeps. The deployment answers `upload`, `list`, `launch`, `stop`, `dev`, `logs` and `events` for a deployment admin only. It answers `open` for anybody who holds a level on that plugin, at a level they hold. See [Access](../concepts/access.md).
+`plugin upload`, `list`, `launch`, `stop`, `dev`, `logs`, `events` and `open` act on the delegation `meridian connect` made, or a session an earlier CLI kept. The deployment answers `upload`, `list`, `launch`, `stop`, `dev`, `logs` and `events` for a deployment admin only. It answers `open` for anybody who holds a level on that plugin, at a level they hold. See [Access](../concepts/access.md).
 
 These flags are shared among them:
 
 | Flag | Argument | Default | Used by | Meaning |
 |---|---|---|---|---|
-| `--deployment` | `<addr>` | the one deployment connected | all | Which connected deployment, when you hold sessions with more than one. |
+| `--deployment` | `<addr>` | the one deployment connected | all | Which connected deployment, when you are connected to more than one. |
 | `--dir` | `<dir>` | `.` | `upload`, `dev` | The plugin's directory. Its image is built with `docker`, from its own `Dockerfile`. |
 | `--instance` | `<id>` | none (required) | `launch`, `dev`, `logs`, `events`, `open` | The instance's name. Its page is found by it. Lowercase letters, digits and single hyphens, starting with a letter, at most 63 characters. |
 | `--yes` | | off | `launch`, `dev` | Approve the roles the version asks for without being asked. For a script that has already shown them to a person. |
@@ -515,7 +551,7 @@ These flags are shared among them:
 | `--print` | `<path>` | none | `open` | The page at that path on the plugin's host, as you are served it, instead of a link. |
 | `--level` | `manage`, `open` or `view` | the first level you hold | `open` | The level the session is opened at, as the dashboard's buttons: `manage` (`admin`), `open` (`write`) or `view` (`read`). From CLI 0.1.21. |
 
-**Exit codes** for all of them: `0` done, `1` refused or failed, `2` asked wrongly, `3` no session or it has lapsed.
+**Exit codes** for all of them: `0` done, `1` refused or failed, `2` asked wrongly, `3` not connected, or the delegation was revoked or has lapsed.
 
 ### `meridian plugin upload`
 
@@ -539,7 +575,7 @@ A version is recorded once and never replaced: uploading a name and version alre
 meridian plugin list [--deployment <addr>]
 ```
 
-Prints the catalogue: every version uploaded, with its roles, whether it serves a page, and the SDK version it pins, and every launch, with its instance, version and state (`launched`, `stopped` or `failed`, with the failure). Because it needs a live session, it is also the way to check you are connected: it exits 3 when you aren't.
+Prints the catalogue: every version uploaded, with its roles, whether it serves a page, and the SDK version it pins, and every launch, with its instance, version and state (`launched`, `stopped` or `failed`, with the failure). Because it needs a live delegation, it is also the way to check you are connected: it exits 3 when you aren't.
 
 ### `meridian plugin launch`
 
@@ -656,7 +692,7 @@ meridian plugin open --instance my-plugin --level manage --print /setup   # the 
 meridian plugin open --instance my-plugin --level open --print /          # the Accounts page, if you hold write
 ```
 
-Without `--print`, it prints a link to the plugin's page, at that level. The first browser that opens the link, within a minute, is signed in to that plugin's page alone, for as long as your terminal session lasts, and lands on its `/`; any other path on the same host is then open to it at that level. Run `open` again for another browser. With `--json`, the level the dashboard opened it at comes too:
+Without `--print`, it prints a link to the plugin's page, at that level. The first browser that opens the link, within a minute, is signed in to that plugin's page alone, for as long as your delegation to the CLI lasts and 12 hours at most, and lands on its `/`; any other path on the same host is then open to it at that level. Run `open` again for another browser. With `--json`, the level the dashboard opened it at comes too:
 
 ```json
 {"instance_id": "my-plugin", "url": "https://…", "level": "admin"}
@@ -706,7 +742,7 @@ meridian uninstall [--yes]
 
 Removes the command line. It lists what it will remove and asks first:
 
-1. Every session it holds, ended at each deployment. A session with a deployment it can't reach is forgotten here and lapses there within 30 minutes.
+1. Every delegation it holds, revoked at each deployment, and any session an earlier CLI kept, ended there. One with a deployment it can't reach is forgotten here: it says when the delegation lapses, which you can bring forward by revoking it from Connected clients, and a session lapses there within 30 minutes.
 2. The sessions directory.
 3. The binary.
 
@@ -714,7 +750,7 @@ Removes the command line. It lists what it will remove and asks first:
 |---|---|---|---|
 | `--yes` | | off | Remove without being asked. With no terminal to ask at, it is refused without this. |
 
-**Exit codes:** `0` removed, `1` not approved or failed. If the binary's directory is not writable, it stops before ending any session.
+**Exit codes:** `0` removed, `1` not approved or failed. If the binary's directory is not writable, it stops before revoking or ending anything.
 
 ## `meridian --version`
 

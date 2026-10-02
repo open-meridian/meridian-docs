@@ -92,7 +92,7 @@ firm's:
     meridian connect https://meridian.firm.example
     ```
 
-2. With more than one session held, name the deployment on each command:
+2. Connected to more than one, name the deployment on each command:
 
     ```bash
     meridian plugin upload --deployment https://meridian.firm.example
