@@ -77,6 +77,23 @@ the scaffold's Accounts page at `/`, which is for Open and View, is refused. See
 Claude Code reads `CLAUDE.md` by itself. Other agents need to be told to read `AGENTS.md`, or pick
 it up by their own convention.
 
+### When the plugin does more than serve a page
+
+If the plugin is to record, read or hear anything in the deployment, ask the agent first which roles
+it needs. Roles are fixed, and nobody can change what a role is granted, not even for one plugin. So
+the agent maps your idea to the least roles that hold what it needs, from [Roles](../concepts/roles.md),
+or tells you how to reshape the idea to fit. For example:
+
+```text
+Read https://open-meridian.dev/llms.txt and the roles page it links. Following
+the method there, map this to the least roles, and tell me what the contract
+version this plugin's SDK pins already grants: a page that shows each
+account's latest broker statement.
+```
+
+`llms.txt` is an index for agents: the roles, the principles a plugin must fit, the method, and
+every operation a plugin may take, each linked to its page here.
+
 ## 5. Approve what the plugin asks for
 
 The first launch of an instance needs your yes. `AGENTS.md` tells the agent to show you the `roles`
@@ -84,8 +101,8 @@ in `pyproject.toml` and ask. Only after you say yes does it pass `--yes`. An ins
 that is already live asks nothing.
 
 !!! warning
-    Approving roles decides what the plugin may do in your deployment. Read them. If an agent passes
-    `--yes` without asking you, stop it.
+    Approving roles decides what the plugin may do in your deployment. Read them: each is described
+    on [Roles](../concepts/roles.md). If an agent passes `--yes` without asking you, stop it.
 
 ## 6. Watch it work
 
@@ -172,6 +189,8 @@ meridian plugin stop my-plugin
 
 ## Next steps
 
+- [Roles](../concepts/roles.md): which roles a plugin needs, and why an idea is sometimes reshaped
+  to fit them.
 - [Record a holdings statement](../tutorials/record-a-holdings-statement.md): a plugin that writes
   to the deployment, with the roles and grants that takes.
 - [Typed operations](../api/typed-operations.md): what a plugin's roles let it do.

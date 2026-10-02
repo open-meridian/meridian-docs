@@ -34,3 +34,26 @@ developer guide. They are written from the code of
 change, the pages change with them. Today they describe CLI 0.1.24, SDK
 0.12.0 (contract v7) and kit 0.7.0. A page describes what is built, and says so where
 something is specified and not built yet.
+
+## The roles page and llms.txt
+
+Two pages are generated at every build, never written by hand:
+`concepts/roles.md` and `llms.txt`, served at the site's root for agents. An
+MkDocs hook, `tools/boundaries_page.py`, writes both from `boundaries/`, a copy
+of meridian-schema's `boundaries/` (the roles, the principles, the method and
+the worked examples). The build fails when the copy is not what its
+`SHA256SUMS` says, or when `llms.txt` links a page or anchor the site does not
+publish, or omits a role or an operation it does; a self-test proves those
+checks fail where they must.
+
+`boundaries/vendored.json` records the schema revision the copy is from and
+the contract version these docs describe. When meridian-schema's boundaries
+change, refresh the copy and build:
+
+```sh
+python tools/boundaries_page.py refresh --rev <full commit or branch> --contract <n>
+```
+
+It takes `boundaries/` from meridian-schema at that revision (`--repo` names a
+local clone instead of GitHub), checks its digests, and writes
+`vendored.json`. Commit the copy; the pages follow it at the next build.

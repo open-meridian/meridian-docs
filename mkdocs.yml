@@ -12,6 +12,12 @@ plugins:
   - search
   - privacy
 
+# The roles page (concepts/roles.md) and llms.txt are generated at every build
+# from boundaries/, meridian-schema's published roles, and llms.txt is checked
+# against the built site. See tools/boundaries_page.py.
+hooks:
+  - tools/boundaries_page.py
+
 theme:
   name: material
   logo: assets/mark.svg
@@ -86,6 +92,7 @@ nav:
       - Architecture: concepts/architecture.md
       - Projects and deployments: concepts/projects-and-deployments.md
       - Plugins, roles and grants: concepts/plugins.md
+      - Roles: concepts/roles.md
       - Access: concepts/access.md
       - Accounts: concepts/accounts.md
       - Instruments: concepts/instruments.md

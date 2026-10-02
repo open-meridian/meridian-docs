@@ -12,6 +12,7 @@ piece of data lives.
 | [Architecture](architecture.md) | The two halves of Open Meridian — the platform and your deployment — what runs in each, and what crosses between them |
 | [Projects and deployments](projects-and-deployments.md) | How a deployment is registered on the platform, how it proves who it is, and the one-time codes it is set up with |
 | [Plugins, roles and grants](plugins.md) | What a plugin is, what it may do on the bus, how that is decided, and how people reach its pages, by Manage, Open and View |
+| [Roles](roles.md) | Each of the thirteen roles: its persona, duties, what it leaves to another role and what it holds; the principles a plugin must fit, and how an idea maps to the least roles |
 | [Access](access.md) | How people sign in to a deployment, and how the dashboard decides what each of them may reach |
 | [Accounts](accounts.md) | The firm's accounts, and how an account at a broker or custodian is tied to one |
 | [Instruments](instruments.md) | Instrument identity, the security master, and the copy a deployment keeps of it |

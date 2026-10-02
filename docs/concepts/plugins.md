@@ -6,6 +6,7 @@ page explains what a plugin is, what it may do, how that is decided, and how
 people reach it.
 
 To write one, start with [Your first plugin](../getting-started/first-plugin.md).
+To choose its roles, see [Roles](roles.md).
 
 ## A plugin is a small program beside its sidecar
 
@@ -54,7 +55,7 @@ their grants.
 |---|---|
 | `ccm` | Broker and venue connectivity |
 | `compliance` | Pre- and post-trade compliance rules |
-| `custody` | Custodian, prime broker and broker positions, and reconciliation |
+| `custody` | Custodian, prime broker and broker statements, positions and cash, into the street store; reconciling them with the book is `operations`' |
 | `dgm` | External data ingress |
 | `ems` | Execution management |
 | `match` | Confirmation with external matching services |
@@ -65,6 +66,12 @@ their grants.
 | `servicing` | Non-trading transactions: corporate actions, lifecycle events, coupons |
 | `settlement` | External settlement rails |
 | `signal` | Signal generation |
+
+Each role's entry, with its persona, its duties, what it leaves to which other
+role and what it holds today, is on [Roles](roles.md), with the principles a
+plugin must fit and the method that maps an idea for a plugin to the least
+roles it needs. Because nobody can change a role's grants, an idea that needs
+a grant no role has is reshaped to fit, never given one.
 
 Nothing else is a role. The deployment's own components — the conductor, the
 dashboard, the street and instrument stores, first-run and the launcher — are
