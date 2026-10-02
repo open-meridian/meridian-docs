@@ -23,7 +23,7 @@ back to your plugins. The breadcrumb beside the mark reads **Settings**, and in 
 **Settings / Plugins /** and the plugin's name.
 
 Settings' tabs include **Plugins**, **Permissions**, **User groups**, **Account groups**,
-**Access groups**, **Accounts**, **Connected clients** and **Terminal sessions**. Each lists its
+**Access groups**, **Accounts**, **Books**, **Connected clients** and **Terminal sessions**. Each lists its
 records in a table with a search box above it, which keeps the rows holding every word you type,
 and headings that sort it. On the three group tabs the section is headed **User**, **Account** or
 **Access**. Where a tab makes records, **+ Add** beside its heading opens a dialog headed with what it makes, such as **New

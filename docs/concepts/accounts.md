@@ -136,7 +136,10 @@ or change at all.
 
 ## What is recorded against an account
 
-Today, what custodians say is held, in the **street store**: statements,
+Two beliefs about what it holds, kept apart on purpose: the custodian's and
+the firm's.
+
+What custodians say is held is in the **street store**: statements,
 holdings and custodial positions, as brokerage and custody plugins report
 them. A statement is one account's, with the account's figures, such as its
 buying power and margin, a set per margin segment as the custodian reports
@@ -157,8 +160,15 @@ within its read scope. Three rules govern it.
   a `Decimal` and an amount a `meridian.Money`, and a value that cannot be
   carried exactly is refused rather than rounded.
 
+What the firm says is held is in the **book of record**, from contract v8:
+the account's positions, lots, pending settlements, what of each position
+cannot move, breaks and figures, from an opening balance a person confirms and
+the book's own entries since. An `operations` plugin writes it, and reconciles
+it with the street on every statement, recording each difference as a break;
+no statement is ever applied to it. See
+[The book of record](the-book-of-record.md).
+
 !!! note "Not built yet"
-    The street store holds the custodian's view of what is held. The firm's
-    own book of record, calculated from its own activity, does not exist yet,
-    and neither does reconciling one against the other. Orders and executions
-    against an account are on the roadmap.
+    Orders and executions against an account are on the roadmap. Until they
+    are, every trade made away from the platform shows in the book as a break
+    until it is resolved.

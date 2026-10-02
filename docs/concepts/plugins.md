@@ -74,7 +74,7 @@ roles it needs. Because nobody can change a role's grants, an idea that needs
 a grant no role has is reshaped to fit, never given one.
 
 Nothing else is a role. The deployment's own components — the conductor, the
-dashboard, the street and instrument stores, first-run and the launcher — are
+dashboard, the street and instrument stores, the book, first-run and the launcher — are
 not roles, and no plugin may declare one. In particular there is no `admin`
 role: administering a deployment is the dashboard's, and no plugin can
 administer the deployment it was installed into. The `admin` level below is a
@@ -82,11 +82,14 @@ person's, on a plugin, and has nothing to do with roles.
 
 !!! note "Most roles hold nothing yet"
     A role holds exactly the topics a workflow in Open Meridian's contract
-    names it for. Today two do. `custody` is for holdings ingestion: recording
+    names it for. Today six do. `custody` is for holdings ingestion: recording
     a statement and its holdings, reporting sync status, resolving an
     instrument and reporting a missing one. `operations`, from contract v7,
     reads the statements and custodial positions custody plugins record, and
-    hears them change, within its read scope. The other eleven are reserved
+    hears them change, within its read scope; from contract v8 it writes the
+    [book of record](the-book-of-record.md). `portfolio`, `reporting`,
+    `compliance` and `oms`, from contract v8, read the book and hear it
+    change. The other seven are reserved
     names that hold no topics until their workflows are built — order routing
     and execution among them, which are on the roadmap. A plugin holding only such roles, or
     naming no role at all, is admitted with no topics rather than refused. It

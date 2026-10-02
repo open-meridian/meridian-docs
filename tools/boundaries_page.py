@@ -67,7 +67,7 @@ GUIDES = [
     (SDK, "Python SDK",
      "connecting to the sidecar, settings, access, figures, receiving what a plugin's roles hear, and pages"),
     ("how-to/prove-a-plugin-against-a-released-runtime.md", "Prove a plugin against a released runtime",
-     "an end-to-end check of what a plugin records, beside a real sidecar and store"),
+     "an end-to-end check of what a plugin records, on core's plugin harness: a real sidecar, street store and book"),
     ("how-to/build-a-plugin-page.md", "Build a plugin's page",
      "declaring a plugin's pages and the levels they serve, and building them on the plugin UI kit"),
 ]

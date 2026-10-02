@@ -361,7 +361,7 @@ Each failure names the rule, the file and line, and what to write instead, so th
 
 The page rules read HTML, CSS, SVG, script and templates, and the Python that renders a page, so they hold for a plugin in any language. The rules about the plugin's code read Python, the one SDK there is. Tests (`tests/`, `test_*.py`, `conftest.py`) are not held to the page and code rules: a test may name a colour to assert it is absent. Comments are not read, so a colour in a comment is on no page.
 
-Nothing a checkout, a build, a virtual environment or an agent leaves beside the plugin is read, such as `.git`, `.venv`, `build`, `dist` and `.claude`. From CLI 0.1.24 neither is `.e2e`, where [a plugin's e2e](../how-to/prove-a-plugin-against-a-released-runtime.md) copies the runtime's plugin harness: core's code, not the plugin's, which reads its own environment.
+Nothing a checkout, a build, a virtual environment or an agent leaves beside the plugin is read, such as `.git`, `.venv`, `build`, `dist` and `.claude`. From CLI 0.1.24 neither is `.e2e`, where [a plugin's e2e](../how-to/prove-a-plugin-against-a-released-runtime.md) copies core's plugin harness out of its image: core's code, not the plugin's, which reads its own environment.
 
 The rules match what can be decided from the text: the obvious forms, not every form. A secret copied into another variable before it is logged, or a colour built from parts in a script, gets past them. They are the floor, not the review.
 
@@ -614,7 +614,7 @@ Without `--release`, it does the following:
 The directory is scanned four times a second, and events are polled twice a second. Some files are never sent:
 
 - `.git`, `__pycache__`, `.venv`, `venv`, `.mypy_cache`, `.pytest_cache`, `.ruff_cache`, `build`, `dist`, `.meridian`, `.DS_Store`, `*.egg-info` and `*.pyc`;
-- from CLI 0.1.24, `.e2e`, where a plugin's e2e copies the runtime's plugin harness, which `plugin check` does not read either;
+- from CLI 0.1.24, `.e2e`, where a plugin's e2e copies core's plugin harness out of its image, which `plugin check` does not read either;
 - whatever the plugin's `.dockerignore` names. Negations and patterns with wildcards other than a leading `*` are not read, and a pattern that can't be read is sent rather than guessed at.
 
 One change may carry at most 11 MiB before encoding.

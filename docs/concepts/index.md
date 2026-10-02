@@ -15,12 +15,14 @@ piece of data lives.
 | [Roles](roles.md) | Each of the thirteen roles: its persona, duties, what it leaves to another role and what it holds; the principles a plugin must fit, and how an idea maps to the least roles |
 | [Access](access.md) | How people sign in to a deployment, and how the dashboard decides what each of them may reach |
 | [Accounts](accounts.md) | The firm's accounts, and how an account at a broker or custodian is tied to one |
+| [The book of record](the-book-of-record.md) | The firm's own record of what each account holds, how it differs from the street and the edge, and how operations opens and reconciles it |
 | [Instruments](instruments.md) | Instrument identity, the security master, and the copy a deployment keeps of it |
 | [Development deployments](development-deployments.md) | A deployment installed for writing plugins, and why a firm's own deployment is never one |
 
 !!! note "What Open Meridian does today"
     A deployment today signs people in, administers who may reach what,
-    catalogues and runs plugins, resolves instruments, and records what
-    custodians say is held. Order routing and execution are on the roadmap and
+    catalogues and runs plugins, resolves instruments, records what
+    custodians say is held, and keeps the firm's own book of record,
+    reconciled with it. Order routing and execution are on the roadmap and
     are not available yet. Where a page describes something that is specified
     but not built, it says so.

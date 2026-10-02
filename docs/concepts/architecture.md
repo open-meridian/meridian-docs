@@ -34,10 +34,10 @@ line.
  |  (browser, CLI)       |        |  configuration store)             |
  |                       |        |                                   |
  |        ===============+== bus (NATS broker) ==+==============      |
- |            |                  |               |           |        |
- |       instrument           street          sidecar     sidecar     |
- |         store              store              |           |        |
- |                                            plugin      plugin      |
+ |          |              |            |           |           |     |
+ |     instrument       street        book       sidecar     sidecar  |
+ |        store          store        (bor)         |           |     |
+ |                                               plugin      plugin   |
  |                                                                    |
  |  launcher --> starts plugins from --> registry (plugin images)     |
  +--------------------------------------------------------------------+
@@ -65,7 +65,11 @@ somebody verify a deployment's signatures and forge none of them.
 
 A deployment is one Helm release, `meridian-runtime`, installed into a
 namespace of your cluster (`meridian` by default). Every component is in one
-published image, `ghcr.io/open-meridian/meridian-runtime`.
+published image, `ghcr.io/open-meridian/meridian-runtime`. Beside it, at the
+same commit and tag, core publishes `ghcr.io/open-meridian/meridian-harness`:
+the plugin harness, files a plugin's own tests copy out to run it on that
+runtime, which no deployment uses. See
+[Prove your plugin against a released runtime](../how-to/prove-a-plugin-against-a-released-runtime.md).
 
 | Component | What it does |
 |---|---|
@@ -73,6 +77,7 @@ published image, `ghcr.io/open-meridian/meridian-runtime`.
 | **conductor** | The only component that holds the deployment's private key, and so the only one that reaches the platform. It also holds the configuration store: accounts, who may reach what, and the plugin catalogue. There is one conductor; redundancy means a standby, not a second one. |
 | **instrument store** | What this deployment knows about instruments, and the answer to every instrument question, locally. It holds a copy of the identity the platform publishes, so resolution keeps working when the platform cannot be reached. |
 | **street store** | What custodians say is held: statements, holdings and custodial positions. The one store whose contents nothing else can rebuild. |
+| **book of record** (`bor`) | What the firm says is held: each account's positions, lots, breaks and figures, as an append-only journal an `operations` plugin writes, verified against the street and never overwritten by it. See [The book of record](the-book-of-record.md). |
 | **sidecar** | One per plugin, bound to loopback in the plugin's pod. It holds that plugin's broker credential and enforces its grants. A plugin reaches its sidecar and nothing else. |
 | **broker** | NATS, carrying the bus. Its permissions are generated from the grants, never written by hand. |
 | **registry** and **launcher** | The deployment's own catalogue of plugin images, and the one component allowed to start a plugin once the conductor has approved it. |
@@ -130,7 +135,8 @@ changing.
 
 ### What never crosses
 
-- Positions, holdings and statements.
+- Positions, holdings and statements, and the book: its lots, breaks and
+  figures.
 - Your accounts, user groups, account groups, access groups and permissions.
 - Who has signed in, and your directory's people and groups.
 - Plugin settings, the figures plugins report, and plugins' own data.
@@ -147,8 +153,8 @@ a new instrument the store has never seen, and redeeming a one-time code.
 
 ## What is not built yet
 
-- **Order routing and execution** are on the roadmap. The `oms` and `ems`
-  roles exist in the vocabulary, but no workflow grants them anything yet.
-- **The firm's own book of record.** The street store holds what custodians
-  say is held. A book calculated from the firm's own activity does not exist
-  yet, and neither does reconciling the two.
+- **Order routing and execution** are on the roadmap. From contract v8 the
+  `oms` role reads the book's positions and breaks, but no workflow grants it
+  or `ems` an order yet. Until orders are booked on the platform, the book
+  moves only by an opening balance, a placeholder followed onto its
+  instrument, and the entries that resolve its breaks.

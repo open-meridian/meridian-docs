@@ -95,6 +95,7 @@ nav:
       - Roles: concepts/roles.md
       - Access: concepts/access.md
       - Accounts: concepts/accounts.md
+      - The book of record: concepts/the-book-of-record.md
       - Instruments: concepts/instruments.md
       - Development deployments: concepts/development-deployments.md
   - How-to:

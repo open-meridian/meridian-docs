@@ -10,7 +10,7 @@ Short recipes for one task each. They assume you have a deployment; if not, star
 | [Reset a lost password](reset-a-lost-password.md) | Get a local administrator back in with a code from the platform. |
 | [Recover administration](recover-administration.md) | Get back in when nobody can administer the deployment. |
 | [Build a plugin's page](build-a-plugin-page.md) | Declare each page with the levels it serves, link the plugin UI kit, link external accounts with `om-account-map` at any scale, fit a page to a phone, and sit well in the dashboard's frame, with header actions and status. |
-| [Prove your plugin against a released runtime](prove-a-plugin-against-a-released-runtime.md) | Run your plugin on the plugin harness of a pinned runtime image, from `make e2e` and CI, and compare the street store with what you expect. |
+| [Prove your plugin against a released runtime](prove-a-plugin-against-a-released-runtime.md) | Run your plugin, and any plugins it needs beside it, on the plugin harness image published with a pinned runtime, from `make e2e` and CI, and compare the street store and the book with what you expect. |
 | [Release a plugin version](release-a-plugin.md) | Ship a change to a plugin as a new version. |
 | [Upgrade a deployment](upgrade-a-deployment.md) | Move a deployment to a newer chart, with the command line or your own pipeline. |
 | [Remove or start over](remove-or-start-over.md) | Uninstall, reinstall, or retire a deployment. |

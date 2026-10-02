@@ -577,4 +577,4 @@ The kit's README gives the messages between the page and the dashboard.
 - [Python SDK](../api/python-sdk.md): `Pages`, `Interface`, `Page`, `Caller` and
   `meridian.testing`.
 - [Prove your plugin against a released runtime](prove-a-plugin-against-a-released-runtime.md):
-  drive the page's link form on the plugin harness, from a test.
+  drive the page's link form, or any of its forms, on the plugin harness, from a test.
