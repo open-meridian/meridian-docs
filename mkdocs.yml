@@ -12,7 +12,8 @@ plugins:
   - search
   - privacy
 
-# The roles page (concepts/roles.md) and llms.txt are generated at every build
+# The roles page (concepts/roles.md), the data dictionary's store pages
+# (boundaries/<store>.md) and llms.txt are generated at every build
 # from boundaries/, meridian-schema's published roles, and llms.txt is checked
 # against the built site. See tools/boundaries_page.py.
 hooks:
@@ -119,6 +120,14 @@ nav:
       - Command line: api/cli.md
       - Python SDK: api/python-sdk.md
       - Typed operations: api/typed-operations.md
+      - Data dictionary:
+          - The street: boundaries/street.md
+          - The instrument store: boundaries/instrument.md
+          - The book of record: boundaries/bor.md
+          - The conductor's accounts: boundaries/conductor.md
+          - The sidecar: boundaries/sidecar.md
+          - The envelope: boundaries/envelope.md
+          - Shared types: boundaries/shared.md
       - Plugin manifest: api/plugin-manifest.md
       - plugin dev events: api/plugin-dev-events.md
   - Developer guide:

@@ -1,21 +1,28 @@
-"""The roles page and llms.txt, generated from meridian-schema's boundaries.
+"""The roles page, the data dictionary's store pages and llms.txt, generated
+from meridian-schema's boundaries.
 
 meridian-schema publishes the roles a plugin may hold, the principles a
 request must fit, the method that maps a request to the least roles and the
-worked examples, as boundaries/roles.json, with each file's digest in
-boundaries/SHA256SUMS. This repository keeps a copy in boundaries/, and the
-schema revision and contract version it describes in boundaries/vendored.json.
+worked examples, as boundaries/roles.json; and every store's data dictionary,
+each entry with its history, as boundaries/fields.json; with each file's
+digest in boundaries/SHA256SUMS. This repository keeps a copy in boundaries/,
+and the schema revision and contract version it describes in
+boundaries/vendored.json.
 
 As an MkDocs hook (mkdocs.yml, `hooks:`), at every build it
 
 - checks the copy against its SHA256SUMS, so the copy is the schema's, unedited;
-- adds concepts/roles.md and llms.txt to the site, both generated from the copy,
-  so neither is written by hand and neither can say what the other does not;
+- adds concepts/roles.md, one page per store under boundaries/ -- the store's
+  dictionary at the contract version these docs describe, its records first,
+  each entry anchored by its name, deprecated entries marked and retired ones
+  listed with their successors -- and llms.txt to the site, all generated
+  from the copy, so none is written by hand and none can say what another
+  does not;
 - after the build, checks llms.txt against the built site: every link resolves
-  to a page and an anchor the site publishes, and every role and operation the
-  site publishes is linked, nothing missing and nothing extra; then proves, by
-  a self-test, that the check fails on a missing link, an extra one and a
-  tampered copy.
+  to a page and an anchor the site publishes, and every role, operation and
+  store page the site publishes is linked, nothing missing and nothing extra;
+  then proves, by a self-test, that the check fails on a missing link, an
+  extra one and a tampered copy.
 
 From the command line, it refreshes the copy:
 
@@ -78,6 +85,20 @@ BY = {"publishes": "published by", "reads": "read by", "hears": "heard by"}
 # Holders a role leaves work to that are not roles.
 HOLDER_NAMES = {"bor": "the book", "platform": "the platform"}
 
+# Each dictionary file's page: its title, and a line saying what the holder is.
+# A store fields.json names and this does not fails the build until it is
+# given its page here.
+STORES = {
+    "street": ("The street", "what custodians say an account holds, as a plugin at the edge reports it"),
+    "instrument": ("The instrument store", "the deployment's instrument records, and resolving an identifier to one"),
+    "bor": ("The book of record", "the deployment's own record of positions, lots, breaks and figures"),
+    "conductor": ("The conductor's accounts", "the deployment's accounts and the links a plugin makes to them"),
+    "sidecar": ("The sidecar", "registration, settings, access, scope, figures, refusals and the delivery stream"),
+    "envelope": ("The envelope", "what every bus message carries about itself"),
+    "shared": ("Shared types", "a number, an amount of currency, and where a change sits in a store's record"),
+}
+DICTIONARY = "boundaries"
+
 
 # The copy -------------------------------------------------------------------
 
@@ -115,6 +136,11 @@ def load(directory: Path = VENDORED) -> tuple[dict, dict]:
     roles = json.loads((directory / "roles.json").read_text())
     vendored = json.loads((directory / "vendored.json").read_text())
     return roles, vendored
+
+
+def load_fields(directory: Path = VENDORED) -> dict:
+    path = directory / "fields.json"
+    return json.loads(path.read_text()) if path.is_file() else {"stores": [], "entries": []}
 
 
 # Generating -----------------------------------------------------------------
@@ -345,7 +371,8 @@ def roles_page(roles: dict, vendored: dict) -> str:
     return "\n".join(out) + "\n"
 
 
-def index_entries(roles: dict, vendored: dict, site_url: str, directory_urls: bool = True) -> dict:
+def index_entries(roles: dict, vendored: dict, site_url: str, directory_urls: bool = True,
+                  fields: dict | None = None) -> dict:
     """The sections of llms.txt: each a list of (text, address, description)."""
     def at(page: str, anchor: str = "") -> str:
         return url(site_url, page, anchor, directory_urls)
@@ -374,6 +401,16 @@ def index_entries(roles: dict, vendored: dict, site_url: str, directory_urls: bo
                     f"{op['name']}, {op['step']} {op['title']}: {article} {op['kind']}, {holders}{how}"))
     sections[f"Operations at contract {contract}"] = ops
 
+    fields = fields or {"stores": [], "entries": []}
+    dictionary = []
+    for store in dictionary_stores(fields, vendored["contract"]):
+        title, line = store_title(store)
+        entries, _ = store_entries(fields, store, vendored["contract"])
+        dictionary.append((title, at(store_page_path(store)),
+                           f"{line}: {len(entries)} entries, each field's meaning, bounds and required uses"))
+    if dictionary:
+        sections[f"Data dictionary at contract {contract}"] = dictionary
+
     sections["What every plugin does"] = [
         (shown, at(page, anchor), f"{call['step']} {call['title']}, through the SDK")
         for call in roles["every_plugin"]
@@ -383,7 +420,8 @@ def index_entries(roles: dict, vendored: dict, site_url: str, directory_urls: bo
     return sections
 
 
-def index(roles: dict, vendored: dict, site_name: str, site_url: str, directory_urls: bool = True) -> str:
+def index(roles: dict, vendored: dict, site_name: str, site_url: str, directory_urls: bool = True,
+          fields: dict | None = None) -> str:
     contract = f"v{vendored['contract']}"
     out = [
         f"# {site_name}",
@@ -391,17 +429,235 @@ def index(roles: dict, vendored: dict, site_name: str, site_url: str, directory_
         f"> {site_name} is the open-source OEMS you run yourself and build on with plugins. A plugin "
         "talks only to its own sidecar, and the roles it holds, from a fixed list, decide what it may "
         "do. This index is for an agent building a plugin: the roles, the principles a plugin must fit, "
-        f"the method that maps a request to the least roles, and every operation a plugin may take at contract {contract}.",
+        f"the method that maps a request to the least roles, every operation a plugin may take at contract {contract}, "
+        "and each store's data dictionary.",
         "",
         "Roles are fixed and their grants generated: nobody can change a role's grants, not even for "
         "one plugin. Map an idea to the least roles that hold what it needs, or reshape it until it "
         "fits. Who may use a plugin is a person's read, write or admin on it, granted by a deployment "
         "admin, never a role.",
     ]
-    for heading, items in index_entries(roles, vendored, site_url, directory_urls).items():
+    for heading, items in index_entries(roles, vendored, site_url, directory_urls, fields).items():
         out += ["", f"## {heading}", ""]
         out += [f"- [{text}]({address}): {description}" for text, address, description in items]
     return "\n".join(out) + "\n"
+
+
+# The data dictionary ---------------------------------------------------------
+
+def number(version: str | None) -> int:
+    return int(version[1:]) if version and re.fullmatch(r"v\d+", version) else 0
+
+
+def at_version(entry: dict, version: int) -> dict | None:
+    """An entry as it stood at a contract version, or None when it did not
+    exist: fields.json's `read_at_a_version`, which meridian-design's
+    generator states and its gate tests."""
+    if number(entry.get("since")) > version:
+        return None
+    if entry.get("retired") and number(entry["retired"]) <= version:
+        return None
+    out = {key: value for key, value in entry.items() if key != "changes"}
+    for change in sorted(entry.get("changes") or [], key=lambda c: number(c.get("version")), reverse=True):
+        if number(change.get("version")) <= version:
+            break
+        for part in ("bounds", "allowed"):
+            if part in (change.get("was") or {}):
+                out[part] = change["was"][part]
+                if not out[part]:
+                    out.pop(part)
+    out["required"] = [use for use in entry.get("required") or [] if number(use.get("since")) <= version]
+    if "allowed" in out:
+        out["allowed"] = [
+            {key: item for key, item in value.items()
+             if not (key == "deprecated" and number((item or {}).get("version")) > version)}
+            for value in out["allowed"]
+            if number(value.get("since") or entry.get("since")) <= version
+            and not (value.get("retired") and number(value["retired"]) <= version)
+        ]
+    if entry.get("deprecated") and number(entry["deprecated"].get("version")) > version:
+        out.pop("deprecated")
+    out["changes"] = [c for c in entry.get("changes") or [] if number(c.get("version")) <= version]
+    return out
+
+
+def store_page_path(store: str) -> str:
+    return f"{DICTIONARY}/{store}.md"
+
+
+def store_title(store: str) -> tuple[str, str]:
+    if store not in STORES:
+        raise ValueError(f"fields.json names the store {store!r}, and tools/boundaries_page.py gives "
+                         "it no page (STORES)")
+    return STORES[store]
+
+
+def message_of(name: str) -> str:
+    return name.rsplit(".", 1)[0]
+
+
+def short(name: str) -> str:
+    return name.rsplit(".", 1)[-1]
+
+
+def bounds_text(bounds: dict) -> str:
+    parts = []
+    if "length" in bounds:
+        least, most = bounds["length"]
+        parts.append(f"{least} to {most} characters" if least else f"at most {most} characters")
+    if "count" in bounds:
+        least, most = bounds["count"]
+        parts.append(f"{least} to {most} items" if least else f"at most {most} items")
+    if "range" in bounds:
+        span = bounds["range"]
+        parts.append(f"from {span.get('least', 'any')} to {span.get('most', 'any')}")
+    if "scale" in bounds:
+        parts.append(f"{bounds['scale'][0]} to {bounds['scale'][1]} decimal places")
+    if "digits" in bounds:
+        parts.append(f"at most {bounds['digits']} significant digits")
+    if bounds.get("past") == "capped":
+        parts.append("past it, answered at the bound")
+    elif parts:
+        parts.append("past it, refused")
+    return "; ".join(parts)
+
+
+def cell(text: str) -> str:
+    return prose(str(text)).replace("|", "\\|").replace("\n", " ")
+
+
+def store_entries(fields: dict, store: str, version: int) -> tuple[list[dict], list[dict]]:
+    """A store's entries at a version, and those retired by then."""
+    current, retired = [], []
+    for entry in fields.get("entries", []):
+        if entry.get("store") != store:
+            continue
+        stood = at_version(entry, version)
+        if stood is not None:
+            current.append(stood)
+        elif entry.get("retired") and number(entry["retired"]) <= version:
+            retired.append(entry)
+    return current, retired
+
+
+def store_page(fields: dict, store: str, vendored: dict) -> str:
+    version = vendored["contract"]
+    contract = f"v{version}"
+    rev = vendored["schema_rev"]
+    title, line = store_title(store)
+    described = next((s for s in fields.get("stores", []) if s["name"] == store), {"records": [], "proto_files": []})
+    entries, retired = store_entries(fields, store, version)
+    out: list[str] = []
+    add = out.append
+    add(f"# {title}\n")
+    add(f"{prose(line[0].upper() + line[1:])}. This is its data dictionary at contract {contract}: "
+        "one entry for every field of its messages a plugin meets, saying what the field is for, what a "
+        "value means and does not mean, what empty means, who fills it, its bounds and the operations a "
+        "write must carry it on. Each entry is anchored by its name, the name a refusal's path resolves "
+        "to and a declaration names, which never changes.\n")
+    if described.get("proto_files"):
+        files = ", ".join(f"`{name}`" for name in described["proto_files"])
+        add(f"Its messages are declared in {files}. A field's entry is the same whatever carries it: a "
+            "typed operation's parameters take the entries of the message they are made from.\n")
+    records = [r for r in described.get("records", []) if any(message_of(e["name"]) == r["message"] for e in entries)]
+    if records:
+        add("## Records { #records }\n")
+        add("The messages this store keeps and answers.\n")
+        add("| Record | What it is |")
+        add("|---|---|")
+        for record in records:
+            add(f"| [`{short(record['message'])}`](#{record['message']}) | {cell(record['intent'])} |")
+        add("")
+    order: list[str] = [r["message"] for r in records]
+    limits = [e for e in entries if e["name"].endswith(".limit") and "." not in message_of(e["name"])]
+    for entry in entries:
+        message = message_of(entry["name"])
+        if entry in limits or message in order:
+            continue
+        order.append(message)
+    record_names = {r["message"] for r in records}
+    for message in order:
+        held = [e for e in entries if message_of(e["name"]) == message and e not in limits]
+        if not held:
+            continue
+        kind = "record" if message in record_names else "message"
+        add(f"## `{short(message)}` {{ #{message} }}\n")
+        add(f"`{message}`, a {kind}.\n")
+        for entry in held:
+            add(field_section(entry, f"`{short(entry['name'])}`"))
+    if limits:
+        add("## Operation limits { #limits }\n")
+        add("A bound a plugin can meet on an operation rather than on a field.\n")
+        for entry in limits:
+            add(field_section(entry, f"`{entry['name']}`"))
+    if retired:
+        add("## Retired { #retired }\n")
+        add("Entries no longer in the contract, kept for the history; a name is never reused.\n")
+        add("| Entry | Retired in | Use instead |")
+        add("|---|---|---|")
+        for entry in retired:
+            successor = (entry.get("deprecated") or {}).get("use")
+            add(f"| `{entry['name']}` | {entry['retired']} | {f'`{successor}`' if successor else 'nothing'} |")
+        add("")
+    add("---\n")
+    add(f"Generated from [`boundaries/fields.json`]({SCHEMA_WEB}/blob/{rev}/boundaries/fields.json) "
+        f"in meridian-schema at `{rev[:7]}`, contract {contract}.")
+    return "\n".join(out) + "\n"
+
+
+def field_section(entry: dict, heading: str) -> str:
+    lines = [f"### {heading} {{ #{entry['name']} }}\n"]
+    facts = [f"*{entry['type']}*", f"since {entry['since']}", entry.get("stability", "stable")]
+    deprecated = entry.get("deprecated")
+    if deprecated:
+        facts.append(f"**deprecated in {deprecated['version']}**")
+    lines.append(" · ".join(facts) + "\n")
+    if deprecated:
+        use = f" Use [`{deprecated['use']}`](#{deprecated['use']}) instead." if deprecated.get("use") else ""
+        lines.append(f'!!! warning "Deprecated in {deprecated["version"]}"')
+        lines.append(f"    {prose(deprecated['why'])}.{use}\n")
+    lines.append(f"{prose(entry['intent'][0].upper() + entry['intent'][1:])}.\n")
+    rows = [("Means", entry.get("meaning")), ("Does not mean", entry.get("not_meaning")),
+            ("Empty", entry.get("empty"))]
+    filled = entry.get("filled", "")
+    if entry.get("filled_by"):
+        filled += f", by `{entry['filled_by']}`"
+    rows.append(("Filled", filled))
+    if entry.get("unit"):
+        rows.append(("Unit", entry["unit"]))
+    if entry.get("bounds"):
+        rows.append(("Bounds", bounds_text(entry["bounds"])))
+    if entry.get("required"):
+        uses = []
+        for use in entry["required"]:
+            text = f"`{use['row']}` from {use['since']}"
+            if use.get("unless"):
+                text += f", unless {prose(use['unless'])}"
+            uses.append(text)
+        rows.append(("Required on", "; ".join(uses)))
+    for label, value in rows:
+        if value:
+            lines.append(f"- **{label}:** {prose(str(value))}")
+    lines.append("")
+    if entry.get("allowed"):
+        lines.append("| Value | Means |")
+        lines.append("|---|---|")
+        for value in entry["allowed"]:
+            note = ""
+            if value.get("deprecated"):
+                note = f" *Deprecated in {value['deprecated']['version']}: {cell(value['deprecated']['why'])}.*"
+            lines.append(f"| `{value['value']}` | {cell(value['meaning'])}{note} |")
+        lines.append("")
+    if entry.get("changes"):
+        lines.append("Changes: " + "; ".join(
+            f"{change['version']}, {change['kind']}: {prose(change['what'])}" for change in entry["changes"]) + ".\n")
+    return "\n".join(lines)
+
+
+def dictionary_stores(fields: dict, version: int) -> list[str]:
+    """The stores with a page: each with an entry at the version."""
+    return [s["name"] for s in fields.get("stores", [])
+            if store_entries(fields, s["name"], version)[0]]
 
 
 # Checking llms.txt against the built site -----------------------------------
@@ -445,7 +701,8 @@ LINK = re.compile(r"\[([^\]]+)\]\(([^)\s]+)\)")
 
 
 def check_index(text: str, site_dir: Path, site_url: str, roles: dict,
-                directory_urls: bool = True) -> list[str]:
+                directory_urls: bool = True, fields: dict | None = None,
+                vendored: dict | None = None) -> list[str]:
     """What is wrong with llms.txt against the built site: empty when nothing is."""
     base = site_url.rstrip("/") + "/"
     pages: dict[str, _Page | None] = {}
@@ -501,8 +758,12 @@ def check_index(text: str, site_dir: Path, site_url: str, roles: dict,
         must_link(url(base, p, anchor, directory_urls=directory_urls), f"{call['name']}, which every plugin makes")
     for p, title, _ in GUIDES:
         must_link(url(base, p, directory_urls=directory_urls), title)
+    vendored = vendored or {"contract": 0}
+    fields = fields or {"stores": [], "entries": []}
+    for store in dictionary_stores(fields, vendored["contract"]):
+        must_link(url(base, store_page_path(store), directory_urls=directory_urls), f"the store page {store}")
 
-    expected = {address for _, items in index_entries(roles, {"contract": 0}, base, directory_urls).items()
+    expected = {address for _, items in index_entries(roles, vendored, base, directory_urls, fields).items()
                 for _, address, _ in items}
     for address in sorted(set(linked) - expected):
         errors.append(f"llms.txt links {address}, which the index does not list")
@@ -510,11 +771,16 @@ def check_index(text: str, site_dir: Path, site_url: str, roles: dict,
 
 
 def self_test(text: str, site_dir: Path, site_url: str, roles: dict, directory: Path,
-              directory_urls: bool = True) -> list[str]:
+              directory_urls: bool = True, fields: dict | None = None,
+              vendored: dict | None = None) -> list[str]:
     """Proves check_index and check_digests fail where they must."""
     failures = []
     base = site_url.rstrip("/") + "/"
-    if check_index(text, site_dir, site_url, roles, directory_urls):
+
+    def check(candidate: str) -> list[str]:
+        return check_index(candidate, site_dir, site_url, roles, directory_urls, fields, vendored)
+
+    if check(text):
         failures.append("the generated llms.txt does not pass its own check")
     lines = text.splitlines()
     first_role = url(base, ROLES_PAGE, roles["roles"][0]["name"], directory_urls)
@@ -530,8 +796,14 @@ def self_test(text: str, site_dir: Path, site_url: str, roles: dict, directory: 
         "an extra link to a page the index does not list":
             text + f"- [Access]({url(base, 'concepts/access.md', directory_urls=directory_urls)}): access\n",
     }
+    stores = dictionary_stores(fields or {}, (vendored or {"contract": 0})["contract"])
+    if stores:
+        first_store = url(base, store_page_path(stores[0]), directory_urls=directory_urls)
+        cases["a missing store page"] = "\n".join(l for l in lines if f"({first_store})" not in l)
+        cases["an extra link to an entry nobody publishes"] = (
+            text + f"- [nothing]({first_store}#meridian.v1.Nothing.at_all): nothing\n")
     for case, mutated in cases.items():
-        if not check_index(mutated, site_dir, site_url, roles, directory_urls):
+        if not check(mutated):
             failures.append(f"the llms.txt check passes {case}")
     with tempfile.TemporaryDirectory() as tmp:
         copy = Path(tmp) / "boundaries"
@@ -557,6 +829,7 @@ def on_config(config, **kwargs):
     if errors:
         raise PluginError("boundaries/: " + "; ".join(errors))
     _state["roles"], _state["vendored"] = load()
+    _state["fields"] = load_fields()
     return config
 
 
@@ -564,16 +837,24 @@ def on_files(files, config, **kwargs):
     from mkdocs.exceptions import PluginError
     from mkdocs.structure.files import File
 
-    for generated in (ROLES_PAGE, INDEX):
+    roles, vendored, fields = _state["roles"], _state["vendored"], _state["fields"]
+    try:
+        stores = {store_page_path(store): store_page(fields, store, vendored)
+                  for store in dictionary_stores(fields, vendored["contract"])}
+    except (KeyError, ValueError) as err:
+        raise PluginError(f"boundaries/fields.json: {err}") from err
+    for generated in (ROLES_PAGE, INDEX, *stores):
         if files.get_file_from_path(generated) is not None:
             raise PluginError(f"docs/{generated} is generated from boundaries/; remove the file")
-    roles, vendored = _state["roles"], _state["vendored"]
     try:
         page = roles_page(roles, vendored)
-        text = index(roles, vendored, config["site_name"], config["site_url"], config["use_directory_urls"])
+        text = index(roles, vendored, config["site_name"], config["site_url"], config["use_directory_urls"],
+                     fields)
     except (KeyError, ValueError) as err:
         raise PluginError(f"boundaries/roles.json: {err}") from err
     files.append(File.generated(config, ROLES_PAGE, content=page))
+    for path, content in stores.items():
+        files.append(File.generated(config, path, content=content))
     files.append(File.generated(config, INDEX, content=text))
     return files
 
@@ -583,12 +864,13 @@ def on_post_build(config, **kwargs):
 
     site_dir = Path(config["site_dir"])
     text = (site_dir / INDEX).read_text(encoding="utf-8")
-    roles = _state["roles"]
+    roles, fields, vendored = _state["roles"], _state["fields"], _state["vendored"]
     directory_urls = config["use_directory_urls"]
-    errors = check_index(text, site_dir, config["site_url"], roles, directory_urls)
+    errors = check_index(text, site_dir, config["site_url"], roles, directory_urls, fields, vendored)
     if not errors:
         errors = [f"self-test: {failure}" for failure in
-                  self_test(text, site_dir, config["site_url"], roles, VENDORED, directory_urls)]
+                  self_test(text, site_dir, config["site_url"], roles, VENDORED, directory_urls,
+                            fields, vendored)]
     if errors:
         raise PluginError("llms.txt: " + "; ".join(errors))
 

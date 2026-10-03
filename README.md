@@ -35,16 +35,21 @@ change, the pages change with them. Today they describe CLI 0.1.26, SDK
 0.14.0 (contract v9) and kit 0.8.0. A page describes what is built, and says so where
 something is specified and not built yet.
 
-## The roles page and llms.txt
+## The roles page, the data dictionary and llms.txt
 
-Two pages are generated at every build, never written by hand:
-`concepts/roles.md` and `llms.txt`, served at the site's root for agents. An
-MkDocs hook, `tools/boundaries_page.py`, writes both from `boundaries/`, a copy
-of meridian-schema's `boundaries/` (the roles, the principles, the method and
-the worked examples). The build fails when the copy is not what its
-`SHA256SUMS` says, or when `llms.txt` links a page or anchor the site does not
-publish, or omits a role or an operation it does; a self-test proves those
-checks fail where they must.
+These pages are generated at every build, never written by hand:
+`concepts/roles.md`; one page per store under `boundaries/` -- the street, the
+instrument store, the book, the conductor's accounts, the sidecar, the
+envelope and the shared types -- each that store's data dictionary at the
+contract version these docs describe, its records first and every entry
+anchored by its name; and `llms.txt`, served at the site's root for agents. An
+MkDocs hook, `tools/boundaries_page.py`, writes them from `boundaries/`, a copy
+of meridian-schema's `boundaries/` (the roles, the principles, the method, the
+worked examples and `fields.json`, every store's entries with their history).
+The build fails when the copy is not what its `SHA256SUMS` says, when
+`fields.json` names a store the hook gives no page, or when `llms.txt` links a
+page or anchor the site does not publish, or omits a role, an operation or a
+store page it does; a self-test proves those checks fail where they must.
 
 `boundaries/vendored.json` records the schema revision the copy is from and
 the contract version these docs describe. When meridian-schema's boundaries
