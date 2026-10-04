@@ -12,6 +12,8 @@ Short recipes for one task each. They assume you have a deployment; if not, star
 | [Build a plugin's page](build-a-plugin-page.md) | Declare each page with the levels it serves, link the plugin UI kit, link external accounts with `om-account-map` at any scale, fit a page to a phone, and sit well in the dashboard's frame, with header actions and status. |
 | [Prove your plugin against a released runtime](prove-a-plugin-against-a-released-runtime.md) | Run your plugin, and any plugins it needs beside it, on the plugin harness image published with a pinned runtime, from `make e2e` and CI, and compare the street store and the book with what you expect. |
 | [Offer your pages to agents](offer-your-pages-to-agents.md) | Declare a route's inputs as one typed record so the SDK derives its tool on the deployment's MCP surface, answer typed data, refuse by path, and test it as an agent calls it. |
+| [Advising on tickets](advise-on-tickets.md) | Run an agent on a schedule that adds advice to open tickets, with the deployment's connector and nothing else, and the prompt to paste. |
+| [Working your tickets](work-your-tickets.md) | Run an agent on a schedule that reads your inbox, advises where a change needs it, and tells you what waits for you, and the prompt to paste. |
 | [Release a plugin version](release-a-plugin.md) | Ship a change to a plugin as a new version. |
 | [Upgrade a deployment](upgrade-a-deployment.md) | Move a deployment to a newer chart, with the command line or your own pipeline. |
 | [Remove or start over](remove-or-start-over.md) | Uninstall, reinstall, or retire a deployment. |

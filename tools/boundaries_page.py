@@ -65,6 +65,8 @@ EVERY_PLUGIN_SECTIONS = {
     "WatchSettings": "settings",
     "PluginAccess": "access",
     "WatchAccountScope": "account_scope",
+    "FileTicket": "file_ticket",
+    "FiledTickets": "filed_tickets",
 }
 
 # The pages llms.txt sends an agent to beside the roles and the operations.
@@ -72,7 +74,8 @@ GUIDES = [
     (TYPED_OPERATIONS, "Typed operations",
      "every operation a plugin's roles let it take, with its arguments, what it returns and its errors"),
     (SDK, "Python SDK",
-     "connecting to the sidecar, settings, access, figures, receiving what a plugin's roles hear, and pages"),
+     "connecting to the sidecar, settings, access, figures, receiving what a plugin's roles hear, "
+     "filing a ticket for a person, and pages"),
     ("how-to/prove-a-plugin-against-a-released-runtime.md", "Prove a plugin against a released runtime",
      "an end-to-end check of what a plugin records, on core's plugin harness: a real sidecar, street store and book"),
     ("how-to/build-a-plugin-page.md", "Build a plugin's page",

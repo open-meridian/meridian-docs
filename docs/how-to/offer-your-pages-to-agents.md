@@ -103,6 +103,17 @@ delegation, its client and the tool, as the dashboard's would. No form token
 is needed: only the dashboard's `/mcp` names a tool, and the sidecar admits
 that claim at the tool's own route alone.
 
+## Beside core's own tools
+
+The surface lists core's tools beside your plugin's, named `dashboard__...`:
+the Instruments tools, to a deployment admin, and from contract v13 seven
+ticket and inbox tools, to any delegation that reaches a level on any plugin.
+An agent that meets a problem with your plugin can file a ticket about your
+instance with `dashboard__file_ticket`, as its person; a person on your page
+files through your plugin, with
+[`plugin.file_ticket`](../api/python-sdk.md#file_ticket). The tools, and who
+sees a ticket, are in [Tickets and the inbox](../concepts/tickets-and-the-inbox.md#through-an-agent).
+
 ## What a person sees
 
 When they connect an agent, the consent page lists under each plugin and

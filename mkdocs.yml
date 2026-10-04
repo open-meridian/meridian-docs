@@ -98,6 +98,7 @@ nav:
       - Accounts: concepts/accounts.md
       - The book of record: concepts/the-book-of-record.md
       - Instruments: concepts/instruments.md
+      - Tickets and the inbox: concepts/tickets-and-the-inbox.md
       - Development deployments: concepts/development-deployments.md
   - How-to:
       - how-to/index.md
@@ -109,6 +110,8 @@ nav:
       - Prove a plugin against a released runtime: how-to/prove-a-plugin-against-a-released-runtime.md
       - Keep what your custody plugin converts: how-to/keep-what-the-edge-converts.md
       - Offer your pages to agents: how-to/offer-your-pages-to-agents.md
+      - Advising on tickets: how-to/advise-on-tickets.md
+      - Working your tickets: how-to/work-your-tickets.md
       - Release a plugin version: how-to/release-a-plugin.md
       - Upgrade a deployment: how-to/upgrade-a-deployment.md
       - Remove or start over: how-to/remove-or-start-over.md

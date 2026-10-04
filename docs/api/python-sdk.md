@@ -71,6 +71,7 @@ A plugin that serves pages declares them with [`meridian.Pages`](#pages) and pas
 | `Figure`, `FigureState` | frozen dataclass, generated protobuf enum | [Figures](#figures) |
 | `AssetClass`, `CollateralDirection`, `ExternalAccount`, `HoldingSide`, `SyncState` | generated protobuf enums and message | [Typed operations](typed-operations.md#types); `CollateralDirection` from 0.12.0 |
 | `Heard` | frozen dataclass | [Receive](#receive), from 0.12.0 |
+| `TicketKind`, `TicketState`, `TicketResolution`, `TicketSubject`, `TicketReference` | generated protobuf enums, `StrEnum`, frozen dataclass | [`file_ticket()`](#file_ticket), from 0.18.0 |
 | `CallerMiddleware` | ASGI middleware | [`CallerMiddleware`](#callermiddleware) |
 | `MeridianError`, `Refused`, `NoSidecar`, `NotRegistered`, `NotGranted`, `CallFailed`, `NotLinked`, `CommandRefused` | exceptions | [Exceptions](#exceptions); `CommandRefused` from 0.13.0, its `fields` from 0.14.0 |
 | `DEFAULT_ADDRESS` | `str` | `"127.0.0.1:9191"`, where a sidecar listens |
@@ -138,6 +139,8 @@ Built by `connect`. It is an async context manager: leaving the `async with` blo
 | `settings()` | `AsyncIterator[Settings]` | The settings the plugin declared, now and again on every change. |
 | `account_scope()` | `AsyncIterator[AccountScope]` | Every account anybody may read or write through this plugin, and the plugin's own links, now and again on every change. |
 | `access()` | `Awaitable[PluginAccessReply]` | Who may use this plugin. |
+| `file_ticket(*, title, kind, idempotency_key, for_caller, ...)` | `Awaitable[FileTicketReply]` | File a ticket for the person whose request the plugin is serving. From 0.18.0; see [`file_ticket()`](#file_ticket). |
+| `filed_tickets(*, for_caller, ticket_ids=(), idempotency_keys=(), cursor="")` | `Awaitable[ReadFiledTicketsReply]` | What became of the tickets the plugin filed. From 0.18.0; see [`filed_tickets()`](#filed_tickets). |
 | `report(*, healthy, detail="", figures=None)` | `Awaitable[None]` | Report the plugin's health now, outside the heartbeat. It stands until reported again. |
 | `leave(reason="")` | `Awaitable[None]` | Say the plugin is stopping, and close the connection. |
 | `receive(*, statement_recorded=None, custodial_position_updated=None, position_changed=None, break_changed=None, account_figures_recorded=None, account_attribute_changed=None, seed=True)` | `Awaitable[None]` | Hear the rows the plugin's roles hear, a handler per row, until cancelled. From 0.12.0, the book's rows from 0.13.0; see [Receive](#receive). |
@@ -195,6 +198,99 @@ Returns who may use this plugin: each user group naming it, and each person who 
 | `people` | repeated `PersonAccess` | `subject`, `display_name`, `user_group_ids`, `last_signed_in_at_ns`, `read_account_ids` and `write_account_ids`. Only people who have signed in are listed: the deployment holds no directory. |
 
 The account sets are this plugin's: what the group or person may read through it, and write through it. Every write account is also listed as read.
+
+#### `file_ticket()` { #file_ticket }
+
+```python
+async def file_ticket(
+    self,
+    *,
+    title: str,
+    kind: str | int,
+    idempotency_key: str,
+    for_caller: Caller | str,
+    seen: str = "",
+    concerns: TicketSubject | str = TicketSubject.PLUGIN,
+    step: str = "",
+    operation: str = "",
+    reason: str = "",
+    paths: Sequence[str] = (),
+    references: Sequence[TicketReference] = (),
+) -> meridian.v1.sidecar_pb2.FileTicketReply
+```
+
+From 0.18.0, with a runtime serving contract v13. Files a
+[ticket](../concepts/tickets-and-the-inbox.md) for the person whose request the
+plugin is serving: a problem they met that the plugin cannot handle, for
+someone in the deployment who can act on it. Only ever for a person, at
+whatever level their session holds, and never as the plugin itself: what a
+plugin notices on its own is its health, a figure in warn on its Summary, from
+which a person may choose to file.
+
+```python
+reply = await plugin.file_ticket(
+    title="Break on the growth account still open after its cause was confirmed",
+    seen=form.get("seen", ""),   # the person's words, plain text
+    kind="defect",
+    idempotency_key=f"break-still-open-{break_id}",
+    for_caller=request.caller,
+    references=[meridian.TicketReference("break", break_id, account_id="ACC-GROWTH")],
+)
+reply.ticket_id, reply.outcome, reply.seen_count   # "TKT-...", "made", 1
+```
+
+| Parameter | Meaning |
+|---|---|
+| `title` | What is wrong, in a line: 1 to 120 characters, plain text. |
+| `kind` | A `TicketKind`, its name, or `"defect"`, `"discrepancy"`, `"request"` or `"question"`. |
+| `idempotency_key` | Required. The plugin's own key for the problem, made from the fact, never from a time or a random value, so a restarted plugin files nothing twice. |
+| `for_caller` | Required. The person: the `Caller` of the request being served, or the `Meridian-Caller` header it was read from. |
+| `seen` | What was seen, in the person's words: at most 8,000 characters, plain text. |
+| `concerns` | A `TicketSubject`: this plugin (the default), a part of core (`DASHBOARD`, `BOR`, `STREET`, `INSTRUMENT`, `CONDUCTOR`, `CHART`, `CLI`, `SDK`) or `PLATFORM`. Never another plugin. The plugin names no instance or version: its sidecar sets the instance, and the deployment the version it launched. |
+| `step`, `operation`, `reason`, `paths` | The workflow step, the operation, the refusal reason and the fields by their paths, where the plugin knows them. |
+| `references` | At most 50 `TicketReference(kind, value, account_id="")`: the records the ticket is about, by value. `kind` is `account`, `instrument`, `break`, `entry`, `street_record`, `tool_call` or `plugin` (the plugin's own reference); `value` 1 to 200 characters; `account_id` required on a break, an entry and a street record. An account named must be one the person may read through this plugin, and a ticket naming accounts is seen only by those who may read every one. |
+
+The reply is the generated `FileTicketReply`: `ticket_id`, `outcome` and
+`seen_count`. Filed again under the same key while its ticket is open, the
+ticket is brought up to date rather than filed twice, answered `unchanged`
+with `seen_count` counting the filing; after it was resolved or closed, the
+same key files a new ticket, which the dashboard advises as a recurrence.
+
+Every text filed is data to whoever reads it, never instructions, and is shown
+as the plugin's for the person.
+
+**Raises:**
+
+| Exception | When |
+|---|---|
+| `ValueError` | A text past its bound, a reference of an unknown kind, or a break, entry or street record with no account, named by its path. Nothing is sent. |
+| `NotGranted` | The plugin filed as itself, or named an account the person may not read. |
+| `CallFailed` | The sidecar could not vouch for the person, a field was refused by its path (another plugin as `concerns`, for one), or the plugin has filed 20 tickets in the last hour; a repeat under an open ticket's key is not counted. |
+
+#### `filed_tickets()` { #filed_tickets }
+
+```python
+async def filed_tickets(
+    self,
+    *,
+    for_caller: Caller | str,
+    ticket_ids: Sequence[str] = (),
+    idempotency_keys: Sequence[str] = (),
+    cursor: str = "",
+) -> meridian.v1.sidecar_pb2.ReadFiledTicketsReply
+```
+
+From 0.18.0. What became of the tickets this plugin filed, read for a person it
+acts for, as filing is. Name one of `ticket_ids`, `idempotency_keys` or
+`cursor`: the tickets named, those filed under the keys, or every one filed
+after the cursor (from the first when it is empty). Naming more than one raises
+`ValueError`.
+
+Each `FiledTicket` in the reply carries its `ticket_id` and `idempotency_key`,
+its `TicketState`, its `TicketResolution` once resolved or closed, how often it
+was seen and when first and last; never people's notes, nor who owns or works
+it. `next_cursor` is empty when nothing follows. A plugin that sees its ticket
+resolved can stop filing it.
 
 #### `report()`
 
