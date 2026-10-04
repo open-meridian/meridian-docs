@@ -96,6 +96,7 @@ STORES = {
     "instrument": ("The instrument store", "the deployment's instrument records, and resolving an identifier to one"),
     "bor": ("The book of record", "the deployment's own record of positions, lots, breaks and figures"),
     "conductor": ("The conductor's accounts", "the deployment's accounts and the links a plugin makes to them"),
+    "dashboard": ("The dashboard's tickets", "tickets, their notes and the inbox's notices, as the dashboard keeps them"),
     "sidecar": ("The sidecar", "registration, settings, access, scope, figures, refusals and the delivery stream"),
     "envelope": ("The envelope", "what every bus message carries about itself"),
     "shared": ("Shared types", "a number, an amount of currency, and where a change sits in a store's record"),
