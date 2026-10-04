@@ -120,8 +120,9 @@ with the person's name.
 
 A plugin's ticket is worked by a person holding write on that plugin and on
 every account it names; one naming no account, also by the plugin's admins.
-Core's and the platform's naming no account are worked by the deployment
-admin. Whoever filed a ticket may close it as withdrawn. Anyone who may see a
+Core's and the platform's are worked by the deployment admin: one naming no
+account by any deployment admin, one naming accounts by a deployment admin
+who may also see every account it names. Whoever filed a ticket may close it as withdrawn. Anyone who may see a
 ticket may add a note.
 
 A person may follow advice by doing what it names elsewhere, completing an
