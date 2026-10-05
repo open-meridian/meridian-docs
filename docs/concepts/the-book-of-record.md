@@ -21,7 +21,7 @@ is a copy of another.
 | | What it holds | Who writes it |
 |---|---|---|
 | **The edge** | A plugin's raw records, as it received them from outside: a vendor's responses, a statement as sent | The edge plugin alone, in storage of its own. Core never reads it, and no other plugin does |
-| **The street** | The custodian's view, as reported: statements, holdings and custodial positions, each statement's figures, and what of each holding is available and what cannot move | Custody plugins, through the street store. See [Record a holdings statement](../tutorials/record-a-holdings-statement.md) |
+| **The street** | The custodian's view, as reported: statements, holdings and custodial positions, each statement's figures, and what of each holding is available and what cannot move; from contract v14, each activity on the account and each sync status | Custody plugins, through the street store. See [Record a holdings statement](../tutorials/record-a-holdings-statement.md) and [The custodian's activity](the-custodians-activity.md) |
 | **The book** | The firm's view: positions, lots, pending settlements, encumbrances, breaks, figures and each account's attributes, every change a journalled entry | An `operations` plugin, through the book; the dashboard sets an account's attributes |
 
 A custody plugin converts what its vendor sends into the street's terms at
@@ -84,7 +84,10 @@ nothing enters with an empty balance.
 
 An opening balance is the fact every later break inherits, so **a person
 confirms it**. An `operations` plugin composes it, typically from the
-account's first completed statement, and shows it on its own page; a person
+account's first completed statement, and from contract v14 may propose a
+position's lots from the custodian's activity
+([the opening balance's lots](the-custodians-activity.md#the-opening-balances-lots)),
+and shows it on its own page; a person
 granted `write` on the account through the plugin confirms it there, with a
 reason, and the book records that person as having made it. The book refuses:
 
@@ -197,7 +200,11 @@ is derived from those dates, never stored.
 
 The plugin's matching offers **candidate causes**: an unbooked trade,
 settlement timing, a cost or price difference, a corporate action, a fail, a
-custodian error, or unknown, each with the item found to cause it. A person
+custodian error, or unknown, and from contract v14 income the custodian
+reinvested, each with the item found to cause it. From v14 that item may be
+the custodian's own activity: a reinvestment, a split, a trade made away from
+the platform, linked by value, from which the plugin proposes the adjustment.
+See [The custodian's activity](the-custodians-activity.md#how-operations-explains-a-break). A person
 confirms one, and sets who owns the break, its escalation level and its due
 date. Then a person ends it, with a reason, in one of three ways:
 
@@ -258,6 +265,8 @@ own pages to the people granted access to them.
 
 - [Accounts](accounts.md): the accounts a book is kept for, and what bounds a
   plugin's reach.
+- [The custodian's activity](the-custodians-activity.md): the custodian's
+  record of what happened, which explains a break and proposes its entry.
 - [Record a holdings statement](../tutorials/record-a-holdings-statement.md):
   how the custodian's view reaches the street store.
 - [Prove your plugin against a released runtime](../how-to/prove-a-plugin-against-a-released-runtime.md#the-book-of-record):

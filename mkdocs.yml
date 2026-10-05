@@ -97,6 +97,7 @@ nav:
       - Access: concepts/access.md
       - Accounts: concepts/accounts.md
       - The book of record: concepts/the-book-of-record.md
+      - The custodian's activity: concepts/the-custodians-activity.md
       - Instruments: concepts/instruments.md
       - Tickets and the inbox: concepts/tickets-and-the-inbox.md
       - Development deployments: concepts/development-deployments.md
@@ -109,6 +110,7 @@ nav:
       - Build a plugin's page: how-to/build-a-plugin-page.md
       - Prove a plugin against a released runtime: how-to/prove-a-plugin-against-a-released-runtime.md
       - Keep what your custody plugin converts: how-to/keep-what-the-edge-converts.md
+      - Report the custodian's activity: how-to/report-the-custodians-activity.md
       - Offer your pages to agents: how-to/offer-your-pages-to-agents.md
       - Advising on tickets: how-to/advise-on-tickets.md
       - Working your tickets: how-to/work-your-tickets.md

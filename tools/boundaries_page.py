@@ -80,6 +80,8 @@ GUIDES = [
      "an end-to-end check of what a plugin records, on core's plugin harness: a real sidecar, street store and book"),
     ("how-to/build-a-plugin-page.md", "Build a plugin's page",
      "declaring a plugin's pages and the levels they serve, and building them on the plugin UI kit"),
+    ("how-to/report-the-custodians-activity.md", "Report the custodian's activity",
+     "a custody plugin's activity reported once and backfilled to history_from, and an operations plugin reading it"),
 ]
 
 # How llms.txt says which roles hold an operation.

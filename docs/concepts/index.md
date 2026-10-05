@@ -16,6 +16,7 @@ piece of data lives.
 | [Access](access.md) | How people sign in to a deployment, and how the dashboard decides what each of them may reach |
 | [Accounts](accounts.md) | The firm's accounts, and how an account at a broker or custodian is tied to one |
 | [The book of record](the-book-of-record.md) | The firm's own record of what each account holds, how it differs from the street and the edge, and how operations opens and reconciles it |
+| [The custodian's activity](the-custodians-activity.md) | What a custody plugin reports of what happened on an account, and how operations explains a break and proposes its entry from it |
 | [Instruments](instruments.md) | Instrument identity, the security master, and the copy a deployment keeps of it |
 | [Tickets and the inbox](tickets-and-the-inbox.md) | How a problem someone sees reaches the people who can act on it: who sees a ticket, advice that changes nothing, the acts only a person takes, and the inbox |
 | [Development deployments](development-deployments.md) | A deployment installed for writing plugins, and why a firm's own deployment is never one |
@@ -23,8 +24,8 @@ piece of data lives.
 !!! note "What Open Meridian does today"
     A deployment today signs people in, administers who may reach what,
     catalogues and runs plugins, resolves instruments, records what
-    custodians say is held, keeps the firm's own book of record,
-    reconciled with it, and takes a problem someone sees to the people who
+    custodians say is held and what happened on each account, keeps the
+    firm's own book of record, reconciled with it, and takes a problem someone sees to the people who
     can act on it. Order routing and execution are on the roadmap and
     are not available yet. Where a page describes something that is specified
     but not built, it says so.

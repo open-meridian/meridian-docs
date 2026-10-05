@@ -11,6 +11,9 @@ custody plugin does for each, with [meridian-snaptrade](https://github.com/open-
     This page describes the Python SDK 0.16.0 (contract v11) and the command line after 0.1.27,
     built and not yet released. The rest of these pages describe SDK 0.14.0 (contract v9).
 
+From contract v14 a custody plugin also reports each activity on an account, each with a raw
+record of its own: see [Report the custodian's activity](report-the-custodians-activity.md).
+
 ## Declare what the version is
 
 A version's **declaration** says three things beside its roles: the names of the secret settings it

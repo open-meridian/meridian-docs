@@ -17,6 +17,8 @@ The operations are generated, not written by hand. One generator reads the contr
 
 This page lists every operation in SDK 0.14.0, which declares contract v9. It has the operations of 0.13.0, which added the [book of record](../concepts/the-book-of-record.md)'s seven commands and four reads, and `resolve_instrument`, to those of 0.12.0, and what of a holding cannot move to the commands that record holdings. What 0.14.0 adds is the book's refusal of an entry missing what it requires, `REFUSAL_REASON_INCOMPLETE`, naming each missing field (see [What the book requires](#what-the-book-requires)). A plugin built on 0.12.0 or 0.13.0 keeps working, and the book refuses an incomplete entry from it all the same. There is no order-routing or execution operation.
 
+From 0.19.0, contract v14, it also lists three operations of [the custodian's activity](../concepts/the-custodians-activity.md): [`record_activity`](#record_activity), by which a `custody` plugin reports each activity on an account as the custodian states it, and [`list_activities`](#list_activities) and [`list_sync_statuses`](#list_sync_statuses), by which an `operations` plugin reads it and each sync status the street keeps. Their rows are `preview` in v14. A sync status says from when the source can read the account's history ([`history_from`](#report_sync_status)), and a break's cause may link the activity that explains it ([`BreakCause`](#breakcause)).
+
 ## Summary
 
 | Python method | gRPC rpc | Workflow step | Kind | Role | Returns |
@@ -27,6 +29,9 @@ This page lists every operation in SDK 0.14.0, which declares contract v9. It ha
 | [`record_holding`](#record_holding) | `RecordHolding` | W2.3 Publish each holding | command | `custody` | `RecordHoldingResult` |
 | [`list_custodial_positions`](#list_custodial_positions) | `ListCustodialPositions` | W2.7 Read custodial positions | query | `operations` | `ListCustodialPositionsResult` |
 | [`list_statements`](#list_statements) | `ListStatements` | W2.9 Read completed statements | query | `operations` | `ListStatementsResult` |
+| [`record_activity`](#record_activity) | `RecordActivity` | W2.10 Record an account's activity | command | `custody` | `RecordActivityResult` |
+| [`list_activities`](#list_activities) | `ListActivities` | W2.11 List an account's activity | query | `operations` | `ListActivitiesResult` |
+| [`list_sync_statuses`](#list_sync_statuses) | `ListSyncStatuses` | W2.14 Read an account's sync status | query | `operations` | `ListSyncStatusesResult` |
 | [`resolve_identifier`](#resolve_identifier) | `ResolveIdentifier` | W3.1 Resolve an identifier set | query | `custody` | `ResolveIdentifierResult` |
 | [`report_missing_instrument`](#report_missing_instrument) | `ReportMissingInstrument` | W3.2 Report that a resolution missed | event | `custody` | `Published` |
 | [`read_accounts_for_linking`](#read_accounts_for_linking) | `ReadAccountsForLinking` | W6.4 Link a plugin's external account | query | `custody` | `ReadAccountsForLinkingResult` |
@@ -51,7 +56,7 @@ This page lists every operation in SDK 0.14.0, which declares contract v9. It ha
 - An **event** returns `Published`, the message's identifier on the bus.
 - A **command** or a **query** returns the answer of whatever serves it.
 
-W2 is holdings ingestion from a brokerage. It is read-only throughout: nothing in it places an order. A `custody` plugin records what the custodian says is held, and an `operations` plugin reads it, within its read scope, and hears it change with [`receive`](python-sdk.md#receive), the stream of what a plugin's roles hear (W4.3, `rpc Receive`). W3 is instrument resolution. W6.4 is linking the accounts a source reaches to the firm's own, which a plugin does on its own page at `admin`, for the admin of the plugin viewing it under Manage. The tutorial [Record a holdings statement](../tutorials/record-a-holdings-statement.md) walks through W2 and W6.4.
+W2 is holdings ingestion from a brokerage. It is read-only throughout: nothing in it places an order. A `custody` plugin records what the custodian says is held, and from 0.19.0 each activity on the account as the custodian states it, and an `operations` plugin reads it, within its read scope, and hears it change with [`receive`](python-sdk.md#receive), the stream of what a plugin's roles hear (W4.3, `rpc Receive`). W3 is instrument resolution. W6.4 is linking the accounts a source reaches to the firm's own, which a plugin does on its own page at `admin`, for the admin of the plugin viewing it under Manage. The tutorial [Record a holdings statement](../tutorials/record-a-holdings-statement.md) walks through W2 and W6.4.
 
 W9, from 0.13.0, is the [book of record](../concepts/the-book-of-record.md): the firm's own record of what each account holds, which an `operations` plugin opens with an opening balance a person confirms, reconciles with the street on each statement, and corrects only by entries that resolve its breaks. `portfolio`, `reporting`, `compliance` and `oms` read it, and hear it change with `receive`. W3.6 is forward resolution, by which those roles join a book position to its instrument. From 0.14.0, contract v9, the book refuses an entry missing what tax tracking, valuation, confirmation or settlement need, and names each field it lacks.
 
@@ -125,7 +130,7 @@ Some fields describe the publisher rather than the event, and only the sidecar k
 
 | Field | On | Set by the sidecar from |
 |---|---|---|
-| `account_id` | `RecordHoldingsStatement`, `RecordHolding` | The link an admin of the plugin made from the plugin's `external_account_id` to an account. Refused when there is none, as [`NotLinked`](#an-unlinked-external-account). On a statement from 0.12.0. |
+| `account_id` | `RecordHoldingsStatement`, `RecordHolding`, `RecordActivity` | The link an admin of the plugin made from the plugin's `external_account_id` to an account. Refused when there is none, as [`NotLinked`](#an-unlinked-external-account). On a statement from 0.12.0; on an activity from 0.19.0. |
 | `account_id` | `ReportSyncStatus` | The same link, or empty when there is none. Never refused. |
 | `publisher_instance_id` | `ReportMissingInstrument` | The instance the plugin was launched as. |
 | `placeholder_instrument_id` | `ReportMissingInstrument` | Nothing: always empty from a plugin. Only the instrument store sets it. |
@@ -141,9 +146,9 @@ Each read answers a page, the next page's `cursor` in `next_cursor`, empty on th
 
 ### Acting for a person
 
-Eleven operations take `acting_for`: the two commands that record holdings, the seven commands of the book, and the two that link accounts. Pass the `Meridian-Caller` header of the page request you are serving: in a view on [`meridian.Pages`](python-sdk.md#pages), `request.caller.header`; with [`CallerMiddleware`](python-sdk.md#callermiddleware), `request.state.caller.header`.
+Twelve operations take `acting_for`: the two commands that record holdings and, from 0.19.0, the one that records an activity; the seven commands of the book; and the two that link accounts. Pass the `Meridian-Caller` header of the page request you are serving: in a view on [`meridian.Pages`](python-sdk.md#pages), `request.caller.header`; with [`CallerMiddleware`](python-sdk.md#callermiddleware), `request.state.caller.header`.
 
-For `record_holdings_statement`, `record_holding` and the book's commands, the sidecar applies the same rule:
+For `record_holdings_statement`, `record_holding`, `record_activity` and the book's commands, the sidecar applies the same rule:
 
 - **Unset:** the plugin acts as itself.
 - **Set:** the sidecar checks the assertion, admits the command only in a session opened by **Open**, at `write`, and only when that person may write the account it names, and stamps the person on it. For a command that names no account, the person must be able to write something through the plugin. A command sent for a person in a session opened by Manage or View is refused with `NotGranted`, naming the session.
@@ -210,7 +215,7 @@ The sidecar sends the code beside the status: a `meridian.v1.Refusal`, encoded, 
 | `REFUSAL_REASON_EXTERNAL_ACCOUNT_NOT_LINKED` | 1 | `FAILED_PRECONDITION` | The operation named an external account nobody has linked to an account. Nothing was recorded, and the next statement after a link records it. |
 | `REFUSAL_REASON_ACTOR_REQUIRED` … `REFUSAL_REASON_INCOMPLETE` | 2 to 11 | `ABORTED` | The book's refusals: 2 to 10 from 0.13.0, and 11 from 0.14.0. See [The book's refusals](#the-books-refusals). |
 
-A reason is never reused for another cause, and a retired one's number stays reserved. [`record_holding`](#record_holding) can be refused this way, and from 0.12.0 [`record_holdings_statement`](#record_holdings_statement), which names its external account too; `report_sync_status` for an unlinked account is not refused.
+A reason is never reused for another cause, and a retired one's number stays reserved. [`record_holding`](#record_holding) can be refused this way, from 0.12.0 [`record_holdings_statement`](#record_holdings_statement), which names its external account too, and from 0.19.0 [`record_activity`](#record_activity); `report_sync_status` for an unlinked account is not refused.
 
 The SDK reads the code and raises **`meridian.NotLinked`**. It is a `CallFailed` whose `kind` is `"refused"`, as this refusal always was, so a plugin that caught `CallFailed` still catches it. It is raised by the code alone: a refusal that carries no code is a plain `CallFailed`, whatever its words say. A sidecar from before the catalogue sends none, so on such a deployment the same refusal arrives as `CallFailed` with `kind="refused"`, which catching `CallFailed` still covers.
 
@@ -338,6 +343,7 @@ async def report_sync_status(
     self, *, source: str = "", last_synced_at_ns: int = 0, connection_healthy: bool = False,
     status_detail: str = "", observed_at_ns: int = 0, external_account_id: str = "",
     state: SyncState | str | None = None, holdings_as_of_ns: int = 0, history_as_of_ns: int = 0,
+    history_from: str = "",
 ) -> Published
 ```
 
@@ -347,7 +353,7 @@ async def report_sync_status(
 | Workflow step | W2.1, Observe the brokerage sync state |
 | Kind | event, on `platform.custody.{instance}.event.sync-status` |
 | Role | `custody` |
-| Heard by | the dashboard, which shows it on the **Overview** tab of the plugin's view in Settings |
+| Heard by | the dashboard, which shows it on the **Overview** tab of the plugin's view in Settings; from contract v14, the street store, which keeps each one for `operations` to read and hear (W2.13, see [`list_sync_statuses`](#list_sync_statuses)) |
 
 | Name | Type | Required | Meaning |
 |---|---|---|---|
@@ -360,6 +366,7 @@ async def report_sync_status(
 | `state` | [`SyncState`](#syncstate) or `None` | no | Whether the data is current, and if not, why. `None` leaves it unset, which reads as `SYNC_STATE_UNSPECIFIED`, shown as what `connection_healthy` says. |
 | `holdings_as_of_ns` | `int` | no | When the holdings the rail serves are as of. `0` where the rail does not say. |
 | `history_as_of_ns` | `int` | no | When the history (transactions) is as of. Apart from holdings, because a connection can have one current and the other not. |
+| `history_from` | `str` | no | From 0.19.0. The first date, ISO 8601, the source can read the account's activity from: how far back a backfill of [`record_activity`](#record_activity) reaches, beside how fresh the history is. Empty where the source does not say. |
 
 **Returns** `Published`, with `message_id`, the message's identifier on the bus.
 
@@ -376,6 +383,7 @@ await plugin.report_sync_status(
     state=meridian.SyncState.SYNC_STATE_CURRENT,
     last_synced_at_ns=last_sync_ns,
     holdings_as_of_ns=last_sync_ns,
+    history_from="2024-06-03",          # from 0.19.0: the first day of the history it can read
     observed_at_ns=time.time_ns(),
 )
 ```
@@ -663,6 +671,155 @@ for statement in page.statements:
     for figures in statement.figures:
         if figures.HasField("net_liquidation"):
             value = meridian.as_money(figures.net_liquidation)
+```
+
+## `record_activity` { #record_activity }
+
+From 0.19.0, contract v14. Records one activity on an account as the custodian states it: a purchase, a sale, a reinvested dividend, a dividend or interest, a fee or a tax, a split or another corporate action, a transfer, a contribution, a withdrawal or a journal. It is evidence that explains a break, never a source: the street store keeps it as reported and derives no position, lot or figure from it, and nothing moves the book until a person confirms. See [The custodian's activity](../concepts/the-custodians-activity.md), and [Report the custodian's activity](../how-to/report-the-custodians-activity.md) for a custody plugin's side.
+
+```python
+async def record_activity(
+    self, *, external_account_id: str = "", source: str = "",
+    activity: CustodialActivity | None = None, acting_for: str | None = None,
+) -> RecordActivityResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc RecordActivity(RecordActivityParams) returns (RecordActivityResult)` |
+| Workflow step | W2.10, Record an account's activity |
+| Kind | command, on `platform.street.command.record-activity` |
+| Role | `custody` |
+| Served by | the street store, which announces each new one as `ActivityRecorded` (W2.12) to `operations` |
+| Stability | `preview` in contract v14 |
+
+| Name | Type | Required | Meaning |
+|---|---|---|---|
+| `external_account_id` | `str` | yes, by the sidecar | The account as the source knows it, which the sidecar translates to the account it is linked to. |
+| `source` | `str` | yes, by the sidecar | The plugin's scheme for its source, as on a statement, such as `"snaptrade"`. |
+| `activity` | [`CustodialActivity`](#custodialactivity) or `None` | yes, by the sidecar | The activity, as the custodian states it. |
+| `acting_for` | `str` or `None` | no | Unset: the plugin reports as itself, as it does on every sync. See [Acting for a person](#acting-for-a-person). |
+
+The street keeps an activity once, by its source, its account and its `external_activity_id`. Sent again under the same identifier, it is answered `already_recorded` with the first one's `activity_id`, recorded and announced once, so a retry, a restart or a backfill sent again records nothing twice. A custodian restating an activity under a new identifier is a new activity, reported, never merged: operations sees both, and a person decides which applies.
+
+**Returns** `RecordActivityResult`:
+
+| Field | Type | Meaning |
+|---|---|---|
+| `activity_id` | `str` | The street's identifier for the activity, such as `ACT-…`. |
+| `already_recorded` | `bool` | `True` when it was recorded before, by its source, account and `external_activity_id`, and the first one is answered. |
+
+**Errors:** [`NotLinked`](#an-unlinked-external-account) for an external account nobody has linked: nothing is recorded, and the plugin reports the account's activity once it is linked. `invalid` for an empty `external_account_id` or `source`, no `activity`, an empty `external_activity_id` or `trade_date`, no raw record, a `Money` with no amount, a kind the enum does not define, or a value outside its bounds (an `external_activity_id` of 1 to 200 characters, a `description` of at most 500, at most 32 provenance entries), naming the field. `NotGranted` without the `custody` role. `no handler`, `timeout` or `handler error` from the street store.
+
+```python
+from decimal import Decimal
+import meridian
+
+reply = await plugin.record_activity(
+    external_account_id="acct-1",
+    source="snaptrade",
+    activity=meridian.CustodialActivity(
+        external_activity_id=venue_activity["id"],       # the custodian's own identifier
+        kind="reinvestment",
+        instrument_id=instrument_id,                     # resolved at the edge, as a holding's is
+        trade_date="2026-09-30",
+        settlement_date="2026-09-30",
+        units=Decimal("3.27"),                           # signed by what it did to the account
+        price=meridian.Money(Decimal("1.00"), "USD"),
+        amount=meridian.Money(Decimal("-3.27"), "USD"),  # signed by what it did to the cash
+        description=venue_activity["description"],
+        raw_record=plugin.raw_record(f"activities/acct-1/{venue_activity['id']}"),
+    ),
+)
+reply.activity_id, reply.already_recorded   # "ACT-…", False
+```
+
+## `list_activities` { #list_activities }
+
+From 0.19.0, contract v14. Reads the activity of the accounts in the plugin's read scope, as the street store announced each, by trade date. The reply says from when the account's source can read history, so an operations plugin can say an opening balance is older than the history that would explain it. See [Reads are within the read scope](#reads).
+
+```python
+async def list_activities(
+    self, *, account_id: str = "", trade_date_from: str = "", trade_date_to: str = "",
+    since: Watermark | None = None, page_size: int = 0, cursor: str = "",
+) -> ListActivitiesResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc ListActivities(ListActivitiesParams) returns (ListActivitiesResult)` |
+| Workflow step | W2.11, List an account's activity |
+| Kind | query, on `platform.street.query.list-activities` |
+| Role | `operations` |
+| Served by | the street store |
+| Stability | `preview` in contract v14 |
+
+| Name | Type | Required | Meaning |
+|---|---|---|---|
+| `account_id` | `str` | no | One account, which must be in the plugin's read scope. Empty for every account in it. |
+| `trade_date_from`, `trade_date_to` | `str` | no | ISO 8601 dates, inclusive. Empty for no bound on that side. |
+| `since` | [`Watermark`](#watermark) or `None` | no | Only the activities recorded after it, in the order recorded rather than by trade date. |
+| `page_size` | `int` | no | How many to a page: 100 when `0`, and never more than 500. |
+| `cursor` | `str` | no | The previous page's `next_cursor`, or empty for the first. |
+
+**Returns** `ListActivitiesResult`:
+
+| Field | Type | Meaning |
+|---|---|---|
+| `activities` | sequence of [`ActivityRecordedEvent`](#activityrecordedevent) | The activities on the page, each as it was announced. |
+| `next_cursor` | `str` | The next page's cursor, empty on the last. |
+| `as_of` | [`Watermark`](#watermark) | The point in the store's record the page was read at. |
+| `history_from` | `str` | The first date the named account's source can read activity from, as its latest sync status said. Empty where the read names no account, or the source has not said. |
+
+**Errors:** `NotGranted` for an `account_id` outside the read scope, and without the `operations` role. `no handler`, `timeout` or `handler error` from the street store.
+
+```python
+page = await plugin.list_activities(account_id="ACC-…", trade_date_from="2026-09-01")
+for each in page.activities:
+    activity = each.activity
+    if activity.kind == meridian.ActivityKind.ACTIVITY_KIND_REINVESTMENT:
+        units = meridian.as_decimal(activity.units)
+page.history_from   # "2024-06-03", or "" where the source has not said
+```
+
+## `list_sync_statuses` { #list_sync_statuses }
+
+From 0.19.0, contract v14. Reads the sync statuses the street store kept, for the accounts in the plugin's read scope: the latest of each connection, or every one recorded since a watermark. The street hears each sync status a custody plugin reports ([`report_sync_status`](#report_sync_status)) and keeps it, so an operations plugin tells a connection that needs a person to sign in again apart from data that is merely old. See [Reads are within the read scope](#reads).
+
+```python
+async def list_sync_statuses(
+    self, *, account_id: str = "", since: Watermark | None = None,
+    page_size: int = 0, cursor: str = "",
+) -> ListSyncStatusesResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc ListSyncStatuses(ListSyncStatusesParams) returns (ListSyncStatusesResult)` |
+| Workflow step | W2.14, Read an account's sync status |
+| Kind | query, on `platform.street.query.list-sync-statuses` |
+| Role | `operations` |
+| Served by | the street store, which announces each one it keeps as `SyncStatusRecorded` (W2.13) to `operations` |
+| Stability | `preview` in contract v14 |
+
+| Name | Type | Required | Meaning |
+|---|---|---|---|
+| `account_id` | `str` | no | One account, which must be in the plugin's read scope. Empty for every account in it. |
+| `since` | [`Watermark`](#watermark) or `None` | no | Unset: the latest of each connection. Set: every one recorded after it, in the order recorded. |
+| `page_size` | `int` | no | How many to a page: 100 when `0`, and never more than 500. |
+| `cursor` | `str` | no | The previous page's `next_cursor`, or empty for the first. |
+
+**Returns** `ListSyncStatusesResult`: `statuses`, a sequence of [`SyncStatusRecordedEvent`](#syncstatusrecordedevent), each as it was announced; `next_cursor`, empty on the last page; and `as_of`, the [`Watermark`](#watermark) it was read at.
+
+A sync status for an external account nobody has linked is kept with its account empty: it reaches no plugin, and the dashboard alone shows it.
+
+**Errors:** `NotGranted` for an `account_id` outside the read scope, and without the `operations` role. `no handler`, `timeout` or `handler error` from the street store.
+
+```python
+page = await plugin.list_sync_statuses(account_id="ACC-…")
+for each in page.statuses:
+    if each.status.state == meridian.SyncState.SYNC_STATE_NEEDS_SIGN_IN:
+        ...  # a person must sign in again at the venue: say so, rather than "old"
 ```
 
 ## `resolve_identifier` { #resolve_identifier }
@@ -1547,6 +1704,71 @@ A completed statement, as the street store announced it when its last row landed
 | `recorded_at_ns` | `int` | When it was completed. |
 | `journal`, `cause` | `JournalRef`, `ChangeCause` | Where its completion sits in the store's record, and who caused it. A handler is handed `cause` as [`Heard.cause`](python-sdk.md#heard), and no `journal`. |
 
+### `CustodialActivity` { #custodialactivity }
+
+One activity on an account as the custodian states it, `meridian.CustodialActivity(...)`, the SDK's form: a number as a `Decimal`, an amount as a [`Money`](#money), the kind as an enum's value or name, each converted and refused naming its path (`activity.units`), as a parameter is. From 0.19.0. Each field's meaning and bounds are in the data dictionary, [the street's `CustodialActivity`](../boundaries/street.md#meridian.v1.CustodialActivity).
+
+| Field | Type | Meaning |
+|---|---|---|
+| `external_activity_id` | `str` | The custodian's own identifier for the activity, never a time or a random value: with the source and the account, the street's key for it. Required. |
+| `kind` | [`ActivityKind`](#activitykind), `str` or `None` | What happened, converted from the custodian's type. `None` where the type converts to none of the kinds, and then `kind_as_reported` carries it. |
+| `kind_as_reported` | `AsReported` or `None` | The custodian's type, `meridian.edge.as_reported(scheme, code, text)`, set only when `kind` is not known. For a person to map; nothing reads it. |
+| `instrument_id` | `str` | The instrument, resolved at the edge as a holding's is: the deployment's record, or the currency's cash instrument. Empty where the activity concerns none, or the custodian's code did not resolve. |
+| `instrument_as_reported` | `AsReported` or `None` | The custodian's code for the instrument, set only when it did not resolve: a plan's own fund code nobody has linked to an instrument, say. |
+| `trade_date`, `settlement_date` | `str` | ISO 8601: when it was traded or took effect, and when it settles or settled. The trade date is required; the settlement date is empty where the custodian does not state it. |
+| `units` | `Decimal`, `int` or `None` | The units of the instrument it moved, signed by what it did to the account: positive added units (a purchase, a reinvestment, the units a split added, a transfer in), negative removed them (a sale, a fee taken in units, a transfer out). `None` where it moved none, such as a cash dividend: never zero. |
+| `price` | `Money` or `None` | The price per unit, as stated. `None` where the custodian states none: never worked out from the amount and the units. |
+| `amount` | `Money` or `None` | The cash it moved, signed by what it did to the account's cash: positive in (a sale, a dividend, a contribution), negative out (a purchase, a fee, a withdrawal). `None` where it moved none, such as a split: never zero. |
+| `description` | `str` | The custodian's own words, for a person. Nothing branches on it. |
+| `raw_record` | `RawRecordRef` | The raw record it was converted from, `plugin.raw_record(key)`. Required. |
+| `provenance` | sequence of `Provenance` | One for each value the plugin closed rather than read: an instrument a named person linked (`meridian.edge.supplied("instrument_id", person)`), a settlement date derived by a named rule. |
+
+Activity is never netted or deduplicated against holdings: a sweep fund's purchases are reported as the custodian lists them.
+
+### `ActivityKind` { #activitykind }
+
+What an activity was, in the platform's own words, never a custodian's. From 0.19.0.
+
+| Value | Number | Meaning |
+|---|---|---|
+| `ACTIVITY_KIND_UNSPECIFIED` | 0 | Not known: the custodian's type converts to none of these, and travels beside it as reported (`kind_as_reported`). |
+| `ACTIVITY_KIND_PURCHASE` | 1 | Units bought. |
+| `ACTIVITY_KIND_SALE` | 2 | Units sold. |
+| `ACTIVITY_KIND_REINVESTMENT` | 3 | Income the custodian reinvested in units, as a money market fund's monthly dividend is. |
+| `ACTIVITY_KIND_DIVIDEND` | 4 | A dividend paid in cash. |
+| `ACTIVITY_KIND_INTEREST` | 5 | Interest paid in cash. |
+| `ACTIVITY_KIND_FEE` | 6 | A fee, in cash or in units. |
+| `ACTIVITY_KIND_TAX` | 7 | A tax withheld or paid. |
+| `ACTIVITY_KIND_SPLIT` | 8 | A split: the units it added or removed. |
+| `ACTIVITY_KIND_CORPORATE_ACTION` | 9 | Another corporate action, as the custodian states it. |
+| `ACTIVITY_KIND_TRANSFER_IN` | 10 | Units or cash moved in from another account. |
+| `ACTIVITY_KIND_TRANSFER_OUT` | 11 | Units or cash moved out to another account. |
+| `ACTIVITY_KIND_CONTRIBUTION` | 12 | Cash paid into the account. |
+| `ACTIVITY_KIND_WITHDRAWAL` | 13 | Cash taken out of the account. |
+| `ACTIVITY_KIND_JOURNAL` | 14 | A movement between the account's own positions or sub-accounts, as the custodian journals it. |
+
+### `ActivityRecordedEvent` { #activityrecordedevent }
+
+An activity, as the street store announced it when it was recorded (W2.12), and each item of [`list_activities`](#list_activities). The `activity_recorded` handler of [`receive`](python-sdk.md#receive) is handed one. From 0.19.0.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `activity_id` | `str` | The street's identifier for it. |
+| `account_id`, `external_account_id`, `source` | `str` | The account it is on, as the sidecar stamped it, and as the source knows it; the source's scheme. |
+| `activity` | `CustodialActivity` | The activity whole, as the custody plugin sent it. |
+| `recorded_at_ns` | `int` | When the street recorded it: the deployment's clock, never back-dated. A backfilled activity's own time is its `trade_date`. |
+| `journal`, `cause` | `JournalRef`, `ChangeCause` | Its record in the street's partition, chained per account with the activities before it, and who caused it. A handler is handed `cause` as [`Heard.cause`](python-sdk.md#heard), and no `journal`. |
+
+### `SyncStatusRecordedEvent` { #syncstatusrecordedevent }
+
+A sync status the street store heard and kept (W2.13), and each item of [`list_sync_statuses`](#list_sync_statuses). The `sync_status_recorded` handler of [`receive`](python-sdk.md#receive) is handed one. From 0.19.0.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `status` | `SyncStatusEvent` | As the custody plugin published it ([`report_sync_status`](#report_sync_status)), its `state` and `history_from` among it; its account as the sidecar stamped it, empty when the external account is not linked, and then delivered to no plugin. |
+| `recorded_at_ns` | `int` | When the street recorded it. |
+| `journal`, `cause` | `JournalRef`, `ChangeCause` | Its record in the street's partition, chained per account, and the custody plugin whose sync status it was. |
+
 ### `Watermark` { #watermark }
 
 A point in a store's record: `partitions`, each a `partition` and its `sequence`. A read answers the one it was read at, as `as_of`, and takes one, as `since`, to answer what changed after it. A plugin passes back what a read answered, and reads nothing into it.
@@ -1797,9 +2019,24 @@ The item found to cause a break, linked by value, `meridian.BreakCause(...)`. Fr
 
 | Field | Type | Meaning |
 |---|---|---|
-| `category` | `BreakCauseCategory`, `str` or `None` | `unbooked_trade`, `settlement_timing`, `cost_or_price`, `corporate_action`, `fail`, `custodian_error` or `unknown`. |
-| `street_record`, `book_entry`, `pending_settlement`, `event_reference`, `none_found` | one of these | The item: a street record, a book entry, a pending settlement (`meridian.PendingSettlementRef`), a corporate action's reference as reported, or `none_found=True`. |
+| `category` | `BreakCauseCategory`, `str` or `None` | `unbooked_trade`, `settlement_timing`, `cost_or_price`, `corporate_action`, `fail`, `custodian_error` or `unknown`; from 0.19.0, `income_reinvested`, income the custodian reinvested in units that the book has not booked, such as a money market fund's monthly dividend. |
+| `street_record`, `book_entry`, `pending_settlement`, `event_reference`, `none_found`, `activity` | one of these | The item: a street record, a book entry, a pending settlement (`meridian.PendingSettlementRef`), a corporate action's reference as reported, `none_found=True`, or, from 0.19.0, the custodian's activity that explains it, an [`ActivityRef`](#activityref). |
 | `note` | `str` | A note. |
+
+### `ActivityRef` { #activityref }
+
+An activity the street recorded, named by value, `meridian.ActivityRef(activity_id=..., change=..., trade_date=...)`: the street's `activity_id`, its record in the street's partition (`change`, the `journal` of its [`ActivityRecordedEvent`](#activityrecordedevent)), and its `trade_date` as the custodian stated it. The book records it as given and follows no key to the street, as it does a street record's. From 0.19.0.
+
+```python
+# each: an ActivityRecordedEvent that list_activities answered
+meridian.BreakCause(
+    category="income_reinvested",
+    activity=meridian.ActivityRef(
+        activity_id=each.activity_id, change=each.journal, trade_date=each.activity.trade_date,
+    ),
+    note="the custodian reinvested income in 3.27 units",
+)
+```
 
 ### `BreakHandling` { #breakhandling }
 
@@ -1852,7 +2089,7 @@ An adjustment that resolves a break, `meridian.Adjustment(...)`. From 0.13.0.
 | `effective_date` | `str` | After the opening balance's date. |
 | `lines` | sequence of `meridian.MovementLine` | Each an `instrument_id` and `side`, a `bucket` (`settled`, or `pending` with its `value_date`, which may be empty where the street gave none), a signed `quantity` added to the position, and the `lot_id` it adds to or relieves, or `opens_lot`, the [`LotTerms`](#lotterms) of a lot it opens, with its `cost` and `acquired_date` from contract v9. |
 | `basis_adjustments` | sequence of `meridian.BasisAdjustment` | Each a `lot_id`, and one of `cost_change`, added to a known cost, or `stated_cost`, the cost of a lot a contract v8 book opened with its cost unknown, from contract v9 the only such lots; and `holding_period_start`, where it moves. |
-| `event_reference` | `str` | A corporate action's reference, as reported, where it records one. |
+| `event_reference` | `str` | A corporate action's reference, as reported, where it records one; from 0.19.0, the street's `activity_id` where the adjustment was proposed from the custodian's activity. |
 
 ### `Reversal` { #reversal }
 
