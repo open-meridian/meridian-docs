@@ -76,6 +76,10 @@ GUIDES = [
     (SDK, "Python SDK",
      "connecting to the sidecar, settings, access, figures, receiving what a plugin's roles hear, "
      "filing a ticket for a person, and pages"),
+    ("concepts/plan-your-deployment.md", "Plan your deployment",
+     "a firm's profile answered in three layers: core as its books and records, the plugins by role "
+     "(existing, planned in a named release, or to build against the contract) and configuration, "
+     "with what is missing named as a spec to bring, each plugin's registry and who checks it; three worked profiles"),
     ("how-to/prove-a-plugin-against-a-released-runtime.md", "Prove a plugin against a released runtime",
      "an end-to-end check of what a plugin records, on core's plugin harness: a real sidecar, street store and book"),
     ("how-to/build-a-plugin-page.md", "Build a plugin's page",

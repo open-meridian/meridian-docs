@@ -91,6 +91,7 @@ nav:
   - Concepts:
       - concepts/index.md
       - Architecture: concepts/architecture.md
+      - Plan your deployment: concepts/plan-your-deployment.md
       - Projects and deployments: concepts/projects-and-deployments.md
       - Plugins, roles and grants: concepts/plugins.md
       - Roles: concepts/roles.md
