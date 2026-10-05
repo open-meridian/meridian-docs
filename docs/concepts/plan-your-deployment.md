@@ -139,7 +139,8 @@ value. No trading yet.
 |---|---|---|---|---|
 | Holdings and cash from Fidelity, daily | [`custody`](roles.md#custody) | SnapTrade | Local | Exists |
 | Dividends, reinvestments, splits and transfers, back to the start of the history SnapTrade holds | [`custody`](roles.md#custody) | SnapTrade | Local | Exists; built, not yet released |
-| A 401(k) plan's own fund codes linked to their instruments | [`custody`](roles.md#custody) | SnapTrade, a table on its settings | Local | Exists |
+| A 401(k) plan's own fund codes linked to their instruments | [`custody`](roles.md#custody) | SnapTrade, a table on its settings | Local | Exists; built, not yet released |
+| The IRA's core position, an FDIC-insured deposit, counted as cash | [`custody`](roles.md#custody) | SnapTrade, by its own flag or a table on its settings | Local | Exists; built, not yet released |
 | An opening balance per account, with its lots, and daily reconciliation, each break explained | [`operations`](roles.md#operations) | The sample operations plugin | Local | Exists |
 | Daily closes for stocks and ETFs | [`dgm`](roles.md#dgm) | Alpaca and Tradier | Planned | Planned, in valuation |
 | US dollar exchange rates | [`dgm`](roles.md#dgm) | The Federal Reserve's H.10 rates | Planned | Planned, in valuation |

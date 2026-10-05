@@ -45,8 +45,11 @@ empty and says only **set** or **not set**. Typing into it replaces the
 value; leaving it empty leaves it as it is; ticking **Clear it** removes it.
 Nobody reads a secret back, a deployment admin included: it is never shown,
 logged, reported or bundled, and is sealed before it is stored. A setting held
-sealed stays a secret whatever the plugin declares of it later. Nothing about
-secrets changed in v14.
+sealed is never shown, whatever the plugin declares of it later: a plugin
+re-declaring it as not secret clears it (see
+[A setting re-declared](#a-setting-re-declared)). What changed for secrets in
+v14 is in their records: a setting that becomes secret has its earlier plain
+values redacted (see [Who changed what](#who-changed-what)).
 
 ## A table setting
 
@@ -61,7 +64,7 @@ anything, so the two refuse alike:
 
 | Column | A cell must be |
 |---|---|
-| Text | Any text, at most 500 characters. |
+| Text | One line of plain text, at most 500 characters: no newline or tab, and no control character, nor one that hides or reorders what a reader sees (a bidirectional override, a zero-width, tag or private-use character). |
 | Integer | A whole number. |
 | Decimal | An exact decimal, such as `12.5`, at most 18 places. |
 | Date | A real date, `YYYY-MM-DD`. |
@@ -88,12 +91,23 @@ A table is never a secret.
 ## Who changed what
 
 Above the form, each **Settings** tab says who made the latest change, and
-when: **Last changed by** a person's name, and the time in UTC.
+when: **Last changed by** a person's name, and the time in UTC. It is read
+from the change records, so a clear counts as a change: where the latest was
+the plugin's re-declaring a setting, it says **Last changed by the plugin's
+re-declaring a setting, which cleared it**, and when.
 
 Behind it, from contract v14, every change is its own record in the
 deployment's configuration: which setting, whether it was set or cleared, the
 value it was set to, who, through which delegation where they used one, and
 when. A secret's record says only that it was set or cleared, never its value.
+
+Records are never changed or deleted, with one exception. When a setting
+becomes secret, because the plugin re-declares it secret or its value is
+stored sealed, the plain values its earlier records hold are redacted: each
+value is blanked, and every record stays, with who and when. The redaction is
+a record of its own, saying which records it blanked and why, made by no
+person, and when. On upgrading to v14, the deployment redacts the records of
+every setting already secret, at its own clock as it upgrades.
 
 The changes made before v14 were recorded with who and when, and without the
 value. Where the setting still holds the value its latest change set, that
@@ -101,6 +115,16 @@ change's record is filled in from it, and says so. For every setting changed
 before v14, one more record says the earlier values are not known before the
 moment the deployment was upgraded, by the deployment's clock. Nothing is
 back-dated or guessed.
+
+### A setting re-declared
+
+A plugin's new version may declare a setting it already had with another
+type, such as text become a table, or as secret where it was not, or the
+reverse. The value the deployment held for it is then cleared when the
+version registers, and the clear is its own record, naming the
+re-declaration and no person. Give the setting again on the form. A value
+held is also checked against the declaration as it stands before it is
+delivered or shown, and one that does not read is withheld.
 
 ## Declare a table setting, and read its rows
 
@@ -165,10 +189,69 @@ for where that provenance goes, and
 
 ### SnapTrade: plan-code links
 
-!!! info "To be filled when SnapTrade 0.11.0 lands"
-    SnapTrade 0.11.0 declares its plan-code links as the table setting
-    `plan_code_links`. This section will say how an admin fills it once that
-    version is released.
+A retirement plan may report a fund under a code only the plan uses, such as
+Fidelity's `OQKR` for the plan's VIGIX. SnapTrade 0.11.0 resolves such a code
+only where an admin of the plugin has linked it, in the table setting
+**Plan-code links** (`plan_code_links`) on SnapTrade's **Settings** tab:
+
+| Column | What to give |
+|---|---|
+| Account | The external account the code is used on, chosen from those SnapTrade reported. Required. |
+| Plan code | The code as SnapTrade names it in the account's activity, such as `OQKR`. Required. |
+| Instrument | The deployment's instrument record the code stands for, found by searching. Required. |
+
+One row links one code on one account; the table holds at most 200. An
+activity under a linked code is reported as that instrument, and its
+provenance names who added or last changed the row, and when, as the
+deployment stamped them. A code nobody linked travels as reported, with no
+instrument, and nothing is resolved by symbol. The plugin only
+reads the table: no page of its own sets it, and its **Account links** tab
+says only how many links the settings hold. See
+[The custodian's activity](../concepts/the-custodians-activity.md#snaptrade-0110).
+
+### SnapTrade: positions counted as cash
+
+<!-- PENDING the product owner's confirmation (2026-10-05): the setting's
+name, counted_as_cash, and its label were proposed at the build of
+meridian-snaptrade 360e40e. Check both before publishing. -->
+
+Whether a custodian's position is cash or a holding is the plugin's to
+decide, from what its vendor says; the street and operations take what it
+sends. A custodian may hold an account's cash as something else, such as
+Fidelity's FDIC-insured bank deposit as an IRA's core position
+(`FDIC99532`), which SnapTrade reports as a position beside the cash.
+SnapTrade 0.11.0 decides in this order:
+
+1. **SnapTrade's own flag first.** A position SnapTrade marks a cash
+   equivalent that is not a fund is already counted in the cash it reports
+   for that currency, so the plugin does not send it separately: the cash row
+   stands for it, its quantity and value derived by a named rule that names
+   the position's symbol and SnapTrade's description. With no price, no cash
+   in its currency, or worth more than that cash, the statement is withheld
+   and the **Statements** page says why.
+2. **Else the admin's table.** A position SnapTrade does not mark is cash
+   only where an admin of the plugin lists it in **Positions counted as
+   cash** (`counted_as_cash`) on SnapTrade's **Settings** tab. It is then
+   added to the cash of the row's currency, and the provenance names who
+   added or last changed the row, and when.
+
+| Column | What to give |
+|---|---|
+| Symbol | The position as SnapTrade names it, such as `FDIC99532`. Required. |
+| Currency | The ISO 4217 code of the cash it is, such as `USD`. Required. |
+| Account | The external account it is on, or blank for every account holding it. A row naming the account comes before a blank one. |
+
+The table holds at most 200 rows. A money market fund stays a fund, whatever
+lists it. A row whose currency is not an ISO 4217 code or differs from the
+currency SnapTrade states for the position, or a position with no price,
+counts nothing: the plugin says so and sends the position as it is. Where
+SnapTrade marks the position itself, its flag decides and the row is not
+read. The **Statements** page says, beside a cash row, which deposit it
+stands for and whether SnapTrade marked it or a person listed it.
+
+A position that becomes cash leaves the account's next statement. Where the
+book holds it, from an opening balance say, the difference shows as a break,
+which a person confirms once, as an adjustment.
 
 ## Related
 

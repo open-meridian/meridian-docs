@@ -106,6 +106,14 @@ cash in your raw records. Where you cannot serve the statement clean (no price f
 fund worth more than the cash), withhold it and say why on your page. `also_counted_in_cash` and
 `currency_assumed` are deprecated.
 
+Whether a position is cash at all is yours to decide too, from what your vendor says: the street
+and operations assume how cash and a money market fund behave, never how a vendor books a record.
+Decide from the vendor's own data first, and where it says nothing, from a setting an admin of the
+plugin fills, carrying the row's `changed_by` and `changed_at` as `edge.supplied`; never from what
+a symbol looks like. A money market fund stays a fund. SnapTrade's
+[positions counted as cash](set-a-plugins-settings.md#snaptrade-positions-counted-as-cash) are an
+example.
+
 The settled quantity and the pending quantities by value date (`meridian.ReportedPending`) are the
 custody role's: state them as the vendor reports them, or close them with their provenance.
 

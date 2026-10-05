@@ -596,7 +596,7 @@ Every cell arrives as text. What each kind accepts:
 
 | Kind | A cell is |
 |---|---|
-| `"text"` | Any text, at most 500 characters. |
+| `"text"` | One line of plain text, at most 500 characters: no newline, tab, control character, or character that hides or reorders text (bidirectional, zero-width, tag or private-use). |
 | `"integer"` | A whole number, such as `"42"`. |
 | `"decimal"` | An exact decimal, at most 18 places, such as `"12.5"`. Read it with `decimal.Decimal`, never `float`. |
 | `"date"` | A date, `"YYYY-MM-DD"`. |
