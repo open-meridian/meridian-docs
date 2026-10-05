@@ -258,7 +258,12 @@ Manage opens on the first:
   figure names no account and carries none of an account's data. See
   [Figures](../api/python-sdk.md#figures).
 - **Settings**: the plugin's settings form, the same as in the dashboard's
-  admin view of it.
+  admin view of it. A plugin declares its settings in its code and an admin
+  of it sets them here, the one place a setting is set: a plugin reads its
+  settings and never sets one. From contract v14 a setting may be a table of
+  typed columns, each change is its own record naming who made it, and the
+  tab says who last changed them. See
+  [Set a plugin's settings](../how-to/set-a-plugins-settings.md).
 
 So a plugin builds no summary page of its own. The health a plugin reports
 stands, with its why, until it reports again: one that says it is not healthy

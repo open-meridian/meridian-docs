@@ -59,6 +59,7 @@ A plugin that serves pages declares them with [`meridian.Pages`](#pages) and pas
 | `connect` | async function | [`meridian.connect`](#connect) |
 | `Plugin` | class | [`Plugin`](#plugin) |
 | `Identity`, `Grants`, `Interface`, `Page`, `Setting`, `Choice`, `AppliesWhen`, `Settings`, `AccountScope`, `LinkedExternalAccount`, `Caller` | frozen dataclasses | [Types](#types) |
+| `Column` | frozen dataclass | [`Column`](#column), from 0.19.0 |
 | `Pages`, `Request`, `Response` | class, frozen dataclasses | [Pages](#pages) |
 | `AccessLevel` | generated protobuf enum | [`AccessLevel`](#accesslevel) |
 | `Money` | frozen dataclass | [Typed operations](typed-operations.md#money) |
@@ -103,7 +104,7 @@ Registers with the sidecar and returns the admitted plugin. A `Plugin` you hold 
 | `heartbeat` | `bool` | `True` | Send a liveness heartbeat to the sidecar every 5 seconds in the background, carrying the health last reported and the plugin's [figures](#figures). |
 | `wait` | `float` | `60.0` | Seconds to wait for a sidecar that is not answering yet. A plugin and its sidecar start together in one pod, in no promised order. |
 | `interface` | `Interface` or `None` | `None` | The pages the plugin serves on loopback, if any. |
-| `settings` | sequence of `Setting` | `()` | The settings the plugin needs an admin of it to give it. |
+| `settings` | sequence of `Setting` | `()` | The settings the plugin needs an admin of it to give it, on the dashboard's Settings form. A plugin sets none of them itself. |
 | `reads_external_accounts` | `bool` | `False` | `True` when the plugin reads accounts at an external source and names them by that source's identifiers. An admin of the plugin links those to accounts, and the sidecar translates them on the way in. |
 
 The contract version it sends is `SCHEMA_VERSION`, `"v14"` from 0.19.0. A sidecar accepts a range of versions, v2 through the one its runtime serves, v14 today: a plugin built for an older version it still supports registers, and one built for a newer version than the sidecar knows is refused at registration, naming both, rather than running without what it was built for. After an upgrade, relaunch plugins so they get the newer sidecar (`meridian upgrade-deployment` names the ones that need it).
@@ -114,8 +115,8 @@ The contract version it sends is `SCHEMA_VERSION`, `"v14"` from 0.19.0. A sideca
 |---|---|
 | `NoSidecar` | No sidecar answered within `wait` seconds. |
 | `Refused` | The sidecar answered and declined to admit the plugin. Its `reason` says why. Not retried. |
-| `TypeError` | A `Setting`'s `kind` is not `str`, `int` or `bool`; it has `choices` and a `kind` other than `str`; or its `default` is not of its `kind`. |
-| `ValueError` | A secret `Setting` declares a `default`; a `default` is not one of its `choices`; or a `Page`'s path does not begin with `/`, or it names no level. |
+| `TypeError` | A `Setting`'s `kind` is not `str`, `int`, `bool` or `list`; it has `choices` and a `kind` other than `str`; its `default` is not of its `kind`; or its `kind` is `list` without `columns`, or another kind with them. |
+| `ValueError` | A secret `Setting` declares a `default`; a `default` is not one of its `choices`; a table is secret, or declares a `default` or `choices`, names a column twice, or has `most_rows` outside 0 to 500; a `Column`'s `kind` is not one of the seven, it is named `changed_by` or `changed_at`, or it is a choice without `choices`; or a `Page`'s path does not begin with `/`, or it names no level. |
 | `grpc.aio.AioRpcError` | Any other gRPC failure during registration, unchanged. |
 
 When run by the development runner on a development deployment, `connect` also records the `ready` event once the plugin is admitted. See [`plugin dev` events](plugin-dev-events.md).
@@ -158,6 +159,8 @@ async def settings(self) -> AsyncIterator[Settings]
 
 Yields the plugin's settings as the deployment holds them, typed by what it declared at `connect`, first as they are now and then on every change. Values for names the plugin did not declare are left out. A setting that declares a `default` and has no value holds its default, so the plugin uses what the form showed. A value that does not parse as its declared kind raises `ValueError` rather than being guessed at. A boolean accepts `true`, `yes`, `1`, `on`, `false`, `no`, `0` and `off`, in any case.
 
+An admin of the plugin sets its settings on the dashboard's Settings form, the one place a setting is set, and the deployment records each change, naming who made it. The plugin only reads them: the SDK has no call that sets a setting, and the deployment refuses an update a plugin sends. See [Set a plugin's settings](../how-to/set-a-plugins-settings.md).
+
 ```python
 async for current in plugin.settings():
     if current.missing_required:
@@ -167,6 +170,14 @@ async for current in plugin.settings():
 ```
 
 While a required setting has no value, the sidecar reports the plugin unhealthy and names the setting.
+
+A [table setting](#column), from 0.19.0, arrives as a list of rows, each a `dict` of its cells as text by column name, with `changed_by`, the person who added or last changed the row, and `changed_at`, when, in RFC 3339 UTC. The deployment stamps both when it stores the table; a row left as it was keeps its own. A value that is not a table's rows raises `ValueError`.
+
+```python
+async for current in plugin.settings():
+    for row in current.values.get("plan_code_links", []):
+        row["code"], row["instrument"], row["changed_by"], row["changed_at"]
+```
 
 #### `account_scope()`
 
@@ -529,7 +540,7 @@ One setting the plugin needs, declared at `connect`.
 | Field | Type | Default | Meaning |
 |---|---|---|---|
 | `name` | `str` | | The setting's name. |
-| `kind` | `type` | `str` | `str`, `int` or `bool`. Anything else raises `TypeError` at `connect`. |
+| `kind` | `type` | `str` | `str`, `int` or `bool`, or from 0.19.0 `list` for a table. Anything else raises `TypeError` at `connect`. |
 | `required` | `bool` | `False` | Whether the plugin needs a value to be healthy. |
 | `secret` | `bool` | `False` | A secret is set through the dashboard and never read back, displayed, logged, reported or bundled. The plugin receives it in `Settings` and nowhere else. |
 | `description` | `str` | `""` | What the setting is, sent with its declaration. |
@@ -539,6 +550,8 @@ One setting the plugin needs, declared at `connect`.
 | `choices` | `tuple[Choice, ...]` | `()` | Makes the setting a choice, one of these, shown as radio buttons. Its `kind` must be `str`. |
 | `applies_when` | `AppliesWhen` or `None` | `None` | The setting applies only while another holds one of some values. |
 | `developer` | `bool` | `False` | Shown only on a development deployment. |
+| `columns` | `tuple[Column, ...]` | `()` | A table's columns, in the order the form shows them. Only with `kind=list`, which needs at least one. From 0.19.0. |
+| `most_rows` | `int` | `0` | The most rows a table holds, at most 500; `0` is 500. From 0.19.0. |
 
 ```python
 plugin = await meridian.connect(
@@ -549,6 +562,49 @@ plugin = await meridian.connect(
     reads_external_accounts=True,
 )
 ```
+
+A table, from 0.19.0, is rows of typed columns an admin enters on the dashboard's Settings form, an editable table checked cell by cell. It has no `default` and is never secret:
+
+```python
+PLAN_CODES = meridian.Setting(
+    "plan_code_links",
+    list,
+    label="Plan-code links",
+    columns=(
+        meridian.Column("account", "external_account", label="Account", required=True),
+        meridian.Column("code", label="Plan code", required=True),
+        meridian.Column("instrument", "instrument", label="Instrument", required=True),
+    ),
+    most_rows=200,
+)
+```
+
+### `Column`
+
+One column of a table setting, from 0.19.0.
+
+| Field | Type | Default | Meaning |
+|---|---|---|---|
+| `name` | `str` | | The key each row's cell is held under. Never `changed_by` or `changed_at`, which the deployment stamps on each row. |
+| `kind` | `str` | `"text"` | How the form takes a cell and the deployment checks it: `"text"`, `"integer"`, `"decimal"`, `"date"`, `"choice"`, `"external_account"` or `"instrument"`. |
+| `label` | `str` | `""` | The column's heading on the form. |
+| `required` | `bool` | `False` | Every row must fill it; a row with it empty is refused, naming the cell. |
+| `description` | `str` | `""` | Words shown beside its heading. |
+| `choices` | `tuple[Choice, ...]` | `()` | A choice column's options, which it needs; a cell holds an option's `value`. |
+
+Every cell arrives as text. What each kind accepts:
+
+| Kind | A cell is |
+|---|---|
+| `"text"` | Any text, at most 500 characters. |
+| `"integer"` | A whole number, such as `"42"`. |
+| `"decimal"` | An exact decimal, at most 18 places, such as `"12.5"`. Read it with `decimal.Decimal`, never `float`. |
+| `"date"` | A date, `"YYYY-MM-DD"`. |
+| `"choice"` | One of the column's `choices`, by its `value`. |
+| `"external_account"` | The identifier of an external account this plugin reported. |
+| `"instrument"` | A deployment instrument record's ID, picked by search and checked to exist, never a symbol. |
+
+See [Set a plugin's settings](../how-to/set-a-plugins-settings.md#a-table-setting) for what the form checks, and the data dictionary's [`SettingColumn`](../boundaries/sidecar.md#meridian.v1.SettingColumn).
 
 ### `Choice`
 
@@ -588,7 +644,7 @@ plugin = await meridian.connect(
 
 | Field | Type | Meaning |
 |---|---|---|
-| `values` | `dict` of `str` to `str`, `int` or `bool` | Each declared setting the deployment holds a value for, typed by its declaration, and the `default` of each that has one and no value. |
+| `values` | `dict` of `str` to `str`, `int`, `bool` or `list` | Each declared setting the deployment holds a value for, typed by its declaration, and the `default` of each that has one and no value. A table's is a `list` of rows, each a `dict` of text by column name with `changed_by` and `changed_at`. |
 | `missing_required` | `tuple[str, ...]` | Required settings with no value yet. |
 
 ### `AccountScope`

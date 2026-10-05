@@ -95,7 +95,10 @@ def activity_of(account: str, row: dict, instrument_id: str) -> meridian.Custodi
   `instrument_id` empty and send the code with
   `instrument_as_reported=edge.as_reported(...)`. Where a person has linked
   that code to an instrument, send the instrument with
-  `provenance=[edge.supplied("instrument_id", person)]`, naming them. SnapTrade
+  `provenance=[edge.supplied("instrument_id", person)]`, naming them. Take the
+  link from a [table setting](set-a-plugins-settings.md#declare-a-table-setting-and-read-its-rows)
+  an admin fills on the plugin's Settings form, whose rows carry who changed
+  each and when; the plugin never sets it. SnapTrade
   resolves a code only by a security the account holds, so an old activity
   naming one it no longer holds mints no instrument record.
 - **Report each activity as listed.** Never net or merge them against

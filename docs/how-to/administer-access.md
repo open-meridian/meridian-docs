@@ -159,7 +159,8 @@ They find the plugin on their home with **Manage**, which opens on its **Summary
 the figures it reports, with its **Settings** and its pages at `admin` after it. Its settings are
 also in the dashboard's admin view of the plugin, at `/admin/plugins/<instance>`, which shows them
 the tabs **Overview**, **Settings** and **Access**; they read **Access** and change nothing there,
-since only a deployment admin grants.
+since only a deployment admin grants. How they fill the form is in
+[Set a plugin's settings](set-a-plugins-settings.md).
 
 To make every plugin's admins one group, grant **All plugins (admin)** on **None**. To keep
 configuring plugins apart from administering the deployment, withdraw the permission first run made

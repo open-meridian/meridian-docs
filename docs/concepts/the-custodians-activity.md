@@ -75,9 +75,12 @@ The list is closed and in the platform's own words. A custodian's type that
 converts to none of them is sent as not known, with the custodian's type
 beside it as reported, for a person to map. The same holds for an
 instrument: a retirement plan's own fund code, a code only the plan uses for
-the fund it holds, travels as reported when it does not resolve. A person can link such a
-code to an instrument once, and from then on it resolves to that instrument,
-with that person named as where the value came from.
+the fund it holds, travels as reported when it does not resolve. An admin of
+the plugin can link such a code to an instrument once, in a table on the
+plugin's Settings form (see
+[A table setting](../how-to/set-a-plugins-settings.md#a-table-setting)), and
+from then on it resolves to that instrument, with that person, and when they
+linked it, named as where the value came from.
 
 ### Sent twice, kept once
 
@@ -221,7 +224,9 @@ records nothing twice. It maps SnapTrade's types onto the kinds:
 
 An activity naming a security the account holds is resolved by that
 holding's identifiers. A plan's own fund code a person has linked resolves
-to its instrument, that person named as its provenance; any other code
+to its instrument, that person named as its provenance (see
+[SnapTrade: plan-code links](../how-to/set-a-plugins-settings.md#snaptrade-plan-code-links));
+any other code
 travels as reported, so an old activity naming a security the account no
 longer holds mints no instrument record. Each reported activity's raw record
 is kept seven years, so the record behind every activity the street holds

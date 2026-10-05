@@ -107,6 +107,7 @@ nav:
       - Give people access: how-to/administer-access.md
       - Reset a lost password: how-to/reset-a-lost-password.md
       - Recover administration: how-to/recover-administration.md
+      - Set a plugin's settings: how-to/set-a-plugins-settings.md
       - Build a plugin's page: how-to/build-a-plugin-page.md
       - Prove a plugin against a released runtime: how-to/prove-a-plugin-against-a-released-runtime.md
       - Keep what your custody plugin converts: how-to/keep-what-the-edge-converts.md
