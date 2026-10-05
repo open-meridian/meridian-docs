@@ -15,7 +15,7 @@ it.
     specified but not built, it says so too.
 
 <!-- DRAFT for the product owner's review (2026-10-05): the wording of
-"Who checks a plugin" and the Registry column. Not to be rephrased elsewhere
+"Who checks a plugin" and the Registry column. The summary points at the Terms' section 9, drafted 2026-10-05 on meridian-platform's branch terms-third-party-plugins: publish this page only once that section is live, or drop the section number. Not to be rephrased elsewhere
 until reviewed. -->
 
 ## Who checks a plugin
@@ -30,6 +30,9 @@ until reviewed. -->
     **In every case the firm carries its own vendor due diligence**: the
     vendor's terms and licences, its security, its regulatory status, and
     whether the plugin is fit for the firm's purpose.
+
+    This is a summary. The [Platform Terms](https://open-meridian.com/terms),
+    section 9, "Third-party plugins", govern.
 
 Every table below marks each plugin with its **registry**:
 
