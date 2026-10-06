@@ -111,7 +111,7 @@ and operations assume how cash and a money market fund behave, never how a vendo
 Decide from the vendor's own data first, and where it says nothing, from a setting an admin of the
 plugin fills, carrying the row's `changed_by` and `changed_at` as `edge.supplied`; never from what
 a symbol looks like. A money market fund stays a fund. SnapTrade's
-[positions counted as cash](set-a-plugins-settings.md#snaptrade-positions-counted-as-cash) are an
+[cash links](set-a-plugins-settings.md#snaptrade-cash-links) are an
 example.
 
 The settled quantity and the pending quantities by value date (`meridian.ReportedPending`) are the

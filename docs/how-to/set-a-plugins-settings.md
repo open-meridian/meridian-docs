@@ -1,13 +1,14 @@
 # Set a plugin's settings
 
 A plugin declares the settings it needs in its code, and an admin of the
-plugin gives them on the dashboard's **Settings** form. That form is the one
-place a setting is set: a plugin reads its settings as they arrive, and never
-sets one, its own included. Every change is recorded, naming who made it.
+plugin gives them in the dashboard: on its **Settings** form, and each table
+on a tab of its own beside it. Those are the only places a setting is set: a
+plugin reads its settings as they arrive, and never sets one, its own
+included. Every change is recorded, naming who made it.
 
 From contract v14 a setting may also be a **table**: rows of typed columns,
 such as, per account, a plan's own fund code and the instrument it is. This
-page shows an admin how to fill the form, table included, and a plugin's
+page shows an admin how to fill the form and a table's tab, and a plugin's
 developer how to declare a table and read its rows.
 
 !!! note "Built, not released"
@@ -21,22 +22,32 @@ developer how to declare a table and read its rows.
 Only an admin of the plugin sees it; a deployment admin is one through the
 **All plugins (admin)** group, unless that permission was withdrawn (see
 [To make someone a plugin's admin](administer-access.md#to-make-someone-a-plugins-admin)).
-The same form is in two places:
+The same form, and the same tab for each table, is in two places:
 
 - On the dashboard's home, choose **Manage** on the plugin, then its
-  **Settings** tab, after **Summary**.
+  **Settings** tab, after **Summary**, and its tables' tabs after that.
 - In the dashboard's admin view of the plugin, at `/admin/plugins/<instance>`,
-  its **Settings** tab. A deployment admin reaches it from the **Plugins** tab
-  of the dashboard's Settings.
+  its **Settings** tab and its tables' tabs. A deployment admin reaches it
+  from the **Plugins** tab of the dashboard's Settings.
+
+The form fits one screen. Its head is one line: **Settings**, and who last
+changed them (see [Who changed what](#who-changed-what)). Its settings are
+grouped in tabs: **Required**, **Optional** and, on a
+[development deployment](../concepts/development-deployments.md) alone,
+**Developer**, for whoever develops the plugin. A group of more than six
+fields goes on in another tab, such as **Optional 2**, and a tab says how
+many of its required settings are missing, so none is left unseen behind
+it. Without script every group shows, one under another, each under its
+title.
 
 Each field is under its label, marked required or optional. A choice is
 radio buttons, and only the fields that apply to the choice made are shown. A
 default is greyed in its empty field: the plugin uses it while nothing is
-set, and it is never stored. A setting meant for whoever develops the plugin
-is shown only on a [development deployment](../concepts/development-deployments.md).
-Choose **Save**: the deployment checks every value against what the plugin
-declared before it keeps any, and refuses the save, saying why, when one does
-not read. Once saved, the settings reach the plugin without a restart.
+set, and it is never stored. Choose **Save settings**: it saves every group
+as it stands, the ones not shown included, and the deployment checks every
+value against what the plugin declared before it keeps any, and refuses the
+save, saying why, when one does not read. Once saved, the settings reach the
+plugin without a restart.
 
 ## A secret
 
@@ -53,10 +64,31 @@ values redacted (see [Who changed what](#who-changed-what)).
 
 ## A table setting
 
-A table setting is an editable table on the form: one line a row, a typed
-input in each column, the rows held and up to three blank ones below them,
-within the most rows the plugin allows. Type into a blank row to add one;
-clear every cell of a row to remove it. Saving sends the table whole.
+A table setting is not on the Settings form. It has a tab of its own, after
+**Settings** and titled with the setting's label, such as SnapTrade's
+**Plan-code links** and **Cash links**, holding the table alone and fitting
+one screen. Its head is one line: the label, how many rows it holds of the
+most the plugin allows, and who changed the latest row, and when. What the
+table is for is one line under it.
+
+The table is an entry grid: one line a row, its columns in the order the
+plugin declared them, a typed input in each.
+
+- **Add a row** adds one at the end, as Enter on the last row does, up to
+  the most the plugin allows; **Remove** takes one away.
+- Rows past what fits the screen are paged, with **Previous**, "Rows 1–8 of
+  40" and **Next** under them. Every row is saved, whichever page shows.
+- Cells copied from a spreadsheet and pasted into a cell fill across and
+  down from it, adding rows as needed up to the most. The grid says how many
+  rows it pasted and how many cells are left to fix.
+- On a phone each row is one line, its first two columns and "…", which
+  opens the whole row.
+
+Choose **Save**: it sends this table whole, through the same checks as the
+form, leaves every other setting as it stands, and comes back to the tab.
+Without script the tab is a plain table of inputs, the rows held and up to
+three blank ones below them; type into a blank row to add one, and clear
+every cell of a row to remove it.
 
 The dashboard checks every cell as you type and again before it sends
 anything, and the deployment checks every cell again before it stores
@@ -73,7 +105,7 @@ anything, so the two refuse alike:
 | Instrument | One of the deployment's instrument records, found by searching them and held by its ID, never a symbol. One the deployment does not hold is refused. |
 
 A column marked required must be filled on every row. A cell that does not
-read is marked, and the form names it by row and column, with its path, as in
+read is marked, and the tab names it by row and column, with its path, as in
 **Plan-code links, row 3, Instrument: names no instrument record this
 deployment holds (`plan_code_links[2].instrument`)**. Nothing is sent while
 any cell is refused, and the deployment refuses an update whole rather than
@@ -81,20 +113,20 @@ keep part of it.
 
 Each row carries who added or last changed it, and when. The deployment
 stamps them when it stores the table, by its own clock; a row you leave as it
-was keeps its own. Below the table the form says how many rows it holds and
-who changed the latest, and when. Nobody types those stamps, and a plugin
-declaring a column named `changed_by` or `changed_at` is refused when it
-registers.
+was keeps its own; the tab's head names who changed the latest. Nobody
+types those stamps, and a plugin declaring a column named `changed_by` or
+`changed_at` is refused when it registers.
 
 A table is never a secret.
 
 ## Who changed what
 
-Above the form, each **Settings** tab says who made the latest change, and
-when: **Last changed by** a person's name, and the time in UTC. It is read
-from the change records, so a clear counts as a change: where the latest was
-the plugin's re-declaring a setting, it says **Last changed by the plugin's
-re-declaring a setting, which cleared it**, and when.
+Each **Settings** tab's head says, on one line beside its title, who made
+the latest change, and when: **Last changed by** a person's name, and the
+time in UTC, cut short where the line must be, the whole of it on hover. It
+is read from the change records, so a clear counts as a change: where the
+latest was the plugin's re-declaring a setting, it says **Last changed by
+the plugin's re-declaring a setting, which cleared it**, and when.
 
 Behind it, from contract v14, every change is its own record in the
 deployment's configuration: which setting, whether it was set or cleared, the
@@ -122,14 +154,16 @@ A plugin's new version may declare a setting it already had with another
 type, such as text become a table, or as secret where it was not, or the
 reverse. The value the deployment held for it is then cleared when the
 version registers, and the clear is its own record, naming the
-re-declaration and no person. Give the setting again on the form. A value
-held is also checked against the declaration as it stands before it is
-delivered or shown, and one that does not read is withheld.
+re-declaration and no person. Give the setting again, on the form or on
+its table's tab. A value held is also checked against the declaration as it
+stands before it is delivered or shown, and one that does not read is
+withheld.
 
 ## Declare a table setting, and read its rows
 
 In the plugin's code, a table is a `meridian.Setting` whose kind is `list`,
-with its columns:
+with its columns. The dashboard draws it as a tab of its own titled with its
+`label`, its columns in the order declared:
 
 ```python
 import meridian
@@ -192,7 +226,8 @@ for where that provenance goes, and
 A retirement plan may report a fund under a code only the plan uses, such as
 Fidelity's `OQKR` for the plan's VIGIX. SnapTrade 0.11.0 resolves such a code
 only where an admin of the plugin has linked it, in the table setting
-**Plan-code links** (`plan_code_links`) on SnapTrade's **Settings** tab:
+**Plan-code links** (`plan_code_links`), its own tab beside SnapTrade's
+**Settings** under Manage:
 
 | Column | What to give |
 |---|---|
@@ -204,16 +239,12 @@ One row links one code on one account; the table holds at most 200. An
 activity under a linked code is reported as that instrument, and its
 provenance names who added or last changed the row, and when, as the
 deployment stamped them. A code nobody linked travels as reported, with no
-instrument, and nothing is resolved by symbol. The plugin only
-reads the table: no page of its own sets it, and its **Account links** tab
-says only how many links the settings hold. See
+instrument, and nothing is resolved by symbol. The plugin only reads the
+table: no page of its own sets any setting, and its **Account links** tab
+only shows how many plan-code links and cash links the settings hold. See
 [The custodian's activity](../concepts/the-custodians-activity.md#snaptrade-0110).
 
-### SnapTrade: positions counted as cash
-
-<!-- PENDING the product owner's confirmation (2026-10-05): the setting's
-name, counted_as_cash, and its label were proposed at the build of
-meridian-snaptrade 360e40e. Check both before publishing. -->
+### SnapTrade: cash links
 
 Whether a custodian's position is cash or a holding is the plugin's to
 decide, from what its vendor says; the street and operations take what it
@@ -230,18 +261,23 @@ SnapTrade 0.11.0 decides in this order:
    in its currency, or worth more than that cash, the statement is withheld
    and the **Statements** page says why.
 2. **Else the admin's table.** A position SnapTrade does not mark is cash
-   only where an admin of the plugin lists it in **Positions counted as
-   cash** (`counted_as_cash`) on SnapTrade's **Settings** tab. It is then
-   added to the cash of the row's currency, and the provenance names who
-   added or last changed the row, and when.
+   only where an admin of the plugin lists it in the table setting **Cash
+   links** (`counted_as_cash`), its own tab beside SnapTrade's **Settings**
+   under Manage. It is then added to the cash of the row's currency, and the
+   provenance names who added or last changed the row, and when.
+
+Its columns are in the order of Plan-code links':
 
 | Column | What to give |
 |---|---|
+| Account | The external account it is on, chosen from those SnapTrade reported. Optional: blank applies the row to every account holding the symbol, and a row naming the account comes before a blank one. |
 | Symbol | The position as SnapTrade names it, such as `FDIC99532`. Required. |
 | Currency | The ISO 4217 code of the cash it is, such as `USD`. Required. |
-| Account | The external account it is on, or blank for every account holding it. A row naming the account comes before a blank one. |
 
-The table holds at most 200 rows. A money market fund stays a fund, whatever
+The table holds at most 200 rows. In SnapTrade 0.11.0 it was labelled
+Positions counted as cash, the account its last column; 0.11.1 relabels it
+and moves the account first, the setting's name unchanged, and a row saved
+in the old order reads the same. A money market fund stays a fund, whatever
 lists it. A row whose currency is not an ISO 4217 code or differs from the
 currency SnapTrade states for the position, or a position with no price,
 counts nothing: the plugin says so and sends the position as it is. Where

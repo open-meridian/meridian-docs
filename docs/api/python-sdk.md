@@ -104,7 +104,7 @@ Registers with the sidecar and returns the admitted plugin. A `Plugin` you hold 
 | `heartbeat` | `bool` | `True` | Send a liveness heartbeat to the sidecar every 5 seconds in the background, carrying the health last reported and the plugin's [figures](#figures). |
 | `wait` | `float` | `60.0` | Seconds to wait for a sidecar that is not answering yet. A plugin and its sidecar start together in one pod, in no promised order. |
 | `interface` | `Interface` or `None` | `None` | The pages the plugin serves on loopback, if any. |
-| `settings` | sequence of `Setting` | `()` | The settings the plugin needs an admin of it to give it, on the dashboard's Settings form. A plugin sets none of them itself. |
+| `settings` | sequence of `Setting` | `()` | The settings the plugin needs an admin of it to give it, on the dashboard's Settings form, or a table on its own tab beside it. A plugin sets none of them itself. |
 | `reads_external_accounts` | `bool` | `False` | `True` when the plugin reads accounts at an external source and names them by that source's identifiers. An admin of the plugin links those to accounts, and the sidecar translates them on the way in. |
 
 The contract version it sends is `SCHEMA_VERSION`, `"v14"` from 0.19.0. A sidecar accepts a range of versions, v2 through the one its runtime serves, v14 today: a plugin built for an older version it still supports registers, and one built for a newer version than the sidecar knows is refused at registration, naming both, rather than running without what it was built for. After an upgrade, relaunch plugins so they get the newer sidecar (`meridian upgrade-deployment` names the ones that need it).
@@ -159,7 +159,7 @@ async def settings(self) -> AsyncIterator[Settings]
 
 Yields the plugin's settings as the deployment holds them, typed by what it declared at `connect`, first as they are now and then on every change. Values for names the plugin did not declare are left out. A setting that declares a `default` and has no value holds its default, so the plugin uses what the form showed. A value that does not parse as its declared kind raises `ValueError` rather than being guessed at. A boolean accepts `true`, `yes`, `1`, `on`, `false`, `no`, `0` and `off`, in any case.
 
-An admin of the plugin sets its settings on the dashboard's Settings form, the one place a setting is set, and the deployment records each change, naming who made it. The plugin only reads them: the SDK has no call that sets a setting, and the deployment refuses an update a plugin sends. See [Set a plugin's settings](../how-to/set-a-plugins-settings.md).
+An admin of the plugin sets its settings on the dashboard's Settings form, and each table on its own tab beside it, the only places a setting is set, and the deployment records each change, naming who made it. The plugin only reads them: the SDK has no call that sets a setting, and the deployment refuses an update a plugin sends. See [Set a plugin's settings](../how-to/set-a-plugins-settings.md).
 
 ```python
 async for current in plugin.settings():
@@ -544,13 +544,13 @@ One setting the plugin needs, declared at `connect`.
 | `required` | `bool` | `False` | Whether the plugin needs a value to be healthy. |
 | `secret` | `bool` | `False` | A secret is set through the dashboard and never read back, displayed, logged, reported or bundled. The plugin receives it in `Settings` and nowhere else. |
 | `description` | `str` | `""` | What the setting is, sent with its declaration. |
-| `label` | `str` | `""` | The field's name on the dashboard's form. |
+| `label` | `str` | `""` | The field's name on the dashboard's form; for a table, the title of its tab. |
 | `default` | `str`, `int`, `bool` or `None` | `None` | Shown greyed in the empty field, and held in `Settings.values` while the setting is unset. Of the setting's `kind`, one of its `choices` if it has any, and never on a secret. |
 | `unit` | `str` | `""` | Shown beside a number. |
 | `choices` | `tuple[Choice, ...]` | `()` | Makes the setting a choice, one of these, shown as radio buttons. Its `kind` must be `str`. |
 | `applies_when` | `AppliesWhen` or `None` | `None` | The setting applies only while another holds one of some values. |
 | `developer` | `bool` | `False` | Shown only on a development deployment. |
-| `columns` | `tuple[Column, ...]` | `()` | A table's columns, in the order the form shows them. Only with `kind=list`, which needs at least one. From 0.19.0. |
+| `columns` | `tuple[Column, ...]` | `()` | A table's columns, in the order its tab shows them. Only with `kind=list`, which needs at least one. From 0.19.0. |
 | `most_rows` | `int` | `0` | The most rows a table holds, at most 500; `0` is 500. From 0.19.0. |
 
 ```python
@@ -563,7 +563,7 @@ plugin = await meridian.connect(
 )
 ```
 
-A table, from 0.19.0, is rows of typed columns an admin enters on the dashboard's Settings form, an editable table checked cell by cell. It has no `default` and is never secret:
+A table, from 0.19.0, is rows of typed columns an admin enters in the dashboard on a tab of its own, after Settings and titled with its `label`: an entry grid checked cell by cell, saved through the same checks as the form. It has no `default` and is never secret:
 
 ```python
 PLAN_CODES = meridian.Setting(
@@ -587,7 +587,7 @@ One column of a table setting, from 0.19.0.
 |---|---|---|---|
 | `name` | `str` | | The key each row's cell is held under. Never `changed_by` or `changed_at`, which the deployment stamps on each row. |
 | `kind` | `str` | `"text"` | How the form takes a cell and the deployment checks it: `"text"`, `"integer"`, `"decimal"`, `"date"`, `"choice"`, `"external_account"` or `"instrument"`. |
-| `label` | `str` | `""` | The column's heading on the form. |
+| `label` | `str` | `""` | The column's heading on the table's tab. |
 | `required` | `bool` | `False` | Every row must fill it; a row with it empty is refused, naming the cell. |
 | `description` | `str` | `""` | Words shown beside its heading. |
 | `choices` | `tuple[Choice, ...]` | `()` | A choice column's options, which it needs; a cell holds an option's `value`. |
@@ -604,7 +604,7 @@ Every cell arrives as text. What each kind accepts:
 | `"external_account"` | The identifier of an external account this plugin reported. |
 | `"instrument"` | A deployment instrument record's ID, picked by search and checked to exist, never a symbol. |
 
-See [Set a plugin's settings](../how-to/set-a-plugins-settings.md#a-table-setting) for what the form checks, and the data dictionary's [`SettingColumn`](../boundaries/sidecar.md#meridian.v1.SettingColumn).
+See [Set a plugin's settings](../how-to/set-a-plugins-settings.md#a-table-setting) for what a table's tab checks, and the data dictionary's [`SettingColumn`](../boundaries/sidecar.md#meridian.v1.SettingColumn).
 
 ### `Choice`
 

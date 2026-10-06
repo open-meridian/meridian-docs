@@ -76,8 +76,8 @@ converts to none of them is sent as not known, with the custodian's type
 beside it as reported, for a person to map. The same holds for an
 instrument: a retirement plan's own fund code, a code only the plan uses for
 the fund it holds, travels as reported when it does not resolve. An admin of
-the plugin can link such a code to an instrument once, in a table on the
-plugin's Settings form (see
+the plugin can link such a code to an instrument once, in a table on its
+own tab beside the plugin's Settings (see
 [A table setting](../how-to/set-a-plugins-settings.md#a-table-setting)), and
 from then on it resolves to that instrument, with that person, and when they
 linked it, named as where the value came from.

@@ -223,7 +223,7 @@ level on, `admin` included, with a button for each level held:
 
 | Button | Level | What it opens |
 |---|---|---|
-| **Manage** | `admin` | Its **Summary** and **Settings**, and the plugin's pages at `admin`: its configuration, such as connections and account links. No account's data |
+| **Manage** | `admin` | Its **Summary**, **Settings** and a tab for each table setting, and the plugin's pages at `admin`: its configuration, such as connections and account links. No account's data |
 | **Open** | `write` | Its pages at `write`, acting on the accounts the person may write |
 | **View** | `read` | Its pages at `read`, read-only. A writer is offered View too |
 
@@ -245,7 +245,7 @@ menu naming the session's level and listing the levels held, and a long name
 is cut with an ellipsis. See
 [Inside the dashboard's frame](../how-to/build-a-plugin-page.md#inside-the-dashboards-frame).
 
-Under Manage the dashboard draws two tabs of its own before the plugin's, and
+Under Manage the dashboard draws tabs of its own before the plugin's, and
 Manage opens on the first:
 
 - **Summary**: the plugin's status, which is core's to say (its health and
@@ -260,9 +260,14 @@ Manage opens on the first:
 - **Settings**: the plugin's settings form, the same as in the dashboard's
   admin view of it. A plugin declares its settings in its code and an admin
   of it sets them here, the one place a setting is set: a plugin reads its
-  settings and never sets one. From contract v14 a setting may be a table of
-  typed columns, each change is its own record naming who made it, and the
-  tab says who last changed them. See
+  settings and never sets one. Its settings are grouped in tabs (Required,
+  Optional, and Developer on a development deployment), and its head says on
+  one line who last changed them. From contract v14 each change is its own
+  record naming who made it.
+- **A tab for each table setting**, from contract v14, after Settings and
+  titled with the setting's label, such as SnapTrade's **Plan-code links**
+  and **Cash links**: the table's entry grid alone, typed columns checked
+  cell by cell, saved through the same checks as the form. See
   [Set a plugin's settings](../how-to/set-a-plugins-settings.md).
 
 So a plugin builds no summary page of its own. The health a plugin reports

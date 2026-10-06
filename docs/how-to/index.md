@@ -9,7 +9,7 @@ Short recipes for one task each. They assume you have a deployment; if not, star
 | [Give people access](administer-access.md) | Set up accounts, groups and permissions in the dashboard's Settings, and make a plugin's admins. |
 | [Reset a lost password](reset-a-lost-password.md) | Get a local administrator back in with a code from the platform. |
 | [Recover administration](recover-administration.md) | Get back in when nobody can administer the deployment. |
-| [Set a plugin's settings](set-a-plugins-settings.md) | Fill a plugin's Settings form, a table of typed columns included, see who changed what, and declare a table setting and read its rows from code. |
+| [Set a plugin's settings](set-a-plugins-settings.md) | Fill a plugin's Settings form and each table's own tab, see who changed what, and declare a table setting and read its rows from code. |
 | [Build a plugin's page](build-a-plugin-page.md) | Declare each page with the levels it serves, link the plugin UI kit, link external accounts with `om-account-map` at any scale, fit a page to a phone, and sit well in the dashboard's frame, with header actions and status. |
 | [Prove your plugin against a released runtime](prove-a-plugin-against-a-released-runtime.md) | Run your plugin, and any plugins it needs beside it, on the plugin harness image published with a pinned runtime, from `make e2e` and CI, and compare the street store and the book with what you expect. |
 | [Report the custodian's activity](report-the-custodians-activity.md) | Report each activity on an account from a custody plugin, once, back to the history's first date, and read it from an operations plugin to explain a break. |
