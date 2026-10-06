@@ -112,9 +112,9 @@ two years of history is two years of activity, each recorded today.
 
 ## An activity re-resolved
 
-!!! note "Built, not released"
-    This section describes a runtime serving contract v15 and open-meridian
-    0.20.0, built and not yet released. Both rows are `preview` in v15.
+!!! note "Contract v15"
+    This section describes a runtime serving contract v15 (chart 0.1.268 or
+    later) and open-meridian 0.20.0. Both rows are `preview` in v15.
 
 An activity is recorded once, and sent again it is answered as already
 recorded and changes nothing. So an activity recorded before its
@@ -276,10 +276,6 @@ carries `history_from`, the first transaction SnapTrade holds for the
 account.
 
 ### SnapTrade 0.12.0: a plan code linked later
-
-!!! note "Built, not released"
-    SnapTrade 0.12.0, on open-meridian 0.20.0 (contract v15), is built and
-    not yet released.
 
 From 0.12.0 SnapTrade [re-resolves](#an-activity-re-resolved) the
 activities it reported under a plan's own code before anyone linked it.

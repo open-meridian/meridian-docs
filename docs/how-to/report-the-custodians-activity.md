@@ -14,8 +14,9 @@ never a source, and what operations does with it, is in
     CLI 0.1.34, the runtime chart 0.1.262 and the SnapTrade plugin 0.11.1.
     The data dictionary marks the rows of `record_activity`,
     `list_activities` and `list_sync_statuses` `preview` in the contract.
-    The re-resolution, contract v15 and open-meridian 0.20.0, is built and
-    not yet released; its two rows are `preview` in v15.
+    The re-resolution, contract v15 and open-meridian 0.20.0, is released
+    with the runtime chart 0.1.268 and the SnapTrade plugin 0.12.0; its two
+    rows are `preview` in v15.
 
 ## Say how far back the history reaches
 

@@ -254,10 +254,10 @@ serving only roles they administer. See [Admin per role](#admin-per-role).
 
 ### Access per role
 
-!!! note "Built, not released"
-    This section describes a runtime serving contract v15 and open-meridian
-    0.20.0, built and not yet released. A runtime serving v14 or earlier
-    grants each plugin as a whole.
+!!! note "Contract v15"
+    This section describes a runtime serving contract v15 (chart 0.1.268 or
+    later) and open-meridian 0.20.0. A runtime serving v14 or earlier grants
+    each plugin as a whole.
 
 A plugin may hold several roles: an order and execution management system is
 `oms` and `ems`, and a vendor's turnkey plugin may hold `portfolio`, `oms`
