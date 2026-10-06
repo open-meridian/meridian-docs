@@ -9,7 +9,7 @@ A **permission** joins three things:
 |---|---|---|
 | User group | Who | Directory groups, or logins |
 | Account group | On which accounts | The firm's accounts |
-| Access group | Using what | Plugins, each at `admin`, `read` or `write` |
+| Access group | Using what | Plugins, each role of each at `admin`, `read` or `write` |
 
 So a permission reads: *the people in this user group, using these plugins, on these accounts.* See [Access](../concepts/access.md) and [Accounts](../concepts/accounts.md) for the model.
 
@@ -23,7 +23,7 @@ back to your plugins. The breadcrumb beside the mark reads **Settings**, and in 
 **Settings / Plugins /** and the plugin's name.
 
 Settings' tabs include **Plugins**, **Permissions**, **User groups**, **Account groups**,
-**Access groups**, **Accounts**, **Books**, **Connected clients** and **Terminal sessions**. Each lists its
+**Access groups**, **Accounts**, **Books** and **Connected clients**. Each lists its
 records in a table with a search box above it, which keeps the rows holding every word you type,
 and headings that sort it. On the three group tabs the section is headed **User**, **Account** or
 **Access**. Where a tab makes records, **+ Add** beside its heading opens a dialog headed with what it makes, such as **New
@@ -73,7 +73,7 @@ edited.
 3. Say who is in it, in any of three ways:
     - **People.** Choose them from the searchable list, which names each person by their user ID,
       then their login ID. It lists everybody the dashboard can name: people already in a user
-      group, people holding a terminal session, and the accounts the deployment holds itself.
+      group, people holding a delegation, and the accounts the deployment holds itself.
     - **Other logins, one per line.** For somebody not listed yet, such as a person from your
       directory who has never been named here. For an account the deployment holds itself, a login
       is `local|name`.
@@ -93,35 +93,51 @@ the first part of their entry's name (`ada` of `uid=ada,ou=people,…`).
 
 ## To say what: make an access group
 
-An access group lists plugins, each at a level. It is the same three levels for every plugin:
+An access group lists plugins, and from contract v15 each role of each, at a level. It is the same
+three levels for every plugin and role:
 
-- `admin`: the person configures the plugin, its settings and its own pages at `admin`, and sees no
-  account's data. See [A plugin's admins](../concepts/access.md#a-plugins-admins).
+- `admin`: the person configures the plugin's role, its settings and its own pages at `admin`, and
+  sees no account's data. See [A plugin's admins](../concepts/access.md#a-plugins-admins).
 - `read`: the plugin may show the person what it reads, on the accounts they may read.
 - `write`, which includes `read`: the plugin may also act for the person, on the accounts they may
   write.
 
 A plugin names no parts of itself. Which topics it may publish and read is its roles', and has
-nothing to do with who may use it.
+nothing to do with who may use it; from contract v15 a person is granted a level on each role of a
+plugin, so a grant on one role reaches nothing of another. See
+[Access per role](../concepts/access.md#access-per-role).
 
 1. Open **Access groups** and choose **+ Add**. The dialog is headed **New access group**.
 2. Enter a **Name**.
-3. Under **Plugins**, choose each plugin the group gives, from the searchable list of the
-   deployment's plugin instances, and beside each choose one of:
+3. Under **Plugins, a row for each role**, the table lists every plugin the deployment knows, one
+   line for each role it holds, with the columns **Plugin**, **Role** and **Level**. A plugin
+   holding one role has one row, its role filled in; one holding none has one row reading **no
+   role**. It is paged, six rows at a time. In **Level**, choose one of:
+    - **None**: the group gives nothing on that row
     - **Read**
-    - **Write (includes read)**
-    - **Admin (configures it, no account)**
-    - **Admin and read**
-    - **Admin and write**
+    - **Write**, which includes read
+    - **Admin**, which configures that role's side and reaches no account
+    - **Admin, read**
+    - **Admin, write**
 4. Choose **Create**.
 
-The plugin instance must be running and have reported to the deployment. If not, the page says so.
+The plugin must have reported to the deployment, whether or not it runs now. If not, the page says
+so. An entry naming a role the plugin does not hold is refused, naming the roles it does.
+
+An entry kept on a role the plugin no longer holds, after a version without that role was launched,
+holds nothing. Its row stays in the editor, flagged **not held now**, naming the roles the plugin
+holds now, and saving the group keeps it as written. Grant the role the plugin holds instead, or
+choose **None** on the flagged row to drop it.
+
+Before contract v15 the editor listed plugins without roles, each chosen from a searchable list,
+with **Read**, **Write (includes read)**, **Admin (configures it, no account)**, **Admin and read**
+and **Admin and write**.
 
 Two access groups are built in, and neither can be edited:
 
 - **Deployment admin** gives the deployment's own capabilities, and no plugin and no account.
-- **All plugins (admin)** gives `admin` on every plugin, those launched later included, and no
-  account.
+- **All plugins (admin)** gives `admin` on every plugin, those launched later included, on every
+  role of each, and no account.
 
 ## To grant a permission
 
@@ -150,8 +166,9 @@ it to **All plugins (admin)** as well.
 
 ## To make someone a plugin's admin
 
-1. Make an access group giving the plugin at **Admin (configures it, no account)**, or at **Admin
-   and read** or **Admin and write** if they also work in it.
+1. Make an access group giving the plugin's role at **Admin**, or at **Admin, read** or **Admin,
+   write** if they also work in it. On a plugin holding several roles, give each role they are to
+   administer its own row: a setting serving several roles is set only by an admin of every one.
 2. Grant it to a user group they are in: on **None** for admin alone, or on an account group for a
    data level beside it.
 
@@ -159,7 +176,9 @@ They find the plugin on their home with **Manage**, which opens on its **Summary
 the figures it reports, with its **Settings** and its pages at `admin` after it. Its settings are
 also in the dashboard's admin view of the plugin, at `/admin/plugins/<instance>`, which shows them
 the tabs **Overview**, **Settings** and **Access**; they read **Access** and change nothing there,
-since only a deployment admin grants. How they fill the form is in
+since only a deployment admin grants. From contract v15 **Access** lists each grant with its
+**Role**: the user group, the role, the level and the accounts, a grant holding nothing flagged
+with the plugin's roles, paged. How they fill the form is in
 [Set a plugin's settings](set-a-plugins-settings.md).
 
 To make every plugin's admins one group, grant **All plugins (admin)** on **None**. To keep
@@ -214,19 +233,15 @@ person's browser sessions are untouched. Their CLI has to connect again.
 A person revokes their own the same way, from **Connected clients** in the menu under their name.
 See [Delegations to the CLI](../concepts/access.md#delegations-to-the-cli).
 
-## To end someone's terminal sessions
-
-The **Terminal sessions** tab lists who is signed in from a terminal by a CLI from before
-delegations, 0.1.24 or earlier, each session honoured until it lapses. Choose **End them** on a
-person's row and confirm. Their CLI has to sign in again.
-
 ## What people see
 
 On the dashboard's home, each person sees the plugins they hold a level on, with a button for each:
 **Manage** for `admin`, **Open** for `write`, **View** for `read` (a writer gets View too). A
 deployment admin linked to **All plugins (admin)** sees every launched plugin, with **Manage**, and
 **Open** or **View** only where a permission gives them `write` or `read`. A plugin opens only at a
-level the person holds. See [Manage, Open and View](../concepts/plugins.md#manage-open-and-view).
+level the person holds. On a plugin holding several roles, a person holding a level on any of its
+roles sees it, and each button's title names the roles it reaches at their levels, such as *Open:
+operations write, custody read*. See [Manage, Open and View](../concepts/plugins.md#manage-open-and-view).
 
 ## Related
 

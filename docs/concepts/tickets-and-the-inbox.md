@@ -67,7 +67,7 @@ tool and every count use the same rule.
 
 | The ticket concerns | Naming no account | Naming accounts |
 |---|---|---|
-| A plugin | Everyone holding any level on that plugin | Those who may read every one of those accounts through that plugin |
+| A plugin | Everyone holding any level on that plugin, from contract v15 on any of its roles | Those who may read every one of those accounts through that plugin, over all their roles on it |
 | Core or the platform | The deployment admin | Those who may read each of those accounts through some plugin |
 
 The person who filed a ticket always sees it. An agent sees what its
@@ -120,6 +120,9 @@ with the person's name.
 
 A plugin's ticket is worked by a person holding write on that plugin and on
 every account it names; one naming no account, also by the plugin's admins.
+From contract v15 that write is on any of the plugin's roles, the accounts
+the ticket names within the union of those roles' write accounts, and its
+admins are those of any of its roles.
 Core's and the platform's are worked by the deployment admin: one naming no
 account by any deployment admin, one naming accounts by a deployment admin
 who may also see every account it names. Whoever filed a ticket may close it as withdrawn. Anyone who may see a

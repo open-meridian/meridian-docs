@@ -101,8 +101,9 @@ from two things: the permissions that name it, and its own links.
 | **Read scope** | Every account some person may read through this plugin, and every account one of its external accounts is linked to |
 | **Write scope** | Every open account some person may write through this plugin, and every open account one of its external accounts is linked to |
 
-A person's data level on a plugin is `read` or `write`, the same for every
-plugin, and `write` includes `read`. A permission gives it on the accounts of
+A person's data level on a plugin, from contract v15 on each of its roles, is
+`read` or `write`, the same for every plugin, and `write` includes `read`. A
+plugin's scopes are the union over its roles. A permission gives it on the accounts of
 an account group; see [Access](access.md). `admin` on a plugin reaches no
 account, and adds nothing to its scope.
 

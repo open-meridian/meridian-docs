@@ -49,7 +49,8 @@ fixed list of thirteen, and a plugin declares a *set* of them. An order and
 execution management system is `oms` and `ems`; a fully automated trading
 system might be `signal`, `portfolio`, `oms` and `ems`. A plugin holding
 several roles still has one sidecar and one credential, and holds the union of
-their grants.
+their grants. From contract v15 a person is granted a level on each of its
+roles apart; see [Access per role](access.md#access-per-role).
 
 | Role | What a plugin with it is for |
 |---|---|
@@ -121,7 +122,10 @@ plugin:
 
 A person may hold `admin` and, beside it, `read` or `write`. A deployment
 admin grants these in the deployment's access groups: an entry names a plugin
-and a level. How that is granted is described in [Access](access.md).
+and a level, and from contract v15 one of the plugin's roles, so on a plugin
+holding `custody` and `operations` a person may write in one and only read
+the other. A plugin holding one role, which is every plugin today, is
+granted as before. How that is granted is described in [Access](access.md).
 
 A plugin names no parts of itself for people. Earlier versions let a plugin
 declare **tags** for that; they were retired, so that every plugin is
@@ -205,8 +209,9 @@ from ends. On every request after that:
 2. It signs an assertion: who the person is, the session's level, and what
    that level reaches on this plugin — none of their accounts under `admin`,
    the accounts they may read and the accounts they may write under `write`,
-   the accounts they may read under `read` — for this instance only, valid
-   for 60 seconds.
+   the accounts they may read under `read` — and from contract v15 their
+   level and accounts on each of the plugin's roles within it, for this
+   instance only, valid for 60 seconds.
 3. The plugin's sidecar verifies the assertion and hands the plugin the
    verified claims. A request that fails verification never reaches the
    plugin, and anything the request carried claiming to be the caller is
@@ -230,7 +235,10 @@ level on, `admin` included, with a button for each level held:
 A button opens the plugin's **area**, at `/plugins/<instance>?level=admin`,
 `write` or `read`: one head, and one tab row holding the pages the plugin
 declared at that level, in the order declared, with the page asked for in a
-seamless frame below. A plugin that declares no page at `write` or `read` has
+seamless frame below. On a plugin holding several roles, from contract v15,
+a page is in the tab row when the person's level on one of the roles it
+serves is one of its levels, and each button's title on the home names the
+roles it reaches. A plugin that declares no page at `write` or `read` has
 one there, its `/`.
 
 The head is the same on every tab and at every level. On the left are the
@@ -263,7 +271,9 @@ Manage opens on the first:
   settings and never sets one. Its settings are grouped in tabs (Required,
   Optional, and Developer on a development deployment), and its head says on
   one line who last changed them. From contract v14 each change is its own
-  record naming who made it.
+  record naming who made it. From contract v15 a setting serving several of
+  the plugin's roles is set only by an admin of every one, and shown
+  read-only to an admin of some of them.
 - **A tab for each table setting**, from contract v14, after Settings and
   titled with the setting's label, such as SnapTrade's **Plan-code links**
   and **Cash links**: the table's entry grid alone, typed columns checked
@@ -296,7 +306,8 @@ its own and is as tall as the page. See
 What every plugin has, whatever its pages, is in the dashboard's admin view of
 it, at `/admin/plugins/<instance>`: **Overview** (its health, what its
 settings still need and its external accounts' sync state), **Settings** (its
-form, for its admins) and **Access** (who holds which level on it). Its own
+form, for its admins) and **Access** (who holds which level on it, from
+contract v15 on which of its roles). Its own
 pages are not there: they are in its area, reached from the home, its
 configuration pages under Manage.
 
@@ -311,6 +322,8 @@ the same plugin, never an account outside it.
 Writes do not rest on the plugin. A command a plugin sends for a person
 carries that person's assertion, and the sidecar admits it only when the
 person may write the account it names and the account is in the plugin's
-*write scope*. The person is stamped on the change, so it is recorded as
+*write scope*; from contract v15, only when they hold `write` on a role of
+the plugin whose grants include the command, and otherwise it refuses,
+naming the role. The person is stamped on the change, so it is recorded as
 theirs. The plugin's own grants remain the ceiling throughout. Scopes are
 explained in [Accounts](accounts.md).

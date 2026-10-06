@@ -27,7 +27,7 @@ The agent sees what you see, cut to what you tick when you connect it, and its
 advice is recorded as yours through that client. Run it as a person who can
 see the tickets it should advise on:
 
-- **A plugin's tickets:** someone holding a level on that plugin, and read on
+- **A plugin's tickets:** someone holding a level on that plugin (on any of its roles), and read on
   the accounts its tickets name. View is enough; advising needs no write.
 - **Core's and the platform's tickets:** the deployment admin.
 

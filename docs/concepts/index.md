@@ -14,7 +14,7 @@ piece of data lives.
 | [Projects and deployments](projects-and-deployments.md) | How a deployment is registered on the platform, how it proves who it is, and the one-time codes it is set up with |
 | [Plugins, roles and grants](plugins.md) | What a plugin is, what it may do on the bus, how that is decided, and how people reach its pages, by Manage, Open and View |
 | [Roles](roles.md) | Each of the thirteen roles: its persona, duties, what it leaves to another role and what it holds; the principles a plugin must fit, and how an idea maps to the least roles |
-| [Access](access.md) | How people sign in to a deployment, and how the dashboard decides what each of them may reach |
+| [Access](access.md) | How people sign in to a deployment, and how the dashboard decides what each of them may reach, per role of a plugin from contract v15 |
 | [Accounts](accounts.md) | The firm's accounts, and how an account at a broker or custodian is tied to one |
 | [The book of record](the-book-of-record.md) | The firm's own record of what each account holds, how it differs from the street and the edge, and how operations opens and reconciles it |
 | [The custodian's activity](the-custodians-activity.md) | What a custody plugin reports of what happened on an account, and how operations explains a break and proposes its entry from it |

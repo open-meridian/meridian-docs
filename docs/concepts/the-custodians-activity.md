@@ -80,7 +80,9 @@ the plugin can link such a code to an instrument once, in a table on its
 own tab beside the plugin's Settings (see
 [A table setting](../how-to/set-a-plugins-settings.md#a-table-setting)), and
 from then on it resolves to that instrument, with that person, and when they
-linked it, named as where the value came from.
+linked it, named as where the value came from. From contract v15 the
+activities recorded under the code before it was linked are re-resolved,
+each kept as first recorded: see [An activity re-resolved](#an-activity-re-resolved).
 
 ### Sent twice, kept once
 
@@ -107,6 +109,45 @@ activity.
 The street records each one with its own time, the moment it heard it,
 never back-dated: an activity's own time is its trade date. So a backfill of
 two years of history is two years of activity, each recorded today.
+
+## An activity re-resolved
+
+!!! note "Built, not released"
+    This section describes a runtime serving contract v15 and open-meridian
+    0.20.0, built and not yet released. Both rows are `preview` in v15.
+
+An activity is recorded once, and sent again it is answered as already
+recorded and changes nothing. So an activity recorded before its
+instrument resolved would otherwise keep the custodian's code for good: a
+backfill of a 401(k)'s history recorded before anyone linked the plan's
+code `OQKR` to its fund, or a symbol the deployment's instrument records
+complete later.
+
+From contract v15 a custody plugin **re-resolves** such an activity
+([`re_resolve_activity`](../api/typed-operations.md#re_resolve_activity)):
+it names the activity as it was recorded (its source, its account and the
+custodian's identifier), the instrument it now resolves to, how it was
+resolved (the link and the person who set it, or the rule), and when that
+was made. The street keeps the activity as first recorded, which never
+changes, and the re-resolution beside it as **a record of its own**, with
+its own time, never back-dated. Both stay visible: what the custodian said,
+and what resolved it later, by whom.
+
+- **The latest resolution is the instrument.** An activity's instrument is
+  its latest re-resolution's, or its own where there is none. A link removed
+  is re-resolved to no instrument, and the activity is unresolved again,
+  its code as first reported.
+- **Sent again, kept once.** A re-resolution naming what the latest
+  resolution already names is answered as already recorded, so a plugin
+  re-resolves an account's activities again whenever what resolves them
+  changes, and records nothing twice.
+- **Only what was recorded.** A re-resolution of an activity never recorded
+  is refused, naming it: a re-resolution resolves nothing into existence.
+- **Operations reads both.**
+  [`list_activities`](../api/typed-operations.md#list_activities) answers
+  each re-resolution beside the activities, and `operations` hears each as
+  it is recorded and catches up from that read after a gap, so a break
+  waiting on its cause can be compared again.
 
 ## The street keeps each sync status
 
@@ -234,6 +275,13 @@ can be read back on the plugin's **Raw responses** tab. Its sync status
 carries `history_from`, the first transaction SnapTrade holds for the
 account.
 
+!!! info "TODO: to be filled when SnapTrade 0.12.0 lands"
+    SnapTrade 0.12.0, on open-meridian 0.20.0 (contract v15), is being built
+    to re-resolve an account's earlier activities under a plan code when a
+    plan-code link is added or changed (see
+    [An activity re-resolved](#an-activity-re-resolved)). Describe what it
+    does here once it is built.
+
 ### The sample operations plugin 0.8.0
 
 The sample operations plugin, the reference `operations` plugin, does what
@@ -253,7 +301,7 @@ street keeps.
 - [The book of record](the-book-of-record.md): breaks, their causes, and how
   a person resolves them.
 - [Typed operations](../api/typed-operations.md#record_activity): every
-  argument of `record_activity`, `list_activities` and
-  `list_sync_statuses`.
+  argument of `record_activity`, `list_activities`, `list_sync_statuses`
+  and, from contract v15, `re_resolve_activity`.
 - [The street](../boundaries/street.md#meridian.v1.CustodialActivity): each
   field of an activity in the data dictionary.

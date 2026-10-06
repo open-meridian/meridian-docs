@@ -14,6 +14,8 @@ never a source, and what operations does with it, is in
     CLI 0.1.34, the runtime chart 0.1.262 and the SnapTrade plugin 0.11.1.
     The data dictionary marks the rows of `record_activity`,
     `list_activities` and `list_sync_statuses` `preview` in the contract.
+    The re-resolution, contract v15 and open-meridian 0.20.0, is built and
+    not yet released; its two rows are `preview` in v15.
 
 ## Say how far back the history reaches
 
@@ -132,6 +134,42 @@ answers what it already holds as already recorded. The street records each
 activity with its own time, never back-dated, and its trade date stays the
 activity's.
 
+## Re-resolve an activity once its instrument resolves
+
+From contract v15 (open-meridian 0.20.0). An activity recorded before its
+instrument resolved, such as one under a plan's own code a person links
+later, is re-resolved, never sent again: sent again it would be answered
+`already_recorded` and change nothing.
+
+```python
+reply = await plugin.re_resolve_activity(
+    external_account_id="acct-1",
+    source="myvendor",
+    external_activity_id=row["id"],            # as first reported
+    instrument_id=linked_instrument_id,        # empty where the link was removed
+    provenance=meridian.Provenance(field="instrument_id",
+                                   kind="PROVENANCE_KIND_SUPPLIED",
+                                   person=link_row["changed_by"]),
+    resolved_at_ns=changed_at_ns,              # the row's changed_at, as nanoseconds
+)
+reply.already_recorded   # True where the latest resolution already names it
+```
+
+- **Name what resolved it.** The provenance is supplied, naming the person
+  who set the link (a table setting row's `changed_by`), or derived, naming
+  the rule; never the custodian's word, which the street refuses.
+  `resolved_at_ns` is when that was made: the row's `changed_at`, or when
+  the rule ran.
+- **Re-resolve an account's activities whenever what resolves them
+  changes:** a link added, changed or removed. The street keeps each
+  activity as first recorded and each re-resolution beside it, and answers
+  one naming what the latest already names `already_recorded`, so running
+  it again records nothing twice and the plugin remembers nothing.
+- **A link removed** is re-resolved with an empty `instrument_id`: the
+  activity is unresolved again, its code as first reported.
+- **Only what was recorded.** One naming an activity never recorded under
+  that source, account and identifier is refused, naming it.
+
 ## Keep its raw record as long as the history
 
 Each activity names the raw record it was converted from. Give each its own
@@ -153,6 +191,12 @@ linked and one linked by a person, and `history_from` stated. Map each to
 your vendor's exchange, as for the rest of the suite. SnapTrade presents all
 of them, none declared not presented.
 
+At v15 it gains one more, `activity-re-resolved-when-a-plan-code-is-linked-later`:
+an activity recorded with a plan's own code unresolved, then the code linked
+by a person in the plugin's settings, expects a `ReResolveActivity` naming
+the activity, the instrument, a supplied provenance naming the person, and
+when.
+
 ## Read it from an operations plugin
 
 An `operations` plugin reads an account's activity by trade date, and is told
@@ -173,6 +217,24 @@ async def activity_recorded(heard: meridian.Heard) -> None:
 
 
 await plugin.receive(activity_recorded=activity_recorded, sync_status_recorded=sync_status_recorded)
+```
+
+From contract v15 it reads and hears each re-resolution too. The activities
+`list_activities` answers stay as first recorded, and its `re_resolutions`
+say what resolved each later: an activity's instrument is its latest
+re-resolution's.
+
+```python
+latest = {each.activity_id: each.instrument_id for each in page.re_resolutions}  # in the order recorded
+instrument = latest.get(item.activity_id, item.activity.instrument_id)
+
+
+async def activity_re_resolved(heard: meridian.Heard) -> None:
+    re = heard.message.re_resolution   # activity_id, instrument_id, provenance, resolved_at_ns
+    ...                                # compare the account's statement again
+
+
+await plugin.receive(activity_recorded=activity_recorded, activity_re_resolved=activity_re_resolved)
 ```
 
 A break's candidate cause links the activity that explains it by value, an
@@ -201,10 +263,22 @@ plugin on the new version. A test that stands in for the SDK's private
 `Operations._receive` is now handed only the rows given a handler, not every
 row with `None` for the rest.
 
+## Move a plugin to 0.20.0 { #move-a-plugin-to-0200 }
+
+`meridian plugin migrate` moves only the pins: `open-meridian==0.20.0` and
+`plugin-python:0.20.0`. Nothing a plugin calls changed. A custody plugin
+that resolves activities by anything a person can change later, such as a
+plan code's link, adds `re_resolve_activity` as above; an operations plugin
+that reads activities reads `re_resolutions` beside them. One that does
+neither needs nothing more. A plugin built on 0.20.0 declares contract v15,
+and a runtime serving v14 refuses it at registration, naming both versions.
+0.20.0 also brings [access per role](../concepts/access.md#access-per-role),
+which changes nothing for a plugin holding one role.
+
 ## Related
 
 - [The custodian's activity](../concepts/the-custodians-activity.md)
 - [Typed operations](../api/typed-operations.md#record_activity):
-  `record_activity`, `list_activities` and `list_sync_statuses`, argument by
-  argument
+  `record_activity`, `list_activities`, `list_sync_statuses` and
+  `re_resolve_activity`, argument by argument
 - [Keep what your custody plugin converts](keep-what-the-edge-converts.md)

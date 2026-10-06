@@ -83,8 +83,9 @@ A session is held by the dashboard, keyed by an opaque, HTTP-only cookie, and
 records who the person is and the directory groups they presented. It records
 nothing about what they may do: access is evaluated from the records on every
 request. Opening a plugin starts a session on that plugin's own host, which
-ends with the dashboard session and carries the one level it was opened at;
-see [One level per session](#one-level-per-session-manage-open-and-view).
+ends with the dashboard session and carries the one level it was opened at,
+and from contract v15 the person's level on each of the plugin's roles within
+it; see [One level per session](#one-level-per-session-manage-open-and-view).
 
 Sessions end after **30 minutes idle** and **12 hours** at most. Both are fixed
 by Open Meridian's contract rather than configuration. A browser's session is
@@ -108,7 +109,8 @@ client for 7, 30 or 90 days. It never takes a password.
 The page, **Allow a client to act as you**, names the client (`meridian on`
 and the computer's host name) and offers **everything you hold, as that
 changes**, or only what the person ticks from what they hold: plugins at their
-levels, the account groups their permissions name, and the deployment admin's
+levels, from contract v15 a level on each of a plugin's roles, the account
+groups their permissions name, and the deployment admin's
 capabilities, which never include changing who holds access. For the CLI it
 starts at everything and 90 days. A narrowed delegation never grows; to widen
 it, connect again.
@@ -148,9 +150,12 @@ clients** tab of Settings, and revokes one of a person's delegations or all of
 them; that person's browser sessions are left alone. `meridian sign-out`
 revokes one's own.
 
-A session an earlier CLI kept, a terminal session, is still accepted until it
-lapses, with a browser session's bounds. A deployment admin ends a person's
-terminal sessions from the **Terminal sessions** tab of Settings.
+A deployment at contract v15 keeps no session for a terminal. The sessions a
+CLI from before delegations kept, 0.1.24 or earlier, are retired with the
+**Terminal sessions** tab of Settings that ended them: the dashboard serves
+CLI 0.1.25 or later, tells an older one so, and takes nothing on the CLI's
+paths but an access token on a delegation. Up to contract v14 such a session
+was accepted until it lapsed, with a browser session's bounds.
 
 ## The access model
 
@@ -161,7 +166,7 @@ store and authored in the dashboard's **Settings**.
 |---|---|
 | **User group** | A set of directory groups and individual logins. A person belongs to it when their login is listed, or when, at sign-in, their directory says they are in one of its groups |
 | **Account group** | An explicit list of the firm's [accounts](accounts.md), with no nesting; an empty group reaches nothing. One is built in, **All accounts** |
-| **Access group** | A list of entries, each naming one plugin instance and a level: `admin`, `read` or `write`. The levels are the same for every plugin; a plugin names no parts of itself |
+| **Access group** | A list of entries, each naming one plugin instance, from contract v15 one of the roles it holds, and a level: `admin`, `read` or `write`. The levels are the same for every plugin and role; a plugin names no parts of itself |
 | **Permission** | Joins one user group, one account group and one access group: *these people* may use *these plugins* on *these accounts* |
 
 A person's access is the union of every permission whose user group they
@@ -177,18 +182,20 @@ belong to. There are no deny rules: access only adds up.
 
 `write` includes `read`. `admin` includes neither, and neither includes
 `admin`: it is configuration, kept apart from the data. A person may hold
-`admin` on a plugin and, beside it, one data level, `read` or `write`, the
-higher one granted. An access group may name a plugin at `admin` and at one
-data level; naming it at both `read` and `write` is refused, since `write`
-already includes `read`.
+`admin` on a plugin's role and, beside it, one data level, `read` or `write`,
+the higher one granted. An access group may name a plugin's role at `admin`
+and at one data level; naming it at both `read` and `write` is refused, since
+`write` already includes `read`.
 
 `read` covers queries and receiving events; `write` covers commands. Each
-access entry names a single plugin, so each plugin's access is granted, and
-can be counted, on its own.
+access entry names a single plugin, and from contract v15 one of its roles,
+so each plugin's access is granted, and can be counted, on its own. A plugin
+holding one role, which is every plugin today, is granted exactly as before:
+see [Access per role](#access-per-role).
 
 The data levels are combined **permission by permission**, never dimension by
-dimension. For each plugin, a person holds a set of accounts they may read and
-a set they may write, and each permission contributes only its own accounts
+dimension. For each plugin and role, a person holds a set of accounts they may
+read and a set they may write, and each permission contributes only its own accounts
 at its own level. Write on one account group through one permission and read
 on another through a second is write on the first and read on the second —
 never write on both.
@@ -213,6 +220,13 @@ dashboard tells the plugin about the person is cut to it:
 | **Open** | `write`, every account they may read, and the accounts they may write | See every account they may read, and act on those their `write` grants name |
 | **View** | `read`, and every account they may read | See every account they may read, and act on nothing |
 
+From contract v15 the plugin is also told, beside these, the person's level
+on each of its roles within the button, and the accounts each reaches: under
+Open a role held at `write` is at `write` and one held at `read` at `read`,
+under View each at `read`, under Manage each role they administer at `admin`
+with no account. What the table says stays the union over those roles, so a
+plugin that reads no role is told what it was told before.
+
 The dashboard opens nothing at a level the person does not hold. Nothing
 conflicts between the levels, so no grant is refused for giving a person a
 second one: separation of duties is per session. A firm that needs it per
@@ -233,6 +247,142 @@ see every account's identity, and link the plugin's external accounts to any
 existing account, but reach no account's data. The barrier between business
 lines is the `read` and `write` levels', and their account groups. Only a
 deployment admin names a new account, and only a deployment admin grants.
+
+From contract v15 `admin` is held on a role of a plugin: a role's admin
+administers that role's side of it, its pages at `admin` and the settings
+serving only roles they administer. See [Admin per role](#admin-per-role).
+
+### Access per role
+
+!!! note "Built, not released"
+    This section describes a runtime serving contract v15 and open-meridian
+    0.20.0, built and not yet released. A runtime serving v14 or earlier
+    grants each plugin as a whole.
+
+A plugin may hold several roles: an order and execution management system is
+`oms` and `ems`, and a vendor's turnkey plugin may hold `portfolio`, `oms`
+and `ems` behind one interface. Granted per plugin, a person with `write` on
+such a plugin would write in every one of its roles, so a portfolio manager
+who proposes and a trader who releases would be one person by accident of a
+vendor's packaging. From contract v15 a person's level is granted **per role
+of a plugin**: an access entry names a plugin, one role it holds, and a
+level.
+
+Roles are not a plugin's parts. They are the deployment's fixed list of
+thirteen, approved when the plugin is launched (see
+[Plugins, roles and grants](plugins.md#roles-what-a-plugin-is-for)), so a
+grant naming one keeps access decided by the deployment, never by the plugin.
+
+**A plugin holding one role changes nothing.** Every plugin today holds one
+role or none: SnapTrade holds `custody`, the sample operations plugin
+`operations`. Each entry on such a plugin names its one role, the Access
+editor fills it in, and nobody sees a role named anywhere else. A plugin
+holding no role is granted as a whole, its entries naming none.
+
+#### A plugin holding two roles
+
+Take a plugin launched holding `custody` and `operations`, and two people:
+
+| Person | Granted | Offered | Under Open |
+|---|---|---|---|
+| Ada | `write` on `operations`, `read` on `custody` | Open and View | Records an opening balance, an `operations` command. Shown `custody`'s pages that serve `read`. A holdings statement the plugin sends for her is refused by the sidecar: *RecordHoldingsStatement is custody's, and Ada Park holds read on custody* |
+| Ben | `write` on `custody`, `read` on `operations` | Open and View | Records the holdings statement. Refused the opening balance, the refusal naming `operations` and his `read` on it |
+
+Under View neither sends anything. Each grant reaches its own accounts, as
+permissions always have: `write` on `operations` through one permission and
+`read` on `custody` through another is exactly that, never `write` on
+`custody`.
+
+- **One home entry per plugin, three buttons.** The home offers the plugin
+  once, with **Manage**, **Open** or **View** for each level the person holds
+  on any of its roles. On a plugin holding several roles, each button's
+  title names the roles it reaches at their levels, such as *Open:
+  operations write, custody read*. A session spans every role the person
+  holds within its button.
+- **The tab row by role.** A plugin holding several roles names the roles
+  each of its pages serves. A page is shown, and served, when the person's
+  level on one of its roles within the button is one of the page's levels.
+- **The sidecar decides every act.** It admits a command sent for a person
+  only when they hold `write` on a role whose generated grants include that
+  command, with the account among that role's write accounts and in the
+  plugin's write scope, and otherwise refuses it, naming each role that
+  holds the command and what the person holds on it. It works the role out
+  from the contract; the plugin names none on what it sends. A page's
+  declared roles decide what is shown, never what is admitted.
+- **One account scope per plugin.** What a plugin may read and write as
+  itself is the union over its roles, and its links and storage stay one
+  per plugin. A plugin that reads no role shows a person the union of their
+  roles' read accounts; cutting per role is the plugin's, as cutting per
+  person is (see [Reads and writes on behalf of people](plugins.md#reads-and-writes-on-behalf-of-people)).
+
+#### Admin per role
+
+- A role's admin configures that role's side of the plugin: its pages at
+  `admin` and the settings serving only roles they administer.
+- A setting serving several roles needs `admin` on every role it serves,
+  today the one act on a plugin as a whole. On the Settings form such a setting
+  is shown to an admin of any role it serves, read-only, with *Serves custody
+  and operations: set by an admin of every one*, and the dashboard refuses a
+  change to it from anyone who does not administer them all.
+- Linking an external account is an admin's of a role whose grants include
+  the link: `custody` today.
+- **All plugins (admin)** holds `admin` on every role of every plugin,
+  plugins launched later and roles gained later included.
+
+#### A role a plugin gains, and entries that no longer match
+
+A role a plugin gains when a new version is launched starts ungranted:
+nobody but **All plugins (admin)** holds anything on it until a deployment
+admin grants it. Nothing widens on an upgrade or a new role.
+
+An entry naming a role the plugin no longer holds, or naming no role on a
+plugin that now holds some, holds nothing. It is kept as the deployment
+admin wrote it, never read as every role, and flagged on the Access editor
+as **not held now**, naming the roles the plugin holds. A role restored at a
+later launch makes it hold again.
+
+#### Delegations and agents
+
+A delegation narrowed to part of what a person holds names, from contract
+v15, a level on each of a plugin's roles. The consent page lists a row per
+plugin role at each level the person holds, each with the tools it reaches,
+and a narrowed delegation never grows. One covering **everything you hold,
+as that changes** follows the person's grants per role, a role granted later
+included. An agent's tools at the dashboard's `/mcp` follow the same rows:
+a tool is listed when the person holds one of its levels on one of its
+roles; see
+[Offer your plugin's pages to agents](../how-to/offer-your-pages-to-agents.md#tools-by-role).
+
+#### On upgrading to contract v15
+
+The upgrade rewrites every grant once, and changes what nobody can do:
+
+- **Every access entry on a plugin holding exactly one role is rewritten to
+  name it**, at the level it had, in the group it was in: on a deployment
+  running SnapTrade and the sample operations plugin, every entry on
+  SnapTrade becomes a `custody` entry and every one on the operations plugin
+  an `operations` entry. A plugin's roles are what its sidecar last reported
+  it was launched as, or its latest launch where it has not reported. An
+  entry on a plugin holding no role is left naming none.
+- **Nothing else moves.** User groups, account groups, permissions and links
+  are untouched. **All plugins (admin)** now grants `admin` on every role,
+  which is everything it granted.
+- **Delegations.** One covering everything is untouched. Each row of a
+  narrowed one is rewritten to name the plugin's one role, so none covers
+  more or less. A row the rewrite cannot name, on a plugin with several
+  roles or none known, is kept, covers nothing, and is flagged on Connected
+  clients.
+- **What a person sees:** the same home, the same buttons, tabs, pages,
+  settings and links, and on the Access editor and each plugin's **Access**
+  tab a **Role** column holding each plugin's one role.
+
+From contract v15 every change to a grant is its own record in the
+deployment's configuration: an access group defined or changed, a
+permission granted or withdrawn, what it was, what it became, who, through
+which delegation where they used one, and when. Each group the upgrade
+rewrote is recorded too, made by no person, and every access group has one
+record saying its history is not known before the upgrade, by the
+deployment's clock. No page shows these records yet.
 
 ### Deployment admin
 
@@ -255,7 +405,8 @@ with a first-admin code from the platform, redeemed at `/claim`.
 ### All plugins (admin)
 
 **All plugins (admin)** is a second built-in access group. It gives `admin` on
-every plugin, those launched later included, and names no account group.
+every plugin, those launched later included, and from contract v15 on every
+role of each, those it gains later included; it names no account group.
 First run links the user group holding deployment admin to it, and so does a
 first-admin code, so a deployment's administrators start as admins of every
 plugin. The link is an ordinary permission, and may be withdrawn, for a firm

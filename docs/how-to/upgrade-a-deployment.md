@@ -6,9 +6,10 @@ image, and the data, the key and the configuration stay.
 
 What people notice:
 
-- **The CLI stays connected.** A delegation from `meridian connect`, and a session an earlier CLI
-  kept, are kept in the deployment's database, so they survive the dashboard restarting, and nobody
-  reconnects a terminal.
+- **The CLI stays connected.** A delegation from `meridian connect` is kept in the deployment's
+  database, so it survives the dashboard restarting, and nobody reconnects a terminal. A session a
+  CLI from before delegations kept, 0.1.24 or earlier, was kept too up to contract v15, which
+  retires them: a runtime at v15 serves CLI 0.1.25 or later, so connect again with a current CLI.
 - **CLI 0.1.25 needs chart 0.1.223 or later.** Against an older dashboard, `meridian connect`
   says it does not take delegations yet. Upgrade the deployment, or connect with CLI 0.1.24 until you
   do.

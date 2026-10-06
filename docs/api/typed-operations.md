@@ -19,6 +19,8 @@ This page lists every operation in SDK 0.14.0, which declares contract v9. It ha
 
 From 0.19.0, contract v14, it also lists three operations of [the custodian's activity](../concepts/the-custodians-activity.md): [`record_activity`](#record_activity), by which a `custody` plugin reports each activity on an account as the custodian states it, and [`list_activities`](#list_activities) and [`list_sync_statuses`](#list_sync_statuses), by which an `operations` plugin reads it and each sync status the street keeps. Their rows are `preview` in v14. A sync status says from when the source can read the account's history ([`history_from`](#report_sync_status)), and a break's cause may link the activity that explains it ([`BreakCause`](#breakcause)).
 
+From 0.20.0, contract v15, it also lists [`re_resolve_activity`](#re_resolve_activity), by which a `custody` plugin re-resolves an activity it recorded before its instrument resolved, and `list_activities` answers each re-resolution beside the activities, which `operations` hears with `receive(activity_re_resolved=...)`. Both rows are `preview` in v15.
+
 ## Summary
 
 | Python method | gRPC rpc | Workflow step | Kind | Role | Returns |
@@ -31,6 +33,7 @@ From 0.19.0, contract v14, it also lists three operations of [the custodian's ac
 | [`list_statements`](#list_statements) | `ListStatements` | W2.9 Read completed statements | query | `operations` | `ListStatementsResult` |
 | [`record_activity`](#record_activity) | `RecordActivity` | W2.10 Record an account's activity | command | `custody` | `RecordActivityResult` |
 | [`list_activities`](#list_activities) | `ListActivities` | W2.11 List an account's activity | query | `operations` | `ListActivitiesResult` |
+| [`re_resolve_activity`](#re_resolve_activity) | `ReResolveActivity` | W2.15 Re-resolve a recorded activity | command | `custody` | `ReResolveActivityResult` |
 | [`list_sync_statuses`](#list_sync_statuses) | `ListSyncStatuses` | W2.14 Read an account's sync status | query | `operations` | `ListSyncStatusesResult` |
 | [`resolve_identifier`](#resolve_identifier) | `ResolveIdentifier` | W3.1 Resolve an identifier set | query | `custody` | `ResolveIdentifierResult` |
 | [`report_missing_instrument`](#report_missing_instrument) | `ReportMissingInstrument` | W3.2 Report that a resolution missed | event | `custody` | `Published` |
@@ -130,7 +133,7 @@ Some fields describe the publisher rather than the event, and only the sidecar k
 
 | Field | On | Set by the sidecar from |
 |---|---|---|
-| `account_id` | `RecordHoldingsStatement`, `RecordHolding`, `RecordActivity` | The link an admin of the plugin made from the plugin's `external_account_id` to an account. Refused when there is none, as [`NotLinked`](#an-unlinked-external-account). On a statement from 0.12.0; on an activity from 0.19.0. |
+| `account_id` | `RecordHoldingsStatement`, `RecordHolding`, `RecordActivity`, `ReResolveActivity` | The link an admin of the plugin made from the plugin's `external_account_id` to an account. Refused when there is none, as [`NotLinked`](#an-unlinked-external-account). On a statement from 0.12.0; on an activity from 0.19.0; on a re-resolution from 0.20.0. |
 | `account_id` | `ReportSyncStatus` | The same link, or empty when there is none. Never refused. |
 | `publisher_instance_id` | `ReportMissingInstrument` | The instance the plugin was launched as. |
 | `placeholder_instrument_id` | `ReportMissingInstrument` | Nothing: always empty from a plugin. Only the instrument store sets it. |
@@ -146,12 +149,12 @@ Each read answers a page, the next page's `cursor` in `next_cursor`, empty on th
 
 ### Acting for a person
 
-Twelve operations take `acting_for`: the two commands that record holdings and, from 0.19.0, the one that records an activity; the seven commands of the book; and the two that link accounts. Pass the `Meridian-Caller` header of the page request you are serving: in a view on [`meridian.Pages`](python-sdk.md#pages), `request.caller.header`; with [`CallerMiddleware`](python-sdk.md#callermiddleware), `request.state.caller.header`.
+Thirteen operations take `acting_for`: the two commands that record holdings, from 0.19.0 the one that records an activity, and from 0.20.0 the one that re-resolves it; the seven commands of the book; and the two that link accounts. Pass the `Meridian-Caller` header of the page request you are serving: in a view on [`meridian.Pages`](python-sdk.md#pages), `request.caller.header`; with [`CallerMiddleware`](python-sdk.md#callermiddleware), `request.state.caller.header`.
 
-For `record_holdings_statement`, `record_holding`, `record_activity` and the book's commands, the sidecar applies the same rule:
+For `record_holdings_statement`, `record_holding`, `record_activity`, `re_resolve_activity` and the book's commands, the sidecar applies the same rule:
 
 - **Unset:** the plugin acts as itself.
-- **Set:** the sidecar checks the assertion, admits the command only in a session opened by **Open**, at `write`, and only when that person may write the account it names, and stamps the person on it. For a command that names no account, the person must be able to write something through the plugin. A command sent for a person in a session opened by Manage or View is refused with `NotGranted`, naming the session.
+- **Set:** the sidecar checks the assertion, admits the command only in a session opened by **Open**, at `write`, and only when that person may write the account it names, and stamps the person on it. For a command that names no account, the person must be able to write something through the plugin. A command sent for a person in a session opened by Manage or View is refused with `NotGranted`, naming the session. From contract v15 the person must hold `write` on a role of the plugin whose grants include the command, the account among that role's write accounts: otherwise it is refused with `NotGranted`, naming each role that holds the command and what the person holds on it, such as *RecordHoldingsStatement is custody's, and Ada Park holds read on custody*. On a plugin holding one role this is the rule above. See [Access per role](../concepts/access.md#access-per-role).
 
 A person narrows what a plugin may do and never widens it.
 
@@ -770,6 +773,7 @@ async def list_activities(
 | `next_cursor` | `str` | The next page's cursor, empty on the last. |
 | `as_of` | [`Watermark`](#watermark) | The point in the store's record the page was read at. |
 | `history_from` | `str` | The first date the named account's source can read activity from, as its latest sync status said. Empty where the read names no account, or the source has not said. |
+| `re_resolutions` | sequence of [`ActivityReResolution`](#activityreresolution) | From 0.20.0, contract v15. Every re-resolution of the activities on the page, each naming its activity and account; on a read `since` a watermark, every re-resolution recorded after it, whether or not its activity was, merged with the activities in the order recorded, the page's size counting both. The activities stay as first recorded: an activity's instrument is its latest re-resolution's. Empty where none was re-resolved. |
 
 **Errors:** `NotGranted` for an `account_id` outside the read scope, and without the `operations` role. `no handler`, `timeout` or `handler error` from the street store.
 
@@ -780,6 +784,61 @@ for each in page.activities:
     if activity.kind == meridian.ActivityKind.ACTIVITY_KIND_REINVESTMENT:
         units = meridian.as_decimal(activity.units)
 page.history_from   # "2024-06-03", or "" where the source has not said
+```
+
+## `re_resolve_activity` { #re_resolve_activity }
+
+From 0.20.0, contract v15. Re-resolves an activity the plugin recorded before its instrument resolved: a retirement plan's own fund code linked to an instrument later, or a symbol the deployment's instrument records complete later. Sending the activity again would change nothing, since the street answers it as already recorded; a re-resolution is a record of its own, kept beside the activity, which stays as first recorded. See [The custodian's activity](../concepts/the-custodians-activity.md#an-activity-re-resolved).
+
+```python
+async def re_resolve_activity(
+    self, *, external_account_id: str = "", source: str = "", external_activity_id: str = "",
+    instrument_id: str = "", provenance: Provenance | None = None, resolved_at_ns: int = 0,
+    acting_for: str | None = None,
+) -> ReResolveActivityResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc ReResolveActivity(ReResolveActivityParams) returns (ReResolveActivityResult)` |
+| Workflow step | W2.15, Re-resolve a recorded activity |
+| Kind | command, on `platform.street.command.re-resolve-activity` |
+| Role | `custody` |
+| Served by | the street store, which announces each one it records as `ActivityReResolved` (W2.16) to `operations` |
+| Stability | `preview` in contract v15 |
+
+| Name | Type | Required | Meaning |
+|---|---|---|---|
+| `external_account_id` | `str` | yes, by the sidecar | The account as the source knows it, which the sidecar translates to the account it is linked to. |
+| `source`, `external_activity_id` | `str` | yes, by the street | The source and the custodian's identifier the activity was recorded under, as first reported: with the account, what names it. |
+| `instrument_id` | `str` | no | The deployment's instrument record it now resolves to. Empty where what had resolved it was removed, such as a link deleted: it is then unresolved again, its code as first reported. |
+| `provenance` | `Provenance` or `None` | yes, by the street | How it was resolved this time: supplied, naming the person who set the link, or derived, naming the rule. Never the custodian's word. |
+| `resolved_at_ns` | `int` | yes, by the street | When what resolves it was made: the link set, a table setting row's `changed_at`, the rule run. The street stamps its own record time beside it. |
+| `acting_for` | `str` or `None` | no | Unset: the plugin re-resolves as itself. See [Acting for a person](#acting-for-a-person). |
+
+The street keeps the activity as first recorded, which never changes, and each re-resolution beside it, its own record, numbered and chained per account apart from the activities. An activity's instrument is its latest re-resolution's, or its own where there is none. A re-resolution naming what the latest resolution already names is answered `already_recorded`, takes no number and announces nothing, so a plugin can re-resolve an account's activities again whenever what resolves them changes.
+
+**Returns** `ReResolveActivityResult`:
+
+| Field | Type | Meaning |
+|---|---|---|
+| `activity_id` | `str` | The street's identifier for the activity re-resolved. |
+| `already_recorded` | `bool` | `True` when the activity's latest resolution already named this instrument and provenance, and nothing was recorded. |
+
+**Errors:** [`NotLinked`](#an-unlinked-external-account) for an external account nobody has linked. `handler error` from the street store, its words naming what is wrong, for an activity never recorded under that source, account and identifier (a re-resolution re-resolves an activity already recorded, and resolves none into existence), and for no provenance, a provenance that is the custodian's word, or no `resolved_at_ns`. `invalid` for an `external_activity_id` outside 1 to 200 characters, or a provenance kind the enum does not define. `NotGranted` without the `custody` role. `no handler` or `timeout` from the street store.
+
+```python
+reply = await plugin.re_resolve_activity(
+    external_account_id="SNAP-ACC-401K",
+    source="snaptrade",
+    external_activity_id=activity_id,          # as first reported
+    instrument_id="INS-...",                   # empty where the link was removed
+    provenance=meridian.Provenance(field="instrument_id",
+                                   kind="PROVENANCE_KIND_SUPPLIED",
+                                   person="Ada Park, in the plan-code links"),
+    resolved_at_ns=link_set_at_ns,             # when the link was set or the rule ran
+)
+reply.activity_id, reply.already_recorded
 ```
 
 ## `list_sync_statuses` { #list_sync_statuses }
@@ -1758,6 +1817,29 @@ An activity, as the street store announced it when it was recorded (W2.12), and 
 | `activity` | `CustodialActivity` | The activity whole, as the custody plugin sent it. |
 | `recorded_at_ns` | `int` | When the street recorded it: the deployment's clock, never back-dated. A backfilled activity's own time is its `trade_date`. |
 | `journal`, `cause` | `JournalRef`, `ChangeCause` | Its record in the street's partition, chained per account with the activities before it, and who caused it. A handler is handed `cause` as [`Heard.cause`](python-sdk.md#heard), and no `journal`. |
+
+### `ActivityReResolution` { #activityreresolution }
+
+One re-resolution of an activity, as the street keeps it beside the activity as first recorded, and each item of `list_activities`' `re_resolutions`. From 0.20.0.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `activity_id`, `account_id` | `str` | The activity it sits beside, and the account it is recorded against. |
+| `instrument_id` | `str` | The instrument the activity now resolves to; empty where it is unresolved again. |
+| `provenance` | `Provenance` | How: supplied by the named person who set the link, or derived by a named rule. |
+| `resolved_at_ns` | `int` | When what resolves it was made, as the plugin sent it. |
+| `recorded_at_ns` | `int` | When the street recorded it: the deployment's clock, never back-dated. |
+| `journal` | `JournalRef` | Its own number in the street's partition, chained per account with the re-resolutions before it. |
+
+### `ActivityReResolvedEvent` { #activityreresolvedevent }
+
+A re-resolution, as the street store announced it when it was recorded (W2.16). The `activity_re_resolved` handler of [`receive`](python-sdk.md#receive) is handed one, caught up after a gap from `list_activities`' `re_resolutions`. From 0.20.0.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `account_id` | `str` | The account it is on. |
+| `re_resolution` | [`ActivityReResolution`](#activityreresolution) | The re-resolution whole. |
+| `cause`, `journal` | `ChangeCause`, `JournalRef` | Who caused it, and its number. A handler is handed `cause` as [`Heard.cause`](python-sdk.md#heard), and no `journal`. |
 
 ### `SyncStatusRecordedEvent` { #syncstatusrecordedevent }
 

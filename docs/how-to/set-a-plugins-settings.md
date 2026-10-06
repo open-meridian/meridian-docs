@@ -50,6 +50,20 @@ value against what the plugin declared before it keeps any, and refuses the
 save, saying why, when one does not read. Once saved, the settings reach the
 plugin without a restart.
 
+### On a plugin holding several roles
+
+From contract v15 a person is an admin of a plugin's role rather than of the
+plugin (see [Admin per role](../concepts/access.md#admin-per-role)), and a
+plugin holding several roles names the roles each setting serves. The form
+shows a setting to an admin of any role it serves, and lets only one holding
+admin on every one of them change it. To an admin of some of them it is
+shown read-only, saying which roles it serves, such as **Serves custody and
+operations: set by an admin of every one**, and posts nothing; a change to
+it from anyone else is refused before anything is sent, naming the roles
+they do not administer. A setting declared before v15, naming no role,
+serves every role the plugin holds. On a plugin holding one role, nothing
+changes.
+
 ## A secret
 
 A secret, such as a vendor's API key, is write-only. Its field is always
@@ -244,6 +258,13 @@ instrument, and nothing is resolved by symbol. The plugin only reads the
 table: no page of its own sets any setting, and its **Account links** tab
 only shows how many plan-code links and cash links the settings hold. See
 [The custodian's activity](../concepts/the-custodians-activity.md#snaptrade-0110).
+
+!!! info "TODO: to be filled when SnapTrade 0.12.0 lands"
+    SnapTrade 0.12.0 (contract v15) is being built to re-resolve the
+    account's earlier activities under a code when its row is added or
+    changed, rather than only the activities read after it (see
+    [An activity re-resolved](../concepts/the-custodians-activity.md#an-activity-re-resolved)).
+    Say here what a row's change does once it is built.
 
 ### SnapTrade: cash links
 

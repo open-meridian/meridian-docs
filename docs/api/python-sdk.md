@@ -12,7 +12,7 @@ pip install open-meridian
 |---|---|
 | PyPI name | `open-meridian` |
 | Import name | `meridian` |
-| Version | 0.19.0 |
+| Version | 0.20.0 |
 | Python | 3.11 or newer |
 | Dependencies | `grpcio>=1.68,<2`, `protobuf>=5.28,<7`, `jinja2>=3.1,<4` (from 0.10.0, for [pages](#pages)) |
 | Licence | Apache-2.0 |
@@ -20,7 +20,13 @@ pip install open-meridian
 !!! warning "Not `meridian-sdk`"
     The PyPI package `meridian-sdk` belongs to an unrelated company. Don't install it.
 
-A plugin pins the SDK exactly, `open-meridian==0.19.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.19.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls; from 0.12.0 to 0.13.0, and from 0.13.0 to 0.14.0, only the pins move. `meridian plugin new` writes a plugin pinned to 0.19.0 from CLI 0.1.34. See [Plugin manifest](plugin-manifest.md).
+!!! note "0.20.0 is built, not released"
+    0.20.0, which declares contract v15 ([access per role](#roles) and an
+    activity re-resolved), is built and not yet on PyPI, and neither is its
+    base image. Until it is, `pip install open-meridian` installs 0.19.0
+    (contract v14).
+
+A plugin pins the SDK exactly, `open-meridian==0.20.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.20.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls; from 0.12.0 to 0.13.0, from 0.13.0 to 0.14.0, and from 0.19.0 to 0.20.0, only the pins move. `meridian plugin new` writes a plugin pinned to 0.19.0 from CLI 0.1.34, and to 0.20.0 from the CLI release after it. See [Plugin manifest](plugin-manifest.md).
 
 | Optional extra | Installs | For |
 |---|---|---|
@@ -78,7 +84,7 @@ A plugin that serves pages declares them with [`meridian.Pages`](#pages) and pas
 | `CallerMiddleware` | ASGI middleware | [`CallerMiddleware`](#callermiddleware) |
 | `MeridianError`, `Refused`, `NoSidecar`, `NotRegistered`, `NotGranted`, `CallFailed`, `NotLinked`, `CommandRefused` | exceptions | [Exceptions](#exceptions); `CommandRefused` from 0.13.0, its `fields` from 0.14.0 |
 | `DEFAULT_ADDRESS` | `str` | `"127.0.0.1:9191"`, where a sidecar listens |
-| `SCHEMA_VERSION` | `str` | the contract version sent at registration: `"v14"` from 0.19.0, `"v13"` in 0.18.0, `"v12"` in 0.17.0, `"v11"` in 0.16.0, `"v10"` in 0.15.0, `"v9"` in 0.14.0, `"v8"` in 0.13.0, `"v7"` in 0.12.0, `"v6"` in 0.11.0, `"v5"` in 0.10.0 and 0.10.1, `"v4"` in 0.9.0, `"v3"` in 0.8.0, `"v2"` before |
+| `SCHEMA_VERSION` | `str` | the contract version sent at registration: `"v15"` from 0.20.0, `"v14"` in 0.19.0, `"v13"` in 0.18.0, `"v12"` in 0.17.0, `"v11"` in 0.16.0, `"v10"` in 0.15.0, `"v9"` in 0.14.0, `"v8"` in 0.13.0, `"v7"` in 0.12.0, `"v6"` in 0.11.0, `"v5"` in 0.10.0 and 0.10.1, `"v4"` in 0.9.0, `"v3"` in 0.8.0, `"v2"` before |
 
 The module `meridian.testing` holds [`PageClient`](#testing) and [`heartbeat`](#testing), for a plugin's own tests.
 
@@ -107,16 +113,16 @@ Registers with the sidecar and returns the admitted plugin. A `Plugin` you hold 
 | `settings` | sequence of `Setting` | `()` | The settings the plugin needs an admin of it to give it, on the dashboard's Settings form, or a table on its own tab beside it. A plugin sets none of them itself. |
 | `reads_external_accounts` | `bool` | `False` | `True` when the plugin reads accounts at an external source and names them by that source's identifiers. An admin of the plugin links those to accounts, and the sidecar translates them on the way in. |
 
-The contract version it sends is `SCHEMA_VERSION`, `"v14"` from 0.19.0. A sidecar accepts a range of versions, v2 through the one its runtime serves, v14 today: a plugin built for an older version it still supports registers, and one built for a newer version than the sidecar knows is refused at registration, naming both, rather than running without what it was built for. After an upgrade, relaunch plugins so they get the newer sidecar (`meridian upgrade-deployment` names the ones that need it).
+The contract version it sends is `SCHEMA_VERSION`, `"v15"` from 0.20.0. A sidecar accepts a range of versions, v2 through the one its runtime serves, v15 at contract v15: a plugin built for an older version it still supports registers, and one built for a newer version than the sidecar knows is refused at registration, naming both, rather than running without what it was built for. After an upgrade, relaunch plugins so they get the newer sidecar (`meridian upgrade-deployment` names the ones that need it).
 
 **Raises:**
 
 | Exception | When |
 |---|---|
 | `NoSidecar` | No sidecar answered within `wait` seconds. |
-| `Refused` | The sidecar answered and declined to admit the plugin. Its `reason` says why. Not retried. |
+| `Refused` | The sidecar answered and declined to admit the plugin. Its `reason` says why. Not retried. From contract v15 it refuses a page or setting naming a role the plugin was not launched with, and, on a plugin holding several roles, one naming none, naming it and the plugin's roles. |
 | `TypeError` | A `Setting`'s `kind` is not `str`, `int`, `bool` or `list`; it has `choices` and a `kind` other than `str`; its `default` is not of its `kind`; or its `kind` is `list` without `columns`, or another kind with them. |
-| `ValueError` | A secret `Setting` declares a `default`; a `default` is not one of its `choices`; a table is secret, or declares a `default` or `choices`, names a column twice, or has `most_rows` outside 0 to 500; a `Column`'s `kind` is not one of the seven, it is named `changed_by` or `changed_at`, or it is a choice without `choices`; or a `Page`'s path does not begin with `/`, or it names no level. |
+| `ValueError` | A secret `Setting` declares a `default`; a `default` is not one of its `choices`; a table is secret, or declares a `default` or `choices`, names a column twice, or has `most_rows` outside 0 to 500; a `Column`'s `kind` is not one of the seven, it is named `changed_by` or `changed_at`, or it is a choice without `choices`; or a `Page`'s path does not begin with `/`, or it names no level. From 0.20.0, when the declaration is made: a `roles=` naming something no role could be (a role is lower-case letters, such as `custody`), or more than 13 roles. |
 | `grpc.aio.AioRpcError` | Any other gRPC failure during registration, unchanged. |
 
 When run by the development runner on a development deployment, `connect` also records the `ready` event once the plugin is admitted. See [`plugin dev` events](plugin-dev-events.md).
@@ -146,8 +152,8 @@ Built by `connect`. It is an async context manager: leaving the `async with` blo
 | `filed_tickets(*, for_caller, ticket_ids=(), idempotency_keys=(), cursor="")` | `Awaitable[ReadFiledTicketsReply]` | What became of the tickets the plugin filed. From 0.18.0; see [`filed_tickets()`](#filed_tickets). |
 | `report(*, healthy, detail="", figures=None)` | `Awaitable[None]` | Report the plugin's health now, outside the heartbeat. It stands until reported again. |
 | `leave(reason="")` | `Awaitable[None]` | Say the plugin is stopping, and close the connection. |
-| `receive(*, statement_recorded=None, custodial_position_updated=None, position_changed=None, break_changed=None, account_figures_recorded=None, account_attribute_changed=None, activity_recorded=None, sync_status_recorded=None, seed=True)` | `Awaitable[None]` | Hear the rows the plugin's roles hear, a handler per row, until cancelled. From 0.12.0, the book's rows from 0.13.0, the custodian's activity and each sync status from 0.19.0; see [Receive](#receive). |
-| Typed operations | see [Typed operations](typed-operations.md) | `report_external_accounts`, `report_sync_status`, `record_holdings_statement`, `record_holding`, `list_custodial_positions`, `list_statements`, `resolve_identifier`, `report_missing_instrument`, `read_accounts_for_linking`, `link_external_account`; from 0.13.0, `resolve_instrument` and the book's `record_opening_balance`, `record_break`, `record_account_figures`, `record_encumbrances`, `handle_break`, `resolve_break`, `close_breaks_as_cleared`, `list_positions`, `list_breaks`, `list_account_figures` and `list_account_attributes`; from 0.19.0, `record_activity`, `list_activities` and `list_sync_statuses`. |
+| `receive(*, statement_recorded=None, custodial_position_updated=None, position_changed=None, break_changed=None, account_figures_recorded=None, account_attribute_changed=None, activity_recorded=None, sync_status_recorded=None, activity_re_resolved=None, seed=True)` | `Awaitable[None]` | Hear the rows the plugin's roles hear, a handler per row, until cancelled. From 0.12.0, the book's rows from 0.13.0, the custodian's activity and each sync status from 0.19.0, an activity re-resolved from 0.20.0; see [Receive](#receive). |
+| Typed operations | see [Typed operations](typed-operations.md) | `report_external_accounts`, `report_sync_status`, `record_holdings_statement`, `record_holding`, `list_custodial_positions`, `list_statements`, `resolve_identifier`, `report_missing_instrument`, `read_accounts_for_linking`, `link_external_account`; from 0.13.0, `resolve_instrument` and the book's `record_opening_balance`, `record_break`, `record_account_figures`, `record_encumbrances`, `handle_break`, `resolve_break`, `close_breaks_as_cleared`, `list_positions`, `list_breaks`, `list_account_figures` and `list_account_attributes`; from 0.19.0, `record_activity`, `list_activities` and `list_sync_statuses`; from 0.20.0, `re_resolve_activity`. |
 
 Every method raises `NotRegistered` once the plugin has left.
 
@@ -207,10 +213,12 @@ Returns who may use this plugin: each user group naming it, and each person who 
 
 | Field | Type | Meaning |
 |---|---|---|
-| `user_groups` | repeated `UserGroupAccess` | `user_group_id`, `name`, `read_account_ids` and `write_account_ids`. |
-| `people` | repeated `PersonAccess` | `subject`, `display_name`, `user_group_ids`, `last_signed_in_at_ns`, `read_account_ids` and `write_account_ids`. Only people who have signed in are listed: the deployment holds no directory. |
+| `user_groups` | repeated `UserGroupAccess` | `user_group_id`, `name`, `read_account_ids` and `write_account_ids`; from contract v15, `roles`. |
+| `people` | repeated `PersonAccess` | `subject`, `display_name`, `user_group_ids`, `last_signed_in_at_ns`, `read_account_ids` and `write_account_ids`; from contract v15, `roles`. Only people who have signed in are listed: the deployment holds no directory. |
 
 The account sets are this plugin's: what the group or person may read through it, and write through it. Every write account is also listed as read.
+
+From contract v15 each also carries `roles`, a `RoleAccess` for each of the plugin's roles the group or person holds a data level on: `role`, `level` (`read` or `write`, never `admin`, since the table lists data access only), and `read_positions` and `write_positions`, the role's accounts as positions in that same message's `read_account_ids`. The two sets above stay the union over the roles.
 
 #### `file_ticket()` { #file_ticket }
 
@@ -327,7 +335,7 @@ Stops the heartbeat, tells the sidecar the plugin is stopping, and closes the ch
 
 ## Receive { #receive }
 
-From 0.12.0. A plugin whose roles hear rows receives them with `plugin.receive`, a handler per row. The street store's rows are heard by the `operations` role, the custodian's activity and each sync status among them from 0.19.0; from 0.13.0, the book of record's are heard by the roles that read the book:
+From 0.12.0. A plugin whose roles hear rows receives them with `plugin.receive`, a handler per row. The street store's rows are heard by the `operations` role, the custodian's activity and each sync status among them from 0.19.0, and an activity re-resolved from 0.20.0; from 0.13.0, the book of record's are heard by the roles that read the book:
 
 | Handler | Row | `heard.message` | Workflow step |
 |---|---|---|---|
@@ -339,6 +347,7 @@ From 0.12.0. A plugin whose roles hear rows receives them with `plugin.receive`,
 | `account_attribute_changed` | `AccountAttributeChanged` | An `AccountAttributeChangedEvent`: the account's [`AccountAttributes`](typed-operations.md#accountattributes) in `attributes`, its standing opening balance among them, and the `entry`. Heard by `portfolio`, `reporting`, `compliance`, `oms` and `operations`. From 0.13.0. | W9.8 |
 | `activity_recorded` | `ActivityRecorded` | An [`ActivityRecordedEvent`](typed-operations.md#activityrecordedevent): an activity on the account as the custodian stated it, recorded once. The same message [`list_activities`](typed-operations.md#list_activities) reads, so a break waiting on its cause can be compared again. From 0.19.0, `preview`. | W2.12 |
 | `sync_status_recorded` | `SyncStatusRecorded` | A [`SyncStatusRecordedEvent`](typed-operations.md#syncstatusrecordedevent): a sync status the street kept, so "needs sign-in" is told apart from merely old. The same message [`list_sync_statuses`](typed-operations.md#list_sync_statuses) reads. From 0.19.0, `preview`. | W2.13 |
+| `activity_re_resolved` | `ActivityReResolved` | An [`ActivityReResolvedEvent`](typed-operations.md#activityreresolvedevent): an activity recorded before its instrument resolved, re-resolved, its re-resolution kept beside it. Caught up from the `re_resolutions` of [`list_activities`](typed-operations.md#list_activities). From 0.20.0, `preview`. | W2.16 |
 
 ```python
 async def receive(
@@ -351,6 +360,7 @@ async def receive(
     account_attribute_changed: Callable[[Heard[AccountAttributeChangedEvent]], Awaitable[None]] | None = None,
     activity_recorded: Callable[[Heard[ActivityRecordedEvent]], Awaitable[None]] | None = None,
     sync_status_recorded: Callable[[Heard[SyncStatusRecordedEvent]], Awaitable[None]] | None = None,
+    activity_re_resolved: Callable[[Heard[ActivityReResolvedEvent]], Awaitable[None]] | None = None,
     seed: bool = True,
 ) -> None
 ```
@@ -512,7 +522,8 @@ One of the plugin's pages, at a path on its own host, and the levels it serves. 
 | `path` | `str` | The path, beginning with `/`. Anything else raises `ValueError` at `connect`. |
 | `title` | `str` | The tab's title. |
 | `levels` | sequence of `str` or `AccessLevel` | The levels it serves: one or several of `"admin"`, `"write"` and `"read"`, an `AccessLevel`, or its name (`"ACCESS_LEVEL_ADMIN"`). A string alone is one level. Anything else raises `ValueError`, and a page with none raises it at `connect`. |
-| `serves(caller: Caller) -> bool` | method | Whether the caller's session is at one of its levels. A session at no level is served nothing. |
+| `roles` | sequence of `str` | The roles it serves, from those the plugin was launched with. Default `()`: a plugin holding one role, or none, names none. From 0.20.0; see [Roles](#roles). |
+| `serves(caller: Caller) -> bool` | method | Whether the caller's session is at one of its levels; for a page naming roles, from 0.20.0, whether the caller's level on one of them is. A session at no level is served nothing. |
 
 ```python
 statements = meridian.Page("/statements", "Statements", levels=["write", "read"])
@@ -552,6 +563,7 @@ One setting the plugin needs, declared at `connect`.
 | `developer` | `bool` | `False` | Shown only on a development deployment. |
 | `columns` | `tuple[Column, ...]` | `()` | A table's columns, in the order its tab shows them. Only with `kind=list`, which needs at least one. From 0.19.0. |
 | `most_rows` | `int` | `0` | The most rows a table holds, at most 500; `0` is 500. From 0.19.0. |
+| `roles` | sequence of `str` | `()` | The roles it serves, from those the plugin was launched with: it is shown to an admin of any of them and set only by one holding admin on every one. Not who may read the value: the plugin reads every setting it declared. None on a plugin holding one role or none. From 0.20.0; see [Roles](#roles). |
 
 ```python
 plugin = await meridian.connect(
@@ -677,6 +689,8 @@ Who a request for the plugin's page came from, as the dashboard vouched and the 
 
 A person opens a plugin at one level they hold, by a button on the dashboard's home: **Manage** at `admin`, **Open** at `write`, **View** at `read`. The session carries only that level, and the accounts are cut to it: under Open, `read` and `write`; under View, `read` alone; under Manage, neither, since admin configures a plugin and sees no account's data.
 
+From 0.20.0, contract v15, a person holds a level on each role of a plugin, and the session carries one entry for each role they hold something on within its button: under Open a role held at `write` is at `write` and one held at `read` at `read`, under View each at `read`, under Manage each role they administer at `admin`, with no account. `roles`, `level_for`, `read_for` and `write_for` read it. `level`, `read` and `write` stay the session's button and the union over its roles.
+
 | Member | Type | Meaning |
 |---|---|---|
 | `subject` | `str` | The person, as the deployment's directory names them. Deployment-local, never an address. |
@@ -690,11 +704,17 @@ A person opens a plugin at one level they hold, by a button on the dashboard's h
 | `delegation_id` | `str` | The delegation the person acted through, when they came through a client, such as the CLI, their own agent or an MCP client, rather than a browser. Empty for a browser. Added in 0.14.0. |
 | `client_name` | `str` | That client's registered name. Empty for a browser. Added in 0.14.0. |
 | `through_a_client` | `bool` property | Whether the person came through a client on a delegation: `delegation_id` is not empty. Added in 0.14.0. |
+| `roles` | `Mapping[str, int]` | Each role's level within the session's button, an [`AccessLevel`](#accesslevel) by role. Empty where the claims carry no per-role entry. Added in 0.20.0. |
+| `level_for(role: str) -> int` | method | Their level on `role` within the session's button; `ACCESS_LEVEL_UNSPECIFIED` for a role they hold nothing on here. Claims carrying no per-role entry read every role at `level`. Added in 0.20.0. |
+| `read_for(role: str) -> frozenset[str]` | method | The accounts the plugin may show them for `role`: within `read`, empty under Manage and for a role they hold nothing on. Claims carrying no per-role entry read every role as `read`. Added in 0.20.0. |
+| `write_for(role: str) -> frozenset[str]` | method | The accounts the plugin may act on for them in `role`, those the sidecar admits a command of that role for: within `read_for(role)`, empty under View and Manage and for a role held at `read`. Claims carrying no per-role entry read every role as `write`. Added in 0.20.0. |
 | `Caller.from_header(header: str) -> Caller` | classmethod | Decode a `Meridian-Caller` header: base64url, unpadded. |
 | `may_read(account_id: str) -> bool` | method | Whether they may read the account through this plugin in this session: `account_id in read`. |
 | `may_write(account_id: str) -> bool` | method | Whether they may write the account through this plugin in this session: `account_id in write`. |
 
-The levels are the same for every plugin, granted in the deployment's access groups. A plugin names no parts of itself, so there is nothing finer to ask. The sidecar checks every command sent for a person again, whatever the plugin believes: it admits one only in a session at `write`. See [Access](../concepts/access.md).
+The levels are the same for every plugin, granted in the deployment's access groups. A plugin names no parts of itself, so there is nothing finer to ask than, from 0.20.0, the person's level on each of its roles, which are the deployment's, not the plugin's. The sidecar checks every command sent for a person again, whatever the plugin believes: it admits one only in a session at `write`, and from contract v15 only by their `write` on a role whose grants include the command, the account among that role's write accounts, refusing otherwise and naming the role. See [Access](../concepts/access.md#access-per-role).
+
+The per-role accounts reach the plugin as positions in the claims' read accounts, which `Caller` resolves; a position past them is a header that does not read. Claims carrying no per-role entry, from a plugin holding no role or a dashboard before contract v15, read every role as the session's level and accounts.
 
 A person who came through a client on a delegation stays the actor: `delegation_id` and `client_name` say only through what, for the plugin to show and record as it chooses. From contract v9 the sidecar stamps the delegation beside the person on every command sent for them. See [The delegation](cli.md#the-delegation).
 
@@ -777,12 +797,13 @@ class Pages(title: str = "", *, templates: str | os.PathLike | None = None, kit:
 
 | Member | Meaning |
 |---|---|
-| `page(path, title, *, levels, methods=("GET",))` | Decorator. A tab, shown under the home's button for each of `levels`, in the order declared, and served only in a session at one of them. |
-| `route(path, *, levels, methods=("GET",))` | Decorator. An endpoint that is not a tab, such as a form's action or a page's data, served only in a session at one of `levels`. |
+| `page(path, title, *, levels, roles=(), methods=("GET",))` | Decorator. A tab, shown under the home's button for each of `levels`, in the order declared, and served only in a session at one of them; naming `roles`, from 0.20.0, in a session where the person's level on one of them is. |
+| `route(path, *, levels, roles=(), methods=("GET",))` | Decorator. An endpoint that is not a tab, such as a form's action or a page's data, served only in a session at one of `levels`; naming `roles`, as a page's. Its tool serves the same roles. |
+| `tool(*, replaces, ..., roles=None)` | Decorator. A tool replacing the one derived from the route at `replaces`; it serves the route's roles, or from 0.20.0 those `roles=` names. See [Offer your plugin's pages to agents](../how-to/offer-your-pages-to-agents.md). |
 | `render(template, /, **context) -> str` | `template`, from `templates`, rendered with `context`. Called from a view, while it serves a request; anywhere else raises `RuntimeError`. |
 | `csrf_token(caller) -> str` | The token a request from this person, in a session at this level, carries back when it changes something. |
 | `declared` | The tabs, in the order declared: what registration sends. |
-| `dispatch(request) -> Response` | The view at the request's path and method: 404 for no such path, 405 for a method the path does not take, 403 for a level it does not serve. A HEAD runs the GET view, where no view is declared for HEAD, and answers its headers with no body. |
+| `dispatch(request) -> Response` | The view at the request's path and method: 404 for no such path, 405 for a method the path does not take, 403 for a level it does not serve, or from 0.20.0 for a session holding none of its levels on any of its roles. A HEAD runs the GET view, where no view is declared for HEAD, and answers its headers with no body. |
 | `app(plugin=None)` | The pages as an ASGI application, with the caller read as [`CallerMiddleware`](#callermiddleware) reads it. A body over `max_body` is answered 413 without being read; a view that raises is logged and answered 500. |
 | `serve(plugin, port, *, loop=None, max_body=None)` | Runs `app(plugin)` on `127.0.0.1:<port>` with the standard library's threaded server, in a thread of its own; each view runs on `loop`, the running one by default, where the plugin's operations are. A request whose `Content-Length` is over `max_body`, the pages' own unless said, is answered 413 without its body being read (`max_body` from 0.10.1). Returns the server, whose `shutdown()` stops it. A view taking more than 60 seconds is answered 500. |
 
@@ -806,6 +827,34 @@ From 0.10.1, HEAD is answered for every path that takes GET: the GET view runs, 
 | `status` | `200` | |
 | `content_type` | `"text/html; charset=utf-8"` | |
 | `headers` | `()` | More headers, as `(name, value)` pairs. |
+
+### Roles { #roles }
+
+From 0.20.0, contract v15. A person's level is granted on each role of a plugin, so a plugin holding several names the roles each page, route, tool and setting serves with `roles=`, from those it was launched with. **A plugin holding one role, or none, names none, and nothing changes**: the sidecar serves its declarations that role.
+
+```python
+@pages.page("/statements", "Statements", roles=["custody"], levels=["write", "read"])
+async def statements(request: meridian.Request) -> str:
+    caller = request.caller
+    rows = [...]  # cut to caller.read_for("custody")
+    return pages.render("statements.html", rows=rows,
+                        may_record=bool(caller.write_for("custody")))
+
+
+@pages.page("/blotter", "Blotter", roles=["custody", "operations"], levels=["write", "read"])
+async def blotter(request: meridian.Request) -> str: ...  # each role's rows by read_for(role)
+
+
+settings = [meridian.Setting("api_key", secret=True, roles=["custody", "operations"])]
+```
+
+- **A page or route** is served, and a page's tab shown, when the person's level on one of its roles within the session's button is one of its levels. Otherwise `Pages` answers 403 before the view, naming the roles and what the session holds on each, such as `/statements is for custody under Open and View; under Open this session holds nothing on custody.`
+- **A tool** derived from a route takes its route's roles; `@pages.tool(..., roles=[...])` names others. It is listed at the deployment's `/mcp` to a person holding one of its levels on one of its roles.
+- **A setting** is shown to an admin of any of its roles and set only by one holding admin on every one.
+- **On a plugin holding several roles**, the sidecar refuses the registration of a page or setting naming no role, or a role the plugin was not launched with, naming it; a tool so declared is refused by name, without refusing the plugin. [`meridian plugin check`](cli.md#plugin-check) says where first (`roles-declared`).
+- **What is shown, never what is admitted.** A declaration's roles decide what a person is shown. The sidecar decides every command sent for them, by their `write` on the role whose grants include it.
+
+A page serving several roles adapts per role with [`caller.level_for(role)`, `read_for(role)` and `write_for(role)`](#caller): offer a role's actions only where `write_for(role)` holds accounts.
 
 ### Templates
 
@@ -863,17 +912,31 @@ client.assert_no_account_data("AAPL", "125", "12,500.00")  # what the stand-in h
 
 | Member | Meaning |
 |---|---|
-| `PageClient(pages, plugin=None, *, read=(), write=(), subject=..., display_name=..., deployment_admin=False)` | `plugin` is what a view reaches as `request.plugin`: a stand-in whose operations answer in the test. `read` and `write` are the accounts the person may read and write, cut to each session's level. The person is Ada Park, a local account, unless `subject` and `display_name` say otherwise, and a deployment admin when `deployment_admin` is `True` (from 0.10.1), which every request the client sends says. |
+| `PageClient(pages, plugin=None, *, read=(), write=(), subject=..., display_name=..., deployment_admin=False, roles=())` | `plugin` is what a view reaches as `request.plugin`: a stand-in whose operations answer in the test. `read` and `write` are the accounts the person may read and write, cut to each session's level. The person is Ada Park, a local account, unless `subject` and `display_name` say otherwise, and a deployment admin when `deployment_admin` is `True` (from 0.10.1), which every request the client sends says. `roles`, from 0.20.0, are the roles the plugin was launched with, each of which the person holds at every level; none, for a plugin holding one role or none, carries no per-role entry, and pages serve as before. |
 | `get(path, level, **query)` | A GET in a session at `level`: `"admin"`, `"write"` or `"read"`. |
-| `post(path, level, form=None, *, headers=None)` | A form posted from the plugin's page, carrying its CSRF token back unless `form` gives one of its own. `headers`, from 0.10.1, sends more, such as the `Referer` of the page it was posted from. |
-| `request(method, path, level, *, form=None, query=None, headers=None)` | The request as given, with no token added: for testing that one without a token, or with somebody else's, is refused. |
-| `caller(level, *, deployment_admin=None)` | The client's person, as a `Caller` in a session at `level`: a deployment admin as the client was made, unless `deployment_admin` says (from 0.10.1). |
-| `every_page()` | Each declared page, in order, under Manage, Open and View: a list of `Rendered`, each with `page`, `level` and `response`, 200 where the page serves the level and 403 where it does not. |
+| `post(path, level, form=None, *, headers=None, roles=None)` | A form posted from the plugin's page, carrying its CSRF token back unless `form` gives one of its own. `headers`, from 0.10.1, sends more, such as the `Referer` of the page it was posted from. `roles`, from 0.20.0, narrows the session as `caller` does. |
+| `request(method, path, level, *, form=None, query=None, headers=None, roles=None)` | The request as given, with no token added: for testing that one without a token, or with somebody else's, is refused. `roles` as `post`'s. |
+| `caller(level, *, roles=None, deployment_admin=None)` | The client's person, as a `Caller` in a session at `level`: a deployment admin as the client was made, unless `deployment_admin` says (from 0.10.1). From 0.20.0 the session carries an entry for each of the client's roles at `level`, or for those `roles` names; a mapping gives each its own level within the button, `{"operations": "write", "custody": "read"}` under Open. A role the client was not made with raises `ValueError`, and so does a level the button cannot carry: under Open a role is at `write` or `read`, under View at `read`, under Manage at `admin`. |
+| `call_tool(name, arguments=None, *, level=None, ..., roles=None)` | Calls a tool as the deployment's `/mcp` would; see [Offer your plugin's pages to agents](../how-to/offer-your-pages-to-agents.md#test-it-as-the-surface-calls-it). `roles`, from 0.20.0, as `caller`'s. |
+| `every_page()` | Each declared page, in order, under Manage, Open and View: a list of `Rendered`, each with `page`, `level` and `response`, 200 where the page serves the level and 403 where it does not. On a client made with roles, from 0.20.0, under each level for each role alone and for all of them together, each `Rendered` naming them in `roles`. |
 | `assert_no_account_data(*held)` | Fails, naming the page and what it showed, when under Manage a page at `admin` does not answer 200, any other page does not answer 403, or a page at `admin` shows any of `held`, as given or as a template escapes it. `held` is the account data the test put where the plugin reads it: holdings, quantities, values, balances, a statement's rows. Called with nothing to look for, it raises `ValueError`. |
 
 `meridian.testing.heartbeat(*, healthy=True, detail="", figures=())`, from 0.11.0, is the heartbeat a plugin's sidecar receives from a plugin reporting these: its figures as the wire carries them, in the plugin's order. It raises as setting `plugin.figures` does, so a test of the figures a plugin computes asserts on it, or on the refusal. See [Figures](#figures).
 
-`meridian.testing.caller_header(level, *, read=(), write=(), subject=..., display_name=..., deployment_admin=False, delegation_id="", client_name="")` makes the header alone, for a test that serves the pages another way. `delegation_id` and `client_name`, from 0.14.0, are a person's who came through a client rather than a browser. It is unsigned: only a plugin's tests read it, never a sidecar.
+`meridian.testing.caller_header(level, *, read=(), write=(), subject=..., display_name=..., deployment_admin=False, delegation_id="", client_name="", tool_name="", roles=())` makes the header alone, for a test that serves the pages another way. `delegation_id` and `client_name`, from 0.14.0, are a person's who came through a client rather than a browser. `roles`, from 0.20.0, are the roles the session carries an entry for, as `caller`'s, each role's accounts as positions in the claims' read accounts, as the dashboard mints them. It is unsigned: only a plugin's tests read it, never a sidecar.
+
+A plugin holding several roles holds each page to them in its tests:
+
+```python
+client = PageClient(pages, plugin=stand_in, read={"ACC-1", "ACC-2"}, write={"ACC-2"},
+                    roles=["custody", "operations"])
+session = {"operations": "write", "custody": "read"}
+assert client.get("/blotter", "write").status == 200
+# a route at write naming custody, asked where custody is at read: refused before the view
+assert client.post("/statements/record", "write", {...}, roles=session).status == 403
+for rendered in client.every_page():   # each level, each role alone, and both
+    ...
+```
 
 The client is synchronous, for a plain pytest test, and not for use inside a running event loop. A view that raises fails the test with its traceback.
 

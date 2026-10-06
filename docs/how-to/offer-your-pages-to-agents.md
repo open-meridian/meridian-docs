@@ -86,6 +86,31 @@ check` fails a route that changes something with no record and no reason
 (`meridian plugin check --verified`). `@pages.tool(replaces="/path")` stands in
 for a derived tool where you want a different one.
 
+## Tools by role { #tools-by-role }
+
+From contract v15 (open-meridian 0.20.0), a person's level is granted on each
+role of a plugin, and a tool serves its route's roles. On a plugin holding
+one role, or none, nothing changes. On one holding several, name the roles
+on the route, and its tool takes them:
+
+```python
+@pages.route("/confirm", levels="write", roles=["operations"], methods=["POST"],
+             params=Confirmation, name="confirm_lots")
+async def confirm(request: meridian.Request) -> meridian.Response: ...
+```
+
+`@pages.tool(replaces="/confirm", roles=[...])` names others for a tool that
+stands in. The surface lists a tool to a person holding one of its levels on
+one of its roles, within what their delegation covers, and opens the call at
+the highest of those levels, write before read before admin, every role the
+person holds within that level carried as a page's session carries them. A
+call by name to a tool not listed is refused, naming the roles it serves and
+what the person holds on each. As for a page, the sidecar has the last word:
+a command the tool's view sends for the person is admitted only by their
+`write` on a role holding it, so an `operations` tool whose view sends a
+`custody` command is refused, naming `custody`. `meridian plugin check` fails
+that call where it can see it (`roles-declared`).
+
 ## Test it as the surface calls it
 
 ```python
@@ -101,7 +126,9 @@ assert answered.outcome == "made"
 test's person holds -- write, then read, then admin -- with claims naming a
 delegation, its client and the tool, as the dashboard's would. No form token
 is needed: only the dashboard's `/mcp` names a tool, and the sidecar admits
-that claim at the tool's own route alone.
+that claim at the tool's own route alone. From 0.20.0 it takes `roles=`, as
+[`PageClient.caller`](../api/python-sdk.md#testing) does, to call it in a
+session narrowed to some roles.
 
 ## Beside core's own tools
 
@@ -118,6 +145,8 @@ sees a ticket, are in [Tickets and the inbox](../concepts/tickets-and-the-inbox.
 
 When they connect an agent, the consent page lists under each plugin and
 level the tools that row reaches, reads and acts apart; they tick rows,
-never single tools. Every call is listed in their Connected clients, never
+never single tools. From contract v15 a row is a plugin's role at a level,
+each listing the tools it reaches, and a delegation narrowed to rows
+reaches only those roles. Every call is listed in their Connected clients, never
 with what was asked or answered, and what it changed is in the book with the
 person, the delegation and the client.

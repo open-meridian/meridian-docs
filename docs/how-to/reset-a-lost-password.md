@@ -33,8 +33,8 @@ The sign-in page then says **Your password is set. Sign in with it.**
 
 ## What happens
 
-- Every session the account held ends, in browsers and in terminals, and every delegation it made
-  is revoked. Run `meridian connect` again on each computer that used it.
+- Every session the account held ends, in browsers (and, before contract v15, in terminals), and
+  every delegation it made is revoked. Run `meridian connect` again on each computer that used it.
 - The account's failed attempts and any lockout are cleared.
 
 !!! warning "The code is spent when you submit"
