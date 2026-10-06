@@ -19,10 +19,16 @@ plugins:
 hooks:
   - tools/boundaries_page.py
 
+# The header logo is the mark in white, for the navy header. The tab icon is
+# meridian-design's brand/ favicon set: favicon.svg turns from indigo to soft
+# indigo on a dark tab by itself; overrides/main.html links the PNG, the SVG
+# again typed and last, and the home-screen icon; docs/favicon.ico answers
+# /favicon.ico.
 theme:
   name: material
+  custom_dir: overrides
   logo: assets/mark.svg
-  favicon: assets/mark.svg
+  favicon: assets/favicon.svg
   palette:
     - scheme: default
       primary: custom

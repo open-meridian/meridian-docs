@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{#
+  The tab icon beyond theme.favicon, whose link the theme writes untyped: the
+  PNG for a browser that does not read SVG, then the SVG again with its type and
+  last, so one that does takes it; and the home-screen icon. meridian-design's
+  brand/README says how a surface serves the set.
+#}
+{% block extrahead %}
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ 'assets/favicon-32.png' | url }}">
+  <link rel="icon" type="image/svg+xml" href="{{ config.theme.favicon | url }}">
+  <link rel="apple-touch-icon" href="{{ 'assets/apple-touch-icon.png' | url }}">
+{% endblock %}
