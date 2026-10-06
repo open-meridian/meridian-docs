@@ -259,12 +259,14 @@ table: no page of its own sets any setting, and its **Account links** tab
 only shows how many plan-code links and cash links the settings hold. See
 [The custodian's activity](../concepts/the-custodians-activity.md#snaptrade-0110).
 
-!!! info "TODO: to be filled when SnapTrade 0.12.0 lands"
-    SnapTrade 0.12.0 (contract v15) is being built to re-resolve the
-    account's earlier activities under a code when its row is added or
-    changed, rather than only the activities read after it (see
-    [An activity re-resolved](../concepts/the-custodians-activity.md#an-activity-re-resolved)).
-    Say here what a row's change does once it is built.
+From SnapTrade 0.12.0 (contract v15, built and not yet released), activity
+that arrived before a row was added is re-resolved too: on the read the
+change wakes, each activity already recorded under that code on that account
+is re-resolved as the row's instrument, naming who added or last changed the
+row and when, beside the activity as it first arrived, which is kept.
+Changing the row re-resolves them again; removing it sends nothing, and they
+keep their latest resolution. A restart re-resolves nothing twice. See
+[SnapTrade 0.12.0](../concepts/the-custodians-activity.md#snaptrade-0120-a-plan-code-linked-later).
 
 ### SnapTrade: cash links
 

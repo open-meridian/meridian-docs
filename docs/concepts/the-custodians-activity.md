@@ -275,12 +275,37 @@ can be read back on the plugin's **Raw responses** tab. Its sync status
 carries `history_from`, the first transaction SnapTrade holds for the
 account.
 
-!!! info "TODO: to be filled when SnapTrade 0.12.0 lands"
-    SnapTrade 0.12.0, on open-meridian 0.20.0 (contract v15), is being built
-    to re-resolve an account's earlier activities under a plan code when a
-    plan-code link is added or changed (see
-    [An activity re-resolved](#an-activity-re-resolved)). Describe what it
-    does here once it is built.
+### SnapTrade 0.12.0: a plan code linked later
+
+!!! note "Built, not released"
+    SnapTrade 0.12.0, on open-meridian 0.20.0 (contract v15), is built and
+    not yet released.
+
+From 0.12.0 SnapTrade [re-resolves](#an-activity-re-resolved) the
+activities it reported under a plan's own code before anyone linked it.
+When a person adds or changes a row on **Plan-code links**, the account the
+row names is backfilled again on the read that change wakes, and each
+activity the street already holds under a linked code on that account is
+re-resolved through the link: to the instrument record the row names,
+supplied by the person who added or last changed the row, at the time the
+row says it was changed, never when the plugin happened to read it. The
+street keeps each activity as first recorded and the re-resolution beside
+it.
+
+- **On start**, the first backfill does the same for every current link.
+- **Nothing twice.** The street answers already recorded a re-resolution
+  naming what an activity's latest resolution already names, so a restart,
+  a settings delivery again, or an activity first recorded through the same
+  link re-resolves nothing twice, and the plugin holds nothing to remember
+  it by.
+- **A row removed sends nothing.** The activities it re-resolved keep their
+  latest resolution.
+- A row saying no time it was changed re-resolves nothing, and the read
+  says why.
+
+Each backfill's log line counts the activities re-resolved through a
+plan-code link. SnapTrade holds one role, so access per role changes nothing
+of its pages or settings.
 
 ### The sample operations plugin 0.8.0
 
