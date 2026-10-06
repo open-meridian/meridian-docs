@@ -7,9 +7,9 @@ written from the contract alone reconciles any custodian the same way. This page
 custody plugin does for each, with [meridian-snaptrade](https://github.com/open-meridian/meridian-snaptrade)
 0.9.0 as the worked example.
 
-!!! note "Built, not released"
-    This page describes the Python SDK 0.16.0 (contract v11) and the command line after 0.1.27,
-    built and not yet released. The rest of these pages describe SDK 0.14.0 (contract v9).
+!!! note "Released 2026-10-05"
+    This page describes the Python SDK 0.19.0 (contract v14), on PyPI, and CLI 0.1.34, saying
+    where a part arrived in an earlier version.
 
 From contract v14 a custody plugin also reports each activity on an account, each with a raw
 record of its own: see [Report the custodian's activity](report-the-custodians-activity.md).

@@ -11,10 +11,11 @@ such as, per account, a plan's own fund code and the instrument it is. This
 page shows an admin how to fill the form and a table's tab, and a plugin's
 developer how to declare a table and read its rows.
 
-!!! note "Built, not released"
-    This page describes open-meridian 0.19.0 (contract v14) on a runtime
-    serving v14, built and not yet released. The table setting is `preview`
-    in v14. A runtime serving v13 refuses a plugin built on 0.19.0, naming
+!!! note "Released 2026-10-05"
+    This page describes open-meridian 0.19.0 (contract v14), on PyPI, with
+    CLI 0.1.34, the runtime chart 0.1.262 and the SnapTrade plugin 0.11.1.
+    The data dictionary marks the table setting's rows `preview` in the
+    contract. A runtime serving v13 refuses a plugin built on 0.19.0, naming
     both versions.
 
 ## Open the form

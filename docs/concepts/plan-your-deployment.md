@@ -112,7 +112,7 @@ Each profile below is a table, one row per need:
 The releases, in their order:
 
 1. **The custodian's activity**: what happened on an account, explaining a
-   break. Built, not yet released.
+   break. Released 2026-10-05.
 2. **Access per role**: a person granted a level on one role of a plugin, so
    one plugin's custody and operations can be given to different people.
 3. **The archive**: an admin's hold on a plugin's raw records, older ones
@@ -138,9 +138,9 @@ value. No trading yet.
 | Need | Role | Plugin | Registry | Status |
 |---|---|---|---|---|
 | Holdings and cash from Fidelity, daily | [`custody`](roles.md#custody) | SnapTrade | Local | Exists |
-| Dividends, reinvestments, splits and transfers, back to the start of the history SnapTrade holds | [`custody`](roles.md#custody) | SnapTrade | Local | Exists; built, not yet released |
-| A 401(k) plan's own fund codes linked to their instruments | [`custody`](roles.md#custody) | SnapTrade, its Plan-code links table | Local | Exists; built, not yet released |
-| The IRA's core position, an FDIC-insured deposit, counted as cash | [`custody`](roles.md#custody) | SnapTrade, by its own flag or its Cash links table | Local | Exists; built, not yet released |
+| Dividends, reinvestments, splits and transfers, back to the start of the history SnapTrade holds | [`custody`](roles.md#custody) | SnapTrade | Local | Exists |
+| A 401(k) plan's own fund codes linked to their instruments | [`custody`](roles.md#custody) | SnapTrade, its Plan-code links table | Local | Exists |
+| The IRA's core position, an FDIC-insured deposit, counted as cash | [`custody`](roles.md#custody) | SnapTrade, by its own flag or its Cash links table | Local | Exists |
 | An opening balance per account, with its lots, and daily reconciliation, each break explained | [`operations`](roles.md#operations) | The sample operations plugin | Local | Exists |
 | Daily closes for stocks and ETFs | [`dgm`](roles.md#dgm) | Alpaca and Tradier | Planned | Planned, in valuation |
 | US dollar exchange rates | [`dgm`](roles.md#dgm) | The Federal Reserve's H.10 rates | Planned | Planned, in valuation |

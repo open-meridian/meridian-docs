@@ -15,12 +15,12 @@ lot or cash figure from it, and nothing moves the book until a person
 confirms an entry. Nothing here books income: a reinvested dividend is
 proposed as the lot it bought, no more.
 
-!!! note "Built, not released"
-    This page describes a runtime serving contract v14 and open-meridian
-    0.19.0, with the SnapTrade plugin 0.11.0 and the sample operations plugin
-    0.8.0 on it, built and not yet released. The rows v14 adds are
-    `preview`. A plugin built on 0.19.0 is refused by a runtime serving
-    v13, naming both versions.
+!!! note "Released 2026-10-05"
+    This page describes open-meridian 0.19.0 (contract v14), on PyPI, with
+    CLI 0.1.34, the runtime chart 0.1.262, the SnapTrade plugin 0.11.1 and
+    the sample operations plugin 0.8.1. The data dictionary marks the rows
+    v14 adds `preview` in the contract. A plugin built on 0.19.0 is refused
+    by a runtime serving v13, naming both versions.
 
 Without it, every money market fund's monthly dividend, every split and
 every fund bought in a retirement plan under the plan's own code shows as a

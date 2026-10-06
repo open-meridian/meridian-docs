@@ -9,10 +9,11 @@ This page shows what each side does, with
 never a source, and what operations does with it, is in
 [The custodian's activity](../concepts/the-custodians-activity.md).
 
-!!! note "Built, not released"
-    This page describes open-meridian 0.19.0 (contract v14) on a runtime
-    serving v14, built and not yet released. `record_activity`,
-    `list_activities` and `list_sync_statuses` are `preview` in v14.
+!!! note "Released 2026-10-05"
+    This page describes open-meridian 0.19.0 (contract v14), on PyPI, with
+    CLI 0.1.34, the runtime chart 0.1.262 and the SnapTrade plugin 0.11.1.
+    The data dictionary marks the rows of `record_activity`,
+    `list_activities` and `list_sync_statuses` `preview` in the contract.
 
 ## Say how far back the history reaches
 
