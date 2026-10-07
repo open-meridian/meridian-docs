@@ -313,6 +313,20 @@ A position that becomes cash leaves the account's next statement. Where the
 book holds it, from an opening balance say, the difference shows as a break,
 which a person confirms once, as an adjustment.
 
+### An edge plugin's windows
+
+From contract v16 (built and not yet released) every plugin at the edge that
+declares kinds of raw record has two settings per kind on this form, the
+same for every such plugin: *Kind*: **window**, in days, and *Kind*: **past
+the window**, archived, kept or deleted. SnapTrade 0.13.0's are **Reported
+activity: window** and **Raw responses: window**, with a past-the-window
+choice for each; they replace 0.12.0's **Keep activity records for** and
+**Keep raw responses for**, whose values are not carried over. The
+deployment refuses a window below the hold over the plugin, and archived
+where no archive is allowed. See
+[Set a plugin's windows](keep-older-records-in-the-archive.md#set-a-plugins-windows)
+and [Upgrade SnapTrade to 0.13.0](keep-older-records-in-the-archive.md#upgrade-snaptrade-to-0130).
+
 ## Related
 
 - [Plugins, roles and grants](../concepts/plugins.md#manage-open-and-view):

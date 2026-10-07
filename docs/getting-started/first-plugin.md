@@ -66,14 +66,20 @@ writes it somewhere other than `./my-plugin`. It never writes over a directory t
 | File | What it is |
 |---|---|
 | `src/my_plugin/__main__.py` | Connects to the sidecar, declaring its pages, logs who it was launched as and what it may do, serves the pages, and reports itself healthy. |
-| `src/my_plugin/page.py` | The pages people see through the dashboard, each a view function declared with the levels it serves: **Setup** (`/setup`), at `admin`, says what the plugin is and what the deployment lets it do, and shows no account's data; **Accounts** (`/`), at `write` and `read`, shows the accounts the person may read and write through the plugin, and under Open one action that writes for them. |
+| `src/my_plugin/page.py` | The pages people see through the dashboard, each a view function declared with the levels it serves: **Setup** (`/setup`), at `admin`, says what the plugin is and what the deployment lets it do, and shows no account's data; **Accounts** (`/`), at `write` and `read`, shows the accounts the person may read and write through the plugin, and under Open a statement button (see the TODO below the table). |
 | `src/my_plugin/templates/` | The pages' Jinja2 templates, `setup.html` and `accounts.html`, each extending the kit's base template. |
-| `pyproject.toml` | The package, pinned exactly to the SDK, `open-meridian==0.20.0` from CLI 0.1.35 (0.19.0 from CLI 0.1.34). Its `[tool.meridian]` table declares the plugin's `roles` and whether it serves a page. |
-| `Dockerfile` | Builds on the SDK's base image of the same version, `ghcr.io/open-meridian/plugin-python:0.20.0`. |
-| `tests/test_page.py` | Tests of the pages, run by `meridian plugin check --run-tests`: each page under each level, no account data under Manage, and the action sent for the person. |
+| `pyproject.toml` | The package, pinned exactly to the SDK, `open-meridian==0.21.0` from the CLI release after 0.1.35 (0.20.0 from CLI 0.1.35, 0.19.0 from CLI 0.1.34). Its `[tool.meridian]` table declares the plugin's `roles` and whether it serves a page. |
+| `Dockerfile` | Builds on the SDK's base image of the same version, `ghcr.io/open-meridian/plugin-python:0.21.0`. |
+| `tests/test_page.py` | Tests of the pages, run by `meridian plugin check --run-tests`: each page under each level, no account data under Manage, and the statement button under Open (see the TODO below the table). |
 | `.github/workflows/check.yaml` | A CI workflow that runs `meridian plugin check --run-tests` on every push. |
 | `AGENTS.md`, `CLAUDE.md`, `.claude/skills/develop-live/` | Instructions for coding agents: building pages with the kit, the live loop, and `meridian plugin check`. `.dockerignore` keeps them out of the image. |
 | `README.md`, `.gitignore`, `.dockerignore` | The usual. |
+
+!!! info "TODO: the Accounts page's statement button, to be filled when its fix lands"
+    The template's **Accounts** page has a statement button under Open. It is being fixed now so
+    that it uses a linked external account, and says "Link an account first" when none is linked.
+    Describe what the button does, and what `tests/test_page.py` holds it to, once the fix is
+    built.
 
 `meridian plugin check` holds the plugin to the rules every plugin is built to, and a new plugin keeps
 them all. Run it after each change; see [the command line](../api/cli.md#plugin-check).
@@ -140,7 +146,7 @@ meridian plugin list
 
 ```text
 Versions:
-  my-plugin 0.1.0  roles: none  page: yes  SDK 0.20.0
+  my-plugin 0.1.0  roles: none  page: yes  SDK 0.21.0
 Launches:
   my-plugin  my-plugin 0.1.0  launched
 ```

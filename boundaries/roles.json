@@ -1260,6 +1260,12 @@
       "step": "W4.12",
       "title": "A plugin files a ticket, and reads what it filed",
       "stability": "preview"
+    },
+    {
+      "name": "RecordMove",
+      "step": "W4.13",
+      "title": "Report a move of raw records",
+      "stability": "preview"
     }
   ],
   "combinations": [

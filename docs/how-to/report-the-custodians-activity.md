@@ -178,8 +178,14 @@ key, written once, and keep it as long as the history you reported, so the
 record behind every activity the street holds can always be read back on
 your plugin's page. Declare that retention with the storage your version asks
 for (see [Keep what your custody plugin converts](keep-what-the-edge-converts.md)).
-SnapTrade keeps each activity's record, `activities/<external account>/<activity ID>`,
-for seven years, and each read's responses for its `raw_retention_days`.
+From contract v16 (open-meridian 0.21.0, built and not yet released), declare
+the activity's record as a kind of raw record of its own, with a long window,
+and past it move it to the archive rather than delete it (see
+[The archive](../concepts/the-archive.md)). SnapTrade 0.13.0 keeps each
+activity's record, `activities/<external account>/<activity ID>`, for its
+`activity_window_days`, seven years by default, never deleting one within the
+history it reported, and each read's responses for its `responses_window_days`,
+30 days by default.
 
 A vendor field you receive and do not carry, such as an activity's fee or
 exchange rate, is declared as not carried and counted, as for holdings.

@@ -41,6 +41,13 @@ no file it expects to find again. What it needs, it reads from the deployment
 when it starts. What must last — holdings, statements, instruments,
 configuration — lives in the deployment's own stores.
 
+A plugin at the edge, one holding `ccm`, `custody`, `servicing`, `match`,
+`settlement`, `dgm` or `reporting`, may also own storage the deployment
+grants its instance alone, for the raw records its vendor sent it, and
+rebuild from it; no other plugin reads it. From contract v16 (built, not
+released) its older records may move to an archive the deployment provides:
+see [The archive](the-archive.md).
+
 ## Roles: what a plugin is for
 
 A **role** says what a plugin is for, and it is the only thing that decides

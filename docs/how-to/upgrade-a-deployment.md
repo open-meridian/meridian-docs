@@ -64,6 +64,13 @@ Upgrading meridian in meridian:
 Upgrade it? [y/N]
 ```
 
+From the CLI release after 0.1.35, where the deployment was installed with an archive for its
+edge plugins' older records, the plan says it is kept, as every value the deployment was given is:
+
+```text
+  Its archive, /mnt/nas/meridian-archive on the cluster's node, is kept: the deployment's own values carry it.
+```
+
 If a node restart has left pods behind, the plan names them too, and the same answer covers removing
 them (see [pods left over from a restart](#pods-left-over-from-a-restart)):
 

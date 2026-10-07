@@ -67,6 +67,7 @@ EVERY_PLUGIN_SECTIONS = {
     "WatchAccountScope": "account_scope",
     "FileTicket": "file_ticket",
     "FiledTickets": "filed_tickets",
+    "RecordMove": "the-archive",
 }
 
 # The pages llms.txt sends an agent to beside the roles and the operations.
@@ -75,7 +76,7 @@ GUIDES = [
      "every operation a plugin's roles let it take, with its arguments, what it returns and its errors"),
     (SDK, "Python SDK",
      "connecting to the sidecar, settings, access, figures, receiving what a plugin's roles hear, "
-     "filing a ticket for a person, and pages"),
+     "filing a ticket for a person, an edge plugin's archive, and pages"),
     ("concepts/plan-your-deployment.md", "Plan your deployment",
      "a firm's profile answered in three layers: core as its books and records, the plugins by role "
      "(existing, planned in a named release, or to build against the contract) and configuration, "

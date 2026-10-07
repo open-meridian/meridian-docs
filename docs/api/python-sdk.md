@@ -12,7 +12,7 @@ pip install open-meridian
 |---|---|
 | PyPI name | `open-meridian` |
 | Import name | `meridian` |
-| Version | 0.20.0 |
+| Version | 0.21.0 |
 | Python | 3.11 or newer |
 | Dependencies | `grpcio>=1.68,<2`, `protobuf>=5.28,<7`, `jinja2>=3.1,<4` (from 0.10.0, for [pages](#pages)) |
 | Licence | Apache-2.0 |
@@ -20,7 +20,12 @@ pip install open-meridian
 !!! warning "Not `meridian-sdk`"
     The PyPI package `meridian-sdk` belongs to an unrelated company. Don't install it.
 
-A plugin pins the SDK exactly, `open-meridian==0.20.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.20.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls; from 0.12.0 to 0.13.0, from 0.13.0 to 0.14.0, and from 0.19.0 to 0.20.0, only the pins move. `meridian plugin new` writes a plugin pinned to 0.19.0 from CLI 0.1.34, and to 0.20.0 from CLI 0.1.35. See [Plugin manifest](plugin-manifest.md).
+!!! note "0.21.0 is built, not released"
+    0.21.0, which declares contract v16 ([the archive](#the-archive)), is
+    built and not yet on PyPI, and neither is its base image. Until it is,
+    `pip install open-meridian` installs 0.20.0 (contract v15).
+
+A plugin pins the SDK exactly, `open-meridian==0.21.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.21.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls; from 0.12.0 to 0.13.0, from 0.13.0 to 0.14.0, from 0.19.0 to 0.20.0, and from 0.20.0 to 0.21.0, only the pins move. `meridian plugin new` writes a plugin pinned to 0.19.0 from CLI 0.1.34, to 0.20.0 from CLI 0.1.35, and to 0.21.0 from the CLI release after it. See [Plugin manifest](plugin-manifest.md).
 
 | Optional extra | Installs | For |
 |---|---|---|
@@ -74,11 +79,13 @@ A plugin that serves pages declares them with [`meridian.Pages`](#pages) and pas
 | `Heard` | frozen dataclass | [Receive](#receive), from 0.12.0 |
 | `TicketKind`, `TicketState`, `TicketResolution`, `TicketSubject`, `TicketReference` | generated protobuf enums, `StrEnum`, frozen dataclass | [`file_ticket()`](#file_ticket), from 0.18.0 |
 | `CustodialActivity` | frozen dataclass | [Typed operations](typed-operations.md#custodialactivity), from 0.19.0 |
+| `Storage`, `RecordKind` | frozen dataclasses | [The archive](#the-archive); `RecordKind` from 0.21.0 |
+| `StoredSpan`, `MoveOutcome` | generated protobuf message and enum | [The archive](#the-archive), from 0.21.0 |
 | `ActivityKind`, `ActivityRef` | generated protobuf enum and message | [Typed operations](typed-operations.md#activitykind), from 0.19.0 |
 | `CallerMiddleware` | ASGI middleware | [`CallerMiddleware`](#callermiddleware) |
 | `MeridianError`, `Refused`, `NoSidecar`, `NotRegistered`, `NotGranted`, `CallFailed`, `NotLinked`, `CommandRefused` | exceptions | [Exceptions](#exceptions); `CommandRefused` from 0.13.0, its `fields` from 0.14.0 |
 | `DEFAULT_ADDRESS` | `str` | `"127.0.0.1:9191"`, where a sidecar listens |
-| `SCHEMA_VERSION` | `str` | the contract version sent at registration: `"v15"` from 0.20.0, `"v14"` in 0.19.0, `"v13"` in 0.18.0, `"v12"` in 0.17.0, `"v11"` in 0.16.0, `"v10"` in 0.15.0, `"v9"` in 0.14.0, `"v8"` in 0.13.0, `"v7"` in 0.12.0, `"v6"` in 0.11.0, `"v5"` in 0.10.0 and 0.10.1, `"v4"` in 0.9.0, `"v3"` in 0.8.0, `"v2"` before |
+| `SCHEMA_VERSION` | `str` | the contract version sent at registration: `"v16"` from 0.21.0, `"v15"` in 0.20.0, `"v14"` in 0.19.0, `"v13"` in 0.18.0, `"v12"` in 0.17.0, `"v11"` in 0.16.0, `"v10"` in 0.15.0, `"v9"` in 0.14.0, `"v8"` in 0.13.0, `"v7"` in 0.12.0, `"v6"` in 0.11.0, `"v5"` in 0.10.0 and 0.10.1, `"v4"` in 0.9.0, `"v3"` in 0.8.0, `"v2"` before |
 
 The module `meridian.testing` holds [`PageClient`](#testing) and [`heartbeat`](#testing), for a plugin's own tests.
 
@@ -93,6 +100,7 @@ async def connect(
     interface: Interface | None = None,
     settings: Sequence[Setting] = (),
     reads_external_accounts: bool = False,
+    declaration: Declaration | None = None,
 ) -> Plugin
 ```
 
@@ -106,8 +114,9 @@ Registers with the sidecar and returns the admitted plugin. A `Plugin` you hold 
 | `interface` | `Interface` or `None` | `None` | The pages the plugin serves on loopback, if any. |
 | `settings` | sequence of `Setting` | `()` | The settings the plugin needs an admin of it to give it, on the dashboard's Settings form, or a table on its own tab beside it. A plugin sets none of them itself. |
 | `reads_external_accounts` | `bool` | `False` | `True` when the plugin reads accounts at an external source and names them by that source's identifiers. An admin of the plugin links those to accounts, and the sidecar translates them on the way in. |
+| `declaration` | `Declaration` or `None` | `None` | The version's declaration, the same one `meridian plugin upload` reads from the image: its secret settings' names, what it does not carry and the storage it asks for. See [Keep what your custody plugin converts](../how-to/keep-what-the-edge-converts.md). From 0.21.0, where its storage declares kinds of raw record, `connect` declares each kind's two window settings and the restore route besides; see [The archive](#the-archive). |
 
-The contract version it sends is `SCHEMA_VERSION`, `"v15"` from 0.20.0. A sidecar accepts a range of versions, v2 through the one its runtime serves, v15 at contract v15: a plugin built for an older version it still supports registers, and one built for a newer version than the sidecar knows is refused at registration, naming both, rather than running without what it was built for. After an upgrade, relaunch plugins so they get the newer sidecar (`meridian upgrade-deployment` names the ones that need it).
+The contract version it sends is `SCHEMA_VERSION`, `"v16"` from 0.21.0. A sidecar accepts a range of versions, v2 through the one its runtime serves, v16 at contract v16: a plugin built for an older version it still supports registers, and one built for a newer version than the sidecar knows is refused at registration, naming both, rather than running without what it was built for. After an upgrade, relaunch plugins so they get the newer sidecar (`meridian upgrade-deployment` names the ones that need it).
 
 **Raises:**
 
@@ -132,6 +141,7 @@ Built by `connect`. It is an async context manager: leaving the `async with` blo
 | `identity` | `Identity` | Who the plugin was launched to be: instance, roles, deployment. Read from the registration reply, never sent by the plugin. |
 | `grants` | `Grants` | What the deployment allowed, as the topic patterns it allowed them as. |
 | `figures` | sequence of `Figure` | The figures the plugin reports on its Summary, as last set. Set it to report a new list. From 0.11.0; see [Figures](#figures). |
+| `stored` | sequence of `StoredSpan` | What the plugin's storage holds of each kind of raw record it declared, as last set, on every heartbeat from the next on. From 0.21.0; see [What is stored](#what-is-stored). |
 
 `grants` is for failing early with a good message, at startup, rather than at the first refused operation. The sidecar refuses independently of what the plugin believes, and the SDK offers no "is this allowed" check.
 
@@ -144,6 +154,10 @@ Built by `connect`. It is an async context manager: leaving the `async with` blo
 | `access()` | `Awaitable[PluginAccessReply]` | Who may use this plugin. |
 | `file_ticket(*, title, kind, idempotency_key, for_caller, ...)` | `Awaitable[FileTicketReply]` | File a ticket for the person whose request the plugin is serving. From 0.18.0; see [`file_ticket()`](#file_ticket). |
 | `filed_tickets(*, for_caller, ticket_ids=(), idempotency_keys=(), cursor="")` | `Awaitable[ReadFiledTicketsReply]` | What became of the tickets the plugin filed. From 0.18.0; see [`filed_tickets()`](#filed_tickets). |
+| `archive_unit(record_kind, unit, *, record_count, first_received_ns, last_received_ns)` | `Awaitable[None]` | Move a unit past its window to the archive. From 0.21.0; see [The archive](#archive_unit). |
+| `restore_unit(record_kind, unit, *, for_caller)` | `Awaitable[Path]` | Restore an archived unit for a person, answering where it is readable. From 0.21.0; see [The archive](#restore_unit). |
+| `delete_unit(record_kind, unit, *, record_count=0, first_received_ns=0, last_received_ns=0, for_caller=None)` | `Awaitable[None]` | Delete a unit, the deletion reported first. From 0.21.0; see [The archive](#delete_unit). |
+| `find_record(key)` | `RecordMoveRequest` or `None` | Where a raw record's key stands: the last move of the unit holding it. From 0.21.0; see [The archive](#find_record). |
 | `report(*, healthy, detail="", figures=None)` | `Awaitable[None]` | Report the plugin's health now, outside the heartbeat. It stands until reported again. |
 | `leave(reason="")` | `Awaitable[None]` | Say the plugin is stopping, and close the connection. |
 | `receive(*, statement_recorded=None, custodial_position_updated=None, position_changed=None, break_changed=None, account_figures_recorded=None, account_attribute_changed=None, activity_recorded=None, sync_status_recorded=None, activity_re_resolved=None, seed=True)` | `Awaitable[None]` | Hear the rows the plugin's roles hear, a handler per row, until cancelled. From 0.12.0, the book's rows from 0.13.0, the custodian's activity and each sync status from 0.19.0, an activity re-resolved from 0.20.0; see [Receive](#receive). |
@@ -468,6 +482,185 @@ At most 8 figures; a label of 1 to 40 characters, given once; a text of at most 
 The sidecar checks them again. A heartbeat it refuses still says the plugin is alive; the plugin is then reported not healthy, the refusal as its why, with no figures. Core draws no figures for a plugin that is not registered or has fallen silent, since they would be stale; its status says why.
 
 In a plugin's tests, [`meridian.testing.heartbeat`](#testing) is the heartbeat its sidecar receives, or the refusal.
+
+## The archive { #the-archive }
+
+From 0.21.0, contract v16. A plugin holding an edge role declares the kinds of raw record it keeps; past each kind's window it archives, keeps or deletes them, as its admin chose, in units it can find again; and it reports every move through its sidecar before it removes anything. What that means for the people using it is in [The archive](../concepts/the-archive.md). Each field on the wire is in the data dictionary: [`RawRecordKind`](../boundaries/sidecar.md#meridian.v1.RawRecordKind), [`StoredSpan`](../boundaries/sidecar.md#meridian.v1.StoredSpan) and [`RecordMoveRequest`](../boundaries/sidecar.md#meridian.v1.RecordMoveRequest).
+
+```python
+import meridian
+from meridian.declaration import Declaration, RecordKind, Storage
+
+DECLARATION = Declaration(
+    settings=SETTINGS,
+    storage=Storage(kinds=[
+        RecordKind("activity", "Reported activity", window_days=2555),
+        RecordKind("responses", "Raw responses", window_days=30),
+        RecordKind("session", "Session state", window_days=7, archivable=False),
+    ]),
+)
+
+async with await meridian.connect(declaration=DECLARATION, interface=INTERFACE) as plugin:
+    async for settings in plugin.settings():
+        window = settings.values["activity_window_days"]   # days, the admin's
+        past = settings.values["activity_past_window"]     # archived, kept or deleted
+        for unit, count, first, last in units_past(window):  # the plugin's own units
+            if past == "archived":
+                await plugin.archive_unit("activity", unit, record_count=count,
+                                          first_received_ns=first, last_received_ns=last)
+            elif past == "deleted":
+                await plugin.delete_unit("activity", unit, record_count=count,
+                                         first_received_ns=first, last_received_ns=last)
+        plugin.stored = [meridian.StoredSpan(record_kind="activity", record_count=...,
+                                             first_received_ns=..., last_received_ns=...)]
+```
+
+### `Storage` and `RecordKind` { #recordkind }
+
+```python
+@dataclass(frozen=True)
+class Storage:
+    retention_days: int = 0
+    kinds: Sequence[RecordKind] = ()
+
+@dataclass(frozen=True)
+class RecordKind:
+    name: str
+    label: str
+    window_days: int
+    archivable: bool = True
+```
+
+`Storage` is the storage a version asks for, on its `Declaration`; only a plugin holding an edge role may ask for it. From 0.21.0 it takes `kinds`.
+
+| Field | Meaning |
+|---|---|
+| `Storage.kinds` | The kinds of raw record the version keeps, at most 16, each named once. |
+| `Storage.retention_days` | The reach of a backfill, 1 to 36,500 days. Left 0 with kinds, it is the longest of their windows. A version declaring no kinds keeps its records under it, as before 0.21.0. |
+| `RecordKind.name` | The name its code and settings use: 1 to 40 lowercase letters, digits and underscores, beginning with a letter, such as `activity`. |
+| `RecordKind.label` | The label a person reads, 1 to 40 characters, such as `Reported activity`. |
+| `RecordKind.window_days` | Its default window, 1 to 36,500 days from when a record was received. |
+| `RecordKind.archivable` | Whether a unit of it can be moved to an archive. `False` for state read and updated in place. |
+
+**Raises** `ValueError` when the declaration is built: a bound broken, a kind declared twice, or a setting of the plugin's own taking one of the window settings' names below.
+
+### The window settings
+
+For each kind, `connect` declares two settings beside the plugin's own, the same for every edge plugin, which an admin of the plugin sets on its Settings form. On a plugin naming roles, they serve its edge roles.
+
+| Setting | Label | Kind | Default |
+|---|---|---|---|
+| `<kind>_window_days` | *Label*: window | `int`, days | the kind's `window_days` |
+| `<kind>_past_window` | *Label*: past the window | a choice of `archived`, `kept` or `deleted` | `archived` where the instance was given an archive and the kind is archivable; `kept` otherwise |
+
+The names are the SDK's: a plugin declaring a setting of either name for a kind it declares is refused by the SDK, by the sidecar at registration, and by `meridian plugin check` ([`window-settings`](cli.md#the-rules)). Read them from [`settings()`](#settings) as delivered. The deployment refuses a save setting a window below the hold over the instance, naming the setting, and `archived` for a kind not archivable or an instance allowed no archive.
+
+### `edge.archive_dir()` { #archive_dir }
+
+```python
+def archive_dir() -> Path | None
+```
+
+In `meridian.edge`. The archive a deployment admin allowed this instance, where it is mounted (`MERIDIAN_ARCHIVE_DIR`), or `None`: in a test, for an instance allowed none, or where the archive is a bucket instead (`MERIDIAN_ARCHIVE_BUCKET`, an `s3://` URL read through `boto3`, which a plugin deployed with one installs). The helpers below reach either through the same interface; a plugin need not read the archive itself. Its storage is `edge.storage_dir()`, as before.
+
+### A unit
+
+A **unit** is a file or a directory in the plugin's storage, named by its path there, such as `activity/ACC-1/2019-03`. The records it holds are the paths within it, which rows name as their raw record's key (`plugin.raw_record("activity/ACC-1/2019-03/act-77.json")`). The helpers keep an index of what moved inside the storage, under `.meridian/`, which is never a unit.
+
+### `archive_unit()` { #archive_unit }
+
+```python
+async def archive_unit(
+    self, record_kind: str, unit: str, *,
+    record_count: int, first_received_ns: int, last_received_ns: int,
+) -> None
+```
+
+Moves one unit past its window to the archive: writes it there, checks that each file landed (its size and SHA-256), reports the move through the sidecar with its rule, the kind's window setting and its value (`activity_window_days 2555`), and only then removes it from storage. `record_count` and the span are the records the unit holds, 1 or more, the span from the first received to the last.
+
+| Raises | When |
+|---|---|
+| `ValueError` | The kind is not declared, or declared not archivable; the unit is archived already; the count or span is out of bounds; or the kind's `<kind>_past_window` is not `archived`. |
+| `RuntimeError` | The instance is allowed no archive; the settings have not arrived yet; or the unit would take the archive past its bound (`MERIDIAN_ARCHIVE_MOST_BYTES`), saying what the archive holds, its bound and the unit's size. Nothing is written or reported, and the unit stays in storage. |
+| `FileNotFoundError` | The unit is not in the plugin's storage. |
+| `CallFailed`, `NotGranted` | The sidecar refused the move: nothing is recorded, and the unit is kept. |
+
+### `restore_unit()` { #restore_unit }
+
+```python
+async def restore_unit(self, record_kind: str, unit: str, *, for_caller: Caller | str) -> Path
+```
+
+Restores an archived unit for the person who asked: copies it back from the archive to the restore area in storage, each file checked against what was archived, reports the restore for `for_caller` (their `Caller`, or the header it was read from), and answers where the unit is readable. It stays readable for seven days, the restore period; then it is removed and its return reported, under the rule `restore period 7 days`. Asked again meanwhile, it answers the same path and reports nothing.
+
+| Raises | When |
+|---|---|
+| `ValueError` | The unit is not archived. |
+| `RuntimeError` | The instance has no archive now: what it holds is kept, and restorable once a deployment admin allows one again. |
+| `NotGranted` | The person does not hold `write` on one of the plugin's edge roles. The copy is removed. |
+| `OSError` | A file did not come back as it was archived. |
+
+### The restore route
+
+An edge plugin declaring kinds and serving pages through [`meridian.Pages`](#pages) offers `POST /archive/restore` on its host, which `connect` declares at `write` on the plugin's edge roles and the deployment derives as the `restore_unit` tool on its MCP surface. It takes `record_kind` (at most 40 characters) and `unit` (at most 512), as a form or as the tool's input, restores the unit for the person the claims name, and answers a form with a redirect to the page it came from and the tool with `{"record_kind": ..., "unit": ..., "outcome": "restored"}`. A refusal names the field (`record_kind` or `unit`), or says `not_granted` or `not_restored`. A plugin's page offers it as a form under Open, posting the two fields:
+
+```html+jinja
+{% if level == "write" %}
+<form method="post" action="/archive/restore">{{ csrf_input }}
+  <input type="hidden" name="record_kind" value="responses">
+  <input type="hidden" name="unit" value="{{ unit }}">
+  <button>Restore</button>
+</form>
+{% endif %}
+```
+
+### `delete_unit()` { #delete_unit }
+
+```python
+async def delete_unit(
+    self, record_kind: str, unit: str, *,
+    record_count: int = 0, first_received_ns: int = 0, last_received_ns: int = 0,
+    for_caller: Caller | str | None = None,
+) -> None
+```
+
+Deletes one unit, the deletion reported before anything is removed, so a refusal keeps it. Either a unit in storage past its window, as the plugin itself, where the kind's `<kind>_past_window` is `deleted`, its count and span given; or an archived unit, which is an admin's act, `for_caller` the person holding `admin` on one of the plugin's edge roles, its count and span the index's.
+
+| Raises | When |
+|---|---|
+| `CommandRefused` | The unit's last record was received inside the deployment's hold over the instance: `reason_name` is `REFUSAL_REASON_WITHIN_HOLD`. Nothing is recorded, and nothing is deleted. The plugin is never told the hold; try again on a later pass. |
+| `ValueError` | The kind is not declared; the unit is deleted already; the unit is archived and no `for_caller` is given; or, as the plugin itself, the kind's `<kind>_past_window` is not `deleted`. |
+| `RuntimeError` | The settings have not arrived yet. |
+| `FileNotFoundError` | The unit is not in the plugin's storage. |
+| `NotGranted` | The person does not hold `admin` on one of the plugin's edge roles. |
+| `CallFailed` | The sidecar or the deployment refused it otherwise. |
+
+### `find_record()` { #find_record }
+
+```python
+def find_record(self, key: str) -> RecordMoveRequest | None
+```
+
+Where a raw record's key stands, by the index: the last move of the unit holding it, the unit itself or a path in it, whose `outcome` is `MOVE_OUTCOME_ARCHIVED` (archived, restorable), `MOVE_OUTCOME_RESTORED` (readable in the restore area) or `MOVE_OUTCOME_DELETED`; or `None` for a record never moved, in storage where the plugin put it. A row's raw-record key resolves through it on the plugin's own page, never to nothing.
+
+### What is stored { #what-is-stored }
+
+`plugin.stored` is what the plugin's storage holds of each kind, as only the plugin knows it: one `StoredSpan` per kind, set whenever it changes and sent on every heartbeat from the next on, which the plugin's Summary draws beside what the archive holds.
+
+| `StoredSpan` field | Meaning |
+|---|---|
+| `record_kind` | A declared kind, once. |
+| `record_count` | How many records of it the storage holds. |
+| `first_received_ns`, `last_received_ns` | When the first and the last of them were received; both 0 with no record. |
+| `bytes` | The bytes the kind uses of the archive. The SDK fills it in from its index on every heartbeat, in place of any the plugin set, and adds a kind the plugin left out that the archive holds some of. |
+
+**Raises** `ValueError` for a kind not declared, a kind twice, more than 16, or a span that is not from the first record to the last, and `TypeError` for anything but a `StoredSpan`; nothing is set then.
+
+### The moves
+
+What a move carries, as the sidecar records it (`RecordMoveRequest`, contract v16): `record_kind`, `unit`, `record_count`, `first_received_ns`, `last_received_ns`, `outcome` (`MoveOutcome`: `MOVE_OUTCOME_ARCHIVED`, `MOVE_OUTCOME_RESTORED`, `MOVE_OUTCOME_RETURNED` or `MOVE_OUTCOME_DELETED`) and `rule`, a window's or the restore period's. A move made for a person names no rule: the person is read from the assertion, never a field. Nothing of a record's content is in a move.
+
+The sidecar checks each before it leaves, refusing `CallFailed` with `kind="invalid"` naming the field by its path: a kind the version did not declare, `archived` of a kind not archivable, a key, count, span or rule out of bounds. The deployment refuses `archived` for an instance allowed no archive. A restore, its return and an archiving for a person need `write` on one of the plugin's edge roles, and a deletion for a person `admin` (`NotGranted`).
 
 ## Types
 
@@ -970,7 +1163,7 @@ Every exception carries the sidecar's own words, so a log line says whether the 
 | `NotGranted` | `topic: str`, `reason: str` | A typed operation was refused permission. `topic` holds the operation's name (for example `"RecordHolding"`), and `reason` names what was missing. |
 | `CallFailed` | `topic: str`, `kind: str`, `detail: str` | A typed operation did not produce an answer. `topic` holds the operation's name. `kind` says which failure it was; see [Typed operations](typed-operations.md#errors). |
 | `NotLinked` | as `CallFailed`, with `kind="refused"` | A typed operation named an external account nobody has linked to an account, so nothing was recorded for it. A subclass of `CallFailed`, so code that caught `CallFailed` still catches it. Raised only when the refusal carries the code `REFUSAL_REASON_EXTERNAL_ACCOUNT_NOT_LINKED`. Not worth retrying: the next statement after an admin links the account records it. Added in 0.7.0; see [Typed operations](typed-operations.md#an-unlinked-external-account). |
-| `CommandRefused` | as `CallFailed`, with `kind="refused"`; `reason: int`, `reason_name: str`, `fields: tuple[str, ...]` | The book of record refused a command with a code of its own, such as `REFUSAL_REASON_OPENING_BALANCE_RECORDED`; `reason` is the code's number and `reason_name` its name. `fields`, from 0.14.0, names each field an incomplete entry left out, by its path in the call (`positions[0].settled_quantity`, `positions[1].lots[0].terms.cost`), for `REFUSAL_REASON_INCOMPLETE`, and is empty for every other refusal. A subclass of `CallFailed`. Not retried: the same command meets the same refusal. Added in 0.13.0; see [Typed operations](typed-operations.md#the-books-refusals). |
+| `CommandRefused` | as `CallFailed`, with `kind="refused"`; `reason: int`, `reason_name: str`, `fields: tuple[str, ...]` | The book of record refused a command with a code of its own, such as `REFUSAL_REASON_OPENING_BALANCE_RECORDED`; `reason` is the code's number and `reason_name` its name. `fields`, from 0.14.0, names each field an incomplete entry left out, by its path in the call (`positions[0].settled_quantity`, `positions[1].lots[0].terms.cost`), for `REFUSAL_REASON_INCOMPLETE`, and is empty for every other refusal. A subclass of `CallFailed`. Not retried: the same command meets the same refusal. Added in 0.13.0; see [Typed operations](typed-operations.md#the-books-refusals). From 0.21.0 also the sidecar's refusal of a deletion inside the deployment's hold, `REFUSAL_REASON_WITHIN_HOLD`, from [`delete_unit()`](#delete_unit): the unit is kept, and a later pass may try again once the hold has passed. |
 
 The sidecar's status is mapped onto these for typed operations:
 
@@ -978,7 +1171,8 @@ The sidecar's status is mapped onto these for typed operations:
 |---|---|
 | `PERMISSION_DENIED` | `NotGranted` |
 | `FAILED_PRECONDITION` carrying `REFUSAL_REASON_EXTERNAL_ACCOUNT_NOT_LINKED` | `NotLinked`, `kind="refused"` |
-| `FAILED_PRECONDITION`, any other | `CallFailed`, `kind="refused"` |
+| `FAILED_PRECONDITION` carrying any other code, from 0.21.0 | `CommandRefused`, `kind="refused"`: `REFUSAL_REASON_WITHIN_HOLD` |
+| `FAILED_PRECONDITION`, with no code | `CallFailed`, `kind="refused"` |
 | `UNAVAILABLE` | `CallFailed`, `kind="no handler"` |
 | `DEADLINE_EXCEEDED` | `CallFailed`, `kind="timeout"` |
 | `ABORTED` carrying a code | `CommandRefused`, `kind="refused"` |
@@ -995,6 +1189,10 @@ The sidecar's status is mapped onto these for typed operations:
 | Variable | Read by | Meaning |
 |---|---|---|
 | `MERIDIAN_SIDECAR_ADDRESS` | `connect` | The sidecar's address, when `address` is not given. |
+| `MERIDIAN_STORAGE_DIR` | `edge.storage_dir()` | Where the deployment mounted the instance's own storage, for a plugin holding an edge role. Unset where none is granted. |
+| `MERIDIAN_ARCHIVE_DIR` | `edge.archive_dir()`, the archive's helpers | From 0.21.0: where the instance's archive is mounted, beside its storage, once a deployment admin allows it one. Unset where none is allowed. See [The archive](#the-archive). |
+| `MERIDIAN_ARCHIVE_BUCKET` | the archive's helpers | From 0.21.0: in a cloud, the instance's own prefix of the deployment's bucket, in place of `MERIDIAN_ARCHIVE_DIR`. 0.21.0 reads an `s3://` URL, through `boto3`. |
+| `MERIDIAN_ARCHIVE_MOST_BYTES` | `archive_unit()` | From 0.21.0: the archive's bound in bytes, as a deployment admin set it. Unset, or 0, for none. A value that is not a whole number of bytes is refused. |
 | `MERIDIAN_LIVE_DIR` | `meridian-dev run` | The live folder. Default `/plugin/live`. |
 | `MERIDIAN_LIVE_SEED` | `meridian-dev run` | What a new live folder is filled from. Default `/plugin`. |
 | `MERIDIAN_DEV_EVENTS`, `MERIDIAN_DEV_REVISION` | `connect` | Set by `meridian-dev run` for the process it starts. When present, `connect` records `ready` for that revision. |

@@ -84,7 +84,7 @@ the firm's own admins:
 | **Accounts and account groups** | Which accounts exist, and which groups of them each permission names | Exists |
 | **Access** | Who may use which plugin, at `read`, `write` or `admin`, on which accounts | Exists, per plugin; per role within a plugin is planned, in **access per role** |
 | **A plugin's settings** | Its keys and secrets, and tables such as code links, each change recorded with who made it | Exists ([Set a plugin's settings](../how-to/set-a-plugins-settings.md)) |
-| **Holds** | How long the raw records a plugin received or sent are kept at the least, and whether older ones move to cold storage | A plugin's version sets how long it keeps them today; the admin's hold and the archive are planned, in **the archive** |
+| **Holds** | How long the raw records a plugin received or sent are kept at the least, and whether older ones move to cold storage | Built, not released, in **the archive**: a deployment admin's hold per edge role or for all, each plugin's archive allowed with a bound, and its windows set by its admin ([The archive](the-archive.md)). Released runtimes keep each version's own retention |
 | **Region** | Where the deployment and its storage run | Yours: the deployment runs where you install it. Showing the storage's region on Settings is planned, not scheduled |
 | **Egress** | The address the deployment calls out from, and which outside hosts each plugin calls | Your cluster's network today. A plugin declaring its hosts, and the admin approving them, is planned, not scheduled |
 | **Service accounts** | A named account, with an owner, that a plugin's scheduled work runs as | Planned, in **service accounts** |
@@ -116,7 +116,8 @@ The releases, in their order:
 2. **Access per role**: a person granted a level on one role of a plugin, so
    one plugin's custody and operations can be given to different people.
 3. **The archive**: an admin's hold on a plugin's raw records, older ones
-   moved to cold storage, restored on request, each move recorded.
+   moved to cold storage, restored on request, each move recorded. Built,
+   not released: see [The archive](the-archive.md).
 4. **Valuation**: prices and daily bars in the deployment's market-data
    store, and the book valued from them.
 5. **Live market data**: trades, quotes and streaming prices, and the

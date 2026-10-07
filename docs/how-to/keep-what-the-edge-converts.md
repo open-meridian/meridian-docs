@@ -74,6 +74,55 @@ await plugin.record_holding(
 The key is yours and opaque past your plugin; the sidecar fills in your instance, and refuses a
 reference naming another's. A person follows it on your plugin's own page.
 
+## Declare its kinds, and move them past their window
+
+!!! note "Built, not released"
+    This section describes open-meridian 0.21.0 (contract v16), built and not yet on PyPI.
+
+From contract v16 a version declares the kinds of raw record it keeps, each with its default
+window, rather than one retention for all of them, and the deployment's admins decide what is done
+past each window (see [The archive](../concepts/the-archive.md)):
+
+```python
+from meridian.declaration import Declaration, RecordKind, Storage
+
+DECLARATION = Declaration(
+    settings=SETTINGS,
+    storage=Storage(kinds=[
+        RecordKind("activity", "Reported activity", window_days=2555),
+        RecordKind("responses", "Raw responses", window_days=30),
+    ]),
+)
+```
+
+- **Declare no window setting of your own.** The SDK declares `<kind>_window_days` and
+  `<kind>_past_window` for each kind, and refuses a plugin that takes either name;
+  `meridian plugin check` says so first (`window-settings`).
+- **Keep each kind in units you can find again**, a file or directory per account and day or
+  month, and name a record by its path within its unit.
+- **When a unit's last record is past its window**, do what `<kind>_past_window` says:
+  `archived`, `plugin.archive_unit(...)`; `deleted`, `plugin.delete_unit(...)`; `kept`, nothing.
+  Never remove a unit any other way: the SDK reports each move before it removes anything, and a
+  deletion inside the deployment's hold is refused, `CommandRefused` with
+  `REFUSAL_REASON_WITHIN_HOLD`, and the unit kept.
+- **Say what each kind holds** in storage whenever it changes: `plugin.stored`.
+- **On your page**, resolve a row's record with `plugin.find_record(key)`, and offer a restore
+  under Open as a form posting `record_kind` and `unit` to `/archive/restore`, which the SDK
+  declares.
+
+Each call, argument by argument, is in [The archive](../api/python-sdk.md#the-archive).
+
+### Move a plugin to 0.21.0 { #move-a-plugin-to-0210 }
+
+`meridian plugin migrate` moves only the pins: `open-meridian==0.21.0` and
+`plugin-python:0.21.0`. Nothing a plugin calls changed, and a plugin keeping one retention,
+`Storage(retention_days=...)`, keeps its records under it as before. A plugin adopting kinds drops
+any setting of its own that held a window, and its release notes name that setting and the
+window setting it maps to, for the admin to set once at upgrade, as SnapTrade 0.13.0's do (see
+[Upgrade SnapTrade to 0.13.0](keep-older-records-in-the-archive.md#upgrade-snaptrade-to-0130)). A
+plugin built on 0.21.0 declares contract v16, and a runtime serving v15 refuses it at
+registration, naming both versions.
+
 ## Say how you came by what the vendor did not send
 
 A value your vendor did not send, and you closed, carries its **provenance**:

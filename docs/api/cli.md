@@ -137,8 +137,26 @@ Installs the deployment's Helm chart into the cluster, waits for the dashboard, 
 | `--port` | `<n>` | `8443` | The local port a port-forward uses. |
 | `--timeout` | `<d>` | `10m` | How long Helm is given. |
 | `--no-doctor` | | off | Skip the `doctor` checks. |
+| `--archive` | `<path>` | asked | From the CLI release after 0.1.35. Where edge plugins' older records go: a directory on the cluster's node, such as a NAS export or a second disk mounted there, by its absolute path. It becomes the chart's `pluginArchive.path`. See [Where older records go](#where-older-records-go). |
+| `--no-archive` | | asked | From the CLI release after 0.1.35. No archive: records past their window stay in each plugin's storage. |
 
 Plus the [global options](#global-options) `-n`, `--platform` and `--image`.
+
+### Where older records go
+
+!!! note "Built, not released"
+    `--archive` and `--no-archive` are in the CLI release after 0.1.35, built
+    and not yet released, for a runtime serving contract v16.
+
+A plugin at the edge keeps what its vendor sent it, and past the window its admin sets it archives the older records, keeps them or deletes them (see [The archive](../concepts/the-archive.md)). Before it installs, `up` asks where the archive is, unless something has said:
+
+```text
+Where do edge plugins' older records go? Past the window a plugin's admin sets, a plugin moves them to an archive, if a deployment admin allows it one. Name a directory on the cluster's node for the archive -- a NAS export or a second disk mounted there -- or press Enter for none, and records past their window stay in each plugin's storage.
+```
+
+`--archive <path>` answers it, and `--no-archive` declines; given both, it is refused. Given neither, `up` asks at a terminal and takes none where there is no terminal to ask at. A `--params` file answers it with `archive`, a path or `none`, which `up` takes out before the wizard's fields are matched and never posts to the wizard. A values file (`-f`) naming `pluginArchive` itself, as a cloud's bucket or a claim on shared storage is, is not asked over. The archive said in two places, such as a flag and a values file, is refused before anything is installed. A path must be absolute, with no `..`.
+
+Naming an archive allows no plugin one: a deployment admin allows each, with a bound or none, on the plugin's Summary. See [Keep older records in the archive](../how-to/keep-older-records-in-the-archive.md).
 
 ### Answering the wizard from a file
 
@@ -173,7 +191,7 @@ meridian up --id DEP-01M3GZ8K4Q7T2V9W6X5Y3R1N0P --params first-run.yaml
 |---|---|
 | `0` | Installed. |
 | `1` | A `doctor` check said `stops` (nothing is installed), or the install failed. |
-| `2` | `--id` is missing or malformed, there is no enrolment code, or `--port` is not a port number. Nothing is installed. |
+| `2` | `--id` is missing or malformed, there is no enrolment code, `--port` is not a port number, or the archive is said twice or is not an absolute path. Nothing is installed. |
 
 ## `meridian down`
 
@@ -225,7 +243,7 @@ It works in four steps, and stops at the step that fails.
 
     Last, it names each launched plugin still on a sidecar that is not the one the components now run, since a plugin keeps the sidecar it was launched with until it is relaunched, and each plugin whose pod started during the upgrade before the new launcher was ready, since the old launcher may have launched it. For each it prints `meridian plugin stop <instance>` and `meridian plugin launch <name> <version> --instance <instance>` (`meridian plugin dev --instance <instance>` for a live one). The name comes from the plugin's image; the version is left as `<version>`, which `meridian plugin list` gives. It relaunches nothing itself.
 
-It never prints the deployment's values, which hold its enrolment code. The one thing it reads from them is `image`.
+It never prints the deployment's values, which hold its enrolment code. What it reads from them is `image`, where the deployment is reached, and, from the CLI release after 0.1.35, where its edge plugins' archive is (`pluginArchive`), which `--reset-then-reuse-values` keeps as it keeps every value the deployment was given. The plan says so: `Its archive, /mnt/nas/meridian-archive on the cluster's node, is kept: the deployment's own values carry it.`
 
 | Flag | Argument | Default | Meaning |
 |---|---|---|---|
@@ -319,7 +337,7 @@ If the deployment can't be reached, the delegation is still forgotten here. It s
 meridian plugin new <name> [--into <dir>]
 ```
 
-Writes a working plugin to start from: the Python SDK's reference plugin, renamed to `<name>`. It needs no network, because the template is compiled into the binary. It writes the plugin's code and its pages, each a view function and a Jinja2 template declared with the levels it serves (a **Setup** page under Manage, at `admin`, and an **Accounts** page under Open and View, at `write` and `read`), its tests (`tests/test_page.py`), a `Dockerfile`, `pyproject.toml`, `.dockerignore`, `.gitignore`, `README.md`, `AGENTS.md`, `CLAUDE.md`, a `develop-live` skill for Claude Code, and a CI workflow that runs `meridian plugin check --run-tests` (`.github/workflows/check.yaml`), then prints the next steps. From CLI 0.1.35 the plugin pins SDK 0.20.0, and needs a deployment whose sidecar accepts contract v15 (0.1.34 pinned 0.19.0, 0.1.33 pinned 0.18.0, 0.1.29 to 0.1.32 pinned 0.17.0, 0.1.28 pinned 0.16.0, 0.1.27 pinned 0.15.0, 0.1.26 pinned 0.14.0, 0.1.24 and 0.1.25 pinned 0.12.0, 0.1.23 pinned 0.11.0, 0.1.22 pinned 0.10.1, 0.1.21 pinned 0.10.0, 0.1.20 pinned 0.9.0, 0.1.18 and 0.1.19 pinned 0.7.1, and 0.1.16 and 0.1.17 pinned 0.6.1). See [Your first plugin](../getting-started/first-plugin.md).
+Writes a working plugin to start from: the Python SDK's reference plugin, renamed to `<name>`. It needs no network, because the template is compiled into the binary. It writes the plugin's code and its pages, each a view function and a Jinja2 template declared with the levels it serves (a **Setup** page under Manage, at `admin`, and an **Accounts** page under Open and View, at `write` and `read`), its tests (`tests/test_page.py`), a `Dockerfile`, `pyproject.toml`, `.dockerignore`, `.gitignore`, `README.md`, `AGENTS.md`, `CLAUDE.md`, a `develop-live` skill for Claude Code, and a CI workflow that runs `meridian plugin check --run-tests` (`.github/workflows/check.yaml`), then prints the next steps. From the CLI release after 0.1.35 the plugin pins SDK 0.21.0, and needs a deployment whose sidecar accepts contract v16 (0.1.35 pinned 0.20.0, 0.1.34 pinned 0.19.0, 0.1.33 pinned 0.18.0, 0.1.29 to 0.1.32 pinned 0.17.0, 0.1.28 pinned 0.16.0, 0.1.27 pinned 0.15.0, 0.1.26 pinned 0.14.0, 0.1.24 and 0.1.25 pinned 0.12.0, 0.1.23 pinned 0.11.0, 0.1.22 pinned 0.10.1, 0.1.21 pinned 0.10.0, 0.1.20 pinned 0.9.0, 0.1.18 and 0.1.19 pinned 0.7.1, and 0.1.16 and 0.1.17 pinned 0.6.1). From the same release its `AGENTS.md` teaches a coding agent the kinds of raw record a plugin at the edge declares and their windows, and that a custody plugin keeps each activity's raw record at least as long as the history it reported. See [Your first plugin](../getting-started/first-plugin.md).
 
 `<name>` must be lowercase letters, digits and single hyphens, starting with a letter. It becomes the package name, and, with hyphens as underscores, the module name.
 
@@ -358,6 +376,7 @@ Each failure names the rule, the file and line, and what to write instead, so th
 | `own-origin` | A page loads nothing from another origin. | An absolute or protocol-relative address (`https://…`, `//…`, `wss://…`) as a script's, stylesheet's, image's or frame's source, in `@import` or `url()`, or given to `fetch`, `EventSource`, `WebSocket` or `import`. A link people follow (`<a href>`) is not loading. |
 | `tools-cover-routes` | Every route that changes something is a tool for agents, or says why not. | A route that changes something with no `params=` record and no `tool=False` with `why=`. See [Offer your plugin's pages to agents](../how-to/offer-your-pages-to-agents.md). |
 | `roles-declared` | On a plugin holding several roles, every page, route and setting names its roles, and a changing route sends only its roles' commands. | From CLI 0.1.35, only on a plugin whose `[tool.meridian]` names several roles: a page, route or setting naming no `roles=`, or a role the plugin does not hold, a tool held to its route's roles unless it names its own; a route that changes something (any method but GET and HEAD) whose view sends a command none of its roles holds, by meridian-schema's published `roles.json`, at the line of the call, naming the roles that hold it. `roles=` is read as written or through a constant bound at the top of a module. A plugin holding one role, or none, names none, and the rule holds. See [Roles](python-sdk.md#roles). |
+| `window-settings` | No setting of the plugin's own takes a declared kind's window setting's name. | From the CLI release after 0.1.35: a setting named `<kind>_window_days` or `<kind>_past_window` for a kind the plugin declares with `RecordKind(...)`, at its line, as written or through a constant bound at the top of a module. The SDK declares both settings for every kind, and refuses a plugin declaring either itself. See [The window settings](python-sdk.md#the-window-settings). |
 | `settings-declared` | Settings are declared to the SDK, not read from the environment. | `os.environ`, `os.getenv`, `getenv(` or `environ[…]`. One name is allowed: a variable ending `_PAGE_PORT`, where the page listens on loopback for its sidecar, as the template's does. That is the plugin's own wiring, which nobody configures. |
 | `secrets-kept` | No secret setting's value is logged or put in a page. | For each `meridian.Setting(…, secret=True)`, by its name or the constant that names it: its value (`values[NAME]`, `.get(NAME)`, `.name`, `{name}`) in a logging call, `print`, a `raise`, or a statement that writes HTML. Its name alone, as in "waiting for broker_api_key", is not its value. |
 | `through-the-sdk` | The deployment is reached only through the SDK. | Importing `nats`, `psycopg`, `psycopg2`, `asyncpg`, `sqlalchemy`, `pg8000`, `aiopg`, `grpc`, `kubernetes`, or the sidecar's raw `*_pb2_grpc` stubs; naming `nats://`, `postgres://`, a cluster service (`*.svc`, `*.svc.cluster.local`), `meridian.localhost`, a dashboard `/terminal/` path, or `MERIDIAN_SIDECAR_ADDRESS`. |
@@ -490,6 +509,7 @@ The rewrites keep a file's formatting and comments wherever they change nothing.
 | 0.16.0 to 0.17.0: the SDK declares contract v12, the deployment serves its MCP: a route's one typed record of inputs, and tools derived from typed routes. See [Offer your pages to agents](../how-to/offer-your-pages-to-agents.md) | Nothing | a page or route that changes something and declares no `params=`: give it its record, or `tool=False` with `why=` (`typed-route`) |
 | 0.17.0 to 0.18.0: the SDK declares contract v13; a plugin files a ticket for a person and reads what it filed | Nothing: only the pins move | |
 | 0.18.0 to 0.19.0: the SDK declares contract v14; a custody plugin reports the custodian's activity, and operations reads, hears and links it, and each sync status the street keeps; a setting may be a table of typed columns. See [Report the custodian's activity](../how-to/report-the-custodians-activity.md#move-a-plugin-to-0190) and [Set a plugin's settings](../how-to/set-a-plugins-settings.md#declare-a-table-setting-and-read-its-rows) | Nothing: only the pins move | |
+| 0.20.0 to 0.21.0: the SDK declares contract v16; a plugin at the edge declares the kinds of raw record it keeps, and past each kind's window archives, keeps or deletes them as its admin chose, each move reported. See [The archive](python-sdk.md#the-archive) and [Move a plugin to 0.21.0](../how-to/keep-what-the-edge-converts.md#move-a-plugin-to-0210) | Nothing: only the pins move. A plugin keeping one retention (`Storage(retention_days=...)`) keeps it. One adopting kinds drops any setting of its own that held a window, and its release notes name it and the window it maps to, for the admin to set once at upgrade; a setting of its own named as a declared kind's window setting is reported by `plugin check` (`window-settings`) | |
 | 0.19.0 to 0.20.0: the SDK declares contract v15; a person's access to a plugin is granted per role, and a page, route, tool and setting names the roles it serves; a custody plugin re-resolves an activity once its instrument resolves, which operations reads and hears. See [Roles](python-sdk.md#roles) and [Report the custodian's activity](../how-to/report-the-custodians-activity.md#move-a-plugin-to-0200) | Nothing: only the pins move. A plugin holding one role, or none, names no role anywhere; one that comes to hold a second names `roles=` on every page, route, tool and setting, which `plugin check` reports (`roles-declared`) | |
 
 `plugin migrate` adds two rules of its own: `pin-elsewhere`, for the old release still named in another file (a Makefile's base image, a workflow, a README), which it reports rather than moves because some of those are history; and `unreadable`, for a file that is not UTF-8, or that a step could not read as Python, which it leaves as it was.

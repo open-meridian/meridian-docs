@@ -32,7 +32,7 @@ developer guide. They are written from the code of
 [meridian-schema](https://github.com/open-meridian/meridian-schema) and
 [meridian-ui](https://github.com/open-meridian/meridian-ui); when those
 change, the pages change with them. Today they describe CLI 0.1.26, SDK
-0.20.0 (contract v15) and kit 0.8.0. A page describes what is built, and says so where
+0.21.0 (contract v16, built and not yet released) and kit 0.8.0. A page describes what is built, and says so where
 something is specified and not built yet.
 
 ## The roles page, the data dictionary and llms.txt
