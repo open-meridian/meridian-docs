@@ -272,7 +272,7 @@ travels as reported, so an old activity naming a security the account no
 longer holds mints no instrument record. Each reported activity's raw record
 is kept seven years, so the record behind every activity the street holds
 can be read back on the plugin's **Raw responses** tab. From SnapTrade 0.13.0
-(contract v16, built and not yet released) seven years is the default of its
+(contract v16) seven years is the default of its
 **Reported activity: window**, which an admin of the plugin may set, and past
 it the record is archived, kept or deleted as they chose, never deleted
 within the history SnapTrade reported (see [The archive](the-archive.md)). Its sync status

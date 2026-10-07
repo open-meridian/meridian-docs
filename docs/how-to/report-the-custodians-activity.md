@@ -178,7 +178,7 @@ key, written once, and keep it as long as the history you reported, so the
 record behind every activity the street holds can always be read back on
 your plugin's page. Declare that retention with the storage your version asks
 for (see [Keep what your custody plugin converts](keep-what-the-edge-converts.md)).
-From contract v16 (open-meridian 0.21.0, built and not yet released), declare
+From contract v16 (open-meridian 0.21.0), declare
 the activity's record as a kind of raw record of its own, with a long window,
 and past it move it to the archive rather than delete it (see
 [The archive](../concepts/the-archive.md)). SnapTrade 0.13.0 keeps each

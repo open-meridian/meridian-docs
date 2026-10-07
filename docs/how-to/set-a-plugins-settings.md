@@ -315,7 +315,7 @@ which a person confirms once, as an adjustment.
 
 ### An edge plugin's windows
 
-From contract v16 (built and not yet released) every plugin at the edge that
+From contract v16 every plugin at the edge that
 declares kinds of raw record has two settings per kind on this form, the
 same for every such plugin: *Kind*: **window**, in days, and *Kind*: **past
 the window**, archived, kept or deleted. SnapTrade 0.13.0's are **Reported

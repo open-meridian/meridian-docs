@@ -64,7 +64,7 @@ Upgrading meridian in meridian:
 Upgrade it? [y/N]
 ```
 
-From the CLI release after 0.1.35, where the deployment was installed with an archive for its
+From CLI 0.1.36, where the deployment was installed with an archive for its
 edge plugins' older records, the plan says it is kept, as every value the deployment was given is:
 
 ```text

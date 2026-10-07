@@ -11,10 +11,9 @@ admin's choice too: the record moves to an **archive**, stays where it is,
 or, only when an admin chose it, is deleted. Every move leaves its own
 record.
 
-!!! note "Built, not released"
-    This page describes a runtime serving contract v16, open-meridian 0.21.0,
-    the CLI release after 0.1.35 and the SnapTrade plugin 0.13.0, all built
-    and not yet released. A runtime serving v15 or earlier refuses a plugin
+!!! note "Contract v16"
+    This page describes a runtime serving contract v16 (chart 0.1.277 or later),
+    open-meridian 0.21.0, CLI 0.1.36 and the SnapTrade plugin 0.13.0. A runtime serving v15 or earlier refuses a plugin
     built on 0.21.0 at registration, naming both versions, and a plugin
     declaring no kinds keeps its records as before.
 

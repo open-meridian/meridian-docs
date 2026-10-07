@@ -7,10 +7,9 @@ install, allow a plugin its archive and set holds, and an admin of a plugin
 how to set its windows and restore what was archived. Why it works this way
 is in [The archive](../concepts/the-archive.md).
 
-!!! note "Built, not released"
-    This page describes a runtime serving contract v16, open-meridian 0.21.0,
-    the CLI release after 0.1.35 and the SnapTrade plugin 0.13.0, all built
-    and not yet released.
+!!! note "Contract v16"
+    This page describes a runtime serving contract v16 (chart 0.1.277 or later),
+    open-meridian 0.21.0, CLI 0.1.36 and the SnapTrade plugin 0.13.0.
 
 Who does what:
 

@@ -188,8 +188,8 @@ included.
 wizard's address. It prints the Helm command it ran, so you can see exactly what it did. The
 namespace is `meridian`; `-n` picks another.
 
-!!! note "Where older records go: the CLI release after 0.1.35, built, not released"
-    From the CLI release after 0.1.35, `meridian up` asks one more question before it installs:
+!!! note "Where older records go: CLI 0.1.36"
+    From CLI 0.1.36, `meridian up` asks one more question before it installs:
     where plugins at the edge move their older records, an archive on a directory of the
     cluster's node, such as a NAS export or a second disk, or none. Answer it with
     `--archive <path>` or `--no-archive`; pressing Enter is none. Naming one allows no plugin an

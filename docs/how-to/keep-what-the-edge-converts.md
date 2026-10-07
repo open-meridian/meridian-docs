@@ -76,9 +76,6 @@ reference naming another's. A person follows it on your plugin's own page.
 
 ## Declare its kinds, and move them past their window
 
-!!! note "Built, not released"
-    This section describes open-meridian 0.21.0 (contract v16), built and not yet on PyPI.
-
 From contract v16 a version declares the kinds of raw record it keeps, each with its default
 window, rather than one retention for all of them, and the deployment's admins decide what is done
 past each window (see [The archive](../concepts/the-archive.md)):

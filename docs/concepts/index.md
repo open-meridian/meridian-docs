@@ -18,7 +18,7 @@ piece of data lives.
 | [Accounts](accounts.md) | The firm's accounts, and how an account at a broker or custodian is tied to one |
 | [The book of record](the-book-of-record.md) | The firm's own record of what each account holds, how it differs from the street and the edge, and how operations opens and reconciles it |
 | [The custodian's activity](the-custodians-activity.md) | What a custody plugin reports of what happened on an account, and how operations explains a break and proposes its entry from it |
-| [The archive](the-archive.md) | An edge plugin's raw records: each kind's window, archived, kept or deleted past it, the deployment admin's archive, bound and holds, restore, and the record every move leaves. Built, not released |
+| [The archive](the-archive.md) | An edge plugin's raw records: each kind's window, archived, kept or deleted past it, the deployment admin's archive, bound and holds, restore, and the record every move leaves. |
 | [Instruments](instruments.md) | Instrument identity, the security master, and the copy a deployment keeps of it |
 | [Tickets and the inbox](tickets-and-the-inbox.md) | How a problem someone sees reaches the people who can act on it: who sees a ticket, advice that changes nothing, the acts only a person takes, and the inbox |
 | [Development deployments](development-deployments.md) | A deployment installed for writing plugins, and why a firm's own deployment is never one |
