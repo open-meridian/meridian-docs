@@ -133,8 +133,12 @@ session narrowed to some roles.
 ## Beside core's own tools
 
 The surface lists core's tools beside your plugin's, named `dashboard__...`:
-the Instruments tools, to a deployment admin, and from contract v13 seven
-ticket and inbox tools, to any delegation that reaches a level on any plugin.
+the Instruments tools, to a deployment admin, from contract v13 seven
+ticket and inbox tools, to any delegation that reaches a level on any plugin,
+and from contract v17 (built, not released) thirteen tools over the parts of
+your plugin's area the dashboard draws -- its Summary, settings, archive,
+and launching and stopping it -- each at its page's role and level. Your
+plugin declares nothing for them; see [Core's tools](../api/core-tools.md).
 An agent that meets a problem with your plugin can file a ticket about your
 instance with `dashboard__file_ticket`, as its person; a person on your page
 files through your plugin, with

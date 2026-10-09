@@ -88,8 +88,12 @@ GUIDES = [
     ("how-to/report-the-custodians-activity.md", "Report the custodian's activity",
      "a custody plugin's activity reported once and backfilled to history_from, and an operations plugin reading it"),
     ("how-to/set-a-plugins-settings.md", "Set a plugin's settings",
-     "settings set only on the dashboard's form by the plugin's admin, each change recorded, "
+     "settings set on the dashboard's form by the plugin's admin, each change recorded, "
      "and a table setting declared and read with who changed each row"),
+    ("api/core-tools.md", "Core's tools",
+     "the deployment's own MCP tools for a plugin's area -- its Summary, settings, archive, holds, "
+     "launching and stopping -- each at its page's role and level, a note on every change, "
+     "never a secret's value and never a change to who holds access"),
 ]
 
 # How llms.txt says which roles hold an operation.
@@ -105,8 +109,10 @@ STORES = {
     "street": ("The street", "what custodians say an account holds, as a plugin at the edge reports it"),
     "instrument": ("The instrument store", "the deployment's instrument records, and resolving an identifier to one"),
     "bor": ("The book of record", "the deployment's own record of positions, lots, breaks and figures"),
-    "conductor": ("The conductor's accounts", "the deployment's accounts and the links a plugin makes to them"),
-    "dashboard": ("The dashboard's tickets", "tickets, their notes and the inbox's notices, as the dashboard keeps them"),
+    "conductor": ("The conductor's accounts", "the deployment's accounts and the links a plugin makes to them, "
+                  "and a plugin's settings, holds and moves as core's tools show them"),
+    "dashboard": ("The dashboard's tickets", "tickets, their notes and the inbox's notices, and a setting as the "
+                  "settings tool shows it, as the dashboard keeps them"),
     "sidecar": ("The sidecar", "registration, settings, access, scope, figures, refusals and the delivery stream"),
     "envelope": ("The envelope", "what every bus message carries about itself"),
     "shared": ("Shared types", "a number, an amount of currency, and where a change sits in a store's record"),

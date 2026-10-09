@@ -2,8 +2,11 @@
 
 A plugin declares the settings it needs in its code, and an admin of the
 plugin gives them in the dashboard: on its **Settings** form, and each table
-on a tab of its own beside it. Those are the only places a setting is set: a
-plugin reads its settings as they arrive, and never sets one, its own
+on a tab of its own beside it. Those are the only places a setting is set,
+and from contract v17 (built, not released) an admin's own agent may set
+them too, as the admin, through the deployment's MCP surface (see
+[Let your agent manage a plugin's settings and archive](let-your-agent-manage-a-plugin.md)).
+A plugin reads its settings as they arrive, and never sets one, its own
 included. Every change is recorded, naming who made it.
 
 From contract v14 a setting may also be a **table**: rows of typed columns,
@@ -50,6 +53,12 @@ value against what the plugin declared before it keeps any, and refuses the
 save, saying why, when one does not read. Once saved, the settings reach the
 plugin without a restart.
 
+From contract v17 (built, not released), the form and each table's tab
+carry the version of the settings they were drawn from. A save made after
+the settings changed since, at the page or through an agent, is refused,
+saying so, and changes nothing: open the form again and make the change on
+what is set now.
+
 ### On a plugin holding several roles
 
 From contract v15 a person is an admin of a plugin's role rather than of the
@@ -76,6 +85,11 @@ re-declaring it as not secret clears it (see
 [A setting re-declared](#a-setting-re-declared)). What changed for secrets in
 v14 is in their records: a setting that becomes secret has its earlier plain
 values redacted (see [Who changed what](#who-changed-what)).
+
+From contract v17 (built, not released), hovering over a secret's **set**
+says who set it and when, and through which client where they used one,
+such as *Set by Ada, 2026-10-09 14:02 UTC, through Claude*. Never its value.
+An agent never reads or types a secret: it may only clear one, with a note.
 
 ## A table setting
 
@@ -333,6 +347,8 @@ and [Upgrade SnapTrade to 0.13.0](keep-older-records-in-the-archive.md#upgrade-s
   the tabs under Manage.
 - [Give people access](administer-access.md#to-make-someone-a-plugins-admin):
   making a plugin's admins.
+- [Core's tools](../api/core-tools.md#dashboard__set_plugin_settings): the
+  same settings read and set by an agent, as their admin.
 - [Python SDK](../api/python-sdk.md#settings): `settings()`, `Setting`,
   `Column` and `Settings`.
 - [The sidecar](../boundaries/sidecar.md#meridian.v1.SettingColumn): each

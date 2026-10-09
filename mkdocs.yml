@@ -122,6 +122,7 @@ nav:
       - Report the custodian's activity: how-to/report-the-custodians-activity.md
       - Keep older records in the archive: how-to/keep-older-records-in-the-archive.md
       - Offer your pages to agents: how-to/offer-your-pages-to-agents.md
+      - Let your agent manage a plugin: how-to/let-your-agent-manage-a-plugin.md
       - Advising on tickets: how-to/advise-on-tickets.md
       - Working your tickets: how-to/work-your-tickets.md
       - Release a plugin version: how-to/release-a-plugin.md
@@ -137,6 +138,7 @@ nav:
       - Command line: api/cli.md
       - Python SDK: api/python-sdk.md
       - Typed operations: api/typed-operations.md
+      - Core's tools: api/core-tools.md
       - Data dictionary:
           - The street: boundaries/street.md
           - The instrument store: boundaries/instrument.md
