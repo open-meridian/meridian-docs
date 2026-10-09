@@ -30,8 +30,11 @@ and the set-up wizard writes its own Secrets.
 On macOS (Apple silicon or Intel) or Linux (x86_64 or arm64):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/open-meridian/meridian-cli/main/install.sh | sh
+curl -fsSL https://open-meridian.com/install | sh
 ```
+
+That address redirects to the CLI repository's `install.sh`. The long form works the same:
+`curl -fsSL https://raw.githubusercontent.com/open-meridian/meridian-cli/main/install.sh | sh`.
 
 It checks the download against its published checksum and puts `meridian` in `~/.local/bin`. No
 `sudo` is needed. Check it:

@@ -83,7 +83,7 @@ This site is how it works. For what it is and why, see
 ## At a glance
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/open-meridian/meridian-cli/main/install.sh | sh
+curl -fsSL https://open-meridian.com/install | sh
 meridian doctor
 meridian up --id DEP-… --development
 meridian connect
