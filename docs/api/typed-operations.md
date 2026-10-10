@@ -21,6 +21,8 @@ From 0.19.0, contract v14, it also lists three operations of [the custodian's ac
 
 From 0.20.0, contract v15, it also lists [`re_resolve_activity`](#re_resolve_activity), by which a `custody` plugin re-resolves an activity it recorded before its instrument resolved, and `list_activities` answers each re-resolution beside the activities, which `operations` hears with `receive(activity_re_resolved=...)`. Both rows are `preview` in v15.
 
+From 0.22.0, contract v18 (built, not released), it also lists eight operations of [the lake](../concepts/the-lake.md) and [the venue master](../concepts/venues.md): [`record_prices`](#record_prices), [`record_bars`](#record_bars) and [`decline_want`](#decline_want), by which a `dgm` plugin records its vendor's prices and bars and answers what the lake wants; [`resolve_venue`](#resolve_venue) and [`report_missing_venue`](#report_missing_venue), by which it names a venue by its venue ID; and [`list_prices`](#list_prices), [`list_bars`](#list_bars) and [`list_datasets`](#list_datasets), by which `reporting`, `portfolio`, `compliance` and `signal` read them. Every row is `preview` in v18. A [`Money`](#money) names its cash instrument, and every date field takes a `datetime.date` (see [Times and dates](#times-and-dates)).
+
 ## Summary
 
 | Python method | gRPC rpc | Workflow step | Kind | Role | Returns |
@@ -35,8 +37,8 @@ From 0.20.0, contract v15, it also lists [`re_resolve_activity`](#re_resolve_act
 | [`list_activities`](#list_activities) | `ListActivities` | W2.11 List an account's activity | query | `operations` | `ListActivitiesResult` |
 | [`re_resolve_activity`](#re_resolve_activity) | `ReResolveActivity` | W2.15 Re-resolve a recorded activity | command | `custody` | `ReResolveActivityResult` |
 | [`list_sync_statuses`](#list_sync_statuses) | `ListSyncStatuses` | W2.14 Read an account's sync status | query | `operations` | `ListSyncStatusesResult` |
-| [`resolve_identifier`](#resolve_identifier) | `ResolveIdentifier` | W3.1 Resolve an identifier set | query | `custody` | `ResolveIdentifierResult` |
-| [`report_missing_instrument`](#report_missing_instrument) | `ReportMissingInstrument` | W3.2 Report that a resolution missed | event | `custody` | `Published` |
+| [`resolve_identifier`](#resolve_identifier) | `ResolveIdentifier` | W3.1 Resolve an identifier set | query | `custody`, `dgm` from v18 | `ResolveIdentifierResult` |
+| [`report_missing_instrument`](#report_missing_instrument) | `ReportMissingInstrument` | W3.2 Report that a resolution missed | event | `custody`, `dgm` from v18 | `Published` |
 | [`read_accounts_for_linking`](#read_accounts_for_linking) | `ReadAccountsForLinking` | W6.4 Link a plugin's external account | query | `custody` | `ReadAccountsForLinkingResult` |
 | [`link_external_account`](#link_external_account) | `LinkExternalAccount` | W6.4 Link a plugin's external account | command | `custody` | `LinkExternalAccountResult` |
 | [`resolve_instrument`](#resolve_instrument) | `ResolveInstrument` | W3.6 Resolve an instrument for display | query | `portfolio`, `reporting`, `compliance`, `oms`, `operations` | `ResolveInstrumentResult` |
@@ -51,6 +53,14 @@ From 0.20.0, contract v15, it also lists [`re_resolve_activity`](#re_resolve_act
 | [`list_breaks`](#list_breaks) | `ListBreaks` | W9.11 Read breaks | query | `operations`, `oms`, `compliance`, `portfolio`, `reporting` | `ListBreaksResult` |
 | [`list_account_figures`](#list_account_figures) | `ListAccountFigures` | W9.12 Read the account's figures | query | `operations`, `portfolio`, `compliance`, `reporting` | `ListAccountFiguresResult` |
 | [`list_account_attributes`](#list_account_attributes) | `ListAccountAttributes` | W9.14 Read an account's attributes | query | `portfolio`, `reporting`, `compliance`, `oms`, `operations` | `ListAccountAttributesResult` |
+| [`record_prices`](#record_prices) | `RecordPrices` | W10.4 Record prices and bars in batches | command | `dgm` | `RecordPricesResult` |
+| [`record_bars`](#record_bars) | `RecordBars` | W10.4 Record prices and bars in batches | command | `dgm` | `RecordBarsResult` |
+| [`decline_want`](#decline_want) | `DeclineWant` | W10.7 Want what a read could not answer | command | `dgm` | `DeclineWantResult` |
+| [`resolve_venue`](#resolve_venue) | `ResolveVenue` | W3.14 Resolve a venue | query | `dgm` | `ResolveVenueResult` |
+| [`report_missing_venue`](#report_missing_venue) | `ReportMissingVenue` | W3.15 Report a venue the deployment does not hold | event | `dgm` | `Published` |
+| [`list_prices`](#list_prices) | `ListPrices` | W10.6 Read prices and bars, point in time, by source | query | `reporting`, `portfolio`, `compliance`, `signal` | `ListPricesResult` |
+| [`list_bars`](#list_bars) | `ListBars` | W10.6 Read prices and bars, point in time, by source | query | `reporting`, `portfolio`, `compliance`, `signal` | `ListBarsResult` |
+| [`list_datasets`](#list_datasets) | `ListDatasets` | W10.9 Read the datasets | query | `reporting`, `portfolio`, `compliance`, `signal` | `ListDatasetsResult` |
 
 **Role** is the plugin role that publishes the step, or the roles that may ask the query, from the contract's matrix. A plugin can call an operation only if it holds one of them, approved when it was launched. Otherwise the call raises `NotGranted`. See [Plugins, roles and grants](../concepts/plugins.md) and [Plugin manifest](plugin-manifest.md).
 
@@ -81,7 +91,7 @@ async with await meridian.connect() as plugin:
 ### Numbers and amounts
 
 !!! important "Numbers are `Decimal` in Python, and exact integers that carry their own scale on the wire"
-    A quantity takes a `decimal.Decimal` or an `int`. An amount of currency takes a [`meridian.Money`](#money): an amount and its ISO 4217 currency code, together, so an amount is never separated from its currency.
+    A quantity takes a `decimal.Decimal` or an `int`. An amount of currency takes a [`meridian.Money`](#money): an amount and its ISO 4217 currency code, together, so an amount is never separated from its currency. From 0.22.0 a Money names its cash instrument, the code resolved by core, a token by its instrument alone.
 
     On the wire a number is its integer, in two 64-bit halves, and the scale it was stated with. `Decimal("1.50")` crosses as 150 at scale 2 and reads back as `1.50`. Nothing on either side is a float, and nothing normalises the scale.
 
@@ -119,6 +129,8 @@ A parameter whose type is an enum, such as [`AssetClass`](#assetclass) or [`Hold
 ### Times and dates
 
 A parameter ending `_ns` is a time in nanoseconds, as an `int`. `time.time_ns()` gives one. `as_of_date` is an ISO 8601 date string, such as `"2026-09-25"`.
+
+From 0.22.0, contract v18, every field the data dictionary types `date` (a business date, an as-of date, a trade date, a value date) takes a `datetime.date`, or its ISO 8601 text as before, and crosses the wire as the text. Text that is no day that exists (`"2026-02-30"`), text in another form (`"20261009"`) and a `datetime`, which is a moment, raise `ValueError` naming the field before anything is sent; the sidecar refuses an invalid date from a plugin that builds its params by hand. A date read back is the text: `date.fromisoformat(price.meta.business_date)`. See [Dates and time](../concepts/dates-and-time.md).
 
 !!! note
     The contract names the unit of `_ns` fields but not their epoch. The examples on this page assume the Unix epoch, which is what `time.time_ns()` returns.
@@ -904,7 +916,7 @@ async def resolve_identifier(
 | gRPC | `rpc ResolveIdentifier(ResolveIdentifierParams) returns (ResolveIdentifierResult)` |
 | Workflow step | W3.1, Resolve an identifier set |
 | Kind | query, on `platform.reference.query.resolve-identifier` |
-| Role | `custody` |
+| Role | `custody`; from contract v18 also `dgm`, resolving its vendor's codes to the instruments its rows name |
 | Served by | the instrument store, the deployment's replica of the security master |
 
 | Name | Type | Required | Meaning |
@@ -961,7 +973,7 @@ async def report_missing_instrument(
 | gRPC | `rpc ReportMissingInstrument(ReportMissingInstrumentParams) returns (Published)` |
 | Workflow step | W3.2, Report that a resolution missed |
 | Kind | event, on `platform.reference.event.instrument-missing` |
-| Role | `custody` |
+| Role | `custody`; from contract v18 also `dgm` |
 | Heard by | the conductor, which asks the platform whether it already knows the instrument (W3.3) |
 
 | Name | Type | Required | Meaning |
@@ -1604,6 +1616,273 @@ if page.attributes and page.attributes[0].HasField("opening_balance"):
     d0 = page.attributes[0].opening_balance.as_of_date  # in the book since this date
 ```
 
+## `record_prices` { #record_prices }
+
+From 0.22.0, contract v18, `preview`. Records a batch of 1 to 500 [`Price`](#price)s into [the lake](../concepts/the-lake.md), whole or refused naming the row and the field. A `dgm` plugin's.
+
+```python
+async def record_prices(
+    self, *, prices: Sequence[Price] = (), want_id: str = "", acting_for: str | None = None,
+) -> RecordPricesResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc RecordPrices(RecordPricesParams) returns (RecordPricesResult)` |
+| Workflow step | W10.4, Record prices and bars in batches |
+| Kind | command, on `platform.lake.command.record-prices` |
+| Role | `dgm` |
+| Served by | the lake, which records, sequences and publishes each row on its dataset's subject (W10.5) |
+
+| Name | Type | Required | Meaning |
+|---|---|---|---|
+| `prices` | sequence of [`Price`](#price) | yes, 1 to 500 | Each with its envelope, [`ObservationMeta`](#observationmeta): a row key, 1 to 8 subjects the instrument store holds, its source's dataset (one the instance's catalogue declares, serving prices of that kind), its valid time, a daily value's business date, the source's times, and its raw record. Fewer than 1 or more than 500 raise `ValueError` before anything is sent. |
+| `want_id` | `str` | no | The [want](#decline_want) the rows answer, as heard in `ObservationsWantedEvent.want_id`; empty for rows recorded unasked. |
+| `acting_for` | `str` or `None` | no | A person's assertion, where a person asked for it. |
+
+The sidecar stamps each row's `source.instance` and `source.plugin_version`; the lake decides `recorded_at_ns`, `version`, `sequence` and `previous_sequence`. Each `Money` is resolved to its cash instrument: a token's code in `currency_code` is refused.
+
+**Returns** `RecordPricesResult`: `recorded`, the rows new; `restated`, the rows recorded as a new version of a row key already recorded with a changed value; `unchanged`, those repeating a version's values (by decimal value: 764.2 is 764.20); and the dataset's `watermark`.
+
+**Errors:** `CallFailed` with `kind="invalid"` naming the row and field by its path (`prices[3].meta.business_date`): a dataset the instance does not declare or that does not serve prices, a subject the instrument store does not hold, a business date that is no day, a source time given twice, a venue that is no venue ID, a Money naming no asset or two. `NotGranted` without `dgm`.
+
+```python
+from datetime import date
+from decimal import Decimal
+from meridian import Money, ObservationMeta, Price, SourceTime
+from meridian.plugin.v1 import operations_pb2 as ops
+
+done = await plugin.record_prices(prices=[
+    Price(
+        meta=ObservationMeta(
+            row_key="SPY:1d:2026-10-08",                    # from the raw record: a repeat changes nothing
+            subjects=[ops.SubjectRef(entity_id=spy)],
+            source=ops.Source(dataset=f"{plugin.identity.instance_id}:daily"),
+            valid_from_ns=open_ns, valid_until_ns=close_ns,
+            business_date=date(2026, 10, 8),
+            source_times=[SourceTime(kind="published", at_ns=published_ns)],
+            raw=plugin.raw_record("bars/SPY/2026-10-08"),
+        ),
+        kind="close",
+        price=Money(Decimal("671.16"), "USD"),
+        basis="per_unit",
+    ),
+])
+done.recorded, done.restated, done.unchanged
+```
+
+## `record_bars` { #record_bars }
+
+From 0.22.0, contract v18, `preview`. Records a batch of 1 to 500 [`Bar`](#bar)s, as [`record_prices`](#record_prices) records prices.
+
+```python
+async def record_bars(
+    self, *, bars: Sequence[Bar] = (), want_id: str = "", acting_for: str | None = None,
+) -> RecordBarsResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc RecordBars(RecordBarsParams) returns (RecordBarsResult)` |
+| Workflow step | W10.4, Record prices and bars in batches |
+| Kind | command, on `platform.lake.command.record-bars` |
+| Role | `dgm` |
+| Served by | the lake |
+
+Each bar's open, high, low, close and VWAP are in one asset, refused otherwise; its volume is never negative; its VWAP and trade count are left unset where the source gives none, which is not zero. The interval is its envelope's valid time, and a daily bar names its business date. Its parameters, result and errors are `record_prices`'s, with `bars` for `prices`.
+
+## `decline_want` { #decline_want }
+
+From 0.22.0, contract v18, `preview`. Says what a `dgm` cannot serve of a want, per subject, with a reason.
+
+A read the lake cannot answer from what it holds becomes a want, heard only by the instance serving its dataset, with `receive(observations_wanted=...)`: an `ObservationsWantedEvent` with its `want_id`, `dataset`, `data_type`, `subjects`, `kinds` (for prices), `interval_ns` (for bars), a `business_date` or a valid range, and `standing`. The plugin fetches what it covers and records it with `want_id=`; what it cannot, it declines. A standing want asks that its subjects be kept current until a `WantWithdrawnEvent` (`want_id`, `dataset`), heard with `receive(want_withdrawn=...)`, withdraws it.
+
+```python
+async def decline_want(
+    self, *, want_id: str = "", subjects: Sequence[SubjectRef] = (),
+    reason: UnansweredReason | str | None = None, acting_for: str | None = None,
+) -> DeclineWantResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc DeclineWant(DeclineWantParams) returns (DeclineWantResult)` |
+| Workflow step | W10.7, Want what a read could not answer |
+| Kind | command, on `platform.lake.command.decline-want` |
+| Role | `dgm` |
+| Served by | the lake, which tells the waiting readers |
+
+| Name | Type | Required | Meaning |
+|---|---|---|---|
+| `want_id` | `str` | yes | The want, as heard. |
+| `subjects` | sequence of [`SubjectRef`](#subjectref) | yes | The subjects declined. |
+| `reason` | [`UnansweredReason`](#unansweredreason) | yes | Such as `"not_covered"`, or `"beyond_history"`. |
+
+**Returns** `DeclineWantResult`, empty. **Errors:** `CallFailed` for a want this instance does not serve. `NotGranted` without `dgm`.
+
+```python
+async def wanted(heard: meridian.Heard) -> None:
+    want = heard.message
+    await plugin.record_prices(prices=fetched(want), want_id=want.want_id)
+    if uncovered:
+        await plugin.decline_want(want_id=want.want_id, subjects=uncovered, reason="not_covered")
+
+await plugin.receive(observations_wanted=wanted, want_withdrawn=stop_keeping_current)
+```
+
+## `resolve_venue` { #resolve_venue }
+
+From 0.22.0, contract v18, `preview`. Asks which [venue](../concepts/venues.md) a set of codes names on a date, among the venues the deployment holds. Never mints one: a deployment pulls venues from the platform's venue master.
+
+```python
+async def resolve_venue(
+    self, *, identifiers: Sequence[Identifier] = (), as_of_ns: int = 0,
+) -> ResolveVenueResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc ResolveVenue(ResolveVenueParams) returns (ResolveVenueResult)` |
+| Workflow step | W3.14, Resolve a venue |
+| Kind | query, on `platform.reference.query.resolve-venue` |
+| Role | `dgm` |
+| Served by | the instrument store |
+
+| Name | Type | Required | Meaning |
+|---|---|---|---|
+| `identifiers` | sequence of [`Identifier`](python-sdk.md#identifier) | yes | A MIC under `iso10383`, or the vendor's own code as a `symbol` with the vendor as its `source`. A venue ID needs no resolving. |
+| `as_of_ns` | `int` | no | The date it is asked about; 0 for now. A MIC names the venue in force then. |
+
+**Returns** `ResolveVenueResult`: `found`, when exactly one venue held is named; `venue`, its [`VenueRecord`](#venuerecord); and `miss_reason`, `MISS_REASON_NOT_FOUND` or `MISS_REASON_AMBIGUOUS`, when not.
+
+**Errors:** `no handler` or `timeout` from the instrument store. `NotGranted` without `dgm`.
+
+```python
+answer = await plugin.resolve_venue(
+    identifiers=[meridian.Identifier(scheme="symbol", value="V", source="alpaca")],
+)
+venue_id = answer.venue.venue_id if answer.found else ""   # not held: report it, name none
+```
+
+## `report_missing_venue` { #report_missing_venue }
+
+From 0.22.0, contract v18, `preview`. Reports that a venue the plugin's source named resolved to none the deployment holds. A fact, not a request: the plugin carries on, its row naming no venue and keeping the code as the source reported it.
+
+```python
+async def report_missing_venue(
+    self, *, source: str = "", identifiers: Sequence[Identifier] = (), as_of_ns: int = 0,
+    reason: MissReason | str | None = None, observed_at_ns: int = 0,
+) -> Published
+```
+
+| | |
+|---|---|
+| gRPC | `rpc ReportMissingVenue(ReportMissingVenueParams) returns (Published)` |
+| Workflow step | W3.15, Report a venue the deployment does not hold |
+| Kind | event, on `platform.reference.event.venue-missing` |
+| Role | `dgm` |
+| Heard by | the conductor, which asks the platform for the venue by its public codes, once and again only after ten minutes; and the lake, which counts the miss against the instance's datasets |
+
+| Name | Type | Required | Meaning |
+|---|---|---|---|
+| `source` | `str` | no | The namespace the code belongs to, such as `"tradier"`. |
+| `identifiers` | sequence of `Identifier` | no | The codes the source named the venue by. |
+| `as_of_ns` | `int` | no | The date it was asked about. |
+| `reason` | `MissReason` or `None` | no | The `miss_reason` `resolve_venue` answered. |
+| `observed_at_ns` | `int` | no | When the plugin observed the miss. |
+
+**Returns** `Published`. **Errors:** `NotGranted` without `dgm`.
+
+## `list_prices` { #list_prices }
+
+From 0.22.0, contract v18, `preview`. Reads prices for up to 500 subjects at one of the latest in force at a valid time, a business date or a valid range; as the lake knew them at a recorded time; from the deployment's default sources, named datasets or every dataset side by side. Only what the plugin is entitled to is answered, and each field it may not read is stripped and named.
+
+```python
+async def list_prices(
+    self, *, subjects: Sequence[SubjectRef] = (), kinds: Sequence[PriceKind | str] = (),
+    sources: SourceChoice | None = None, at_ns: int = 0, business_date: date | str = "",
+    valid_from_ns: int = 0, valid_until_ns: int = 0, as_of_ns: int = 0,
+    page_size: int = 0, cursor: str = "",
+) -> ListPricesResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc ListPrices(ListPricesParams) returns (ListPricesResult)` |
+| Workflow step | W10.6, Read prices and bars, point in time, by source |
+| Kind | query, on `platform.lake.query.list-prices` |
+| Role | `reporting`, `portfolio`, `compliance`, `signal` |
+| Served by | the lake |
+
+| Name | Type | Required | Meaning |
+|---|---|---|---|
+| `subjects` | sequence of [`SubjectRef`](#subjectref) | yes | 1 to 500 instruments. |
+| `kinds` | sequence of [`PriceKind`](#pricekind) | no | Which kinds, such as `["close"]`; none for every kind. |
+| `sources` | [`SourceChoice`](#sourcechoice) or `None` | no | The deployment's default (`None`, or `default=True`), `named=[...]` datasets, or `side_by_side=True`. |
+| `at_ns` | `int` | no | The latest in force at this valid time; 0 for now. |
+| `business_date` | `datetime.date` or `str` | no | A daily value's business date, in each dataset's own day. |
+| `valid_from_ns`, `valid_until_ns` | `int` | no | A valid-time range, from inclusive to exclusive. |
+| `as_of_ns` | `int` | no | The recorded-time cut: what the lake knew then; 0 for now. |
+| `page_size`, `cursor` | `int`, `str` | no | At most 500 a page, 100 when `0`; the previous page's `next_cursor`. |
+
+Give one of `at_ns`, `business_date` or the range. A read the lake cannot answer from what it holds is wanted of the `dgm` serving the dataset, and answered `asked_source` in `unanswered`; the rows follow, heard with `receive(prices_recorded=...)`.
+
+**Returns** `ListPricesResult`: `prices`, each a [`Price`](#price) with its envelope as recorded; `unanswered`, each an [`Unanswered`](#unanswered) naming the subject, dataset, field and reason; `datasets`, each [`DatasetRef`](#datasetref) in the answer, once; the `watermark` it was read at; and `next_cursor`. A default read that fell through to a lower dataset says why the first did not answer.
+
+**Errors:** `CallFailed` with `kind="invalid"` for no subject or more than 500, a business date that is no day. `NotGranted` without one of the four roles.
+
+```python
+from datetime import date
+
+closes = await plugin.list_prices(subjects=held, kinds=["close"], business_date=date(2026, 10, 8))
+for price in closes.prices:
+    close = meridian.as_money(price.price)       # names its cash instrument
+for gap in closes.unanswered:
+    ...                                          # unvalued, never zero: gap.reason says why
+then = await plugin.list_prices(subjects=held, business_date=date(2026, 10, 8), as_of_ns=friday_ns)
+```
+
+## `list_bars` { #list_bars }
+
+From 0.22.0, contract v18, `preview`. Reads bars as [`list_prices`](#list_prices) reads prices, with `interval_ns` (the bar's length, such as `86_400 * 10**9` for a day; 0 for every interval) in place of `kinds`.
+
+```python
+async def list_bars(
+    self, *, subjects: Sequence[SubjectRef] = (), interval_ns: int = 0,
+    sources: SourceChoice | None = None, at_ns: int = 0, business_date: date | str = "",
+    valid_from_ns: int = 0, valid_until_ns: int = 0, as_of_ns: int = 0,
+    page_size: int = 0, cursor: str = "",
+) -> ListBarsResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc ListBars(ListBarsParams) returns (ListBarsResult)` |
+| Workflow step | W10.6, Read prices and bars, point in time, by source |
+| Kind | query, on `platform.lake.query.list-bars` |
+| Role | `reporting`, `portfolio`, `compliance`, `signal` |
+| Served by | the lake |
+
+**Returns** `ListBarsResult`: `bars`, each a [`Bar`](#bar); `unanswered`, `datasets`, `watermark` and `next_cursor`, as `list_prices`.
+
+## `list_datasets` { #list_datasets }
+
+From 0.22.0, contract v18, `preview`. Reads the datasets the plugin may read, each with its instance, vendor, aggregator and catalogue entry, the licence of each, and the plugin's own entitlements. The SDK reads it once to join each heard row's dataset (`Heard.dataset`).
+
+```python
+async def list_datasets(self) -> ListDatasetsResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc ListDatasets(ListDatasetsParams) returns (ListDatasetsResult)` |
+| Workflow step | W10.9, Read the datasets |
+| Kind | query, on `platform.lake.query.list-datasets` |
+| Role | `reporting`, `portfolio`, `compliance`, `signal` |
+| Served by | the lake |
+
+**Returns** `ListDatasetsResult`: `datasets`, each a [`DatasetRef`](#datasetref); `licences`, each dataset's licence enforced; and `entitlements`, the plugin's own.
+
 ## Types { #types }
 
 The plugin-facing types these operations take and return. [`Identifier`](python-sdk.md#identifier) and [`MissReason`](python-sdk.md#missreason) are described with the Python SDK. `Money`, `StatementFigures`, `ReportedCollateral`, `ReportedLot` and, from 0.13.0, `ReportedEncumbrance` and the book's `OpeningSource`, `OpeningPosition`, `OpeningLot`, `PendingSettlement`, `LotTerms`, `PositionKey`, `BreakDifference`, `BreakValue`, `BreakCause`, `PendingSettlementRef`, `AgreementFigures`, `ReportedPositionValue`, `PositionEncumbrances`, `Encumbrance`, `Adjustment`, `MovementLine` and `BasisAdjustment` are the SDK's frozen dataclasses, exported from `meridian`, which take their numbers as `Decimal` and their amounts as `Money`, and are converted and refused as a call's own parameters are. Every other type below is a generated protobuf message or enum in `meridian.plugin.v1.operations_pb2`, and `AssetClass`, `CollateralDirection`, `ExternalAccount`, `HoldingSide` and `SyncState` are also exported from `meridian`. What a read answers is all generated messages, `StatementFigures` among them: read a number or an amount off one with [`as_decimal` and `as_money`](#numbers-and-amounts).
@@ -1615,7 +1894,10 @@ An amount of currency, `meridian.Money(amount, currency_code)`: a frozen datacla
 | Field | Type | Meaning |
 |---|---|---|
 | `amount` | `Decimal` or `int` | In the currency's major unit. |
-| `currency_code` | `str` | ISO 4217, such as `"USD"`. |
+| `currency_code` | `str` | ISO 4217, such as `"USD"`. From 0.22.0 empty for an asset with no ISO 4217 code. |
+| `instrument_id` | `str` | From 0.22.0, contract v18: the cash instrument the amount is in, fiat and tokens alike. Empty from a plugin naming a fiat currency by its code, which core resolves, dated; never empty on what core keeps and answers. |
+
+From contract v18 a Money always names an instrument (see [Money and instruments](../concepts/money-and-instruments.md)). `Money(Decimal("12.50"), "USD")` keeps its shape; a token is named by its instrument alone, `Money(Decimal("2410.5"), instrument_id=usdc)`, as [`resolve_identifier`](#resolve_identifier) resolved it. A Money naming neither raises `ValueError` before anything is sent; a token's code in `currency_code`, and a code and an instrument naming two assets, are refused naming the field. A Money read back with [`as_money`](#numbers-and-amounts) carries `instrument_id` beside the code: a test comparing one with a Money it made compares `amount` and `currency_code`.
 
 ### `ExternalAccount` { #externalaccount }
 
@@ -1884,7 +2166,8 @@ An instrument's record, as [`resolve_instrument`](#resolve_instrument) answers i
 | `identifiers` | sequence of `Identifier` | Its full identifier set. |
 | `asset_class` | [`AssetClass`](#assetclass) | Its asset class. |
 | `currency` | `str` | ISO 4217. |
-| `exchange_mic` | `str` | Its listing venue, ISO 10383; empty where there is none. |
+| `exchange_mic` | `str` | Its listing venue, ISO 10383; empty where there is none. Deprecated in contract v18 for `listing_venue_id`, and read until every record carries a venue ID. |
+| `listing_venue_id` | `str` | From 0.22.0, contract v18: the [venue](../concepts/venues.md) it is listed on, a venue master ID (`VEN-`), a segment's venue where the listing is on one; empty where it is listed on none or its venue is not yet known. |
 | `description` | `str` | Its name. |
 | `lifecycle_state` | `InstrumentLifecycleState` | `DEFINE` (its attributes may be incomplete), `ACTIVE` or `DECOMMISSIONED`. |
 | `version`, `valid_from_ns`, `record_time_ns` | `int` | The record's version, when its mapping became true, and when the store recorded it. |
@@ -2184,6 +2467,102 @@ An adjustment that resolves a break, `meridian.Adjustment(...)`. From 0.13.0.
 ### `ResolvedByEntries` { #resolvedbyentries }
 
 `ResolvedByEntries(entry_ids=[...])`: entries already recorded that resolve the breaks. From 0.13.0.
+
+### `Price` { #price }
+
+From 0.22.0. A price of one kind for one subject, `meridian.Price(...)`: a frozen dataclass, keyword only, converted and refused as a call's own parameters are. What a read answers is the generated message of the same name.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `meta` | [`ObservationMeta`](#observationmeta) | Its envelope. |
+| `kind` | [`PriceKind`](#pricekind) | Which price. |
+| `price` | [`Money`](#money) | The price of one unit of the subject. An FX rate is the price of one currency's cash instrument in another. |
+| `basis` | `PriceBasis` | `per_unit`, the one basis in v18. |
+
+### `Bar` { #bar }
+
+From 0.22.0. Open, high, low and close over an interval, `meridian.Bar(...)`: a frozen dataclass, keyword only.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `meta` | [`ObservationMeta`](#observationmeta) | Its envelope; the interval is its valid time, and a daily bar names its business date. |
+| `open`, `high`, `low`, `close` | [`Money`](#money) | In one asset, refused otherwise. |
+| `volume` | `Decimal` or `int` | Units of the instrument, never negative. |
+| `vwap` | [`Money`](#money) or `None` | `None` where the source gives none. |
+| `trade_count` | `int` or `None` | `None` where the source gives none. |
+
+### `ObservationMeta` { #observationmeta }
+
+From 0.22.0. The envelope every lake row carries as its first field, `meridian.ObservationMeta(...)`: a frozen dataclass, keyword only.
+
+| Field | Type | Filled | Meaning |
+|---|---|---|---|
+| `row_key` | `str` | by the plugin | Made from its raw record, so a repeat is the same row; a changed value under it is the next version. |
+| `subjects` | sequence of [`SubjectRef`](#subjectref) | by the plugin | 1 to 8 of the deployment's instruments, resolved first. |
+| `source` | [`Source`](#source) | by the plugin, partly stamped | The dataset and venue; the instance and version stamped. |
+| `valid_from_ns`, `valid_until_ns` | `int` | by the plugin | When the value was in force, the end exclusive; 0 for an instant or a value in force until the next. A day still forming ends after now. |
+| `business_date` | `datetime.date` or `str` | by the plugin | A daily value's business date, in the dataset's day; empty for one that is not daily. |
+| `source_times` | sequence of `SourceTime` | by the plugin | The source's own times, each a `kind` (`event`, `consolidated`, `reported`, `vendor_received`, `published`) once, and `at_ns`. |
+| `raw` | `RawRecordRef` | by the plugin | The raw record it was converted from, `plugin.raw_record(key)`. |
+| `unconverted` | sequence of `AsReported` | by the plugin | A value that failed conversion, as reported, such as a venue's code the deployment does not hold. |
+| `sent_at_ns` | `int` | stamped | The envelope's publication time. |
+| `recorded_at_ns`, `version`, `sequence`, `previous_sequence` | `int` | by the lake | When it was recorded, its version under the row key from 1, its sequence in the dataset, and the previous sequence of the same subject. |
+
+### `SubjectRef` { #subjectref }
+
+From 0.22.0. One entity a row is about: `entity_id`, the deployment's instrument ID.
+
+### `Source` { #source }
+
+From 0.22.0. Where a row came from.
+
+| Field | Meaning |
+|---|---|
+| `dataset` | The dataset's ID, the instance, a colon and its key, `alpaca-1:daily`; one the instance's catalogue declares. |
+| `venue_id` | The [venue](../concepts/venues.md) it originated on, a venue master ID; empty for the consolidated view, or a venue not yet held, whose code is then in `unconverted`. |
+| `instance`, `plugin_version` | Stamped by the sidecar. |
+
+### `SourceChoice` { #sourcechoice }
+
+From 0.22.0. Which sources a read takes, one of: `default=True` (or no choice), the deployment's source priority, falling through where one is silent, not covering or not entitled; `named`, the datasets named; `side_by_side=True`, every entitled dataset, each its own row.
+
+### `PriceKind` { #pricekind }
+
+From 0.22.0. In a string, spelled as its name without `PRICE_KIND_`, in lower case.
+
+| Value | Meaning |
+|---|---|
+| `PRICE_KIND_CLOSE` | The official close for the business date, consolidated or the venue's. |
+| `PRICE_KIND_LAST` | The last eligible trade's price at the valid time. |
+| `PRICE_KIND_NAV` | A fund's net asset value per share, for the business date. |
+| `PRICE_KIND_SETTLEMENT` | A contract's settlement price for the business date. |
+| `PRICE_KIND_BID`, `PRICE_KIND_ASK`, `PRICE_KIND_MID` | At the valid time, or the business date's closing quote. |
+
+### `Unanswered` { #unanswered }
+
+From 0.22.0. What a lake read did not answer: `subject`, `dataset`, `field` (a field stripped, by its dictionary entry; empty for the whole row) and `reason`, an [`UnansweredReason`](#unansweredreason).
+
+### `UnansweredReason` { #unansweredreason }
+
+From 0.22.0. In a string, spelled as its name without `UNANSWERED_REASON_`, in lower case.
+
+| Value | Meaning |
+|---|---|
+| `UNANSWERED_REASON_NOT_ENTITLED` | The plugin is not entitled to the dataset, or the field. |
+| `UNANSWERED_REASON_NOT_COVERED` | No dataset covers the subject. |
+| `UNANSWERED_REASON_ASKED_SOURCE` | Wanted of the `dgm` serving it; the rows follow when recorded. |
+| `UNANSWERED_REASON_SOURCE_SILENT` | The dataset recorded nothing for the subject within its cadence. |
+| `UNANSWERED_REASON_UNRESOLVED` | The subject is not one the deployment's instruments resolve. |
+| `UNANSWERED_REASON_BEYOND_HISTORY` | Older than the history the dataset reaches, or the lake keeps. |
+| `UNANSWERED_REASON_NOT_KEPT` | Its licence forbids keeping it, and it was served, not kept. |
+
+### `DatasetRef` { #datasetref }
+
+From 0.22.0. A dataset as a lake answer names it, once: `dataset`, `instance`, `vendor`, `aggregator`, and its catalogue entry as declared, `declaration` ([`DatasetDeclaration`](../boundaries/sidecar.md#meridian.v1.DatasetDeclaration)); and `unconverted_count` and `miss_count`, the values its plugin left unconverted and the identifiers and venues it reported missing.
+
+### `VenueRecord` { #venuerecord }
+
+From 0.22.0. A venue as the deployment holds it, from the platform's venue master: `venue_id` (`VEN-`), `name`, `country_code`, `kind` (`VenueKind`: `exchange`, `alternative_trading_system`, `crypto_exchange`, `dealer_network`, `reporting_facility`), `identifiers` (its MIC under `iso10383` and vendors' codes as `symbol`, each dated), `operating_venue_id`, `time_zone`, `lifecycle_state`, `version`, `valid_from_ns` and `record_time_ns`. See [Venues](../concepts/venues.md).
 
 ## The gRPC service
 

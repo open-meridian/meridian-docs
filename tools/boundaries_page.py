@@ -76,7 +76,7 @@ GUIDES = [
      "every operation a plugin's roles let it take, with its arguments, what it returns and its errors"),
     (SDK, "Python SDK",
      "connecting to the sidecar, settings, access, figures, receiving what a plugin's roles hear, "
-     "filing a ticket for a person, an edge plugin's archive, and pages"),
+     "filing a ticket for a person, an edge plugin's archive, the lake, and pages"),
     ("concepts/plan-your-deployment.md", "Plan your deployment",
      "a firm's profile answered in three layers: core as its books and records, the plugins by role "
      "(existing, planned in a named release, or to build against the contract) and configuration, "
@@ -93,7 +93,16 @@ GUIDES = [
     ("api/core-tools.md", "Core's tools",
      "the deployment's own MCP tools for a plugin's area -- its Summary, settings, archive, holds, "
      "launching and stopping -- each at its page's role and level, a note on every change, "
-     "never a secret's value and never a change to who holds access"),
+     "never a secret's value and never a change to who holds access; and the Data sources page's "
+     "five, its datasets' licences, entitlements and source priority, at the deployment admin's level"),
+    ("concepts/the-lake.md", "The lake",
+     "prices and bars by dataset from dgm plugins: versions, reads by business date and as of a "
+     "recorded time, the source priority, wants, kept or served (contract v18)"),
+    ("how-to/write-a-dgm.md", "Write a dgm against its suite",
+     "a data plugin from plugin new --role dgm: its catalogue, conversion at the edge, wants, "
+     "and the dgm suite"),
+    ("how-to/license-and-entitle-a-dataset.md", "License and entitle a dataset",
+     "the Data sources page: a dataset's licence, the plugins entitled to it, and the source priority"),
 ]
 
 # How llms.txt says which roles hold an operation.
@@ -107,7 +116,10 @@ HOLDER_NAMES = {"bor": "the book", "platform": "the platform"}
 # given its page here.
 STORES = {
     "street": ("The street", "what custodians say an account holds, as a plugin at the edge reports it"),
-    "instrument": ("The instrument store", "the deployment's instrument records, and resolving an identifier to one"),
+    "instrument": ("The instrument store", "the deployment's instrument records, and resolving an identifier to one; "
+                   "from contract v18 the venues it pulled from the platform's venue master"),
+    "lake": ("The lake", "what data sources say: prices and bars by dataset, each dataset's entitlements, "
+             "and the source priority a default read takes (contract v18)"),
     "bor": ("The book of record", "the deployment's own record of positions, lots, breaks and figures"),
     "conductor": ("The conductor's accounts", "the deployment's accounts and the links a plugin makes to them, "
                   "and a plugin's settings, holds and moves as core's tools show them"),

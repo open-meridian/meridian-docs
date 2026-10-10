@@ -20,7 +20,8 @@ whoever works on it next has them too. `.dockerignore` keeps them out of the plu
 - A deployment installed **for development**. Development deployments run unreviewed code, so
   never use one your firm depends on. See
   [Development deployments](../concepts/development-deployments.md).
-- The `meridian` CLI, 0.1.36, whose `plugin new` builds on SDK 0.21.0: 0.1.15 brought
+- The `meridian` CLI, 0.1.36, whose `plugin new` builds on SDK 0.21.0 (0.22.0 from the release
+  after it, built and not released): 0.1.15 brought
   `plugin check`, which `AGENTS.md` asks for, and 0.1.21 `plugin open --level`, which the checks
   below use. Check with `meridian --version`; update with `meridian upgrade`.
 - Docker on this machine. The first run builds the plugin's image.

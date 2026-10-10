@@ -119,7 +119,10 @@ The releases, in their order:
    moved to cold storage, restored on request, each move recorded. Released with contract v16:
    see [The archive](the-archive.md).
 4. **Valuation**: prices and daily bars in the deployment's market-data
-   store, and the book valued from them.
+   store, and the book valued from them. Contract v18 is built and not yet
+   released: [the lake](the-lake.md), its licences and entitlements, and the
+   Alpaca and Tradier plugins; the other data plugins and the sample
+   reporting plugin are still being built.
 5. **Live market data**: trades, quotes and streaming prices, and the
    professional data sources a fund licenses.
 6. **Prepared changes**: an agent prepares a change, and a person makes it.
@@ -143,7 +146,7 @@ value. No trading yet.
 | A 401(k) plan's own fund codes linked to their instruments | [`custody`](roles.md#custody) | SnapTrade, its Plan-code links table | Local | Exists |
 | The IRA's core position, an FDIC-insured deposit, counted as cash | [`custody`](roles.md#custody) | SnapTrade, by its own flag or its Cash links table | Local | Exists |
 | An opening balance per account, with its lots, and daily reconciliation, each break explained | [`operations`](roles.md#operations) | The sample operations plugin | Local | Exists |
-| Daily closes for stocks and ETFs | [`dgm`](roles.md#dgm) | Alpaca and Tradier | Planned | Planned, in valuation |
+| Daily closes for stocks and ETFs | [`dgm`](roles.md#dgm) | Alpaca and Tradier | Planned | Built, not released: see [Add a data plugin's key](../how-to/add-a-data-plugins-key.md) |
 | US dollar exchange rates | [`dgm`](roles.md#dgm) | The Federal Reserve's H.10 rates | Planned | Planned, in valuation |
 | A mutual fund's daily NAV | [`dgm`](roles.md#dgm) | Tiingo | Planned | Planned, after valuation's equity sources |
 | The book valued, by account and in total | [`reporting`](roles.md#reporting) | The sample reporting plugin | Planned | Planned, in valuation |

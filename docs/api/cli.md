@@ -333,23 +333,28 @@ If the deployment can't be reached, the delegation is still forgotten here. It s
 ## `meridian plugin new`
 
 ```text
-meridian plugin new <name> [--into <dir>]
+meridian plugin new <name> [--into <dir>] [--role dgm|reporting]
 ```
 
-Writes a working plugin to start from: the Python SDK's reference plugin, renamed to `<name>`. It needs no network, because the template is compiled into the binary. It writes the plugin's code and its pages, each a view function and a Jinja2 template declared with the levels it serves (a **Setup** page under Manage, at `admin`, and an **Accounts** page under Open and View, at `write` and `read`), its tests (`tests/test_page.py`), a `Dockerfile`, `pyproject.toml`, `.dockerignore`, `.gitignore`, `README.md`, `AGENTS.md`, `CLAUDE.md`, a `develop-live` skill for Claude Code, and a CI workflow that runs `meridian plugin check --run-tests` (`.github/workflows/check.yaml`), then prints the next steps. From CLI 0.1.36 the plugin pins SDK 0.21.0, and needs a deployment whose sidecar accepts contract v16 (0.1.35 pinned 0.20.0, 0.1.34 pinned 0.19.0, 0.1.33 pinned 0.18.0, 0.1.29 to 0.1.32 pinned 0.17.0, 0.1.28 pinned 0.16.0, 0.1.27 pinned 0.15.0, 0.1.26 pinned 0.14.0, 0.1.24 and 0.1.25 pinned 0.12.0, 0.1.23 pinned 0.11.0, 0.1.22 pinned 0.10.1, 0.1.21 pinned 0.10.0, 0.1.20 pinned 0.9.0, 0.1.18 and 0.1.19 pinned 0.7.1, and 0.1.16 and 0.1.17 pinned 0.6.1). From the same release its `AGENTS.md` teaches a coding agent the kinds of raw record a plugin at the edge declares and their windows, and that a custody plugin keeps each activity's raw record at least as long as the history it reported. See [Your first plugin](../getting-started/first-plugin.md).
+Writes a working plugin to start from: the Python SDK's reference plugin, renamed to `<name>`, or with `--role` that role's template. It needs no network, because the template is compiled into the binary. It writes the plugin's code and its pages, each a view function and a Jinja2 template declared with the levels it serves (a **Setup** page under Manage, at `admin`, and an **Accounts** page under Open and View, at `write` and `read`), its tests (`tests/test_page.py`), a `Dockerfile`, `pyproject.toml`, `.dockerignore`, `.gitignore`, `README.md`, `AGENTS.md`, `CLAUDE.md`, a `develop-live` skill for Claude Code, and a CI workflow that runs `meridian plugin check --run-tests` (`.github/workflows/check.yaml`), then prints the next steps. From the CLI release after 0.1.36 (built, not released) the plugin pins SDK 0.22.0, and needs a deployment whose sidecar accepts contract v18 (chart 0.1.291, not yet released). CLI 0.1.36 pins SDK 0.21.0, and needs a deployment whose sidecar accepts contract v16 (0.1.35 pinned 0.20.0, 0.1.34 pinned 0.19.0, 0.1.33 pinned 0.18.0, 0.1.29 to 0.1.32 pinned 0.17.0, 0.1.28 pinned 0.16.0, 0.1.27 pinned 0.15.0, 0.1.26 pinned 0.14.0, 0.1.24 and 0.1.25 pinned 0.12.0, 0.1.23 pinned 0.11.0, 0.1.22 pinned 0.10.1, 0.1.21 pinned 0.10.0, 0.1.20 pinned 0.9.0, 0.1.18 and 0.1.19 pinned 0.7.1, and 0.1.16 and 0.1.17 pinned 0.6.1). From the same release its `AGENTS.md` teaches a coding agent the kinds of raw record a plugin at the edge declares and their windows, and that a custody plugin keeps each activity's raw record at least as long as the history it reported. See [Your first plugin](../getting-started/first-plugin.md).
 
 `<name>` must be lowercase letters, digits and single hyphens, starting with a letter. It becomes the package name, and, with hyphens as underscores, the module name.
 
 | Flag | Argument | Default | Meaning |
 |---|---|---|---|
 | `--into` | `<dir>` | `./<name>` | Where to write it. Never somewhere that already exists. |
+| `--role` | `dgm` or `reporting` | none | From the CLI release after 0.1.36 (built, not released): write that role's template instead, from the SDK's `templates/`, a whole plugin holding the role with its tests running the role's suite. A role with no template of its own is refused, naming those that have one; the reference plugin takes any role in its `pyproject.toml`. |
 
-**Exit codes:** `0` written, `1` refused (bad name, or the directory exists), `2` asked wrongly.
+**`--role dgm`** writes a plugin that puts a stand-in vendor's daily closes and bars into the [lake](../concepts/the-lake.md): its catalogue declared from code, every price parsed from the vendor's text as a `Decimal`, every subject and venue resolved before a row names it, wants answered, and its **Connection** and **Datasets** pages under Manage, each with its read tool, `read_connection` and `read_datasets`. Replace the vendor (`vendor.py`) with your own. Its tests run the `dgm` suite. See [Write a `dgm` against its suite](../how-to/write-a-dgm.md).
+
+**`--role reporting`** writes a plugin that shows the positions in its account scope valued at the last close from the lake, on a **Closes** page under Open and View and a **Datasets** page under Manage, and records nothing. Its tests run the `reporting` suite. See [Value the book](../how-to/value-the-book.md).
+
+**Exit codes:** `0` written, `1` refused (bad name, the directory exists, or a role with no template), `2` asked wrongly.
 
 ## `meridian plugin check` { #plugin-check }
 
 ```text
-meridian plugin check [--dir <dir>] [--run-tests] [--json]
+meridian plugin check [--dir <dir>] [--run-tests] [--verified] [--json]
 ```
 
 From CLI 0.1.15. Holds the plugin in `--dir` to the framework's rules: the rules every plugin is built to, so that plugins written by different people and different coding agents look and behave alike, and a change to what plugins call can be applied to all of them. It needs no deployment and no session, changes nothing, and reads nothing outside the directory. Run it while you work, and in the plugin's own CI.
@@ -360,6 +365,7 @@ Each failure names the rule, the file and line, and what to write instead, so th
 |---|---|---|---|
 | `--dir` | `<dir>` | `.` | The plugin's directory. |
 | `--run-tests` | | off | Also run the plugin's tests with pytest: `.venv/bin/python -m pytest` when the plugin has a `.venv`, otherwise `python3 -m pytest`, which must have the plugin and pytest installed. No cache or bytecode is written. |
+| `--verified` | | off | Hold it as a verified plugin is: every route that changes something a tool for agents, none kept from them (`tools-cover-routes`), and from the CLI release after 0.1.36 each role it holds with a suite run in its tests (`role-suite`). |
 | `--json` | | off | One JSON object on stdout instead of the report. |
 
 ### The rules
@@ -369,7 +375,7 @@ Each failure names the rule, the file and line, and what to write instead, so th
 | `template-shape` | The project keeps the template's shape. | No `pyproject.toml`, or one with no plugin name or version; the SDK not pinned exactly (`open-meridian==<version>`); no `Dockerfile`, or one not built on `ghcr.io/open-meridian/plugin-python:<the pinned version>`; no `src/<module>/__main__.py`; nothing calling `meridian.connect()`; no `AGENTS.md`; a `CLAUDE.md` that does not begin from `@AGENTS.md`; a `.dockerignore` that does not name `AGENTS.md` and `.meridian`. |
 | `tool-meridian` | `[tool.meridian]` names roles from the fixed list, and no tags. | No `[tool.meridian]`; a role not in the deployment's list (`ccm`, `compliance`, `custody`, `dgm`, `ems`, `match`, `oms`, `operations`, `portfolio`, `reporting`, `servicing`, `settlement`, `signal`); `tags`, empty or not; an `interface` that is not true or false. |
 | `edge-storage` | Only a plugin at the edge asks for storage in its declaration. | A plugin holding no edge role asking for storage. See [Keep what your custody plugin converts](../how-to/keep-what-the-edge-converts.md). |
-| `role-suite` | A plugin holding a role with a suite runs the suite in its tests. | A custody plugin with no test running the custody suite. See [Keep what your custody plugin converts](../how-to/keep-what-the-edge-converts.md). |
+| `role-suite` | A verified plugin holding a role with a suite runs the suite in its tests. | With `--verified`: a plugin holding `custody`, or from the CLI release after 0.1.36 `dgm`, with no test running that role's suite, which `--run-tests` then runs. Without `--verified` it is reported skipped, from the CLI release after 0.1.36: a plugin not passing its role's suite is not verified for it, and breaks no rule, so the reference plugin given `custody` keeps every rule. CLI 0.1.36 and earlier hold every custody plugin to it. See [Keep what your custody plugin converts](../how-to/keep-what-the-edge-converts.md) and [Write a `dgm` against its suite](../how-to/write-a-dgm.md#hold-it-to-the-suite). |
 | `kit-linked` | Every page links the kit from `/.meridian/ui/`, and the plugin holds no copy of it. | A file that writes a document (`<!doctype html>`, `<html>` or `<head>`) with no link to `/.meridian/ui/…/meridian.css`; a file named `meridian.css` or `meridian.js` in the plugin. |
 | `no-raw-colour` | No raw colour in a page or its styles. | A hex colour where a colour goes, `rgb()`, `rgba()`, `hsl()`, `hsla()`, `hwb()`, `oklch()` or `oklab()`, or a CSS colour name as the value of a colour property (`color`, `background`, `border`, `fill`, `stroke` and the like), a colour attribute (`fill="…"`) or a script's `.style.…Color`. A fallback in `var(--x, #fff)` is a raw colour too. |
 | `own-origin` | A page loads nothing from another origin. | An absolute or protocol-relative address (`https://…`, `//…`, `wss://…`) as a script's, stylesheet's, image's or frame's source, in `@import` or `url()`, or given to `fetch`, `EventSource`, `WebSocket` or `import`. A link people follow (`<a href>`) is not loading. |
@@ -438,7 +444,7 @@ With `--json`, one object. `line` is `null` when the failure is a whole file, or
 }
 ```
 
-`outcome` is `passed`, `failed`, or `skipped` for `tests-pass` without `--run-tests`.
+`outcome` is `passed`, `failed`, or `skipped` for `tests-pass` without `--run-tests`, and from the CLI release after 0.1.36 for `role-suite` without `--verified`, its line saying `--verified holds it`.
 
 !!! note "A freshly scaffolded plugin"
     From CLI 0.1.16, the plugin `meridian plugin new` writes keeps every rule, with its own tests and a CI workflow (`.github/workflows/check.yaml`) that runs `meridian plugin check --run-tests`. At 0.1.15 it failed `tests-exist` until you added a test.
@@ -510,6 +516,7 @@ The rewrites keep a file's formatting and comments wherever they change nothing.
 | 0.18.0 to 0.19.0: the SDK declares contract v14; a custody plugin reports the custodian's activity, and operations reads, hears and links it, and each sync status the street keeps; a setting may be a table of typed columns. See [Report the custodian's activity](../how-to/report-the-custodians-activity.md#move-a-plugin-to-0190) and [Set a plugin's settings](../how-to/set-a-plugins-settings.md#declare-a-table-setting-and-read-its-rows) | Nothing: only the pins move | |
 | 0.20.0 to 0.21.0: the SDK declares contract v16; a plugin at the edge declares the kinds of raw record it keeps, and past each kind's window archives, keeps or deletes them as its admin chose, each move reported. See [The archive](python-sdk.md#the-archive) and [Move a plugin to 0.21.0](../how-to/keep-what-the-edge-converts.md#move-a-plugin-to-0210) | Nothing: only the pins move. A plugin keeping one retention (`Storage(retention_days=...)`) keeps it. One adopting kinds drops any setting of its own that held a window, and its release notes name it and the window it maps to, for the admin to set once at upgrade; a setting of its own named as a declared kind's window setting is reported by `plugin check` (`window-settings`) | |
 | 0.19.0 to 0.20.0: the SDK declares contract v15; a person's access to a plugin is granted per role, and a page, route, tool and setting names the roles it serves; a custody plugin re-resolves an activity once its instrument resolves, which operations reads and hears. See [Roles](python-sdk.md#roles) and [Report the custodian's activity](../how-to/report-the-custodians-activity.md#move-a-plugin-to-0200) | Nothing: only the pins move. A plugin holding one role, or none, names no role anywhere; one that comes to hold a second names `roles=` on every page, route, tool and setting, which `plugin check` reports (`roles-declared`) | |
+| 0.21.0 to 0.22.0: the SDK declares contract v18, the lake: a `dgm`'s catalogue, prices and bars recorded in batches, wants, the lake's reads by business date, as of and side by side, venues resolved, the `dgm` suite; a `Money` names its cash instrument, and every date field takes a `datetime.date`. See [The lake](python-sdk.md#the-lake) | Nothing: only the pins move. `Money(amount, code)` keeps its shape | a test comparing a Money read back with one it made, which now carries `instrument_id`: compare `amount` and `currency_code`; a date sent as text that is no date, now refused |
 
 `plugin migrate` adds two rules of its own: `pin-elsewhere`, for the old release still named in another file (a Makefile's base image, a workflow, a README), which it reports rather than moves because some of those are history; and `unreadable`, for a file that is not UTF-8, or that a step could not read as Python, which it leaves as it was.
 

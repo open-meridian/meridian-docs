@@ -120,6 +120,18 @@ window setting it maps to, for the admin to set once at upgrade, as SnapTrade 0.
 plugin built on 0.21.0 declares contract v16, and a runtime serving v15 refuses it at
 registration, naming both versions.
 
+### Move a plugin to 0.22.0 { #move-a-plugin-to-0220 }
+
+`meridian plugin migrate` moves only the pins: `open-meridian==0.22.0` and
+`plugin-python:0.22.0`, built and not yet released. A `Money` naming its currency by its ISO 4217
+code keeps its shape, and core resolves the code to the currency's cash instrument; a date sent as
+valid ISO text is sent as before. Left for you: a test comparing a `Money` read back with one it
+made, which now carries `instrument_id` (compare `amount` and `currency_code`), and a date sent as
+text that is no date, now refused. A plugin built on 0.22.0 declares contract v18, and a runtime
+serving v16 refuses it at registration, naming both versions. SnapTrade 0.13.1 and the sample
+operations plugin 0.9.1 are this move and nothing else. See
+[Money and instruments](../concepts/money-and-instruments.md).
+
 ## Say how you came by what the vendor did not send
 
 A value your vendor did not send, and you closed, carries its **provenance**:
@@ -182,5 +194,8 @@ def test_every_case_of_the_custody_suite_passes() -> None:
 ```
 
 A case asserting one value of a closed list your vendor never presents may be named in
-`not_presented`, with why; every other case needs a producer. `meridian plugin check` fails a
-custody plugin with no such test (`role-suite`), and `--run-tests` runs it.
+`not_presented`, with why; every other case needs a producer. `meridian plugin check --verified`
+fails a custody plugin with no such test (`role-suite`), and `--run-tests` runs it. From the CLI
+release after 0.1.36 the rule is held only under `--verified`; CLI 0.1.36 and earlier hold every
+custody plugin to it. A `dgm` plugin passes its own suite the same way: see
+[Write a `dgm` against its suite](write-a-dgm.md#hold-it-to-the-suite).

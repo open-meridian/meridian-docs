@@ -107,6 +107,11 @@ nav:
       - The custodian's activity: concepts/the-custodians-activity.md
       - The archive: concepts/the-archive.md
       - Instruments: concepts/instruments.md
+      - The lake: concepts/the-lake.md
+      - Licences and entitlements: concepts/licences-and-entitlements.md
+      - Money and instruments: concepts/money-and-instruments.md
+      - Venues: concepts/venues.md
+      - Dates and time: concepts/dates-and-time.md
       - Tickets and the inbox: concepts/tickets-and-the-inbox.md
       - Development deployments: concepts/development-deployments.md
   - How-to:
@@ -121,6 +126,10 @@ nav:
       - Keep what your custody plugin converts: how-to/keep-what-the-edge-converts.md
       - Report the custodian's activity: how-to/report-the-custodians-activity.md
       - Keep older records in the archive: how-to/keep-older-records-in-the-archive.md
+      - License and entitle a dataset: how-to/license-and-entitle-a-dataset.md
+      - Add a data plugin's key: how-to/add-a-data-plugins-key.md
+      - Write a dgm against its suite: how-to/write-a-dgm.md
+      - Value the book: how-to/value-the-book.md
       - Offer your pages to agents: how-to/offer-your-pages-to-agents.md
       - Let your agent manage a plugin: how-to/let-your-agent-manage-a-plugin.md
       - Advising on tickets: how-to/advise-on-tickets.md
@@ -142,6 +151,7 @@ nav:
       - Data dictionary:
           - The street: boundaries/street.md
           - The instrument store: boundaries/instrument.md
+          - The lake: boundaries/lake.md
           - The book of record: boundaries/bor.md
           - The conductor's accounts: boundaries/conductor.md
           - The dashboard's tickets: boundaries/dashboard.md

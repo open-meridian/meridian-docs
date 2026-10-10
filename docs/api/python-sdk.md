@@ -12,7 +12,7 @@ pip install open-meridian
 |---|---|
 | PyPI name | `open-meridian` |
 | Import name | `meridian` |
-| Version | 0.21.0 |
+| Version | 0.22.0 (built, not yet on PyPI; 0.21.0 is the latest released) |
 | Python | 3.11 or newer |
 | Dependencies | `grpcio>=1.68,<2`, `protobuf>=5.28,<7`, `jinja2>=3.1,<4` (from 0.10.0, for [pages](#pages)) |
 | Licence | Apache-2.0 |
@@ -20,7 +20,15 @@ pip install open-meridian
 !!! warning "Not `meridian-sdk`"
     The PyPI package `meridian-sdk` belongs to an unrelated company. Don't install it.
 
-A plugin pins the SDK exactly, `open-meridian==0.21.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.21.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls; from 0.12.0 to 0.13.0, from 0.13.0 to 0.14.0, from 0.19.0 to 0.20.0, and from 0.20.0 to 0.21.0, only the pins move. `meridian plugin new` writes a plugin pinned to 0.19.0 from CLI 0.1.34, to 0.20.0 from CLI 0.1.35, and to 0.21.0 from CLI 0.1.36. See [Plugin manifest](plugin-manifest.md).
+A plugin pins the SDK exactly, `open-meridian==0.22.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.22.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls; from 0.12.0 to 0.13.0, from 0.13.0 to 0.14.0, from 0.19.0 to 0.20.0, from 0.20.0 to 0.21.0 and from 0.21.0 to 0.22.0, only the pins move. `meridian plugin new` writes a plugin pinned to 0.19.0 from CLI 0.1.34, to 0.20.0 from CLI 0.1.35, to 0.21.0 from CLI 0.1.36, and to 0.22.0 from the release after it.
+
+!!! note "0.22.0: built, not released"
+    open-meridian 0.22.0 declares contract v18, [the lake](#the-lake): a
+    `dgm`'s catalogue, prices and bars recorded in batches, wants, the
+    readers, a `Money` naming its instrument and real dates. It is built and
+    not yet on PyPI, and needs a runtime serving contract v18 (chart
+    0.1.291, not yet released), which refuses nothing a plugin on 0.21.0
+    sends. See [Plugin manifest](plugin-manifest.md).
 
 | Optional extra | Installs | For |
 |---|---|---|
@@ -62,7 +70,7 @@ A plugin that serves pages declares them with [`meridian.Pages`](#pages) and pas
 | `Column` | frozen dataclass | [`Column`](#column), from 0.19.0 |
 | `Pages`, `Request`, `Response` | class, frozen dataclasses | [Pages](#pages) |
 | `AccessLevel` | generated protobuf enum | [`AccessLevel`](#accesslevel) |
-| `Money` | frozen dataclass | [Typed operations](typed-operations.md#money) |
+| `Money` | frozen dataclass | [Typed operations](typed-operations.md#money); its `instrument_id` from 0.22.0 |
 | `StatementFigures`, `ReportedCollateral`, `ReportedLot` | frozen dataclasses | [Typed operations](typed-operations.md#statementfigures), from 0.12.0 |
 | `ReportedEncumbrance` | frozen dataclass | [Typed operations](typed-operations.md#reportedencumbrance), from 0.13.0 |
 | `OpeningSource`, `OpeningPosition`, `OpeningLot`, `PendingSettlement`, `LotTerms`, `PositionKey`, `BreakDifference`, `BreakValue`, `BreakCause`, `PendingSettlementRef`, `AgreementFigures`, `ReportedPositionValue`, `PositionEncumbrances`, `Encumbrance`, `Adjustment`, `MovementLine`, `BasisAdjustment` | frozen dataclasses | [Typed operations](typed-operations.md#types), the book's, from 0.13.0 |
@@ -77,10 +85,13 @@ A plugin that serves pages declares them with [`meridian.Pages`](#pages) and pas
 | `Storage`, `RecordKind` | frozen dataclasses | [The archive](#the-archive); `RecordKind` from 0.21.0 |
 | `StoredSpan`, `MoveOutcome` | generated protobuf message and enum | [The archive](#the-archive), from 0.21.0 |
 | `ActivityKind`, `ActivityRef` | generated protobuf enum and message | [Typed operations](typed-operations.md#activitykind), from 0.19.0 |
+| `DatasetDeclaration`, `DatasetLicence` | frozen dataclasses | [A dgm's catalogue](#a-dgms-catalogue), from 0.22.0 |
+| `Price`, `Bar`, `ObservationMeta`, `SourceTime` | frozen dataclasses | [Typed operations](typed-operations.md#price), from 0.22.0 |
+| `ObservationMode`, `PriceKind`, `PriceBasis`, `SourceTimeKind`, `UnansweredReason`, `VenueKind`, `Source`, `SourceChoice`, `SubjectRef`, `DatasetRef`, `Unanswered`, `VenueRecord` | generated protobuf enums and messages | [Typed operations](typed-operations.md#types), the lake's, from 0.22.0 |
 | `CallerMiddleware` | ASGI middleware | [`CallerMiddleware`](#callermiddleware) |
 | `MeridianError`, `Refused`, `NoSidecar`, `NotRegistered`, `NotGranted`, `CallFailed`, `NotLinked`, `CommandRefused` | exceptions | [Exceptions](#exceptions); `CommandRefused` from 0.13.0, its `fields` from 0.14.0 |
 | `DEFAULT_ADDRESS` | `str` | `"127.0.0.1:9191"`, where a sidecar listens |
-| `SCHEMA_VERSION` | `str` | the contract version sent at registration: `"v16"` from 0.21.0, `"v15"` in 0.20.0, `"v14"` in 0.19.0, `"v13"` in 0.18.0, `"v12"` in 0.17.0, `"v11"` in 0.16.0, `"v10"` in 0.15.0, `"v9"` in 0.14.0, `"v8"` in 0.13.0, `"v7"` in 0.12.0, `"v6"` in 0.11.0, `"v5"` in 0.10.0 and 0.10.1, `"v4"` in 0.9.0, `"v3"` in 0.8.0, `"v2"` before |
+| `SCHEMA_VERSION` | `str` | the contract version sent at registration: `"v18"` from 0.22.0 (no SDK declares v17, a revision of core's alone), `"v16"` in 0.21.0, `"v15"` in 0.20.0, `"v14"` in 0.19.0, `"v13"` in 0.18.0, `"v12"` in 0.17.0, `"v11"` in 0.16.0, `"v10"` in 0.15.0, `"v9"` in 0.14.0, `"v8"` in 0.13.0, `"v7"` in 0.12.0, `"v6"` in 0.11.0, `"v5"` in 0.10.0 and 0.10.1, `"v4"` in 0.9.0, `"v3"` in 0.8.0, `"v2"` before |
 
 The module `meridian.testing` holds [`PageClient`](#testing) and [`heartbeat`](#testing), for a plugin's own tests.
 
@@ -109,9 +120,9 @@ Registers with the sidecar and returns the admitted plugin. A `Plugin` you hold 
 | `interface` | `Interface` or `None` | `None` | The pages the plugin serves on loopback, if any. |
 | `settings` | sequence of `Setting` | `()` | The settings the plugin needs an admin of it to give it, on the dashboard's Settings form, or a table on its own tab beside it. A plugin sets none of them itself. |
 | `reads_external_accounts` | `bool` | `False` | `True` when the plugin reads accounts at an external source and names them by that source's identifiers. An admin of the plugin links those to accounts, and the sidecar translates them on the way in. |
-| `declaration` | `Declaration` or `None` | `None` | The version's declaration, the same one `meridian plugin upload` reads from the image: its secret settings' names, what it does not carry and the storage it asks for. See [Keep what your custody plugin converts](../how-to/keep-what-the-edge-converts.md). From 0.21.0, where its storage declares kinds of raw record, `connect` declares each kind's two window settings and the restore route besides; see [The archive](#the-archive). |
+| `declaration` | `Declaration` or `None` | `None` | The version's declaration, the same one `meridian plugin upload` reads from the image: its secret settings' names, what it does not carry and the storage it asks for. See [Keep what your custody plugin converts](../how-to/keep-what-the-edge-converts.md). From 0.21.0, where its storage declares kinds of raw record, `connect` declares each kind's two window settings and the restore route besides; see [The archive](#the-archive). From 0.22.0, a `dgm`'s catalogue; see [A dgm's catalogue](#a-dgms-catalogue). |
 
-The contract version it sends is `SCHEMA_VERSION`, `"v16"` from 0.21.0. A sidecar accepts a range of versions, v2 through the one its runtime serves, v16 at contract v16: a plugin built for an older version it still supports registers, and one built for a newer version than the sidecar knows is refused at registration, naming both, rather than running without what it was built for. After an upgrade, relaunch plugins so they get the newer sidecar (`meridian upgrade-deployment` names the ones that need it).
+The contract version it sends is `SCHEMA_VERSION`, `"v18"` from 0.22.0, `"v16"` in 0.21.0. A sidecar accepts a range of versions, v2 through the one its runtime serves, v18 at contract v18: a plugin built for an older version it still supports registers, and one built for a newer version than the sidecar knows is refused at registration, naming both, rather than running without what it was built for. After an upgrade, relaunch plugins so they get the newer sidecar (`meridian upgrade-deployment` names the ones that need it).
 
 **Raises:**
 
@@ -351,6 +362,10 @@ From 0.12.0. A plugin whose roles hear rows receives them with `plugin.receive`,
 | `activity_recorded` | `ActivityRecorded` | An [`ActivityRecordedEvent`](typed-operations.md#activityrecordedevent): an activity on the account as the custodian stated it, recorded once. The same message [`list_activities`](typed-operations.md#list_activities) reads, so a break waiting on its cause can be compared again. From 0.19.0, `preview`. | W2.12 |
 | `sync_status_recorded` | `SyncStatusRecorded` | A [`SyncStatusRecordedEvent`](typed-operations.md#syncstatusrecordedevent): a sync status the street kept, so "needs sign-in" is told apart from merely old. The same message [`list_sync_statuses`](typed-operations.md#list_sync_statuses) reads. From 0.19.0, `preview`. | W2.13 |
 | `activity_re_resolved` | `ActivityReResolved` | An [`ActivityReResolvedEvent`](typed-operations.md#activityreresolvedevent): an activity recorded before its instrument resolved, re-resolved, its re-resolution kept beside it. Caught up from the `re_resolutions` of [`list_activities`](typed-operations.md#list_activities). From 0.20.0, `preview`. | W2.16 |
+| `prices_recorded` | `PricesRecorded` | A `PricesRecordedEvent`: one [`Price`](typed-operations.md#price) the lake recorded, in `price`, for a subject named in `subjects=`. Heard by `reporting`, `portfolio`, `compliance` and `signal`, from a dataset the plugin is entitled to. Caught up by [`list_prices`](typed-operations.md#list_prices). From 0.22.0, `preview`. | W10.5 |
+| `bars_recorded` | `BarsRecorded` | A `BarsRecordedEvent`: one [`Bar`](typed-operations.md#bar), in `bar`, likewise. Caught up by [`list_bars`](typed-operations.md#list_bars). From 0.22.0, `preview`. | W10.5 |
+| `observations_wanted` | `ObservationsWanted` | An `ObservationsWantedEvent`, heard by the `dgm` serving its dataset alone: `want_id`, `dataset`, `data_type`, `subjects`, `kinds`, `interval_ns`, the `business_date` or valid range wanted, and `standing`. See [Wants](#wants). From 0.22.0, `preview`. | W10.7 |
+| `want_withdrawn` | `WantWithdrawn` | A `WantWithdrawnEvent`, `want_id` and `dataset`: a standing want no reader asked for within its dataset's cadence. From 0.22.0, `preview`. | W10.7 |
 
 ```python
 async def receive(
@@ -364,7 +379,12 @@ async def receive(
     activity_recorded: Callable[[Heard[ActivityRecordedEvent]], Awaitable[None]] | None = None,
     sync_status_recorded: Callable[[Heard[SyncStatusRecordedEvent]], Awaitable[None]] | None = None,
     activity_re_resolved: Callable[[Heard[ActivityReResolvedEvent]], Awaitable[None]] | None = None,
+    prices_recorded: Callable[[Heard[PricesRecordedEvent]], Awaitable[None]] | None = None,
+    bars_recorded: Callable[[Heard[BarsRecordedEvent]], Awaitable[None]] | None = None,
+    observations_wanted: Callable[[Heard[ObservationsWantedEvent]], Awaitable[None]] | None = None,
+    want_withdrawn: Callable[[Heard[WantWithdrawnEvent]], Awaitable[None]] | None = None,
     seed: bool = True,
+    subjects: Sequence[str] = (),
 ) -> None
 ```
 
@@ -396,6 +416,8 @@ It runs until cancelled, so give it a task of its own beside the pages. It hears
 
 A plugin catches up from the store, never from the bus, and the SDK does it: a handler never sees the store's numbers, and keeps nothing to catch up with. A change carries its whole new state, so one handed on twice changes nothing a handler keeps; where reading a page at a time cannot say exactly where the store was, a change may be handed on twice rather than never.
 
+**The lake's rows, from 0.22.0.** A price or a bar is heard only for the subjects named in `subjects=`, by their instrument IDs, at most 500, and none without them, from the datasets the plugin is entitled to. Each is delivered latest value first: the sidecar keeps one value waiting per key (a price's dataset, subjects, venue and kind; a bar's dataset, subjects, venue and interval start), a later value replacing one not yet delivered, and the SDK hands on the newest per key, never an older value after a newer one. On start, after a `Lost` and after a broken stream it reads them again by `list_prices` or `list_bars`, latest first and side by side, marked `caught_up`. Each carries its dataset in [`Heard.dataset`](#heard). A plugin built before 0.22.0, naming no `subjects`, is unchanged.
+
 Everything heard is within the plugin's read scope, as the [reads](typed-operations.md#list_custodial_positions) are, and a plugin whose read scope is empty hears nothing. It reads and hears for its whole scope, as itself: serve each person from it with `caller.read`, as always.
 
 ### `Heard` { #heard }
@@ -412,6 +434,7 @@ class Heard(Generic[Message]):
     correlation_id: str = ""
     causation_id: str = ""
     published_at_ns: int = 0
+    dataset: DatasetRef | None = None
 ```
 
 | Field | Meaning |
@@ -422,6 +445,7 @@ class Heard(Generic[Message]):
 | `own` | `True` when the plugin's own act caused it. |
 | `cause` | Who caused it, where the store recorded it, a `ChangeCause`: `instance_id`, the instance that sent the command; `acting_for_subject`, the person it was sent for, empty when the plugin acted as itself; `correlation_id`; `causation_id`, the command's `message_id`; and `committed_at_ns`. |
 | `message_id`, `correlation_id`, `causation_id`, `published_at_ns` | From the envelope it was heard in. Empty, and `0`, for what was read. |
+| `dataset` | From 0.22.0, for a price or a bar: the dataset it came from, a [`DatasetRef`](typed-operations.md#datasetref) with its instance, vendor, aggregator and catalogue entry, as `list_datasets` answers it, which the lake names once rather than on every row. `None` for any other row, and where the plugin may not list the datasets. |
 
 **Raises:** `ValueError` when no handler is given. [`NotGranted`](#exceptions) for a row none of the plugin's roles hears. A read to catch up that finds nothing serving it, has no answer in time, or is refused by what serves it is tried again with the stream; any other refusal raises as the read's own would.
 
@@ -656,6 +680,115 @@ Where a raw record's key stands, by the index: the last move of the unit holding
 What a move carries, as the sidecar records it (`RecordMoveRequest`, contract v16): `record_kind`, `unit`, `record_count`, `first_received_ns`, `last_received_ns`, `outcome` (`MoveOutcome`: `MOVE_OUTCOME_ARCHIVED`, `MOVE_OUTCOME_RESTORED`, `MOVE_OUTCOME_RETURNED` or `MOVE_OUTCOME_DELETED`) and `rule`, a window's or the restore period's. A move made for a person names no rule: the person is read from the assertion, never a field. Nothing of a record's content is in a move.
 
 The sidecar checks each before it leaves, refusing `CallFailed` with `kind="invalid"` naming the field by its path: a kind the version did not declare, `archived` of a kind not archivable, a key, count, span or rule out of bounds. The deployment refuses `archived` for an instance allowed no archive. A restore, its return and an archiving for a person need `write` on one of the plugin's edge roles, and a deletion for a person `admin` (`NotGranted`).
+
+## The lake { #the-lake }
+
+From 0.22.0, contract v18, `preview`. [The lake](../concepts/the-lake.md) keeps what sources say about prices, append-only and point in time. A `dgm` plugin puts prices and bars in; `reporting`, `portfolio`, `compliance` and `signal` read and hear them. The SDK carries the typed operations and nothing of any vendor's: no HTTP or WebSocket client, no vendor-file parser, no reconnecting stream. Each operation is in [Typed operations](typed-operations.md#record_prices); each field in the [lake's data dictionary](../boundaries/lake.md).
+
+### A dgm's catalogue { #a-dgms-catalogue }
+
+A `dgm` declares the datasets it serves in its declaration, from code, beside its settings and storage: `Declaration(catalogue=[DatasetDeclaration(...)])`. A dataset's ID in a deployment is the instance, a colon and its key, `f"{plugin.identity.instance_id}:daily"`, which each row names.
+
+```python
+from meridian import DatasetDeclaration, DatasetLicence, Declaration, RecordKind, Storage
+
+DECLARATION = Declaration(
+    settings=SETTINGS,
+    storage=Storage(kinds=[RecordKind("responses", "Raw responses", window_days=30)]),
+    catalogue=[
+        DatasetDeclaration(
+            key="daily",
+            vendor="Coinbase",
+            data_types=["meridian.v1.Price", "meridian.v1.Bar", "meridian.v1.Bar.trade_count"],
+            modes=["pull", "push"],
+            cadence=86_400,
+            history=3650,
+            licence_default=DatasetLicence(kept=True, personal_use=True),
+            day_time_zone="Etc/UTC",
+            day_end_minute=0,
+        ),
+    ],
+)
+```
+
+`DatasetDeclaration`, keyword only:
+
+| Field | Type | Meaning |
+|---|---|---|
+| `key` | `str` | Required. 1 to 40 lowercase letters, digits and underscores, a letter first; once in the catalogue. |
+| `vendor` | `str` | Required. Who originated the data, 1 to 64 characters, as the plugin names it. |
+| `data_types` | sequence of `str` | Required, 1 to 32: the lake's types it serves by their message (`meridian.v1.Price`, `meridian.v1.Bar`), and the optional fields it fills by their dictionary entry (`meridian.v1.Bar.vwap`), each once. |
+| `modes` | sequence of `str` or `ObservationMode` | Required, 1 to 3, each once: `pull`, `push`, `stream`. |
+| `aggregator` | `str` | Who carries it, where an aggregator does; empty when reached directly. |
+| `cadence` | `int` | Seconds between the source's updates, which say when it is silent; 0 when it updates only when asked. |
+| `history` | `int` | Days of history the source serves; 0 for none stated. |
+| `licence_default` | `DatasetLicence` or `None` | What the vendor's standard terms say. |
+| `day_time_zone` | `str` | The IANA zone its business dates are in; empty for a dataset that is not daily. |
+| `day_end_minute` | `int` | Minutes after local midnight the day ends, 0 to 1,439. See [Dates and time](../concepts/dates-and-time.md). |
+| `venue_id` | `str` | The venue the dataset is, a venue master ID (`VEN-`); empty for a consolidated dataset. |
+
+`DatasetLicence`, keyword only, every field optional: `kept` (`False`: served, not kept), `retention_days` (0 to 36,500; 0 for no limit set), `derived_use`, `display`, `default_fields` (at most 64 dictionary entries; none for every field) and `personal_use`. It records what the vendor's terms say, which a deployment admin confirms or replaces (see [Licences and entitlements](../concepts/licences-and-entitlements.md)), never whether a deployment meets them.
+
+**Raises** `ValueError` when the declaration is built, naming the dataset: a key out of form, a vendor or aggregator too long, a data type or field no dictionary entry names, one named twice, no mode or a mode twice, a negative cadence or history, a zone that is no IANA zone, a day end out of range, a venue that is no `VEN-` ID, and a catalogue on a version not holding `dgm`. The upload's JSON carries the catalogue only where one is declared, its modes as words. The sidecar holds a catalogue to the same rules at registration, and refuses the plugin naming the field.
+
+### Recording
+
+A `dgm` records with [`record_prices`](typed-operations.md#record_prices) and [`record_bars`](typed-operations.md#record_bars), 1 to 500 rows a call, refused outside the bound before anything is sent, recorded whole or refused naming the row and field. Resolve each subject first with [`resolve_identifier`](typed-operations.md#resolve_identifier), and each venue with [`resolve_venue`](typed-operations.md#resolve_venue); report what does not resolve. The answer counts the rows `recorded`, `restated` and `unchanged`.
+
+### Wants { #wants }
+
+A `dgm` hears what the lake wants of it with `receive(observations_wanted=..., want_withdrawn=...)`, records against a want with `want_id=`, and declines per subject with [`decline_want`](typed-operations.md#decline_want):
+
+```python
+async def wanted(heard: meridian.Heard) -> None:
+    want = heard.message           # dataset, data_type, subjects, kinds, business_date or a range
+    await plugin.record_prices(prices=fetched(want), want_id=want.want_id)
+    await plugin.decline_want(want_id=want.want_id, subjects=uncovered, reason="not_covered")
+
+await plugin.receive(observations_wanted=wanted, want_withdrawn=stop_keeping_current)
+```
+
+A standing want asks that its subjects be kept current until it is withdrawn.
+
+### Reading
+
+A reader reads with [`list_prices`](typed-operations.md#list_prices) and [`list_bars`](typed-operations.md#list_bars), and learns the datasets it may read with [`list_datasets`](typed-operations.md#list_datasets). The readers' choices are the reads' parameters, not a library:
+
+```python
+from datetime import date
+
+closes = await plugin.list_prices(subjects=held, kinds=["close"], business_date=date(2026, 10, 8))
+then = await plugin.list_prices(subjects=held, business_date=date(2026, 10, 8), as_of_ns=cut)
+both = await plugin.list_prices(subjects=held, sources=meridian.SourceChoice(side_by_side=True))
+named = await plugin.list_prices(subjects=held, sources=meridian.SourceChoice(named=["alpaca-1:daily"]))
+```
+
+and hears what is recorded after with `receive(prices_recorded=..., bars_recorded=..., subjects=...)`; see [Receive](#receive).
+
+### The `dgm` suite { #the-dgm-suite }
+
+`meridian.suites` carries each role's conformance suite, as for `custody`: a plugin maps each case to its own recorded or synthetic exchange with its vendor, runs its own conversion against a `Recorder` (its typed operations, recorded rather than sent, answered as a sidecar answers them), and `run` compares what it sent with the case.
+
+```python
+from meridian.suites import run
+
+report = run("dgm", PRODUCERS, instance_id="my-prices-1")
+assert report.passed, report.failures
+```
+
+A case naming a row the plugin hears, such as a want, gives it what `recorder.answer(row, reply)` returns, through the plugin's own `receive` called on the recorder:
+
+```python
+async def a_want_recorded_against(recorder):
+    recorder.answer("ObservationsWanted", lambda _: synthetic_want())
+    await recorder.receive(observations_wanted=MyDgm(recorder).on_want)
+```
+
+The twelve cases are listed in [Write a `dgm` against its suite](../how-to/write-a-dgm.md#hold-it-to-the-suite). A plugin holding `dgm` is verified for it only by passing every case, which [`meridian plugin check --verified --run-tests`](cli.md#plugin-check) holds it to. The reading roles, `reporting`, `portfolio`, `compliance` and `signal`, have suites of their own, run the same way.
+
+### Money and dates
+
+From 0.22.0 a [`Money`](typed-operations.md#money) names its cash instrument: `Money(Decimal("12.50"), "USD")` keeps its shape, and core resolves the code; a token is named by `instrument_id` alone. Every field the dictionary types `date` takes a `datetime.date` or its ISO text, and refuses text that is no date and a `datetime`. See [Money and instruments](../concepts/money-and-instruments.md) and [Dates and time](../concepts/dates-and-time.md).
 
 ## Types
 
@@ -908,17 +1041,19 @@ A person who came through a client on a delegation stays the actor: `delegation_
 
 ### `Identifier`
 
-The generated protobuf message `meridian.plugin.v1.operations_pb2.Identifier`: one typed identifier for an instrument.
+The generated protobuf message `meridian.plugin.v1.operations_pb2.Identifier`: one typed identifier for an instrument, or from 0.22.0 for a venue.
 
 | Field | Type | Meaning |
 |---|---|---|
-| `scheme` | `str` | A global scheme (`"figi"`, `"isin"`, `"cusip"`, `"sedol"`) or a source-scoped one (`"symbol"`). |
+| `scheme` | `str` | A global scheme (`"figi"`, `"isin"`, `"cusip"`, `"sedol"`; a currency's `"iso4217"`, a token's `"caip19"`; from 0.22.0 a venue's MIC, `"iso10383"`) or a source-scoped one (`"symbol"`). |
 | `value` | `str` | The identifier. |
 | `source` | `str` | The namespace a source-scoped identifier belongs to, such as `"snaptrade"`. Empty for a global scheme. |
 
 ```python
 isin = meridian.Identifier(scheme="isin", value="US0378331005")
 symbol = meridian.Identifier(scheme="symbol", value="AAPL", source="snaptrade")
+mic = meridian.Identifier(scheme="iso10383", value="XNYS")              # a venue, for resolve_venue
+letter = meridian.Identifier(scheme="symbol", value="V", source="alpaca")  # a vendor's code for one
 ```
 
 ### `MissReason`

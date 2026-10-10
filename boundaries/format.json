@@ -20,7 +20,10 @@
       "external account",
       "instrument",
       "instance",
-      "message"
+      "message",
+      "entity",
+      "dataset",
+      "venue"
     ],
     "filled": [
       "as-reported",
@@ -75,7 +78,8 @@
       "meridian/v1/envelope.proto": "envelope",
       "meridian/v1/bus.proto": "envelope",
       "meridian/v1/amounts.proto": "shared",
-      "meridian/v1/journal.proto": "shared"
+      "meridian/v1/journal.proto": "shared",
+      "meridian/v1/lake.proto": "lake"
     },
     "messages": {
       "meridian.v1.Decimal": "shared",
@@ -91,7 +95,8 @@
   },
   "identifiers": {
     "instrument": "meridian.v1.InstrumentRecord",
-    "account": "meridian.v1.AccountRecord"
+    "account": "meridian.v1.AccountRecord",
+    "venue": "meridian.v1.VenueRecord"
   },
   "records": {
     "entry": {

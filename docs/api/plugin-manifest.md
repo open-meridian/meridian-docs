@@ -14,7 +14,7 @@ name = "reference-plugin"
 version = "0.1.0"
 description = "A Meridian plugin"
 requires-python = ">=3.11"
-dependencies = ["open-meridian==0.21.0"]
+dependencies = ["open-meridian==0.22.0"]
 
 [project.scripts]
 reference-plugin = "reference_plugin.__main__:main"
