@@ -12,12 +12,12 @@ your agent is doing. Allow 15 minutes.
 - A deployment installed with `meridian up --development`. See
   [Install a deployment](../getting-started/installation.md).
 - You are a deployment admin on it, and so an admin of every plugin through **All plugins (admin)**.
-- The `meridian` CLI, 0.1.21 or later (`meridian --version`), which scaffolds the pages shown here and
-  takes `--level`.
+- The `meridian` CLI, 0.1.36 (`meridian --version`; `meridian upgrade` updates it), whose scaffold
+  this page shows, on SDK 0.21.0. Its pages and `--level` came with 0.1.21.
 - Docker on this machine.
 - Two terminals.
 
-The examples use `http://meridian.localhost`, the deployment on this machine. For another, give
+The examples use `https://meridian.localhost`, the deployment on this machine. For another, give
 its address to `meridian connect`.
 
 ## 1. Sign in and make the plugin
@@ -44,10 +44,10 @@ live-demo 0.1.0 asks for
   roles: none
 Launch it live as live-demo, with these? [y/N] y
 Launched live-demo: live-demo 0.1.0.
-Its page, if it serves one: http://meridian.localhost/plugins/live-demo
+Its page, if it serves one: https://meridian.localhost/plugins/live-demo
 Watching . for live-demo. Ctrl-C stops watching; the instance keeps running.
-r1 sent (8 files, 0 deleted)
-r1 synced (8 sent, 0 deleted)
+r1 sent (10 files, 0 deleted)
+r1 synced (10 sent, 0 deleted)
 r1 restarted
 r1 ready
 ```
@@ -166,7 +166,7 @@ It prints a link. Open it within a minute; it works once and signs that one brow
 plugin's page alone, at the first level you hold, Manage. The link lands on the plugin's `/`, which
 the reference plugin serves only under Open and View, so the browser says
 `/ is not served under Manage; it is for Open and View.` Go to `/setup` on the same address,
-`http://live-demo.plugins.meridian.localhost/setup`, and reload as often as you like. The
+`https://live-demo.plugins.meridian.localhost/setup`, and reload as often as you like. The
 dashboard's home opens the plugin with **Manage** onto its **Summary**, with its **Setup** tab after
 **Summary** and **Settings**.
 

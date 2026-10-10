@@ -12,8 +12,8 @@ It works on any deployment. For the faster loop where each save runs at once, se
 
 - A deployment you installed with [Install a deployment](installation.md).
 - You hold **deployment admin** on it. Only a deployment admin brings plugins in.
-- The `meridian` CLI, 0.1.21 or later (`meridian --version`), for the pages and the `--level` this
-  page shows. Update with `meridian upgrade`.
+- The `meridian` CLI, 0.1.36 (`meridian --version`), whose scaffold this page shows: on SDK
+  0.21.0, so the deployment's sidecar must accept contract v16. Update with `meridian upgrade`.
 - Docker on this machine. `meridian plugin upload` builds the plugin's image here, from its own
   `Dockerfile`.
 
@@ -23,7 +23,7 @@ It works on any deployment. For the faster loop where each save runs at once, se
 meridian connect
 ```
 
-With no address it signs in to the deployment on this machine, `http://meridian.localhost`. For any
+With no address it signs in to the deployment on this machine, `https://meridian.localhost`. For any
 other, give its address: `meridian connect https://meridian.firm.example`. Your browser opens the
 deployment's sign-in. From CLI 0.1.25 it then asks you to let the CLI on this computer act as you;
 choose **Allow**. The CLI holds that delegation for up to 90 days, and nothing asks for a browser
@@ -112,7 +112,7 @@ It builds the image with Docker and sends its layers to the deployment's own cat
 deployment already holds are not sent again. It ends with a line like:
 
 ```text
-Uploaded to http://meridian.localhost, as sha256:….
+Uploaded to https://meridian.localhost, as sha256:….
 ```
 
 ## 5. Launch it
@@ -133,7 +133,7 @@ Type `y`. Anything else is no.
 
 ```text
 Launched my-plugin: my-plugin 0.1.0.
-Its page, if it serves one: http://meridian.localhost/plugins/my-plugin
+Its page, if it serves one: https://meridian.localhost/plugins/my-plugin
 ```
 
 `--instance` names this running copy. You use the same name to open, stop and grant access to it.
@@ -161,11 +161,11 @@ In the dashboard, the home page, **Your plugins**, lists it with a **Manage** bu
 administrators are admins of every plugin, through **All plugins (admin)**, so that is the level you
 hold on it; see [Manage, Open and View](../concepts/plugins.md#manage-open-and-view).
 
-Choose **Manage**. The plugin's area opens, at `http://meridian.localhost/plugins/my-plugin?level=admin`,
+Choose **Manage**. The plugin's area opens, at `https://meridian.localhost/plugins/my-plugin?level=admin`,
 on its **Summary**, which the dashboard draws: the plugin's status, its version and its contract.
 The reference plugin reports no figures, so there are no tiles below it. After **Summary** and
 **Settings** come its pages at `admin`: here one, **Setup**, served from the plugin's own name,
-`http://my-plugin.plugins.meridian.localhost/`. It shows who you are signed in as, the instance, its
+`https://my-plugin.plugins.meridian.localhost/`. It shows who you are signed in as, the instance, its
 roles, and what it may publish and subscribe to. Manage is configuration, so it shows no account's
 data.
 

@@ -66,7 +66,7 @@ Every command exits 0 when it succeeds. What a non-zero code means depends on th
 A `plugin` command exits 3 in three cases:
 
 - when this computer is not connected to the deployment, or is connected to several and `--deployment` does not pick one;
-- when the deployment answers `401 Unauthorized`: the delegation was revoked or has lapsed, its directory groups are older than the deployment allows, or it is one the deployment does not know; or, for a session an earlier CLI kept, the session lapsed or was ended. That includes the deployment's registry, which `plugin upload` pushes through. The message says which, and ends with the `meridian connect` to run, for example ``your delegation to this computer at http://meridian.localhost was revoked: `meridian connect` to sign in again``. Before CLI 0.1.15, `plugin upload` reported a lapsed session met at the registry as `the registry did not start an upload: 401 Unauthorized: invalid_token` and exited 1;
+- when the deployment answers `401 Unauthorized`: the delegation was revoked or has lapsed, its directory groups are older than the deployment allows, or it is one the deployment does not know; or, for a session an earlier CLI kept, the session lapsed or was ended. That includes the deployment's registry, which `plugin upload` pushes through. The message says which, and ends with the `meridian connect` to run, for example ``your delegation to this computer at https://meridian.localhost was revoked: `meridian connect` to sign in again``. Before CLI 0.1.15, `plugin upload` reported a lapsed session met at the registry as `the registry did not start an upload: 401 Unauthorized: invalid_token` and exited 1;
 - from CLI 0.1.25, when refreshing the access token is refused: the delegation was revoked or has lapsed, its directory groups are too old, or a refresh token was presented twice, which revokes it (see [The delegation](#the-delegation)).
 
 An access token that has only expired never exits 3: the command refreshes it and asks again.
@@ -269,7 +269,7 @@ meridian connect [<address>]
 
 Signs you in to a deployment's dashboard in your browser, however that deployment signs people in, and asks you to let the CLI on this computer act as you there: a delegation, for up to 90 days. It never takes a password. From CLI 0.1.25; an earlier CLI kept a session of 12 hours at most (see [With an older dashboard or an older CLI](#with-an-older-dashboard-or-an-older-cli)).
 
-With no address it signs in to `http://meridian.localhost`, the deployment `meridian up` installs on this machine by default. Give an address for any other.
+With no address it signs in to `https://meridian.localhost`, the deployment `meridian up` installs on this machine by default. Give an address for any other.
 
 `<address>` is the dashboard's address alone, with no path:
 

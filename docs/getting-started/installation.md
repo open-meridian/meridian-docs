@@ -158,7 +158,13 @@ included.
     meridian up --id DEP-XXXXXXXXXXXXXXXXXXXXXXXXXX
     ```
 
-    It is reached at `http://meridian.localhost`. That needs no certificate and no DNS.
+    It is reached at `https://meridian.localhost`, and needs no DNS. It is HTTPS because an AI
+    agent signs in to the deployment's MCP over nothing else. From CLI 0.1.30 the certificate comes
+    from this machine's own certificate authority, which `meridian up` makes the first time, able
+    to sign names under `.localhost` and nothing else. Before asking anything it says what the
+    authority is for; on macOS it then offers to add it to your login keychain, and macOS asks for
+    your password itself. Elsewhere it prints the one command that trusts it.
+    `meridian authority` says where it is, and `meridian authority trust` trusts it later.
 
 === "Your firm's cluster"
 
@@ -235,7 +241,7 @@ The code is single use and lasts a day. It opens the wizard.
 ## 8. Open the wizard
 
 Open the address `meridian up` printed: `https://<your name>/first-run`, or
-`http://meridian.localhost/first-run` on a laptop.
+`https://meridian.localhost/first-run` on a laptop.
 
 1. **Compare the fingerprints.** The page shows the deployment's identifier and its key's
    fingerprint. It must match what the platform shows. If it does not, someone else spent your
@@ -274,7 +280,7 @@ Applying takes a couple of minutes and restarts what changed.
     ```
 
     On a laptop, just `meridian connect`: with no address it signs in to
-    `http://meridian.localhost`, where `meridian up` puts a deployment. It opens the deployment's own sign-in
+    `https://meridian.localhost`, where `meridian up` puts a deployment. It opens the deployment's own sign-in
     in your browser and never takes a password. From CLI 0.1.25 it then asks you to let the CLI on
     this computer act as you: choose **Allow**. That is a delegation of everything you hold, for 90
     days unless you choose less, and the CLI keeps its access fresh by itself until then. See

@@ -488,7 +488,7 @@ Records one holding, for one account, at one instrument, on one side, against an
 
 Set exactly one of `instrument_id` and `unresolved_identifiers`:
 
-- `instrument_id` when [`resolve_identifier`](#resolve_identifier) found it: an instrument, or the deployment's placeholder for an identifier set nothing matched;
+- `instrument_id` when [`resolve_identifier`](#resolve_identifier) found it: an instrument, perhaps the deployment's own `LCL-` record, minted for an identifier set nothing matched;
 - `unresolved_identifiers` when it did not, because more than one instrument matched.
 
 A row that could not be resolved is still recorded. A dropped holding would be invisible.
@@ -522,7 +522,7 @@ async def record_holding(
 | Name | Type | Required | Meaning |
 |---|---|---|---|
 | `statement_id` | `str` | yes, by the street store | The `statement_id` that `record_holdings_statement` returned. |
-| `instrument_id` | `str` | one of these two, by the street store | The instrument, or the deployment's placeholder, when resolution found one. |
+| `instrument_id` | `str` | one of these two, by the street store | The instrument, when resolution found one: perhaps a record the deployment minted. |
 | `unresolved_identifiers` | sequence of `Identifier` | one of these two, by the street store | Everything the plugin held, when resolution was ambiguous, so an operator can see exactly what could not be accounted for. |
 | `quantity` | `Decimal` or `int` | yes, by Python | The trade-date quantity: what is held counting every trade executed, settled or not. Signed to match `side`: negative is short. At most 18 decimal places. |
 | `market_value` | [`Money`](#money) or `None` | no | The rail's valuation of the holding, in its currency, recorded as reported and not recomputed. `None` where the venue reported none, which is not a value of zero. |
@@ -887,13 +887,15 @@ Reverse resolution: asks which instrument a set of identifiers maps to, as of a 
 
 There are two outcomes other than a match:
 
-- **Nothing matched.** The instrument store answers the deployment's placeholder for the set, an `LCL-` identifier, minting it the first time the set is asked about. `found` is `True` and `placeholder` is `True`. Record the holding against it: the platform's `INS-` identifier replaces it later, and the instrument store reports the miss itself.
+- **Nothing matched.** From contract v10 the deployment mints its own record for the set, an `LCL-` identifier, and answers it: `found` is `True`, and `minted` is `True` on the resolve that minted it. A later resolve of the same identifiers matches that record, with `minted` `False`. An `LCL-` record is the deployment's own, a record like any other, not one waiting to be replaced; a deployment admin completes what it lacks on the dashboard's **Instruments** page. Record the holding against it; the instrument store reports the miss itself. Until contract v10 the field was `placeholder`, and `meridian plugin migrate` rewrites it (`resolve-minted`).
 - **More than one matched.** The result is a miss rather than a pick: `found` is `False` and `miss_reason` is `MISS_REASON_AMBIGUOUS`. Record the holding with `unresolved_identifiers`, and [report the miss](#report_missing_instrument).
 
 ```python
 async def resolve_identifier(
     self, *, identifiers: Sequence[Identifier] = (), as_of_ns: int = 0,
     exchange_mic: str = "", currency: str = "",
+    stated_asset_class: AssetClass | str | None = None, stated_currency: str = "",
+    stated_description: str = "", stated_instrument_type: InstrumentType | str | None = None,
 ) -> ResolveIdentifierResult
 ```
 
@@ -907,18 +909,20 @@ async def resolve_identifier(
 
 | Name | Type | Required | Meaning |
 |---|---|---|---|
-| `identifiers` | sequence of `Identifier` | yes, by the contract | At least one. Matched strongest first. An empty set is a miss, `MISS_REASON_NOT_FOUND`, with no placeholder. |
+| `identifiers` | sequence of `Identifier` | yes, by the contract | At least one. Matched strongest first. An empty set is a miss, `MISS_REASON_NOT_FOUND`, and mints nothing. |
 | `as_of_ns` | `int` | no | The reference time: the date the mapping is being asked about. An identifier maps to different instruments over time. |
 | `exchange_mic` | `str` | no | Narrows a symbol match. Empty means unconstrained. |
 | `currency` | `str` | no | Narrows a symbol match. |
+| `stated_asset_class`, `stated_currency`, `stated_description` | `AssetClass`, `str`, `str` | no | What the plugin's source states of the security, where it states it, and nothing it would have to guess (contract v10). Kept on the record as offers from this instance, in force only when a person accepts them. Not stated is unspecified or empty. `stated_currency` is an ISO 4217 code. |
+| `stated_instrument_type` | `InstrumentType` | no | Its type within the stated class, where the source says it (contract v11): a custodian's sweep fund is a money market fund. |
 
 **Returns** `ResolveIdentifierResult`:
 
 | Field | Type | Meaning |
 |---|---|---|
-| `found` | `bool` | Whether `instrument_id` holds an answer: exactly one instrument matched, or the placeholder stands in. |
-| `instrument_id` | `str` | The instrument, or the placeholder, when `found`. |
-| `placeholder` | `bool` | `True` when nothing matched and `instrument_id` is the deployment's `LCL-` placeholder for the set. |
+| `found` | `bool` | Whether `instrument_id` holds an answer: exactly one instrument matched, or nothing did and the deployment minted its record for the set. |
+| `instrument_id` | `str` | The instrument, when `found`. |
+| `minted` | `bool` | `True` when nothing matched and this resolve minted `instrument_id`, the deployment's `LCL-` record for the set; `found` is `True` beside it. A later resolve of the same identifiers matches the record, and is not minted. |
 | `miss_reason` | `MissReason` | Set only when `found` is `False`: `MISS_REASON_AMBIGUOUS`, or `MISS_REASON_NOT_FOUND` for an empty set. |
 
 **Errors:** `no handler`, `timeout` or `handler error` from the instrument store. `NotGranted` without the `custody` role.
@@ -933,7 +937,7 @@ held = [
 ]
 answer = await plugin.resolve_identifier(identifiers=held, as_of_ns=time.time_ns())
 if answer.found:
-    instrument_id = answer.instrument_id  # an instrument, or the deployment's placeholder
+    instrument_id = answer.instrument_id  # an instrument, perhaps one the deployment just minted
 else:
     reason = answer.miss_reason  # ambiguous: record the row unresolved, report the miss, carry on
 ```
@@ -942,7 +946,7 @@ else:
 
 Reports that a resolution missed. **A fact, not a request.** The plugin reports what it held and carries on with the next holding. It does not ask for an instrument to be created, does not wait for one, and could not create one. The deployment and the platform decide what the instrument is, and an administrator completes it.
 
-A plugin reports only an ambiguous miss. When nothing matched, `resolve_identifier` answered a placeholder, and the instrument store has already reported that miss, carrying it.
+A plugin reports only an ambiguous miss. When nothing matched, `resolve_identifier` answered a record the deployment minted, and the instrument store has already reported that miss, carrying it.
 
 ```python
 async def report_missing_instrument(
