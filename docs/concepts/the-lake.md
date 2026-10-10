@@ -9,7 +9,7 @@ lake is core's, beside the street and the book: it is not a plugin, and
 nothing in it leaves the deployment.
 
 !!! note "Built, not released"
-    This page describes contract v18: core's lake in chart 0.1.291 and
+    This page describes contract v18: core's lake in chart 0.1.292 and
     open-meridian 0.22.0, both built and not yet released. The lake's
     operations are `preview` in v18. A runtime serving v16 or earlier
     refuses a plugin built on 0.22.0 at registration, naming both versions.
@@ -161,10 +161,13 @@ The page shows no price: prices are the reading roles', shown on their
 plugins' pages. Each `dgm` shows its own connection and what it serves on
 its pages under Manage.
 
-!!! note "TODO: valuing the book"
-    The sample reporting plugin, which values the book at the close from the
-    lake, consolidated and by account, is still being built. See
-    [Value the book](../how-to/value-the-book.md).
+## Valuing the book
+
+The sample reporting plugin values the book at a business date's prices
+from the lake, consolidated across every account a person may read and by
+account, each price naming its dataset, kind and date, and a position with
+no price shown unvalued with its reason, never as zero. It is built, and
+not yet released: see [Value the book](../how-to/value-the-book.md).
 
 ## Related
 

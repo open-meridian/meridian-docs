@@ -6,12 +6,16 @@ vendor's key, and puts it into the deployment's
 the plugin enters it on the plugin's **Settings** form, and from then on it
 is never shown, logged, put on a page, read by an agent or sent anywhere but
 the vendor. This page covers the two retail equity plugins, Alpaca and
-Tradier, which pass the same suite unchanged.
+Tradier, which pass the same suite unchanged, and Tiingo, for mutual funds'
+daily net asset values. The data plugins that need no key, Coinbase,
+Kraken and the Federal Reserve's H.10, are in
+[Add a public data plugin](add-a-public-data-plugin.md).
 
 !!! note "Built, not released"
-    meridian-alpaca and meridian-tradier are built on open-meridian 0.22.0
-    (contract v18) and not yet released, and neither is the runtime they need,
-    chart 0.1.291. Until they are, this page says how they will be set up.
+    meridian-alpaca, meridian-tradier and meridian-tiingo are built on
+    open-meridian 0.22.0 (contract v18) and not yet released, and neither is
+    the runtime they need, chart 0.1.292. Until they are, this page says how
+    they will be set up.
 
 ## What each serves
 
@@ -42,14 +46,14 @@ plain date in New York's day ending at the 16:00 close:
 - Not served: trades, quotes and streaming, which come with the lake's next
   revision; options; Alpaca's crypto; mutual funds at Tradier.
 
-!!! note "TODO: an instrument the plugin did not resolve itself"
-    In contract v18 a `dgm` resolves its own identifiers to an instrument
-    but may not read an instrument's record, so it can name to its vendor
-    only the listings it resolved itself by the vendor's symbol. An
-    instrument known to the deployment only by another source's identifier,
-    such as a custodian's symbol, is declined as not covered, and the
-    plugin's **Datasets** page says why. A fix is in progress; this note
-    changes when it lands.
+- **An instrument another source named.** The lake asks for a price by
+  the deployment's own instrument ID. An instrument the book holds from
+  another source, known only by that source's identifiers (a custodian's
+  symbol and CUSIP), is read from its record and priced under the vendor's
+  symbol for the listing, and the vendor's symbol is added to the record.
+  Only a record carrying no symbol is declined, as not covered, and the
+  **Datasets** page says why. On a runtime before chart 0.1.292, which first
+  lets a `dgm` read an instrument's record, such an instrument is declined.
 
 ## The vendors' terms, summarised
 
@@ -139,17 +143,81 @@ echo, asks the vendor for a week of closes and the latest prices, and
 prints what came back and that the key is in no raw record; never the key.
 It runs on your own machine with your own key, never in CI.
 
-## The other data plugins
+## Tiingo: mutual funds' daily NAVs
 
-!!! note "TODO: still being built"
-    These pages will cover the other first data plugins once each is built:
+meridian-tiingo puts mutual funds' daily net asset values from Tiingo into
+the lake, so a reporting plugin can value a fund no exchange prices, such as
+VIGIX.
 
-    - **Coinbase and Kraken**, the crypto pair: public market data, no key.
-    - **The Federal Reserve's H.10**: FX rates, no key.
-    - **Tiingo**: mutual funds' daily net asset values, with a key.
+- **One dataset, `<instance>:daily`**: each listed fund's NAV, kind `nav`,
+  for its business date, in US dollars, exact. Each fund's last days are
+  pushed every six hours, and any past day is pulled when the lake wants it.
+  New York's day, ending at 16:00; no venue; one person's terms by default.
+- **NAVs after midnight New York time.** Tiingo gives a fund's NAV for a day
+  the night after; each NAV shows its date.
+- **Only mutual funds.** A ticker Tiingo files as a mutual fund is served.
+  An ETF or a stock is shown as not a mutual fund and not recorded (its
+  closes are the equity datasets'); a ticker Tiingo does not know is shown
+  as not found.
+- **Each fund resolved** to the deployment's record: the one its row in the
+  **Funds** setting names, or its ticker as Tiingo's symbol, a miss
+  reported.
+- Every response is kept as received, without the token, in the plugin's
+  own storage, and named by each row read from it.
+
+**Its terms, summarised.** Not legal advice: read Tiingo's own terms and
+pricing before relying on them, as they change. You use Tiingo under your
+own account and its terms; the plugin calls it with your token. Tiingo's
+free and Power plans are for internal and personal use, with no
+redistribution, so the dataset's default licence is one person's
+(`personal_use`); a firm's use needs Tiingo's commercial terms. The free
+plan's limits, as Tiingo states them, are 50 requests an hour, 1,000 a day
+and 500 symbols a month, and the plugin keeps inside them. Whether a
+deployment's use fits Tiingo's terms is for its admin and the account holder
+to settle with Tiingo; neither the plugin nor these docs say it does.
+
+**Its settings**, on the plugin's **Settings** form:
+
+- **API token** (`tiingo_api_token`), secret: your own Tiingo account's
+  token, from its API page. Sent only to Tiingo, in a header.
+- **Funds** (`funds`), a table of up to 100 rows: each fund's **Ticker**,
+  and optionally its **Instrument**, the deployment's record for it where
+  the ticker alone does not find it, such as the one your custodian's
+  positions name.
+- **Synthetic mode**, on a development deployment only: invented responses
+  for VIGIX and VOO, no token.
+
+Upload and launch it as above, from `meridian-tiingo`, named `tiingo`, as
+`tiingo-1`. Until the token is set it waits and reads nothing.
+
+### Check it live
+
+For the person who holds the Tiingo account:
+
+1. In the dashboard, open the plugin under **Manage**, then **Settings**.
+2. Enter your token in **API token**.
+3. Under **Funds**, add `VIGIX`, and pick its **Instrument** where your
+   custodian's positions already name one. **Save**.
+4. Open **Connection**: within a minute it says "Tiingo read", and the
+   token **Set**. Open **Datasets**: VIGIX is a mutual fund, resolved to an
+   instrument, its latest recorded day the last business day. An agent sees
+   the same with `read_datasets`.
+5. On **Settings**, **Data sources**, license `tiingo-1:daily` as your terms
+   say, and entitle your reporting plugin to it.
+
+If Connection says Tiingo refused the token, enter it again; if it says the
+limit was reached, the plugin waits and tries again.
+
+`meridian plugin check --verified` refuses Tiingo until contract v19: a
+fund's NAV is no close, bar, FX rate, stablecoin or venue, and a source
+cannot yet mark those cases of the `dgm` suite not presented (see
+[Write a `dgm` against its suite](write-a-dgm.md#hold-it-to-the-suite)). A
+plain `meridian plugin upload` takes it.
 
 ## Related
 
+- [Add a public data plugin](add-a-public-data-plugin.md): Coinbase, Kraken
+  and the Federal Reserve's H.10, no key.
 - [Licences and entitlements](../concepts/licences-and-entitlements.md).
 - [Write a `dgm` against its suite](write-a-dgm.md): your own data plugin.
 - [Core's tools](../api/core-tools.md#the-data-sources-page): the Data

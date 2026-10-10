@@ -9,7 +9,7 @@ by the deployment alone, never sent to the platform:
   its fields.
 
 !!! note "Built, not released"
-    This page describes contract v18, core's lake in chart 0.1.291, built
+    This page describes contract v18, core's lake in chart 0.1.292, built
     and not yet released.
 
 A licence records what the admin entered. Neither it nor anything else in a
@@ -101,8 +101,10 @@ should read them with that in mind.
 
 - [License and entitle a dataset](../how-to/license-and-entitle-a-dataset.md):
   the page and its tools, step by step.
-- [Add a data plugin's key](../how-to/add-a-data-plugins-key.md): Alpaca's
-  and Tradier's terms, summarised.
+- [Add a data plugin's key](../how-to/add-a-data-plugins-key.md): Alpaca's,
+  Tradier's and Tiingo's terms, summarised; and
+  [Add a public data plugin](../how-to/add-a-public-data-plugin.md):
+  Coinbase's, Kraken's and the Federal Reserve Board's.
 - The data dictionary, field by field:
   [`DatasetLicence`](../boundaries/sidecar.md#meridian.v1.DatasetLicence),
   [`DatasetEntitlement`](../boundaries/lake.md#meridian.v1.DatasetEntitlement)

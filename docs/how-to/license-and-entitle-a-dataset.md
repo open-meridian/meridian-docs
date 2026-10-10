@@ -10,7 +10,7 @@ through its tools for an agent. What each term means is in
 
 !!! note "Built, not released"
     This page describes contract v18, core's lake and the Data sources page
-    in chart 0.1.291, built and not yet released.
+    in chart 0.1.292, built and not yet released.
 
 You need the deployment admin's capabilities, and a data plugin launched:
 its datasets are listed from the moment it runs. See

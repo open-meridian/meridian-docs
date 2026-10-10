@@ -11,7 +11,7 @@ suite.
     This page describes open-meridian 0.22.0 (contract v18) and the CLI
     release after 0.1.36, whose `plugin new --role dgm` writes this
     template. Neither is released yet, nor is the runtime that serves
-    contract v18, chart 0.1.291.
+    contract v18, chart 0.1.292.
 
 ## Make the plugin
 
@@ -101,12 +101,20 @@ Replace the stand-in vendor, keeping the template's shape in `convert.py`:
    [`decline_want`](../api/typed-operations.md#decline_want) what the vendor
    does not cover. A standing want is kept current until it is withdrawn.
 
-!!! note "TODO: instruments a `dgm` did not resolve itself"
-    In contract v18 a `dgm` may resolve its own identifiers to an
-    instrument, but may not read an instrument's record, so it names to its
-    vendor only the listings it resolved itself: a want for an instrument
-    known to the deployment only by another source's identifier is declined
-    as not covered. A fix is in progress; this step changes when it lands.
+7. **Name a subject another source resolved.** A want names the
+   deployment's own instrument ID, which may be one your plugin never
+   resolved: an instrument the book holds from a custodian's statement,
+   known by the custodian's symbol and a CUSIP. Read its record with
+   [`resolve_instrument`](../api/typed-operations.md#resolve_instrument),
+   find among its identifiers one your vendor takes (a `symbol` your vendor
+   serves), and record against the want under it. Decline as not covered
+   only a record holding nothing your vendor takes. The template's
+   `symbol_for` does this:
+
+    ```python
+    found = await self.plugin.resolve_instrument(instrument_id=instrument, as_of_ns=as_of_ns)
+    named = {i.value for i in found.instrument.identifiers if i.scheme == "symbol"}
+    ```
 
 ## Hold it to the suite
 
@@ -134,6 +142,7 @@ def test_every_case_of_the_dgm_suite_passes() -> None:
 | `a-venue-resolved` | a price's venue by its MIC | resolves it, and names its venue ID |
 | `a-venue-not-held` | a venue the deployment does not hold | reports it missing |
 | `a-want-recorded-against` | the lake wanting closes it covers | records them against the want |
+| `a-subject-another-source-resolved` | the lake wanting a close for an instrument another source resolved, its record holding that source's symbol and a CUSIP | reads the record, and records the close against the want |
 | `a-subject-declined` | the lake wanting a subject it does not cover | declines it as not covered |
 | `a-standing-want-withdrawn` | a standing want withdrawn | records nothing more for it |
 
@@ -142,6 +151,15 @@ source, maps to the recording path it would take. When you replace the
 stand-in vendor, map each case to a recorded or synthetic exchange with your
 own, and keep every case passing: a candle read through a `float`, or a
 forming day recorded as a new row, fails it.
+
+!!! note "A source that never publishes a kind of data"
+    In contract v18 a case can be marked not presented only where the suite
+    lists it so. A source that never publishes some kinds of data the suite
+    asks about -- a bar, a stablecoin's quote, a venue, a close or an FX
+    rate -- has no way yet to say so, and is short of the suite: `meridian
+    plugin check --verified` refuses it. So, until contract v19, it refuses
+    the Federal Reserve's H.10, Tiingo and Coinbase. A plain
+    `meridian plugin upload` takes them, and they run.
 
 Then hold the plugin to the framework's rules as a verified plugin:
 

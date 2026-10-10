@@ -27,7 +27,7 @@ A plugin pins the SDK exactly, `open-meridian==0.22.0`, in its `pyproject.toml`.
     `dgm`'s catalogue, prices and bars recorded in batches, wants, the
     readers, a `Money` naming its instrument and real dates. It is built and
     not yet on PyPI, and needs a runtime serving contract v18 (chart
-    0.1.291, not yet released), which refuses nothing a plugin on 0.21.0
+    0.1.292, not yet released), which refuses nothing a plugin on 0.21.0
     sends. See [Plugin manifest](plugin-manifest.md).
 
 | Optional extra | Installs | For |
@@ -733,7 +733,7 @@ DECLARATION = Declaration(
 
 ### Recording
 
-A `dgm` records with [`record_prices`](typed-operations.md#record_prices) and [`record_bars`](typed-operations.md#record_bars), 1 to 500 rows a call, refused outside the bound before anything is sent, recorded whole or refused naming the row and field. Resolve each subject first with [`resolve_identifier`](typed-operations.md#resolve_identifier), and each venue with [`resolve_venue`](typed-operations.md#resolve_venue); report what does not resolve. The answer counts the rows `recorded`, `restated` and `unchanged`.
+A `dgm` records with [`record_prices`](typed-operations.md#record_prices) and [`record_bars`](typed-operations.md#record_bars), 1 to 500 rows a call, refused outside the bound before anything is sent, recorded whole or refused naming the row and field. Resolve each subject first with [`resolve_identifier`](typed-operations.md#resolve_identifier), and each venue with [`resolve_venue`](typed-operations.md#resolve_venue); report what does not resolve. A want for an instrument another source resolved, such as a custodian's, names the deployment's ID: read its record with [`resolve_instrument`](typed-operations.md#resolve_instrument) and name it to the vendor by an identifier the vendor takes. The answer counts the rows `recorded`, `restated` and `unchanged`.
 
 ### Wants { #wants }
 
@@ -784,7 +784,7 @@ async def a_want_recorded_against(recorder):
     await recorder.receive(observations_wanted=MyDgm(recorder).on_want)
 ```
 
-The twelve cases are listed in [Write a `dgm` against its suite](../how-to/write-a-dgm.md#hold-it-to-the-suite). A plugin holding `dgm` is verified for it only by passing every case, which [`meridian plugin check --verified --run-tests`](cli.md#plugin-check) holds it to. The reading roles, `reporting`, `portfolio`, `compliance` and `signal`, have suites of their own, run the same way.
+The thirteen cases are listed in [Write a `dgm` against its suite](../how-to/write-a-dgm.md#hold-it-to-the-suite). A plugin holding `dgm` is verified for it only by passing every case, which [`meridian plugin check --verified --run-tests`](cli.md#plugin-check) holds it to. The reading roles, `reporting`, `portfolio`, `compliance` and `signal`, have suites of their own, run the same way.
 
 ### Money and dates
 

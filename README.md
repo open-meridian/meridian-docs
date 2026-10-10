@@ -33,8 +33,9 @@ developer guide. They are written from the code of
 [meridian-ui](https://github.com/open-meridian/meridian-ui); when those
 change, the pages change with them. Today they describe CLI 0.1.36, SDK
 0.21.0 (contract v16), core's plugin-area tools (contract v17, chart 0.1.288) and kit 0.8.0;
-and, marked built and not released, contract v18: core's lake (chart 0.1.291), SDK 0.22.0, the
-CLI release after 0.1.36, and the Alpaca and Tradier data plugins. A page describes what is built,
+and, marked built and not released, contract v18: core's lake (chart 0.1.292), SDK 0.22.0, the
+CLI release after 0.1.36, the Alpaca, Tradier, Tiingo, Coinbase, Kraken and Fed H.10 data plugins,
+and the sample reporting plugin. A page describes what is built,
 and says so where something is specified and not built yet.
 
 ## The roles page, the data dictionary and llms.txt

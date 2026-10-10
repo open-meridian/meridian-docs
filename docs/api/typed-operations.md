@@ -21,7 +21,7 @@ From 0.19.0, contract v14, it also lists three operations of [the custodian's ac
 
 From 0.20.0, contract v15, it also lists [`re_resolve_activity`](#re_resolve_activity), by which a `custody` plugin re-resolves an activity it recorded before its instrument resolved, and `list_activities` answers each re-resolution beside the activities, which `operations` hears with `receive(activity_re_resolved=...)`. Both rows are `preview` in v15.
 
-From 0.22.0, contract v18 (built, not released), it also lists eight operations of [the lake](../concepts/the-lake.md) and [the venue master](../concepts/venues.md): [`record_prices`](#record_prices), [`record_bars`](#record_bars) and [`decline_want`](#decline_want), by which a `dgm` plugin records its vendor's prices and bars and answers what the lake wants; [`resolve_venue`](#resolve_venue) and [`report_missing_venue`](#report_missing_venue), by which it names a venue by its venue ID; and [`list_prices`](#list_prices), [`list_bars`](#list_bars) and [`list_datasets`](#list_datasets), by which `reporting`, `portfolio`, `compliance` and `signal` read them. Every row is `preview` in v18. A [`Money`](#money) names its cash instrument, and every date field takes a `datetime.date` (see [Times and dates](#times-and-dates)).
+From 0.22.0, contract v18 (built, not released), it also lists eight operations of [the lake](../concepts/the-lake.md) and [the venue master](../concepts/venues.md): [`record_prices`](#record_prices), [`record_bars`](#record_bars) and [`decline_want`](#decline_want), by which a `dgm` plugin records its vendor's prices and bars and answers what the lake wants; [`resolve_venue`](#resolve_venue) and [`report_missing_venue`](#report_missing_venue), by which it names a venue by its venue ID; and [`list_prices`](#list_prices), [`list_bars`](#list_bars) and [`list_datasets`](#list_datasets), by which `reporting`, `portfolio`, `compliance` and `signal` read them. Each of the eight is `preview` in v18. A `dgm` may also call [`resolve_identifier`](#resolve_identifier), [`report_missing_instrument`](#report_missing_instrument) and [`resolve_instrument`](#resolve_instrument), the last to name to its vendor an instrument another source resolved. A [`Money`](#money) names its cash instrument, and every date field takes a `datetime.date` (see [Times and dates](#times-and-dates)).
 
 ## Summary
 
@@ -41,7 +41,7 @@ From 0.22.0, contract v18 (built, not released), it also lists eight operations 
 | [`report_missing_instrument`](#report_missing_instrument) | `ReportMissingInstrument` | W3.2 Report that a resolution missed | event | `custody`, `dgm` from v18 | `Published` |
 | [`read_accounts_for_linking`](#read_accounts_for_linking) | `ReadAccountsForLinking` | W6.4 Link a plugin's external account | query | `custody` | `ReadAccountsForLinkingResult` |
 | [`link_external_account`](#link_external_account) | `LinkExternalAccount` | W6.4 Link a plugin's external account | command | `custody` | `LinkExternalAccountResult` |
-| [`resolve_instrument`](#resolve_instrument) | `ResolveInstrument` | W3.6 Resolve an instrument for display | query | `portfolio`, `reporting`, `compliance`, `oms`, `operations` | `ResolveInstrumentResult` |
+| [`resolve_instrument`](#resolve_instrument) | `ResolveInstrument` | W3.6 Resolve an instrument for display | query | `portfolio`, `reporting`, `compliance`, `oms`, `operations`, `dgm` from v18 | `ResolveInstrumentResult` |
 | [`record_opening_balance`](#record_opening_balance) | `RecordOpeningBalance` | W9.1 Record an account's opening balance | command | `operations` | `RecordOpeningBalanceResult` |
 | [`record_break`](#record_break) | `RecordBreak` | W9.4 Record a break | command | `operations` | `RecordBreakResult` |
 | [`record_account_figures`](#record_account_figures) | `RecordAccountFigures` | W9.5 Record the account's figures | command | `operations` | `RecordAccountFiguresResult` |
@@ -1139,7 +1139,7 @@ async def resolve_instrument(
 | gRPC | `rpc ResolveInstrument(ResolveInstrumentParams) returns (ResolveInstrumentResult)` |
 | Workflow step | W3.6, Resolve an instrument for display |
 | Kind | query, on `platform.reference.query.resolve-instrument` |
-| Role | `portfolio`, `reporting`, `compliance`, `oms`, `operations` |
+| Role | `portfolio`, `reporting`, `compliance`, `oms`, `operations`; from contract v18 also `dgm`, reading the record of an instrument another source resolved to name it to its vendor |
 | Served by | the instrument store |
 
 | Name | Type | Required | Meaning |
@@ -1154,7 +1154,7 @@ async def resolve_instrument(
 | `found` | `bool` | Whether the store holds the instrument. |
 | `instrument` | [`InstrumentRecord`](#instrumentrecord) | Its record, when `found`. |
 
-**Errors:** `no handler`, `timeout` or `handler error` from the instrument store. `NotGranted` without one of the five roles.
+**Errors:** `no handler`, `timeout` or `handler error` from the instrument store. `NotGranted` without one of those roles.
 
 ```python
 answer = await plugin.resolve_instrument(instrument_id=position.instrument_id)

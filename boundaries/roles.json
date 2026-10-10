@@ -260,6 +260,13 @@
           "duty": "Puts market, reference and alternative data into the lake, converting its vendor's codes at the edge."
         },
         {
+          "duty": "Resolves the subjects and venues its source names, reads an instrument's record to name to its vendor one another source resolved, and reports what it could not resolve; it never mints reference data.",
+          "basis": [
+            "W10.3",
+            "W3.6"
+          ]
+        },
+        {
           "duty": "Keeps its vendor's raw files and cursors in its own storage.",
           "basis": [
             "decisions/028"
@@ -291,6 +298,7 @@
         ],
         "reads": [
           "ResolveIdentifier",
+          "ResolveInstrument",
           "ResolveVenue"
         ],
         "hears": [
@@ -1358,6 +1366,7 @@
       "roles": {
         "reads": [
           "compliance",
+          "dgm",
           "oms",
           "operations",
           "portfolio",

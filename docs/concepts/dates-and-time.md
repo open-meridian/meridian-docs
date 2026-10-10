@@ -11,7 +11,7 @@ questions:
   its ISO 8601 text, `2026-10-09`.
 
 !!! note "Built, not released"
-    This page describes contract v18: core in chart 0.1.291 and
+    This page describes contract v18: core in chart 0.1.292 and
     open-meridian 0.22.0, both built and not yet released.
 
 ## A daily price is keyed by a date

@@ -22,7 +22,7 @@ only as far as that person could at the page each tool mirrors.
 !!! note "Contract v18: built, not released"
     [The Data sources page](#the-data-sources-page) and its five tools, and
     v17's security fixes marked *from contract v18* below, are built into
-    chart 0.1.291 and not yet released.
+    chart 0.1.292 and not yet released.
 
 ## What every one of them does
 
