@@ -83,7 +83,7 @@ wait.
 Records are applied under their version. A record arriving twice, or an older
 one arriving late, changes nothing, so a retried delivery is always safe.
 
-From contract v18 (built, not released) the store also keeps the
+From contract v18 the store also keeps the
 [venues](venues.md) the deployment pulled from the platform's venue master, one
 at a time as something names them, and answers which venue a code names; an
 instrument's listing venue is a venue ID, `listing_venue_id`, in place of its

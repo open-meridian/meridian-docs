@@ -12,7 +12,7 @@ pip install open-meridian
 |---|---|
 | PyPI name | `open-meridian` |
 | Import name | `meridian` |
-| Version | 0.22.0 (built, not yet on PyPI; 0.21.0 is the latest released) |
+| Version | 0.22.0 |
 | Python | 3.11 or newer |
 | Dependencies | `grpcio>=1.68,<2`, `protobuf>=5.28,<7`, `jinja2>=3.1,<4` (from 0.10.0, for [pages](#pages)) |
 | Licence | Apache-2.0 |
@@ -20,15 +20,14 @@ pip install open-meridian
 !!! warning "Not `meridian-sdk`"
     The PyPI package `meridian-sdk` belongs to an unrelated company. Don't install it.
 
-A plugin pins the SDK exactly, `open-meridian==0.22.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.22.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls; from 0.12.0 to 0.13.0, from 0.13.0 to 0.14.0, from 0.19.0 to 0.20.0, from 0.20.0 to 0.21.0 and from 0.21.0 to 0.22.0, only the pins move. `meridian plugin new` writes a plugin pinned to 0.19.0 from CLI 0.1.34, to 0.20.0 from CLI 0.1.35, to 0.21.0 from CLI 0.1.36, and to 0.22.0 from the release after it.
+A plugin pins the SDK exactly, `open-meridian==0.22.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.22.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls; from 0.12.0 to 0.13.0, from 0.13.0 to 0.14.0, from 0.19.0 to 0.20.0, from 0.20.0 to 0.21.0 and from 0.21.0 to 0.22.0, only the pins move. `meridian plugin new` writes a plugin pinned to 0.19.0 from CLI 0.1.34, to 0.20.0 from CLI 0.1.35, to 0.21.0 from CLI 0.1.36, and to 0.22.0 from CLI 0.1.37.
 
-!!! note "0.22.0: built, not released"
+!!! note "0.22.0: contract v18"
     open-meridian 0.22.0 declares contract v18, [the lake](#the-lake): a
     `dgm`'s catalogue, prices and bars recorded in batches, wants, the
-    readers, a `Money` naming its instrument and real dates. It is built and
-    not yet on PyPI, and needs a runtime serving contract v18 (chart
-    0.1.292, not yet released), which refuses nothing a plugin on 0.21.0
-    sends. See [Plugin manifest](plugin-manifest.md).
+    readers, a `Money` naming its instrument and real dates. It needs a
+    runtime serving contract v18 (chart 0.1.292 or later), which refuses
+    nothing a plugin on 0.21.0 sends. See [Plugin manifest](plugin-manifest.md).
 
 | Optional extra | Installs | For |
 |---|---|---|

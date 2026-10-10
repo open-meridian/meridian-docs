@@ -356,7 +356,7 @@ From contract v17, everything a person can see or do
 in a plugin's area, an agent can through their delegation, at the same role
 and level, with two exceptions: no agent reads or types a secret setting's
 value, and none changes who holds access; see
-[Core's tools](../api/core-tools.md). From contract v18 (built, not released) a narrowed
+[Core's tools](../api/core-tools.md). From contract v18 a narrowed
 delegation keeps the tools that change something its consent page listed: one added since, by a
 release or a plugin, waits until the person consents again from that client, where the consent page
 names it as new. The consent page fits one screen, every tool each row grants in view before

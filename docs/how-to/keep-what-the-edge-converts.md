@@ -123,7 +123,7 @@ registration, naming both versions.
 ### Move a plugin to 0.22.0 { #move-a-plugin-to-0220 }
 
 `meridian plugin migrate` moves only the pins: `open-meridian==0.22.0` and
-`plugin-python:0.22.0`, built and not yet released. A `Money` naming its currency by its ISO 4217
+`plugin-python:0.22.0`. A `Money` naming its currency by its ISO 4217
 code keeps its shape, and core resolves the code to the currency's cash instrument; a date sent as
 valid ISO text is sent as before. Left for you: a test comparing a `Money` read back with one it
 made, which now carries `instrument_id` (compare `amount` and `currency_code`), and a date sent as
@@ -195,7 +195,7 @@ def test_every_case_of_the_custody_suite_passes() -> None:
 
 A case asserting one value of a closed list your vendor never presents may be named in
 `not_presented`, with why; every other case needs a producer. `meridian plugin check --verified`
-fails a custody plugin with no such test (`role-suite`), and `--run-tests` runs it. From the CLI
-release after 0.1.36 the rule is held only under `--verified`; CLI 0.1.36 and earlier hold every
+fails a custody plugin with no such test (`role-suite`), and `--run-tests` runs it. From CLI
+0.1.37 the rule is held only under `--verified`; CLI 0.1.36 and earlier hold every
 custody plugin to it. A `dgm` plugin passes its own suite the same way: see
 [Write a `dgm` against its suite](write-a-dgm.md#hold-it-to-the-suite).

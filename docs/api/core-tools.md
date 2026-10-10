@@ -19,10 +19,10 @@ only as far as that person could at the page each tool mirrors.
     plugin: the SDK, the CLI and every plugin stay as they are, and a plugin
     still declares contract v16.
 
-!!! note "Contract v18: built, not released"
+!!! note "Contract v18"
     [The Data sources page](#the-data-sources-page) and its five tools, and
-    v17's security fixes marked *from contract v18* below, are built into
-    chart 0.1.292 and not yet released.
+    v17's security fixes marked *from contract v18* below, are in chart
+    0.1.292.
 
 ## What every one of them does
 
@@ -308,7 +308,7 @@ is refused.
 
 ## The Data sources page
 
-From contract v18 (built, not released). The dashboard's **Data sources**
+From contract v18, chart 0.1.292. The dashboard's **Data sources**
 page, on **Settings** beside **Instruments**, at the deployment admin's
 level: the datasets each launched `dgm` plugin's catalogue serves the
 [lake](../concepts/the-lake.md), their licences and entitlements, and the

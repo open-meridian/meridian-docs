@@ -8,9 +8,8 @@ by the deployment alone, never sent to the platform:
 - its **entitlements**: which plugin instances may read it, and which of
   its fields.
 
-!!! note "Built, not released"
-    This page describes contract v18, core's lake in chart 0.1.292, built
-    and not yet released.
+!!! note "Contract v18"
+    This page describes contract v18, core's lake, from chart 0.1.292.
 
 A licence records what the admin entered. Neither it nor anything else in a
 deployment says the deployment meets a vendor's or an exchange's terms:

@@ -38,7 +38,7 @@ Every table below marks each plugin with its **registry**:
 
 | Registry | What it is |
 |---|---|
-| **Local** | Your deployment's own registry, which you or your agent upload to. Unsupervised. Every plugin installed today is local, SnapTrade and the sample operations plugin included |
+| **Local** | Your deployment's own registry, which you or your agent upload to. Unsupervised. Every plugin installed today is local, SnapTrade, the sample plugins and the data plugins included |
 | **Community** | The platform's shared registry, for anyone's plugins. Unsupervised. Not open yet |
 | **Verified** | The platform's registry of plugins checked at best effort, as above. Not open yet |
 | **Planned** | The plugin does not exist yet |
@@ -119,9 +119,9 @@ The releases, in their order:
    moved to cold storage, restored on request, each move recorded. Released with contract v16:
    see [The archive](the-archive.md).
 4. **Valuation**: prices and daily bars in the deployment's market-data
-   store, and the book valued from them. Contract v18 is built and not yet
-   released: [the lake](the-lake.md), its licences and entitlements, the
-   data plugins (Alpaca, Tradier, Tiingo, Coinbase, Kraken and the Federal
+   store, and the book valued from them. Released 2026-10-10 with contract
+   v18: [the lake](the-lake.md), its licences and entitlements, the data
+   plugins (Alpaca, Tradier, Tiingo, Coinbase, Kraken and the Federal
    Reserve's H.10), and the sample reporting plugin.
 5. **Live market data**: trades, quotes and streaming prices, and the
    professional data sources a fund licenses.
@@ -146,10 +146,10 @@ value. No trading yet.
 | A 401(k) plan's own fund codes linked to their instruments | [`custody`](roles.md#custody) | SnapTrade, its Plan-code links table | Local | Exists |
 | The IRA's core position, an FDIC-insured deposit, counted as cash | [`custody`](roles.md#custody) | SnapTrade, by its own flag or its Cash links table | Local | Exists |
 | An opening balance per account, with its lots, and daily reconciliation, each break explained | [`operations`](roles.md#operations) | The sample operations plugin | Local | Exists |
-| Daily closes for stocks and ETFs | [`dgm`](roles.md#dgm) | Alpaca and Tradier | Planned | Built, not released: see [Add a data plugin's key](../how-to/add-a-data-plugins-key.md) |
-| US dollar exchange rates | [`dgm`](roles.md#dgm) | The Federal Reserve's H.10 rates | Planned | Built, not released: see [Add a public data plugin](../how-to/add-a-public-data-plugin.md) |
-| A mutual fund's daily NAV | [`dgm`](roles.md#dgm) | Tiingo | Planned | Built, not released: see [Add a data plugin's key](../how-to/add-a-data-plugins-key.md#tiingo-mutual-funds-daily-navs) |
-| The book valued, by account and in total | [`reporting`](roles.md#reporting) | The sample reporting plugin | Planned | Built, not released: see [Value the book](../how-to/value-the-book.md) |
+| Daily closes for stocks and ETFs | [`dgm`](roles.md#dgm) | Alpaca and Tradier | Local | Exists: see [Add a data plugin's key](../how-to/add-a-data-plugins-key.md) |
+| US dollar exchange rates | [`dgm`](roles.md#dgm) | The Federal Reserve's H.10 rates | Local | Exists: see [Add a public data plugin](../how-to/add-a-public-data-plugin.md) |
+| A mutual fund's daily NAV | [`dgm`](roles.md#dgm) | Tiingo | Local | Exists: see [Add a data plugin's key](../how-to/add-a-data-plugins-key.md#tiingo-mutual-funds-daily-navs) |
+| The book valued, by account and in total | [`reporting`](roles.md#reporting) | The sample reporting plugin | Local | Exists: see [Value the book](../how-to/value-the-book.md) |
 | A plan-only fund valued at the custodian's own mark | [`dgm`](roles.md#dgm) | SnapTrade | Local | Planned, not scheduled |
 | Trading from the deployment | [`ccm`](roles.md#ccm) | SnapTrade | Local | Planned, in the order path |
 
@@ -177,13 +177,13 @@ reports to its investors, and trades once the order path is built.
 | Holdings and activity read directly from Alpaca or Tradier | [`custody`](roles.md#custody) | Alpaca, Tradier | Planned | Planned, not scheduled |
 | Opening balances, daily reconciliation, breaks resolved by people | [`operations`](roles.md#operations) | The sample operations plugin, or yours | Local | Exists |
 | Consolidated end-of-day prices under the fund's own licence | [`dgm`](roles.md#dgm) | Databento, Massive | Planned | Planned, in live market data |
-| Mutual fund NAVs | [`dgm`](roles.md#dgm) | Tiingo, under the fund's own licence | Planned | Built, not released: see [Add a data plugin's key](../how-to/add-a-data-plugins-key.md#tiingo-mutual-funds-daily-navs) |
-| Exchange rates | [`dgm`](roles.md#dgm) | The Federal Reserve's H.10 rates | Planned | Built, not released: see [Add a public data plugin](../how-to/add-a-public-data-plugin.md) |
-| The book valued daily, consolidated and by account | [`reporting`](roles.md#reporting) | The sample reporting plugin, or yours | Planned | Built, not released: see [Value the book](../how-to/value-the-book.md) |
+| Mutual fund NAVs | [`dgm`](roles.md#dgm) | Tiingo, under the fund's own licence | Local | Exists: see [Add a data plugin's key](../how-to/add-a-data-plugins-key.md#tiingo-mutual-funds-daily-navs) |
+| Exchange rates | [`dgm`](roles.md#dgm) | The Federal Reserve's H.10 rates | Local | Exists: see [Add a public data plugin](../how-to/add-a-public-data-plugin.md) |
+| The book valued daily, consolidated and by account | [`reporting`](roles.md#reporting) | The sample reporting plugin, or yours | Local | Exists: see [Value the book](../how-to/value-the-book.md) |
 | Post-trade concentration checks against the book | [`compliance`](roles.md#compliance) | Yours | Local | Build your own: it reads positions and account figures today |
 | Restricted lists and standing limits in a common form | [`compliance`](roles.md#compliance) | Yours | Local | Planned, with the order path |
 | A verdict on each order before it goes out | [`compliance`](roles.md#compliance) | Yours | Local | Planned, in the order path |
-| Investor reports, kept as sent | [`reporting`](roles.md#reporting) | Yours | Local | Build your own; valued figures wait for valuation |
+| Investor reports, kept as sent | [`reporting`](roles.md#reporting) | Yours | Local | Build your own: it reads positions and the lake's prices today |
 | An agent drafting an adjustment that a person makes | any | Any | — | Planned, in prepared changes |
 | A nightly job running as a named account | any | Any | — | Planned, in service accounts |
 | Orders decided, worked and sent | [`portfolio`](roles.md#portfolio), [`oms`](roles.md#oms), [`ems`](roles.md#ems) | Yours | Local | Planned, in the order path |
@@ -216,7 +216,7 @@ deployment records and checks, and the firm answers to MAS.
 | Each client's accounts and positions, reconciled daily with the carrying broker's | core, and [`operations`](roles.md#operations) | The sample operations plugin, or yours | Local | Exists |
 | Positions, cash and activity from the carrying broker for US equities | [`custody`](roles.md#custody) | Alpaca, its Broker API | Planned | Planned, not scheduled |
 | Spot crypto balances and activity from an exchange | [`custody`](roles.md#custody) | Yours, reading OKX | Local | Build your own |
-| Crypto prices | [`dgm`](roles.md#dgm) | Coinbase and Kraken; OKX later | Planned | Coinbase and Kraken built, not released: see [Add a public data plugin](../how-to/add-a-public-data-plugin.md); OKX planned |
+| Crypto prices | [`dgm`](roles.md#dgm) | Coinbase and Kraken; OKX later | Local; planned | Coinbase and Kraken exist: see [Add a public data plugin](../how-to/add-a-public-data-plugin.md); OKX planned |
 | US equity prices under the firm's licence | [`dgm`](roles.md#dgm) | Databento, Massive | Planned | Planned, in live market data |
 | Money in, out and between accounts, and journals between the firm's accounts and its clients' | [`custody`](roles.md#custody), or [`settlement`](roles.md#settlement) for a separate payment rail | The carrying broker's plugin | Planned | Planned, after the order path |
 | A firm-account mark, and custodial, joint and trust accounts | core | none | — | Planned, after the order path |

@@ -7,18 +7,10 @@ pair, which pass one suite between them, and the **Federal Reserve's H.10**,
 weekly US dollar exchange rates. For the plugins that need a key, see
 [Add a data plugin's key](add-a-data-plugins-key.md).
 
-!!! note "Built, not released"
+!!! note "Contract v18"
     meridian-coinbase 0.1.0, meridian-kraken 0.1.0 and meridian-fed-h10
-    0.1.0 are built on open-meridian 0.22.0 (contract v18) and not yet
-    released, and neither is the runtime they need, chart 0.1.292. Until they
-    are, this page says how they will be set up.
-
-!!! note "TODO: the crypto pair's last changes"
-    Coinbase and Kraken are taking two more changes before release: reading
-    the record of an instrument another source resolved, as Alpaca and
-    Tradier do (see [Add a data plugin's key](add-a-data-plugins-key.md#what-each-serves)),
-    and a search on their **Datasets** page. This note changes when they
-    land.
+    0.1.0 are built on open-meridian 0.22.0 (contract v18), and run on chart
+    0.1.292 or later.
 
 ## What each serves
 
@@ -37,15 +29,36 @@ weekly US dollar exchange rates. For the plugins that need a key, see
   restated under the same row as it fills, until it ends. A Kraken day that
   traded nothing carries no VWAP.
 - **A product names a market, not an asset**: its base asset is a row's
-  subject, and its quote asset what the price is in. Each asset is resolved
-  to the deployment's instrument, with the exchange's code as its `symbol`:
-  a currency by its ISO 4217 code; a native coin (bitcoin, ether) by its
+  subject, and its quote asset what the price is in. Reading the listing
+  resolves nothing and adds no instrument to the deployment.
+- **Each subject is the deployment's own record.** The lake asks for a
+  price by the deployment's instrument ID, usually a record a custodian's
+  positions made. The plugin reads that record and names the exchange's
+  asset it is by its identifiers: the exchange's code, else the global
+  identifier the exchange's asset carries (a currency's ISO 4217 code, a
+  native coin's SLIP-44 CAIP-19), else another source's symbol that is the
+  exchange's code. The exchange's code is then added to the record where it
+  lacks it; where that meets another record it is reported, and the subject
+  is priced all the same. A record naming none of the exchange's assets is
+  declined as not covered, and the **Datasets** page says why.
+    - **Kraken calls bitcoin `XXBT`**, so a custodian's record carrying only
+      the symbol `BTC` names none of Kraken's assets and is declined. Add
+      bitcoin's CAIP-19 to the record on the Instruments page, and Kraken
+      names it at its next read, within a day. Coinbase's code for bitcoin is
+      `BTC`, so it names that record by the custodian's symbol.
+    - **Another source's symbol is never matched** to a record classed as a
+      security, or carrying a CUSIP or an ISIN: Ethan Allen's shares trade
+      as `ETH`, and are never taken for ether.
+- **Only a wanted product's quote asset is resolved**, with the exchange's
+  code as its `symbol`, and a record is added only where none resolves: a
+  currency by its ISO 4217 code; a native coin (bitcoin, ether) by its
   SLIP-44 CAIP-19; a token Coinbase lists on exactly one network by that
   contract's CAIP-19; and any other token, such as Coinbase's USDC (listed
   on several networks) or any token at Kraken (which states no network), as
   the exchange's own instrument, by its code. Kraken's legacy codes, such as
-  `XXBT` and `ZUSD`, are converted at the edge. An asset whose identifiers
-  meet two records is reported, and every product on it left out.
+  `XXBT` and `ZUSD`, are converted at the edge. A quote asset whose
+  identifiers meet two records is reported, and every product quoted in it
+  left out until a person resolves the conflict on the Instruments page.
 - **A price in a stablecoin names the token**, never a fiat code: a USDC
   price is never a dollar price. A reader values it through a price of the
   stablecoin itself (USDC-USD, recorded like any product), never by
@@ -57,8 +70,9 @@ weekly US dollar exchange rates. For the plugins that need a key, see
   (neither has a MIC), and each row names its [venue ID](../concepts/venues.md).
   A deployment that does not hold it gets each row with the venue left
   empty and the code beside it, and the miss reported.
-- **Wants** are recorded against, or declined per subject: not covered (no
-  product's base is it), beyond history (at Kraken, older than its 720
+- **Wants** are recorded against, or declined per subject: not covered (its
+  record names none of the exchange's assets, or no product's base is it),
+  beyond history (at Kraken, older than its 720
   days), or the source silent. A standing want keeps a live price current at
   most once a second, and the forming day every five minutes.
 
@@ -164,9 +178,12 @@ page shows. Neither shows a price.
   error; for the crypto pair, the venue ID it resolved; for H.10, the latest
   release and the next expected.
 - **Datasets**: each dataset of its catalogue; for the crypto pair, the
-  products mapped and the assets not resolved; for H.10, each currency's
-  instrument, or why there is none; and the wants it heard, each with what
-  it recorded and declined.
+  products mapped for the instruments the lake asked about, how many of the
+  deployment's instruments it named as the exchange's assets, and the
+  assets not resolved; for H.10, each currency's instrument, or why there
+  is none; and the wants it heard, each with what it recorded and declined.
+  On the crypto pair's page, a search above the wants narrows them by ID,
+  dataset, what was asked or state.
 
 ## Related
 

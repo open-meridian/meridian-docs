@@ -7,11 +7,10 @@ for it only by passing every case, and two data plugins of a pair pass it
 unchanged. This page starts one from the template and holds it to the
 suite.
 
-!!! note "Built, not released"
-    This page describes open-meridian 0.22.0 (contract v18) and the CLI
-    release after 0.1.36, whose `plugin new --role dgm` writes this
-    template. Neither is released yet, nor is the runtime that serves
-    contract v18, chart 0.1.292.
+!!! note "Contract v18"
+    This page describes open-meridian 0.22.0 (contract v18) and CLI 0.1.37,
+    whose `plugin new --role dgm` writes this template, for a runtime
+    serving contract v18, chart 0.1.292 or later.
 
 ## Make the plugin
 

@@ -11,11 +11,10 @@ daily net asset values. The data plugins that need no key, Coinbase,
 Kraken and the Federal Reserve's H.10, are in
 [Add a public data plugin](add-a-public-data-plugin.md).
 
-!!! note "Built, not released"
-    meridian-alpaca, meridian-tradier and meridian-tiingo are built on
-    open-meridian 0.22.0 (contract v18) and not yet released, and neither is
-    the runtime they need, chart 0.1.292. Until they are, this page says how
-    they will be set up.
+!!! note "Contract v18"
+    meridian-alpaca 0.2.0, meridian-tradier 0.1.0 and meridian-tiingo 0.1.0
+    are built on open-meridian 0.22.0 (contract v18), and run on chart
+    0.1.292 or later.
 
 ## What each serves
 

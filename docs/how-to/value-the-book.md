@@ -11,10 +11,9 @@ reference implementation of valuing a book at a business date's prices, not
 a firm's valuation policy. You can run it as it is, or read it and build
 your own from the template below.
 
-!!! note "Built, not released"
+!!! note "Contract v18"
     meridian-sample-reporting 0.1.0 is built on open-meridian 0.22.0
-    (contract v18) and not yet released, and neither is the runtime it needs,
-    chart 0.1.292. Until they are, this page says how it will be set up.
+    (contract v18), and runs on chart 0.1.292 or later.
 
 ## What the sample reporting plugin shows
 
@@ -120,8 +119,8 @@ and nothing it reads leaves the deployment.
 
 ## Build your own
 
-A reporting plugin of your own uses what the sample does, built and not yet
-released (contract v18, open-meridian 0.22.0, the CLI release after 0.1.36):
+A reporting plugin of your own uses what the sample does (contract v18,
+open-meridian 0.22.0, CLI 0.1.37):
 
 - **The reads.** A `reporting` plugin reads positions with
   [`list_positions`](../api/typed-operations.md#list_positions) and prices

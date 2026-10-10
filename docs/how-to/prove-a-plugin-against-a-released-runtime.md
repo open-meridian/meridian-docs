@@ -173,7 +173,7 @@ Each prints what it found and exits 0, or exits non-zero saying why. Every wait 
 | `page --level admin\|write\|read PATH [--until TEXT] [--seconds N]` | Opens a session on the plugin's own host at that level (Manage, Open, View), GETs `PATH`, prints the status and the body; with `--until`, again until the body says `TEXT`. |
 | `form --level L --page PATH --post PATH [--csrf-field NAME] [--from-page NAME ...] [--expect TEXT] FIELD=VALUE ...` | In such a session, reads `--page`, takes its CSRF field (`csrf`, the SDK's name) and each field `--from-page` names, with the value the page gives it, and posts them with the fields you give to `--post`; prints the status and the body. |
 | `unlinked [--expect N] [--seconds N]` | Prints how many external accounts the plugin reported that nothing links, as the dashboard counts them; with `--expect`, waits for `N`. |
-| `licence DATASET kept=true\|false retention_days=N derived_use=true\|false display=true\|false personal_use=true\|false [default_fields=A,B] [note=TEXT]` | From a runtime serving contract v18 (built, not released): sets a dataset's licence on the Data sources page, as a deployment admin does, replacing it whole; a term left out is false. See [License and entitle a dataset](license-and-entitle-a-dataset.md). |
+| `licence DATASET kept=true\|false retention_days=N derived_use=true\|false display=true\|false personal_use=true\|false [default_fields=A,B] [note=TEXT]` | From a runtime serving contract v18: sets a dataset's licence on the Data sources page, as a deployment admin does, replacing it whole; a term left out is false. See [License and entitle a dataset](license-and-entitle-a-dataset.md). |
 | `entitle DATASET [--fields A,B] [--withdraw] [note=TEXT]` | From contract v18: entitles the plugin to a dataset, every field or those named, or withdraws it, and waits until the bus admits the plugin to the dataset's subject before the entitlement is recorded. |
 | `priority DATA_TYPE [--kind KIND] DATASET ... [note=TEXT] [--against N]` | From contract v18: sets the priority a default read takes for `meridian.v1.Price`, one kind of it (`close`, `last`, `nav`, `settlement`), or `meridian.v1.Bar`: the datasets first to last, replaced whole, against the priority as the page shows it. |
 
@@ -202,7 +202,7 @@ $H run --rm -T store book
 prints that store as stable, sorted lines, so a file from one run compares with the next. Whoever
 reads a store needs no database user, password, file or query of their own.
 
-From a runtime serving contract v18 (built, not released), `store lake` prints what the
+From a runtime serving contract v18, `store lake` prints what the
 [lake](../concepts/the-lake.md) kept, one line each: every row version (its dataset, data type,
 sequence, row key, version, subject, kind or interval, venue, business date and how many values
 were left unconverted), each priority's changes, each want asked, answered, declined or withdrawn,

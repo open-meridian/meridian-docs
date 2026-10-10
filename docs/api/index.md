@@ -13,4 +13,4 @@ Reference pages for building on Open Meridian, taken from the code of each relea
 | [`plugin dev` events](plugin-dev-events.md) | The JSON event stream of `meridian plugin dev --json` and `meridian plugin events --json`, for scripts and AI agents following a live plugin. |
 
 !!! note "What is not here"
-    Open Meridian has no order-routing or execution API in this release. The typed operations cover holdings ingestion, reading what it recorded, and instrument resolution, and from contract v18 (built, not released) recording and reading prices and bars in the lake; they are read-only towards any brokerage.
+    Open Meridian has no order-routing or execution API in this release. The typed operations cover holdings ingestion, reading what it recorded, and instrument resolution, and from contract v18 recording and reading prices and bars in the lake; they are read-only towards any brokerage.

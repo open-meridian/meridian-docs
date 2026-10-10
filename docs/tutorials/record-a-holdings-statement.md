@@ -27,7 +27,7 @@ Allow 30 minutes.
 - The `meridian` CLI, 0.1.36 (`meridian --version`; `meridian upgrade` updates it), and Docker on
   this machine. From CLI 0.1.36, `meridian plugin new` builds on SDK 0.21.0 (contract v16), and
   writes the **Setup** page that links accounts, which this tutorial uses; the deployment's sidecar
-  must accept contract v16. The release after 0.1.36 (built, not released) builds on SDK 0.22.0
+  must accept contract v16. CLI 0.1.37 builds on SDK 0.22.0
   (contract v18), and the tutorial runs on it unchanged.
 - To have done [Change your plugin's page, live](change-the-page-live.md), or be comfortable with
   `meridian plugin dev`.
@@ -193,7 +193,7 @@ meridian plugin check --run-tests
 `tests-pass` passes. On CLI 0.1.36 one rule fails, `role-suite`: a plugin holding `custody` runs
 the custody suite in its tests, each case mapped to its own exchange with its vendor. This plugin
 converts no vendor's data, so it has nothing to map, and nothing in this tutorial needs the check to
-pass: `plugin dev` does not run it. From the CLI release after 0.1.36, `role-suite` is held only
+pass: `plugin dev` does not run it. From CLI 0.1.37, `role-suite` is held only
 under `--verified`, and shown skipped otherwise, so every rule holds: a plugin not passing its
 role's suite is not verified for the role, which breaks no rule. A real custody plugin passes it,
 checked with `meridian plugin check --verified --run-tests`; see

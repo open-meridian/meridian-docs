@@ -13,7 +13,7 @@ your agent is doing. Allow 15 minutes.
   [Install a deployment](../getting-started/installation.md).
 - You are a deployment admin on it, and so an admin of every plugin through **All plugins (admin)**.
 - The `meridian` CLI, 0.1.36 (`meridian --version`; `meridian upgrade` updates it), whose scaffold
-  this page shows, on SDK 0.21.0 (0.22.0 from the release after it, built and not released, with the
+  this page shows, on SDK 0.21.0 (0.22.0 from CLI 0.1.37, with the
   same pages). Its pages and `--level` came with 0.1.21.
 - Docker on this machine.
 - Two terminals.

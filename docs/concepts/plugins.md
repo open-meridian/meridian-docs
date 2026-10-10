@@ -44,8 +44,8 @@ configuration — lives in the deployment's own stores.
 A plugin at the edge, one holding `ccm`, `custody`, `servicing`, `match`,
 `settlement`, `dgm` or `reporting`, may also own storage the deployment
 grants its instance alone, for the raw records its vendor sent it, and
-rebuild from it; no other plugin reads it. From contract v16 (built, not
-released) its older records may move to an archive the deployment provides:
+rebuild from it; no other plugin reads it. From contract v16
+its older records may move to an archive the deployment provides:
 see [The archive](the-archive.md).
 
 ## Roles: what a plugin is for

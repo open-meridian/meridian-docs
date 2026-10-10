@@ -8,9 +8,9 @@ on, its licence. Both are on the dashboard's **Data sources** page, and
 through its tools for an agent. What each term means is in
 [Licences and entitlements](../concepts/licences-and-entitlements.md).
 
-!!! note "Built, not released"
-    This page describes contract v18, core's lake and the Data sources page
-    in chart 0.1.292, built and not yet released.
+!!! note "Contract v18"
+    This page describes contract v18, core's lake and the Data sources page,
+    from chart 0.1.292.
 
 You need the deployment admin's capabilities, and a data plugin launched:
 its datasets are listed from the moment it runs. See
