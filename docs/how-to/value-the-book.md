@@ -15,10 +15,15 @@ your own from the template below.
     meridian-sample-reporting 0.1.0 is built on open-meridian 0.22.0
     (contract v18), and runs on chart 0.1.292 or later.
 
+!!! note "Contract v19: built, not released"
+    meridian-sample-reporting 0.2.0, on open-meridian 0.23.0 (contract v19,
+    chart 0.1.293 or later), adds the [Board](watch-the-board.md) and any
+    reporting currency. It is not yet released.
+
 ## What the sample reporting plugin shows
 
 Two pages, under **Open** and **View**, each fitting one screen, its rows
-paged:
+paged, and from 0.2.0 a third, the [Board](watch-the-board.md):
 
 - **Consolidated**: every account you may read, valued at the prices of the
   date you choose (the weekday before today unless you choose another), in
@@ -68,7 +73,7 @@ never as zero**, and counted in what the total leaves out:
 | its source is silent | Its admin looks at the source's Connection page |
 | this plugin is not entitled to the dataset that covers it | A deployment admin entitles the plugin on the Data sources page |
 | no rate into the currency it is shown in | Entitle a source of exchange rates, or choose a later date |
-| its currency's cash instrument is not known here | Hold or price something in that currency, or show it in another |
+| its currency's cash instrument is not known here | The deployment holds no record of that currency: complete one on the Instruments page, or show it in another. Before 0.2.0, only a currency the book held was known |
 | the deployment holds no record of it | The deployment admin looks at the Instruments page |
 
 ## Set it up
@@ -93,12 +98,17 @@ never as zero**, and counted in what the total leaves out:
 4. **Its setting**, on **Manage**, **Settings**, by an admin of the plugin:
    **Reporting currency** (`reporting_currency`), the ISO 4217 code
    Consolidated shows every account in, USD unless set. By account always
-   shows an account in its own base currency. In contract v18 the code
-   resolves only to a currency the book holds; a currency it does not hold
-   leaves converted values unvalued, its cash instrument not known here.
-   From contract v19, the plugin may resolve the code itself. A value that
-   is not an ISO 4217 code is not used: Consolidated shows USD, and the
-   plugin is unhealthy on Manage until the setting is corrected.
+   shows an account in its own base currency. From 0.2.0 (contract v19)
+   the plugin resolves the code to the deployment's cash instrument itself,
+   as it does each account's base currency and a stable-NAV fund's
+   currency, so **any currency works**, held in the book or not. In 0.1.0
+   (contract v18) the code resolved only to a currency the book held; any
+   other left converted values unvalued, its cash instrument not known
+   here. A value that is not an ISO 4217 code is not used: Consolidated
+   shows USD, and the plugin is unhealthy on Manage until the setting is
+   corrected.
+   From 0.2.0, **Watchlist** (`watchlist`) too: the instruments the Board
+   shows.
 5. **Read on the plugin**, granted by a deployment admin to the people who
    will look at valuations. Each person sees only the accounts they may
    read.
@@ -107,7 +117,8 @@ never as zero**, and counted in what the total leaves out:
 
 Each page is also a read tool on the deployment's MCP surface, answering
 exactly what the page shows the same person: `read_valuation` for
-Consolidated and `read_account_valuation` for By account. An agent you have
+Consolidated and `read_account_valuation` for By account, and from 0.2.0
+`read_board` for the Board. An agent you have
 delegated to reads valuations as you would, and only the accounts you may
 read. A tool's answer includes the prices the page shows; an agent client
 may pass what it reads to its model's host, and whether a source's terms
@@ -128,7 +139,21 @@ open-meridian 0.22.0, CLI 0.1.37):
   date, as of a recorded time, from the deployment's default sources, named
   datasets or side by side, and hears new prices for the subjects it names
   with `receive(prices_recorded=..., subjects=...)`. See
-  [The lake in the Python SDK](../api/python-sdk.md#the-lake).
+  [The lake in the Python SDK](../api/python-sdk.md#the-lake). A
+  `reporting` plugin reads prices and bars, never trades or quotes.
+- **Its currency, by its code.** From contract v19 a `reporting` plugin
+  names its reporting currency by its ISO 4217 code and has core resolve
+  it, read-only, with
+  [`resolve_identifier`](../api/typed-operations.md#resolve_identifier):
+
+    ```python
+    found = await plugin.resolve_identifier(
+        identifiers=[meridian.Identifier(scheme="iso4217", value="EUR")], as_of_ns=day_ns)
+    euro = found.instrument_id if found.found else ""
+    ```
+
+  The `reporting` suite's `resolves-its-reporting-currency` case holds a
+  plugin to it from open-meridian 0.23.0.
 - **A template.** `meridian plugin new my-report --role reporting` writes a
   `reporting` plugin that shows the positions in its account scope at the
   last close from the lake: each position, its close, the dataset it came

@@ -102,8 +102,8 @@ stylesheet and script in `<head>`, and draw the page inside `<main class="page">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Accounts</title>
-  <link rel="stylesheet" href="/.meridian/ui/0.8.0/meridian.css">
-  <script src="/.meridian/ui/0.8.0/meridian.js"></script>
+  <link rel="stylesheet" href="/.meridian/ui/0.11.0/meridian.css">
+  <script src="/.meridian/ui/0.11.0/meridian.js"></script>
 </head>
 <body>
   <main class="page">
@@ -142,6 +142,9 @@ market-direction convention, and the kit applies them.
 | 0.6.0 | `om-status`, a status dot with its note on hover, focus or a tap; and in `om-account-map`, each account's optional `status` and `values`, a Status column and a filter by state |
 | 0.7.0 | Header status: a framed page's head `om-status` marked `data-om-header`, drawn by the dashboard beside the plugin's name. See [Header status](#header-status). |
 | 0.8.0 | Icon actions: a button marked `data-om-icon="refresh"` is drawn as a circular arrow, in the page and as a header action in the dashboard's header. See [Icon actions](#icon-actions). |
+| 0.9.0 | `om-entry-grid`: a table of typed inputs a person enters rows in, posted with the page's own form, the server's messages placed on their cells, a spreadsheet's paste and a CSV in a dialog |
+| 0.10.0 | Every page fits one screen: a height budget the dashboard holds to the screen, compact chrome, one-line rows (`table.one-line`, `om-grid`'s `one-line`) with the whole row a click away, `om-pager`, as many rows a page as fit, and the overflow check |
+| 0.11.0 | A search beside the pager, `search` on `om-grid`, `om-pager` and `om-entry-grid`, `search-param` on `om-pager`, and the `om-search` event; and fields gated on a choice, `data-om-applies-when` and `data-om-one-of`. See [To search a list, and show a field only when it applies](#to-search-a-list-and-show-a-field-only-when-it-applies). Served from chart 0.1.293 (contract v19, built, not released). |
 
 **A 0.x release only adds.** Nothing in the kit is removed or renamed within 0.x, so a page built
 against an earlier 0.x keeps working on a later one.
@@ -442,6 +445,82 @@ Kit 0.3.0 also fits the rest of a page to a phone, with nothing to do but use it
   `<om-moment label="Last read" value="2026-09-29T12:04:00Z">`. It shows the moment to the minute
   in UTC, or in the reader's own time zone with `zone="local"`, and "Not yet" for a value it cannot
   read, never a guess.
+
+## To search a list, and show a field only when it applies
+
+From kit 0.11.0: where a list's rows will grow, give it a search; where a
+form's fields depend on a choice, show each only when it applies. Both work
+without the kit too, every row there and every field posted, so the server
+stays the judge.
+
+### Search: `search` and `search-param`
+
+Give `om-grid`, `om-pager` or `om-entry-grid` the `search` attribute. Its
+words name the box, which is drawn above the rows with the pager under
+them, beside it how many of how many rows match. A row stays while every
+word typed is somewhere in its text, in any order, case and spacing aside;
+Escape empties the box.
+
+```html
+<om-grid row-key="id" one-line search="Search accounts">…</om-grid>
+```
+
+- **Rows all on the page** (`om-grid`, `om-pager` with no `total`,
+  `om-entry-grid`) narrow as typed, and the pages are of what is left. An
+  entry grid's rows the search leaves out still post; a row being typed in
+  never leaves under the person.
+- **A server's pages** (`om-pager` with `total`): typing narrows nothing.
+  Enter asks the server for the same address with `q` set (or the name in
+  `search-param`), the offset dropped and the size that fits. The server
+  draws that page of what `q` finds, `total` counting only those, and its
+  links keep `q`:
+
+    ```html
+    <om-pager search="Search instruments" total="42" offset="0" size="3">
+      <table class="one-line">…the page's rows…</table>
+      <nav class="pager" aria-label="Pages">…</nav>
+    </om-pager>
+    ```
+
+- **`om-search`**, `{ query }` (and `href` for a server's), is raised before
+  a search is applied. Cancel it (`preventDefault`) to search yourself, as
+  `om-sort` sorts on the server.
+- **One search to a list.** An `om-grid` inside an `om-pager` is searched by
+  either one, not both.
+
+### A field gated on a choice: `data-om-applies-when` and `data-om-one-of`
+
+Mark a field, or a group of fields, with the control it hangs on
+(`data-om-applies-when`, a control's `name` in the same form) and the
+values it applies at (`data-om-one-of`, a JSON list of strings or one
+value):
+
+```html
+<fieldset class="choice"><legend>Key</legend><div class="options">
+  <label class="option"><input type="radio" name="key_type" value="personal" checked><span>Personal</span></label>
+  <label class="option"><input type="radio" name="key_type" value="commercial"><span>Commercial</span></label>
+</div></fieldset>
+<label class="field" data-om-applies-when="key_type" data-om-one-of='["commercial"]'>
+  <span>Client ID</span><input name="client_id" required>
+</label>
+```
+
+While the choice holds one of the values the field shows; otherwise it is
+hidden and every control inside it disabled, so it is neither required nor
+sent. A checkbox holds its `value` (`on` when it has none) while checked;
+`[""]` applies while nothing is chosen. Gates may hang on gated choices. A
+page that sets a choice from script dispatches a `change` event on it.
+Without the kit's script every field shows and posts, so **the server reads
+a field only with its choice**, as it would a field gated off. It is the
+declared settings' [`AppliesWhen`](../api/python-sdk.md#applieswhen),
+taken into the kit for a page's own forms.
+
+Core's own pages use both from chart 0.1.293: the Instruments page and its
+conflicts, the Data sources tabs, the archive's moves, a plugin's Access
+tab, the links tables, Tickets and the Inbox are searched; the completion
+form shows a type under its class and a binary event contract's payout and
+close only for that type, and the licence's "Kept for" only when it is
+kept.
 
 ## Inside the dashboard's frame
 

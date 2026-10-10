@@ -12,7 +12,7 @@ pip install open-meridian
 |---|---|
 | PyPI name | `open-meridian` |
 | Import name | `meridian` |
-| Version | 0.22.0 |
+| Version | 0.23.0 |
 | Python | 3.11 or newer |
 | Dependencies | `grpcio>=1.68,<2`, `protobuf>=5.28,<7`, `jinja2>=3.1,<4` (from 0.10.0, for [pages](#pages)) |
 | Licence | Apache-2.0 |
@@ -20,7 +20,21 @@ pip install open-meridian
 !!! warning "Not `meridian-sdk`"
     The PyPI package `meridian-sdk` belongs to an unrelated company. Don't install it.
 
-A plugin pins the SDK exactly, `open-meridian==0.22.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.22.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls; from 0.12.0 to 0.13.0, from 0.13.0 to 0.14.0, from 0.19.0 to 0.20.0, from 0.20.0 to 0.21.0 and from 0.21.0 to 0.22.0, only the pins move. `meridian plugin new` writes a plugin pinned to 0.19.0 from CLI 0.1.34, to 0.20.0 from CLI 0.1.35, to 0.21.0 from CLI 0.1.36, and to 0.22.0 from CLI 0.1.37.
+A plugin pins the SDK exactly, `open-meridian==0.23.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.23.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls; from 0.12.0 to 0.13.0, from 0.13.0 to 0.14.0, from 0.19.0 to 0.20.0, from 0.20.0 to 0.21.0, from 0.21.0 to 0.22.0 and from 0.22.0 to 0.23.0, only the pins move. `meridian plugin new` writes a plugin pinned to 0.19.0 from CLI 0.1.34, to 0.20.0 from CLI 0.1.35, to 0.21.0 from CLI 0.1.36, and to 0.22.0 from CLI 0.1.37; run `meridian plugin migrate` to move it to 0.23.0.
+
+!!! note "TODO: `plugin new` on 0.23.0"
+    No CLI release pins 0.23.0 in `meridian plugin new` yet: CLI 0.1.37
+    writes a plugin on 0.22.0. Name the release here when it is built.
+
+!!! note "0.23.0: contract v19, built, not released"
+    open-meridian 0.23.0, on PyPI, declares contract v19, the lake's trades
+    and quotes: a `dgm` records them in batches, `signal` and `ems` read and
+    hear them, every trade in full and caught up after a watermark;
+    `reporting` resolves an identifier; the suites' 1b cases and a case
+    about a kind of data a plugin never publishes marked not presented. It
+    needs a runtime serving contract v19 (chart 0.1.293 or later), which
+    refuses nothing a plugin on 0.22.0 sends. Contract v19 itself is built
+    and not yet released. See [Trades and quotes](#trades-and-quotes).
 
 !!! note "0.22.0: contract v18"
     open-meridian 0.22.0 declares contract v18, [the lake](#the-lake): a
@@ -87,10 +101,12 @@ A plugin that serves pages declares them with [`meridian.Pages`](#pages) and pas
 | `DatasetDeclaration`, `DatasetLicence` | frozen dataclasses | [A dgm's catalogue](#a-dgms-catalogue), from 0.22.0 |
 | `Price`, `Bar`, `ObservationMeta`, `SourceTime` | frozen dataclasses | [Typed operations](typed-operations.md#price), from 0.22.0 |
 | `ObservationMode`, `PriceKind`, `PriceBasis`, `SourceTimeKind`, `UnansweredReason`, `VenueKind`, `Source`, `SourceChoice`, `SubjectRef`, `DatasetRef`, `Unanswered`, `VenueRecord` | generated protobuf enums and messages | [Typed operations](typed-operations.md#types), the lake's, from 0.22.0 |
+| `Trade`, `TradeAttributes`, `Eligibility`, `Quote` | frozen dataclasses | [Typed operations](typed-operations.md#trade), from 0.23.0 |
+| `Aggressor`, `Eligible`, `TradeCharacteristic`, `QuoteCharacteristic` | generated protobuf enums | [Typed operations](typed-operations.md#tradecharacteristic), from 0.23.0 |
 | `CallerMiddleware` | ASGI middleware | [`CallerMiddleware`](#callermiddleware) |
 | `MeridianError`, `Refused`, `NoSidecar`, `NotRegistered`, `NotGranted`, `CallFailed`, `NotLinked`, `CommandRefused` | exceptions | [Exceptions](#exceptions); `CommandRefused` from 0.13.0, its `fields` from 0.14.0 |
 | `DEFAULT_ADDRESS` | `str` | `"127.0.0.1:9191"`, where a sidecar listens |
-| `SCHEMA_VERSION` | `str` | the contract version sent at registration: `"v18"` from 0.22.0 (no SDK declares v17, a revision of core's alone), `"v16"` in 0.21.0, `"v15"` in 0.20.0, `"v14"` in 0.19.0, `"v13"` in 0.18.0, `"v12"` in 0.17.0, `"v11"` in 0.16.0, `"v10"` in 0.15.0, `"v9"` in 0.14.0, `"v8"` in 0.13.0, `"v7"` in 0.12.0, `"v6"` in 0.11.0, `"v5"` in 0.10.0 and 0.10.1, `"v4"` in 0.9.0, `"v3"` in 0.8.0, `"v2"` before |
+| `SCHEMA_VERSION` | `str` | the contract version sent at registration: `"v19"` from 0.23.0, `"v18"` in 0.22.0 (no SDK declares v17, a revision of core's alone), `"v16"` in 0.21.0, `"v15"` in 0.20.0, `"v14"` in 0.19.0, `"v13"` in 0.18.0, `"v12"` in 0.17.0, `"v11"` in 0.16.0, `"v10"` in 0.15.0, `"v9"` in 0.14.0, `"v8"` in 0.13.0, `"v7"` in 0.12.0, `"v6"` in 0.11.0, `"v5"` in 0.10.0 and 0.10.1, `"v4"` in 0.9.0, `"v3"` in 0.8.0, `"v2"` before |
 
 The module `meridian.testing` holds [`PageClient`](#testing) and [`heartbeat`](#testing), for a plugin's own tests.
 
@@ -121,7 +137,7 @@ Registers with the sidecar and returns the admitted plugin. A `Plugin` you hold 
 | `reads_external_accounts` | `bool` | `False` | `True` when the plugin reads accounts at an external source and names them by that source's identifiers. An admin of the plugin links those to accounts, and the sidecar translates them on the way in. |
 | `declaration` | `Declaration` or `None` | `None` | The version's declaration, the same one `meridian plugin upload` reads from the image: its secret settings' names, what it does not carry and the storage it asks for. See [Keep what your custody plugin converts](../how-to/keep-what-the-edge-converts.md). From 0.21.0, where its storage declares kinds of raw record, `connect` declares each kind's two window settings and the restore route besides; see [The archive](#the-archive). From 0.22.0, a `dgm`'s catalogue; see [A dgm's catalogue](#a-dgms-catalogue). |
 
-The contract version it sends is `SCHEMA_VERSION`, `"v18"` from 0.22.0, `"v16"` in 0.21.0. A sidecar accepts a range of versions, v2 through the one its runtime serves, v18 at contract v18: a plugin built for an older version it still supports registers, and one built for a newer version than the sidecar knows is refused at registration, naming both, rather than running without what it was built for. After an upgrade, relaunch plugins so they get the newer sidecar (`meridian upgrade-deployment` names the ones that need it).
+The contract version it sends is `SCHEMA_VERSION`, `"v19"` from 0.23.0, `"v18"` in 0.22.0, `"v16"` in 0.21.0. A sidecar accepts a range of versions, v2 through the one its runtime serves, v19 at contract v19: a plugin built for an older version it still supports registers, and one built for a newer version than the sidecar knows is refused at registration, naming both, rather than running without what it was built for. After an upgrade, relaunch plugins so they get the newer sidecar (`meridian upgrade-deployment` names the ones that need it).
 
 **Raises:**
 
@@ -365,6 +381,8 @@ From 0.12.0. A plugin whose roles hear rows receives them with `plugin.receive`,
 | `bars_recorded` | `BarsRecorded` | A `BarsRecordedEvent`: one [`Bar`](typed-operations.md#bar), in `bar`, likewise. Caught up by [`list_bars`](typed-operations.md#list_bars). From 0.22.0, `preview`. | W10.5 |
 | `observations_wanted` | `ObservationsWanted` | An `ObservationsWantedEvent`, heard by the `dgm` serving its dataset alone: `want_id`, `dataset`, `data_type`, `subjects`, `kinds`, `interval_ns`, the `business_date` or valid range wanted, and `standing`. See [Wants](#wants). From 0.22.0, `preview`. | W10.7 |
 | `want_withdrawn` | `WantWithdrawn` | A `WantWithdrawnEvent`, `want_id` and `dataset`: a standing want no reader asked for within its dataset's cadence. From 0.22.0, `preview`. | W10.7 |
+| `trades_recorded` | `TradesRecorded` | A `TradesRecordedEvent`: one [`Trade`](typed-operations.md#trade) the lake recorded, in `trade`, for a subject named in `subjects=`. Heard by `signal` and `ems`, every one, never conflated. Caught up by [`list_trades`](typed-operations.md#list_trades) after the watermark last seen. From 0.23.0, `preview`. | W10.5 |
+| `quotes_recorded` | `QuotesRecorded` | A `QuotesRecordedEvent`: one [`Quote`](typed-operations.md#quote), in `quote`, latest value first per subject, dataset, venue and asset. Heard by `signal` and `ems`. Caught up by [`list_quotes`](typed-operations.md#list_quotes). From 0.23.0, `preview`. | W10.5 |
 
 ```python
 async def receive(
@@ -382,6 +400,8 @@ async def receive(
     bars_recorded: Callable[[Heard[BarsRecordedEvent]], Awaitable[None]] | None = None,
     observations_wanted: Callable[[Heard[ObservationsWantedEvent]], Awaitable[None]] | None = None,
     want_withdrawn: Callable[[Heard[WantWithdrawnEvent]], Awaitable[None]] | None = None,
+    trades_recorded: Callable[[Heard[TradesRecordedEvent]], Awaitable[None]] | None = None,
+    quotes_recorded: Callable[[Heard[QuotesRecordedEvent]], Awaitable[None]] | None = None,
     seed: bool = True,
     subjects: Sequence[str] = (),
 ) -> None
@@ -415,7 +435,9 @@ It runs until cancelled, so give it a task of its own beside the pages. It hears
 
 A plugin catches up from the store, never from the bus, and the SDK does it: a handler never sees the store's numbers, and keeps nothing to catch up with. A change carries its whole new state, so one handed on twice changes nothing a handler keeps; where reading a page at a time cannot say exactly where the store was, a change may be handed on twice rather than never.
 
-**The lake's rows, from 0.22.0.** A price or a bar is heard only for the subjects named in `subjects=`, by their instrument IDs, at most 500, and none without them, from the datasets the plugin is entitled to. Each is delivered latest value first: the sidecar keeps one value waiting per key (a price's dataset, subjects, venue and kind; a bar's dataset, subjects, venue and interval start), a later value replacing one not yet delivered, and the SDK hands on the newest per key, never an older value after a newer one. On start, after a `Lost` and after a broken stream it reads them again by `list_prices` or `list_bars`, latest first and side by side, marked `caught_up`. Each carries its dataset in [`Heard.dataset`](#heard). A plugin built before 0.22.0, naming no `subjects`, is unchanged.
+**The lake's rows, from 0.22.0.** A price or a bar is heard only for the subjects named in `subjects=`, by their instrument IDs, at most 500, and none without them, from the datasets the plugin is entitled to. Each is delivered latest value first: the sidecar keeps one value waiting per key (a price's dataset, subjects, venue and kind; a bar's dataset, subjects, venue and interval start), a later value replacing one not yet delivered, and the SDK hands on the newest per key, never an older value after a newer one. On start, after a `Lost` and after a broken stream it reads them again by `list_prices` or `list_bars`, latest first and side by side, marked `caught_up`. Each carries its dataset in [`Heard.dataset`](#heard). A plugin built before 0.22.0, naming no `subjects`, is unchanged. From 0.23.0 a price's key holds the asset it is in too, so BTC priced in USD and in USDC on one venue are two values, neither replacing the other.
+
+**Trades and quotes, from 0.23.0.** Quotes are heard as prices are: latest value first per subject, dataset, venue and asset, read again at the latest after a loss. Trades are handed on **every one**, once, in their dataset's order, never dropped for a later one. After a `Lost` naming them, or a broken stream, the SDK reads the trades recorded after the watermark it last saw (per dataset, the last trade it handed on), side by side for the subjects named, and hands them on marked `caught_up`, a late print among them, before anything heard after; a trade the stream delivers after the read had it is handed on once. On start it reads none: there is no latest trade to begin from, so a plugin wanting the day's trades reads them by range with [`list_trades`](typed-operations.md#list_trades). Each carries its dataset in `Heard.dataset`.
 
 Everything heard is within the plugin's read scope, as the [reads](typed-operations.md#list_custodial_positions) are, and a plugin whose read scope is empty hears nothing. It reads and hears for its whole scope, as itself: serve each person from it with `caller.read`, as always.
 
@@ -444,7 +466,7 @@ class Heard(Generic[Message]):
 | `own` | `True` when the plugin's own act caused it. |
 | `cause` | Who caused it, where the store recorded it, a `ChangeCause`: `instance_id`, the instance that sent the command; `acting_for_subject`, the person it was sent for, empty when the plugin acted as itself; `correlation_id`; `causation_id`, the command's `message_id`; and `committed_at_ns`. |
 | `message_id`, `correlation_id`, `causation_id`, `published_at_ns` | From the envelope it was heard in. Empty, and `0`, for what was read. |
-| `dataset` | From 0.22.0, for a price or a bar: the dataset it came from, a [`DatasetRef`](typed-operations.md#datasetref) with its instance, vendor, aggregator and catalogue entry, as `list_datasets` answers it, which the lake names once rather than on every row. `None` for any other row, and where the plugin may not list the datasets. |
+| `dataset` | From 0.22.0, for a price or a bar, and from 0.23.0 a trade or a quote: the dataset it came from, a [`DatasetRef`](typed-operations.md#datasetref) with its instance, vendor, aggregator and catalogue entry, as `list_datasets` answers it, which the lake names once rather than on every row. `None` for any other row, and where the plugin may not list the datasets. |
 
 **Raises:** `ValueError` when no handler is given. [`NotGranted`](#exceptions) for a row none of the plugin's roles hears. A read to catch up that finds nothing serving it, has no answer in time, or is refused by what serves it is tried again with the stream; any other refusal raises as the read's own would.
 
@@ -682,7 +704,7 @@ The sidecar checks each before it leaves, refusing `CallFailed` with `kind="inva
 
 ## The lake { #the-lake }
 
-From 0.22.0, contract v18, `preview`. [The lake](../concepts/the-lake.md) keeps what sources say about prices, append-only and point in time. A `dgm` plugin puts prices and bars in; `reporting`, `portfolio`, `compliance` and `signal` read and hear them. The SDK carries the typed operations and nothing of any vendor's: no HTTP or WebSocket client, no vendor-file parser, no reconnecting stream. Each operation is in [Typed operations](typed-operations.md#record_prices); each field in the [lake's data dictionary](../boundaries/lake.md).
+From 0.22.0, contract v18, `preview`. [The lake](../concepts/the-lake.md) keeps what sources say about prices, append-only and point in time. A `dgm` plugin puts prices and bars in; `reporting`, `portfolio`, `compliance` and `signal` read and hear them. From 0.23.0, contract v19, it puts trades and quotes in too, which `signal` and `ems` read and hear: see [Trades and quotes](#trades-and-quotes). The SDK carries the typed operations and nothing of any vendor's: no HTTP or WebSocket client, no vendor-file parser, no reconnecting stream. Each operation is in [Typed operations](typed-operations.md#record_prices); each field in the [lake's data dictionary](../boundaries/lake.md).
 
 ### A dgm's catalogue { #a-dgms-catalogue }
 
@@ -783,7 +805,23 @@ async def a_want_recorded_against(recorder):
     await recorder.receive(observations_wanted=MyDgm(recorder).on_want)
 ```
 
-The thirteen cases are listed in [Write a `dgm` against its suite](../how-to/write-a-dgm.md#hold-it-to-the-suite). A plugin holding `dgm` is verified for it only by passing every case, which [`meridian plugin check --verified --run-tests`](cli.md#plugin-check) holds it to. The reading roles, `reporting`, `portfolio`, `compliance` and `signal`, have suites of their own, run the same way.
+The cases are listed in [Write a `dgm` against its suite](../how-to/write-a-dgm.md#hold-it-to-the-suite): thirteen in 0.22.0, twenty-one from 0.23.0. A plugin holding `dgm` is verified for it only by passing every case it presents, which [`meridian plugin check --verified --run-tests`](cli.md#plugin-check) holds it to. The reading roles, `reporting`, `portfolio`, `compliance` and `signal`, and from 0.23.0 `ems`, have suites of their own, run the same way.
+
+**A case not presented.** A case asserting one value of a closed list (`Case.closed_list`) that the plugin's source never presents may be named in `not_presented`, with why. From 0.23.0, so may a case about one kind of data (`Case.about`, in the contract's words: closes, bars, trades, quotes, prices on a venue, a currency's rate against another currency, a crypto asset's price, a security's price) that the plugin declares it never publishes. Every other case is required, and a case not presented without a reason fails:
+
+```python
+report = run("dgm", PRODUCERS, not_presented={
+    "a-trade-recorded": "daily closes and bars only: this source states no trades",
+})
+```
+
+### Trades and quotes { #trades-and-quotes }
+
+From 0.23.0, contract v19 (built, not released), `preview`. Still typed operations only: no WebSocket client, no reconnecting stream, no bar builder.
+
+**A `dgm` records them** from a dataset declaring `data_types=["meridian.v1.Trade", "meridian.v1.Quote"]` (or one of them) and `modes=["stream"]`, with [`record_trades`](typed-operations.md#record_trades) and [`record_quotes`](typed-operations.md#record_quotes), 1 to 500 a call. Each is keyed by UTC instants and names no business date. A trade carries its [`TradeAttributes`](typed-operations.md#tradeattributes), converted at the edge from its source's condition codes, a code with no conversion kept in `meta.unconverted`; and its `aggressor` where its source says which side took liquidity (a source naming the resting order's side records the other). A withdrawn trade is the next version under its row key, `cancelled=True`. A quote's empty side is left unset. Keep a standing want of a streamed dataset current from the stream.
+
+**`signal` and `ems` read them**, with [`list_trades`](typed-operations.md#list_trades) (over a range within a day, or `after_watermark=`) and [`list_quotes`](typed-operations.md#list_quotes) (at the latest, per asset, or over a range), and hear them with `receive(trades_recorded=..., quotes_recorded=..., subjects=[...])`; see [Receive](#receive). `reporting` reads neither. See [Read trades and quotes in a `signal` or `ems` plugin](../how-to/read-trades-and-quotes.md).
 
 ### Money and dates
 
@@ -1047,6 +1085,7 @@ The generated protobuf message `meridian.plugin.v1.operations_pb2.Identifier`: o
 | `scheme` | `str` | A global scheme (`"figi"`, `"isin"`, `"cusip"`, `"sedol"`; a currency's `"iso4217"`, a token's `"caip19"`; from 0.22.0 a venue's MIC, `"iso10383"`) or a source-scoped one (`"symbol"`). |
 | `value` | `str` | The identifier. |
 | `source` | `str` | The namespace a source-scoped identifier belongs to, such as `"snaptrade"`. Empty for a global scheme. |
+| `valid_from_ns`, `valid_until_ns` | `int` | From 0.23.0, contract v19: its window on the record, as the instrument store answers it; `valid_until_ns` 0 while it is on the record. Filled by the store, never by a plugin: leave both 0 in what you send. |
 
 ```python
 isin = meridian.Identifier(scheme="isin", value="US0378331005")

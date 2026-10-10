@@ -129,8 +129,11 @@ nav:
       - License and entitle a dataset: how-to/license-and-entitle-a-dataset.md
       - Add a data plugin's key: how-to/add-a-data-plugins-key.md
       - Add a public data plugin: how-to/add-a-public-data-plugin.md
+      - Add a prediction-market plugin: how-to/add-a-prediction-market-plugin.md
       - Write a dgm against its suite: how-to/write-a-dgm.md
+      - Read trades and quotes: how-to/read-trades-and-quotes.md
       - Value the book: how-to/value-the-book.md
+      - Watch the market on the Board: how-to/watch-the-board.md
       - Offer your pages to agents: how-to/offer-your-pages-to-agents.md
       - Let your agent manage a plugin: how-to/let-your-agent-manage-a-plugin.md
       - Advising on tickets: how-to/advise-on-tickets.md

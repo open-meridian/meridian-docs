@@ -24,6 +24,13 @@ only as far as that person could at the page each tool mirrors.
     v17's security fixes marked *from contract v18* below, are in chart
     0.1.292.
 
+!!! note "Contract v19: built, not released"
+    From chart 0.1.293 the source priority takes trades and quotes, and the
+    [Instruments tools](../concepts/instruments.md#through-an-agent) answer
+    and take a binary event contract's payout and close, each identifier's
+    window, and a conflict's reason. No tool is added, and no core tool
+    reads a trade or a quote, as none reads a price.
+
 ## What every one of them does
 
 - **The page's gate.** Each tool is listed only through a delegation that
@@ -391,8 +398,9 @@ The **Priority** tab.
 **Input:** nothing.
 
 **Answer:** `priorities`, each with its `data_type` (`meridian.v1.Price` or
-`meridian.v1.Bar`), its `kind` for a price (`close`, `last`, `nav`,
-`settlement`; `null` for a bar), its `datasets` first to last, who set it,
+`meridian.v1.Bar`, and from contract v19 `meridian.v1.Trade` or
+`meridian.v1.Quote`), its `kind` for a price (`close`, `last`, `nav`,
+`settlement`; `null` for any other type), its `datasets` first to last, who set it,
 `updated_at_ns`, the delegation and client, and its `note`. A change is
 sent against `updated_at_ns`.
 
@@ -405,8 +413,8 @@ kind's.
 
 | Argument | What it takes |
 |---|---|
-| `data_type` | Required: `meridian.v1.Price` or `meridian.v1.Bar`. |
-| `kind` | For a price, required: `close`, `last`, `nav` or `settlement`. A bar names none. |
+| `data_type` | Required: `meridian.v1.Price` or `meridian.v1.Bar`, and from contract v19 `meridian.v1.Trade` or `meridian.v1.Quote`. |
+| `kind` | For a price, required: `close`, `last`, `nav` or `settlement`. Any other type names none. |
 | `datasets` | Required: 1 to 16, first to last, each declared for the data type. |
 | `against_updated_at_ns` | Required: the priority's `updated_at_ns` as read, 0 where none is set. |
 | `note` | Required: why. |

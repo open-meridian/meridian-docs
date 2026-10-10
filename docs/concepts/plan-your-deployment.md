@@ -124,7 +124,12 @@ The releases, in their order:
    plugins (Alpaca, Tradier, Tiingo, Coinbase, Kraken and the Federal
    Reserve's H.10), and the sample reporting plugin.
 5. **Live market data**: trades, quotes and streaming prices, and the
-   professional data sources a fund licenses.
+   professional data sources a fund licenses. Built, not released, as
+   contract v19: [trades and quotes](the-lake.md#trades-and-their-attributes)
+   for `signal` and `ems` plugins, streamed by the crypto and retail data
+   plugins; Kalshi and Polymarket; the sample reporting plugin's
+   [Board](../how-to/watch-the-board.md). The professional sources follow
+   when their keys exist.
 6. **Prepared changes**: an agent prepares a change, and a person makes it.
 7. **Service accounts**: a plugin's scheduled work runs as a named account.
 8. **The order path**: orders, their state decided by the book, sent to

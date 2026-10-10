@@ -28,7 +28,8 @@ In the dashboard, open **Settings**, then **Data sources**, beside
 | **Priority** | data type and price kind, with the datasets a default read takes first to last |
 
 The page shows no price: prices are read by the plugins entitled to them, on
-their own pages.
+their own pages. From chart 0.1.293 (contract v19, built, not released) each
+tab has a search above its rows, beside its pager.
 
 ## Confirm or change a dataset's licence
 
@@ -41,6 +42,7 @@ so on hover. To set the deployment's own:
    are served, not kept), **Derived data may be made**, **It may be shown**,
    and **Its terms are one person's**.
 3. **Kept for, in days**: 0 keeps rows with no limit set; at most 36,500.
+   From chart 0.1.293 it is shown only while the lake may keep its rows.
 4. **Fields readable by default**: leave it empty for every field, or list
    dictionary entries, such as `meridian.v1.Bar.vwap`.
 5. Add a **Note** saying why, and **Save**.
@@ -56,6 +58,12 @@ clear it, narrow who holds access to the entitled plugins (see
 [Give people access](administer-access.md)), or withdraw an entitlement.
 
 ## Entitle a plugin
+
+Entitle each plugin to what its roles read: a `reporting`, `portfolio` or
+`compliance` plugin to datasets of prices and bars; from contract v19, a
+`signal` or `ems` plugin to datasets of trades and quotes too. Entitling a
+`reporting` plugin to a trades dataset gives it nothing: its role reads no
+trade or quote.
 
 1. On the dataset's row, select **Entitle**.
 2. **Plugin instance**: the running instance that may read it, such as
@@ -76,8 +84,9 @@ type and, for prices, the kind. With none set, it takes the datasets in the
 order the lake lists them.
 
 1. On **Priority**, select **+ Add**, or a row's **Edit** to change one.
-2. **Data type**: Price or Bar. **Kind, for prices**: Close, Last, NAV or
-   Settlement; none for bars.
+2. **Data type**: Price or Bar, and from chart 0.1.293 Trade or Quote.
+   **Kind, for prices**: Close, Last, NAV or Settlement, asked only for a
+   price.
 3. **Datasets, first to last, one a line**: at most 16, each declaring the
    data type.
 4. Add a **Note**, and **Set**.

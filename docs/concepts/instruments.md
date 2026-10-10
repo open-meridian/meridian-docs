@@ -16,14 +16,47 @@ Tickers, symbols and codes such as FIGI, ISIN, CUSIP and SEDOL are
 reassigned to something else afterwards.
 
 So resolution happens once, at the boundary where outside data arrives, and
-everything past that point holds a key that cannot go stale. A canonical
-identifier is never reused: an instrument that is retired does not free its
-identifier for the next one.
+everything past that point holds a key that cannot go stale.
+
+**An instrument ID is never reused.** A decommissioned instrument, a
+deployment's record mapped onto another, and a record merged into another
+all keep their IDs, and no other instrument is ever given one, as no venue
+is ever given another's [venue ID](venues.md). A position, an order or a
+row in the lake stores the ID and nothing else about identity; everything
+that moves (a ticker, a symbol, a venue's code) is a dated identifier,
+resolved where outside data arrives. From contract v19 (built, not
+released) the contract says so where an instrument's ID is defined, for
+every ID a master mints, instruments and venues alike.
 
 **Resolution is dated.** The question is always "which instrument did this
 identifier mean *on this date*", because a ticker that has since been
 reassigned must still resolve to its previous holder for a date when it was
-theirs. A lookup with no date is a bug waiting for a reassignment.
+theirs. A lookup with no date is a bug waiting for a reassignment. The
+date picks which record an identifier names, and, for a record's values,
+which version was in force; it never changes which record an ID is.
+
+### Each identifier's window
+
+From contract v19 (built, not released, chart 0.1.293), every identifier
+on a record carries its **window**: `valid_from_ns`, when it began naming
+the record, and `valid_until_ns`, when it left, 0 while it is still on it.
+An identifier leaving a record (moved by a merge, removed by a completion,
+or ended by the platform once a person accepts that end) has its window
+closed at that date, and is **kept, never deleted**. One joining a record
+opens a window from that date.
+
+So the deployment's instrument store answers a resolve **as of any date it
+holds**, without asking the platform. A ticker freed by a delisting and
+given to another company answers the first record for the dates it named
+it, and the second for the dates after. Contract v18 wrote a record's
+identifiers whole on each change, and an identifier that left a record
+stopped answering even for the dates it had named it.
+
+The windows are shown with each identifier on the Instruments page and a
+record's history, and answered by its tools. The platform fills them on a
+pull, the identifiers it ended included, so the deployment can offer each
+end; an end is in force only once a person accepts it. A plugin never sets a
+window.
 
 ## The security master
 
@@ -68,6 +101,41 @@ identifier should mean one instrument at a time.
     from data values is what keeps the central service small, and keeps a
     firm's licensed data in the firm's hands.
 
+## Binary event contracts
+
+From contract v19 (built, not released), an instrument's type can be a
+**binary event contract**, under the class `event_contract`: a contract
+that pays a fixed amount if an event happens, and nothing if not, as Kalshi
+and Polymarket list them. Its record carries two attributes:
+
+| Attribute | What it is |
+|---|---|
+| **Payout** | What one contract pays if the event happens, a [Money](money-and-instruments.md) naming its cash instrument: 1 USD at Kalshi, 1 in Polymarket's own USDC instrument at Polymarket. More than zero. |
+| **Closes at** | When the venue says trading in it closes, in UTC; none where the venue states none. |
+
+Which outcome a contract pays on stays in its description, in the venue's
+own words, which an agent receives marked and screened as another's text.
+Polymarket's YES and NO tokens are two records, each a binary event
+contract of its own. A contract's price is money per contract, never a
+probability: a reader computes the implied probability as the price over
+the payout.
+
+The type and its attributes go together: the attributes on a record that is
+not a binary event contract, the type on a record not of class
+`event_contract`, and a payout naming no asset or not more than zero are
+refused, naming the field.
+
+- **In the security master**, staff (or their agent) define and amend an
+  instrument with the type and its attributes, and a deployment's pull
+  offers them.
+- **In a deployment**, the deployment admin completes a record on the
+  **Instruments** page: the completion form shows the payout (its amount,
+  and its asset by ISO 4217 code or by its cash record) and when trading
+  closes once the type is chosen. A data plugin that names a contract, such
+  as [Kalshi's or Polymarket's](../how-to/add-a-prediction-market-plugin.md),
+  offers the class, the type and the venue's title for a record that lacks
+  them.
+
 ## The instrument store: your deployment's copy
 
 Each deployment has an **instrument store**, and it answers every instrument
@@ -105,6 +173,31 @@ would be wrong about half the time, silently. And an ambiguous tier does not
 fall through to a weaker one, which would answer using the evidence the caller
 trusted least.
 
+**An ambiguous miss is flagged, never escalated.** Only a person can say
+which of two records a set of identifiers means, or whether they are one
+security to merge, and the platform holds neither of the deployment's
+records. So from contract v19 (built, not released) an ambiguous resolve
+takes no record and goes to no one outside the deployment: the conflict it
+meets is listed on the Instruments page with its reason, `ambiguous` (a
+resolve met both records), for the deployment's own person to settle. A
+conflict a join or a completion met carries no reason.
+
+**A reporting plugin resolves, read-only.** From contract v19 a
+`reporting` plugin may name an instrument by an identifier, such as its
+reporting currency by its ISO 4217 code, and the store answers the record
+it holds for the date. Asked by `reporting`, nothing is minted, joined,
+offered or listed: nothing matched is not found, and several matched is
+ambiguous, with no conflict listed.
+
+!!! warning "TODO: core's read-only resolve for `reporting`"
+    At core e149c69 (chart 0.1.293) the instrument store has the read-only
+    resolve, but the runtime cannot yet tell that a resolve is a
+    `reporting` plugin's, so it answers one as it answers any plugin's: a
+    set nothing matched is minted a record. A currency's ISO 4217 code
+    resolves to the currency's cash instrument either way. Confirm, or
+    remove this note, when core chooses the read-only resolve for
+    `reporting`.
+
 ## When an instrument is missing
 
 The plugin reading the outside data is the one that knows the source's
@@ -127,12 +220,49 @@ identifiers is not a burst of requests, and never a burst of new instruments.
 Only the conductor calls the platform, because only it holds the deployment's
 key; the instrument store itself holds no address and no key.
 
+## Through an agent
+
+The Instruments page's existing tools on the deployment's MCP surface take
+and answer what contract v19 adds, with no new tool:
+`dashboard__read_instrument`, `dashboard__read_instrument_history`,
+`dashboard__list_instruments_to_complete` and
+`dashboard__complete_instruments`.
+
+- A record answers `binary_event_contract` (`payout` with its `amount` as
+  text, its `currency_code` or `instrument_id`, and `closes_at_ns`), and each
+  identifier its `valid_from_ns` and `valid_until_ns` where it has them.
+- `dashboard__list_instruments_to_complete` lists a binary event contract
+  lacking its payout and close among the records to complete, and each
+  conflict with its `reason` (`MISS_REASON_AMBIGUOUS` where a plugin's
+  resolve met several records).
+- `dashboard__complete_instruments` takes the type
+  `INSTRUMENT_TYPE_BINARY_EVENT_CONTRACT` and a `binary_event_contract`
+  value, each with its source in words and a note, against the version
+  read:
+
+    ```json
+    {"completions": [{
+      "instrument_id": "LCL-01JB8Z3K6Q",
+      "against_version": 1,
+      "note": "a Kalshi contract, completed from the venue's market page",
+      "values": [
+        {"instrument_type": "INSTRUMENT_TYPE_BINARY_EVENT_CONTRACT", "source": "stated by kalshi-1"},
+        {"binary_event_contract": {"payout": {"amount": "1", "currency_code": "USD"},
+                                   "closes_at_ns": 1798761600000000000},
+         "source": "the venue's market page"}
+      ]
+    }]}
+    ```
+
+  An end the platform offered is accepted as the identifier with its
+  `valid_until_ns`.
+
 ## Known limits
 
-- **One version per instrument, locally.** The instrument store holds each
-  instrument's current version. An identifier that a later amend dropped is
-  gone from the local copy, so resolving it as of a date when it was still
-  valid returns nothing. That is a safe failure — never the wrong instrument —
-  and still a gap.
+- **Before contract v19, one version of an identifier set.** A runtime
+  before chart 0.1.293 writes a record's identifiers whole on each change,
+  so an identifier a later change dropped no longer resolves as of a date
+  when it was still valid. That fails safe, never the wrong instrument;
+  contract v19 keeps every window instead.
 - **No bulk distribution.** A deployment pulls the one instrument it just
   missed. There is no snapshot of the whole master to download.

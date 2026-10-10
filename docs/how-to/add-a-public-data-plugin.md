@@ -5,12 +5,19 @@ and no account, and put it into the deployment's
 [lake](../concepts/the-lake.md): **Coinbase** and **Kraken**, the crypto
 pair, which pass one suite between them, and the **Federal Reserve's H.10**,
 weekly US dollar exchange rates. For the plugins that need a key, see
-[Add a data plugin's key](add-a-data-plugins-key.md).
+[Add a data plugin's key](add-a-data-plugins-key.md); for Kalshi and
+Polymarket, [Add a prediction-market plugin](add-a-prediction-market-plugin.md).
 
 !!! note "Contract v18"
     meridian-coinbase 0.1.0, meridian-kraken 0.1.0 and meridian-fed-h10
     0.1.0 are built on open-meridian 0.22.0 (contract v18), and run on chart
     0.1.292 or later.
+
+!!! note "TODO: Coinbase 0.2.0 and Kraken 0.2.0, trades and quotes (contract v19)"
+    Their v19 pushes are in progress, built on open-meridian 0.23.0 and not
+    yet on `main`: [Trades and quotes](#trades-and-quotes-contract-v19)
+    below is written from those builds. Confirm each fact, and the
+    versions, once they land.
 
 ## What each serves
 
@@ -100,6 +107,43 @@ through a float; a value that does not convert is counted on the plugin's
 record in the plugin's own storage, and every row names the one it came
 from.
 
+### Trades and quotes (contract v19)
+
+From meridian-coinbase 0.2.0 and meridian-kraken 0.2.0 (TODO: not yet
+landed; built, not released), each serves a third dataset and quotes:
+
+| Plugin | Dataset | What | Default terms |
+|---|---|---|---|
+| Coinbase | `trades` | every trade, streamed from Coinbase's WebSocket feed; a range read from its REST history | kept two days, as `live` |
+| Coinbase | `live` | gains quotes: the best bid and offer with their sizes, at most once a second a product | as before |
+| Kraken | `trades` | every trade, streamed from Kraken's v2 WebSocket; a range read from its REST history | kept two days, as `live` |
+| Kraken | `live` | gains quotes, as Coinbase's | as before |
+
+- **Only what a reader follows.** A standing want of `live` or `trades`
+  puts its subjects' products on the exchange's stream, kept open while any
+  want stands, and nothing streams while none does. Every trade is recorded,
+  never conflated; quotes at most once a second a product.
+- **A crypto trade has no condition codes:** each is regular, eligible to
+  set every statistic of a bar in its venue's view and the consolidated
+  one. **The aggressor**: Coinbase names the resting order's side, so the
+  plugin records the other; Kraken names the side that took liquidity,
+  recorded as sent.
+- **No gap.** A stream that drops, or is silent for 30 seconds, is opened
+  again after a wait doubling from a second to a minute, and the trades
+  since the last one recorded are read back from the exchange's history,
+  so the lake has every trade and a reader catches up from it by its
+  watermark. A trade heard twice is sent once.
+- **A quote's empty side** is left unset, never zero.
+- **The suite.** Of the `dgm` suite's 21 cases each passes 17 and marks
+  four not presented, with why: at Coinbase an FX rate, the two condition
+  cases and a withdrawal; at Kraken the maker's side inverted, the two
+  condition cases and a withdrawal. Each exchange's **Connection** page
+  shows its stream's session: open or not, how many products, how often it
+  opened and dropped, and its last message.
+
+Trades and quotes are read by `signal` and `ems` plugins: entitle those to
+`trades` and `live` on the Data sources page.
+
 ## The terms, summarised
 
 Not legal advice: read each source's own terms before relying on this.
@@ -151,12 +195,14 @@ key to enter. Their settings, on each plugin's **Settings** form:
   exchanges committed with the plugin instead of calling the source, to try
   it offline.
 
-`meridian plugin check --verified` refuses H.10 and Coinbase until contract
-v19: each never publishes some kinds of data the `dgm` suite asks about (at
-H.10 a bar, a stablecoin's quote and a venue; at Coinbase an FX rate), and a
-source cannot yet mark those cases not presented (see
-[Write a `dgm` against its suite](write-a-dgm.md#hold-it-to-the-suite)). A
-plain `meridian plugin upload` takes them.
+`meridian plugin check --verified` refuses H.10 0.1.0 and Coinbase 0.1.0,
+on open-meridian 0.22.0: each never publishes some kinds of data the `dgm`
+suite asks about (at H.10 a bar, a stablecoin's quote and a venue; at
+Coinbase an FX rate), and on 0.22.0 a source cannot mark those cases not
+presented. From 0.23.0 (contract v19) it can (see
+[A kind of data your source never publishes](write-a-dgm.md#a-kind-of-data-your-source-never-publishes)),
+as Coinbase 0.2.0 does; H.10 is verified once it moves to 0.23.0. A plain
+`meridian plugin upload` takes them all.
 
 ## License and entitle its datasets
 
@@ -190,6 +236,9 @@ page shows. Neither shows a price.
 - [Licences and entitlements](../concepts/licences-and-entitlements.md).
 - [Add a data plugin's key](add-a-data-plugins-key.md): Alpaca, Tradier and
   Tiingo.
+- [Add a prediction-market plugin](add-a-prediction-market-plugin.md):
+  Kalshi and Polymarket.
+- [Read trades and quotes in a `signal` or `ems` plugin](read-trades-and-quotes.md).
 - [Value the book](value-the-book.md): the sample reporting plugin, which
   reads these prices and rates.
 - [Write a `dgm` against its suite](write-a-dgm.md): your own data plugin.

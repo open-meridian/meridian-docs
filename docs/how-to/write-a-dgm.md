@@ -12,6 +12,13 @@ suite.
     whose `plugin new --role dgm` writes this template, for a runtime
     serving contract v18, chart 0.1.292 or later.
 
+!!! note "Contract v19: built, not released"
+    open-meridian 0.23.0 (contract v19, chart 0.1.293 or later) adds trades
+    and quotes, eight cases to the suite, and a case about a kind of data
+    your source never publishes marked not presented, with why. CLI 0.1.37
+    still writes the template on 0.22.0: move it with `meridian plugin
+    migrate`, then mark the new cases as [below](#a-kind-of-data-your-source-never-publishes).
+
 ## Make the plugin
 
 ```sh
@@ -99,6 +106,8 @@ Replace the stand-in vendor, keeping the template's shape in `convert.py`:
    `receive`, record against a want with `want_id=`, and decline with
    [`decline_want`](../api/typed-operations.md#decline_want) what the vendor
    does not cover. A standing want is kept current until it is withdrawn.
+   From contract v19 a decline stands only for the date or range its want
+   asked.
 
 7. **Name a subject another source resolved.** A want names the
    deployment's own instrument ID, which may be one your plugin never
@@ -114,6 +123,47 @@ Replace the stand-in vendor, keeping the template's shape in `convert.py`:
     found = await self.plugin.resolve_instrument(instrument_id=instrument, as_of_ns=as_of_ns)
     named = {i.value for i in found.instrument.identifiers if i.scheme == "symbol"}
     ```
+
+8. **Trades and quotes** (contract v19). Declare them in a live dataset
+   apart from the live prices, licensed by default kept two days or served,
+   not kept:
+
+    ```python
+    DatasetDeclaration(
+        key="trades",
+        vendor="My vendor",
+        data_types=["meridian.v1.Trade"],
+        modes=["pull", "stream"],
+        licence_default=DatasetLicence(kept=True, retention_days=2, personal_use=True),
+        day_time_zone="America/New_York",
+        day_end_minute=16 * 60,
+    )
+    ```
+
+    Record them with
+    [`record_trades`](../api/typed-operations.md#record_trades) and
+    [`record_quotes`](../api/typed-operations.md#record_quotes), in batches
+    of up to 500, only for subjects under a standing want, each keyed by
+    UTC instants with no business date:
+
+    - **Convert each condition code** into the trade's attributes (what it
+      may set of the consolidated bar and its venue's, and its
+      characteristics); keep a code you have no conversion for, as
+      reported, in `meta.unconverted`, its eligibilities unset. Never keep
+      the vendor's code table in the lake as the meaning of anything.
+    - **The aggressor** is the side that took liquidity. Where your vendor
+      names the resting order's side, record the other; where it says
+      nothing, leave it unset.
+    - **A correction or a withdrawal** is the next version under the same
+      row key, a withdrawal `cancelled=True`.
+    - **A quote's empty side** is unset, never zero.
+    - **Keep the stream open while a standing want stands**, and after a
+      drop read back what you missed from the vendor's history where it
+      names each trade, so the lake has no gap; a trade heard twice is
+      sent once. The SDK carries no WebSocket client: choose your own.
+
+    A `dgm` started anew hears no standing want until a reader asks again;
+    see [the lake](../concepts/the-lake.md#wants-a-read-the-lake-cannot-answer-yet).
 
 ## Hold it to the suite
 
@@ -145,20 +195,52 @@ def test_every_case_of_the_dgm_suite_passes() -> None:
 | `a-subject-declined` | the lake wanting a subject it does not cover | declines it as not covered |
 | `a-standing-want-withdrawn` | a standing want withdrawn | records nothing more for it |
 
+From open-meridian 0.23.0 (contract v19) eight more, about trades and quotes:
+
+| Case | Given | The plugin |
+|---|---|---|
+| `a-trade-recorded` | a trade with no condition codes, its event time and the side that took liquidity | records it with its price, quantity, aggressor and attributes, eligible for every statistic in both views, its row key, valid time, dataset and raw record |
+| `the-makers-side-inverted` | a trade naming the resting order's side, a sell | records the aggressor as a buy |
+| `a-condition-converted` | a trade whose condition says an odd lot, not to set the high and low or the close, its volume counted | records `odd_lot` and those eligibilities |
+| `a-condition-not-converted` | a condition the plugin has no conversion for | keeps it in `meta.unconverted` |
+| `a-trade-withdrawn` | the source withdrawing a trade it stated | records a version with `cancelled` under its row key |
+| `a-quote-recorded` | the best bid and offer, each with its size | records both sides and sizes |
+| `a-one-sided-quote` | a best bid and no offer | records the bid, the ask unset |
+| `a-standing-want-streamed` | a standing want of a streamed dataset, and a trade for its subject on the stream | records the trade for that subject |
+
 A case your vendor never presents, such as an FX rate from an equity
 source, maps to the recording path it would take. When you replace the
 stand-in vendor, map each case to a recorded or synthetic exchange with your
 own, and keep every case passing: a candle read through a `float`, or a
 forming day recorded as a new row, fails it.
 
-!!! note "A source that never publishes a kind of data"
-    In contract v18 a case can be marked not presented only where the suite
-    lists it so. A source that never publishes some kinds of data the suite
-    asks about -- a bar, a stablecoin's quote, a venue, a close or an FX
-    rate -- has no way yet to say so, and is short of the suite: `meridian
-    plugin check --verified` refuses it. So, until contract v19, it refuses
-    the Federal Reserve's H.10, Tiingo and Coinbase. A plain
-    `meridian plugin upload` takes them, and they run.
+### A kind of data your source never publishes
+
+Each case about one kind of data says which in its `about` (closes, bars,
+trades, quotes, prices on a venue, a currency's rate against another
+currency, a crypto asset's price, a security's price). From open-meridian
+0.23.0 (contract v19) a plugin that declares it never publishes that kind
+names the case in `not_presented`, with why, and is verified on the rest;
+a case with no `about` is every `dgm`'s, and stays required. The template
+derives its list from its own catalogue, so a dataset declaring trades or
+quotes makes those cases required again:
+
+```python
+KINDS = {"trades": "meridian.v1.Trade", "quotes": "meridian.v1.Quote"}
+DECLARED = {kind for dataset in DECLARATION.catalogue for kind in dataset.data_types}
+NOT_PRESENTED = {
+    case.name: f"its datasets publish daily closes and bars, and no {case.about}"
+    for case in suite("dgm").cases
+    if case.about in KINDS and KINDS[case.about] not in DECLARED
+}
+report = run("dgm", PRODUCERS, not_presented=NOT_PRESENTED, instance_id="reference-1")
+```
+
+On 0.22.0 (contract v18) only a closed-list case could be marked so, and a
+source that never published a bar, a venue or an FX rate fell short of the
+suite: `meridian plugin check --verified` refuses the Federal Reserve's
+H.10, Tiingo and Coinbase 0.1.0 until they move to 0.23.0. A plain
+`meridian plugin upload` takes them, and they run.
 
 Then hold the plugin to the framework's rules as a verified plugin:
 

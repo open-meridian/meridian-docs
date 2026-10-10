@@ -23,6 +23,8 @@ From 0.20.0, contract v15, it also lists [`re_resolve_activity`](#re_resolve_act
 
 From 0.22.0, contract v18, it also lists eight operations of [the lake](../concepts/the-lake.md) and [the venue master](../concepts/venues.md): [`record_prices`](#record_prices), [`record_bars`](#record_bars) and [`decline_want`](#decline_want), by which a `dgm` plugin records its vendor's prices and bars and answers what the lake wants; [`resolve_venue`](#resolve_venue) and [`report_missing_venue`](#report_missing_venue), by which it names a venue by its venue ID; and [`list_prices`](#list_prices), [`list_bars`](#list_bars) and [`list_datasets`](#list_datasets), by which `reporting`, `portfolio`, `compliance` and `signal` read them. Each of the eight is `preview` in v18. A `dgm` may also call [`resolve_identifier`](#resolve_identifier), [`report_missing_instrument`](#report_missing_instrument) and [`resolve_instrument`](#resolve_instrument), the last to name to its vendor an instrument another source resolved. A [`Money`](#money) names its cash instrument, and every date field takes a `datetime.date` (see [Times and dates](#times-and-dates)).
 
+From 0.23.0, contract v19 (built, not released; chart 0.1.293), it also lists four operations of the lake's trades and quotes: [`record_trades`](#record_trades) and [`record_quotes`](#record_quotes), by which a `dgm` plugin records them, and [`list_trades`](#list_trades) and [`list_quotes`](#list_quotes), by which `signal` and `ems` read them. `ems` also reads [`list_datasets`](#list_datasets), and `reporting` may call [`resolve_identifier`](#resolve_identifier), read-only. Each of the four is `preview` in v19. `reporting` reads no trade and no quote: it is for slower consumers (see [Who reads what](../concepts/the-lake.md#who-reads-what)).
+
 ## Summary
 
 | Python method | gRPC rpc | Workflow step | Kind | Role | Returns |
@@ -37,7 +39,7 @@ From 0.22.0, contract v18, it also lists eight operations of [the lake](../conce
 | [`list_activities`](#list_activities) | `ListActivities` | W2.11 List an account's activity | query | `operations` | `ListActivitiesResult` |
 | [`re_resolve_activity`](#re_resolve_activity) | `ReResolveActivity` | W2.15 Re-resolve a recorded activity | command | `custody` | `ReResolveActivityResult` |
 | [`list_sync_statuses`](#list_sync_statuses) | `ListSyncStatuses` | W2.14 Read an account's sync status | query | `operations` | `ListSyncStatusesResult` |
-| [`resolve_identifier`](#resolve_identifier) | `ResolveIdentifier` | W3.1 Resolve an identifier set | query | `custody`, `dgm` from v18 | `ResolveIdentifierResult` |
+| [`resolve_identifier`](#resolve_identifier) | `ResolveIdentifier` | W3.1 Resolve an identifier set | query | `custody`, `dgm` from v18, `reporting` from v19 | `ResolveIdentifierResult` |
 | [`report_missing_instrument`](#report_missing_instrument) | `ReportMissingInstrument` | W3.2 Report that a resolution missed | event | `custody`, `dgm` from v18 | `Published` |
 | [`read_accounts_for_linking`](#read_accounts_for_linking) | `ReadAccountsForLinking` | W6.4 Link a plugin's external account | query | `custody` | `ReadAccountsForLinkingResult` |
 | [`link_external_account`](#link_external_account) | `LinkExternalAccount` | W6.4 Link a plugin's external account | command | `custody` | `LinkExternalAccountResult` |
@@ -55,12 +57,16 @@ From 0.22.0, contract v18, it also lists eight operations of [the lake](../conce
 | [`list_account_attributes`](#list_account_attributes) | `ListAccountAttributes` | W9.14 Read an account's attributes | query | `portfolio`, `reporting`, `compliance`, `oms`, `operations` | `ListAccountAttributesResult` |
 | [`record_prices`](#record_prices) | `RecordPrices` | W10.4 Record prices and bars in batches | command | `dgm` | `RecordPricesResult` |
 | [`record_bars`](#record_bars) | `RecordBars` | W10.4 Record prices and bars in batches | command | `dgm` | `RecordBarsResult` |
+| [`record_trades`](#record_trades) | `RecordTrades` | W10.4 Record prices, bars, trades and quotes in batches | command | `dgm`, from v19 | `RecordTradesResult` |
+| [`record_quotes`](#record_quotes) | `RecordQuotes` | W10.4 Record prices, bars, trades and quotes in batches | command | `dgm`, from v19 | `RecordQuotesResult` |
 | [`decline_want`](#decline_want) | `DeclineWant` | W10.7 Want what a read could not answer | command | `dgm` | `DeclineWantResult` |
 | [`resolve_venue`](#resolve_venue) | `ResolveVenue` | W3.14 Resolve a venue | query | `dgm` | `ResolveVenueResult` |
 | [`report_missing_venue`](#report_missing_venue) | `ReportMissingVenue` | W3.15 Report a venue the deployment does not hold | event | `dgm` | `Published` |
 | [`list_prices`](#list_prices) | `ListPrices` | W10.6 Read prices and bars, point in time, by source | query | `reporting`, `portfolio`, `compliance`, `signal` | `ListPricesResult` |
 | [`list_bars`](#list_bars) | `ListBars` | W10.6 Read prices and bars, point in time, by source | query | `reporting`, `portfolio`, `compliance`, `signal` | `ListBarsResult` |
-| [`list_datasets`](#list_datasets) | `ListDatasets` | W10.9 Read the datasets | query | `reporting`, `portfolio`, `compliance`, `signal` | `ListDatasetsResult` |
+| [`list_trades`](#list_trades) | `ListTrades` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `signal`, `ems`, from v19 | `ListTradesResult` |
+| [`list_quotes`](#list_quotes) | `ListQuotes` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `signal`, `ems`, from v19 | `ListQuotesResult` |
+| [`list_datasets`](#list_datasets) | `ListDatasets` | W10.9 Read the datasets | query | `reporting`, `portfolio`, `compliance`, `signal`, `ems` from v19 | `ListDatasetsResult` |
 
 **Role** is the plugin role that publishes the step, or the roles that may ask the query, from the contract's matrix. A plugin can call an operation only if it holds one of them, approved when it was launched. Otherwise the call raises `NotGranted`. See [Plugins, roles and grants](../concepts/plugins.md) and [Plugin manifest](plugin-manifest.md).
 
@@ -916,8 +922,12 @@ async def resolve_identifier(
 | gRPC | `rpc ResolveIdentifier(ResolveIdentifierParams) returns (ResolveIdentifierResult)` |
 | Workflow step | W3.1, Resolve an identifier set |
 | Kind | query, on `platform.reference.query.resolve-identifier` |
-| Role | `custody`; from contract v18 also `dgm`, resolving its vendor's codes to the instruments its rows name |
+| Role | `custody`; from contract v18 also `dgm`, resolving its vendor's codes to the instruments its rows name; from contract v19 also `reporting`, read-only |
 | Served by | the instrument store, the deployment's replica of the security master |
+
+**Read-only, for `reporting`** (contract v19, built, not released). A `reporting` plugin names an instrument by an identifier, such as its reporting currency by its ISO 4217 code (`Identifier(scheme="iso4217", value="EUR")`), and the store answers the record it holds for the date. Asked by `reporting`, nothing is minted, joined, offered or listed: nothing matched is `MISS_REASON_NOT_FOUND`, several matched `MISS_REASON_AMBIGUOUS`. At core e149c69 the runtime does not yet tell the store that a resolve is a `reporting` plugin's (see [Instruments](../concepts/instruments.md#resolving-an-identifier)).
+
+**As of any date the store holds** (contract v19). The store keeps each identifier's window on a record, so an identifier that has since left a record still answers, as of a date it was on it, the record that held it then.
 
 | Name | Type | Required | Meaning |
 |---|---|---|---|
@@ -937,7 +947,7 @@ async def resolve_identifier(
 | `minted` | `bool` | `True` when nothing matched and this resolve minted `instrument_id`, the deployment's `LCL-` record for the set; `found` is `True` beside it. A later resolve of the same identifiers matches the record, and is not minted. |
 | `miss_reason` | `MissReason` | Set only when `found` is `False`: `MISS_REASON_AMBIGUOUS`, or `MISS_REASON_NOT_FOUND` for an empty set. |
 
-**Errors:** `no handler`, `timeout` or `handler error` from the instrument store. `NotGranted` without the `custody` role.
+**Errors:** `no handler`, `timeout` or `handler error` from the instrument store. `NotGranted` without one of its roles.
 
 ```python
 import time
@@ -1691,6 +1701,80 @@ async def record_bars(
 
 Each bar's open, high, low, close and VWAP are in one asset, refused otherwise; its volume is never negative; its VWAP and trade count are left unset where the source gives none, which is not zero. The interval is its envelope's valid time, and a daily bar names its business date. Its parameters, result and errors are `record_prices`'s, with `bars` for `prices`.
 
+## `record_trades` { #record_trades }
+
+From 0.23.0, contract v19 (built, not released), `preview`. Records a batch of 1 to 500 [`Trade`](#trade)s into [the lake](../concepts/the-lake.md), as [`record_prices`](#record_prices) records prices. A `dgm` plugin's, from a dataset declaring `meridian.v1.Trade`.
+
+```python
+async def record_trades(
+    self, *, trades: Sequence[Trade] = (), want_id: str = "", acting_for: str | None = None,
+) -> RecordTradesResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc RecordTrades(RecordTradesParams) returns (RecordTradesResult)` |
+| Workflow step | W10.4, Record prices, bars, trades and quotes in batches |
+| Kind | command, on `platform.lake.command.record-trades` |
+| Role | `dgm` |
+| Served by | the lake, which records each and publishes every one on its dataset's subject, never conflated (W10.5) |
+
+Each trade is keyed by UTC instants: valid from its event time at its venue, `valid_until_ns` 0, and **no business date**. Its venue is the venue it printed on (a consolidated dataset's trade names its market centre). A correction or a withdrawal is the next version under the same row key, a withdrawal with `cancelled=True`. Its parameters and result are `record_prices`'s, with `trades` for `prices`.
+
+**Errors:** as `record_prices`, and: a quantity not more than zero, an unspecified trade characteristic, a trade naming a business date, a dataset not serving trades. `NotGranted` without `dgm`.
+
+```python
+from decimal import Decimal
+from meridian import Eligibility, Money, ObservationMeta, Trade, TradeAttributes
+from meridian.plugin.v1 import operations_pb2 as ops
+
+every = Eligibility(high_low="eligible", open="eligible", close="eligible", volume="eligible")
+await plugin.record_trades(trades=[
+    Trade(
+        meta=ObservationMeta(
+            row_key="BTC-USD:t:812345678",                       # the product and the venue's trade ID
+            subjects=[ops.SubjectRef(entity_id=btc)],
+            source=ops.Source(dataset=f"{plugin.identity.instance_id}:trades", venue_id=venue),
+            valid_from_ns=traded_at_ns,
+            raw=plugin.raw_record("matches/BTC-USD/812345678"),
+        ),
+        price=Money(Decimal("62510.01"), "USD"),
+        quantity=Decimal("0.0125"),
+        attributes=TradeAttributes(consolidated=every, market_centre=every),
+        aggressor="buy",              # the side that took liquidity; unset where the source says nothing
+        source_sequence=812345678,
+    ),
+])
+```
+
+## `record_quotes` { #record_quotes }
+
+From 0.23.0, contract v19 (built, not released), `preview`. Records a batch of 1 to 500 [`Quote`](#quote)s, as [`record_prices`](#record_prices) records prices. A `dgm` plugin's, from a dataset declaring `meridian.v1.Quote`.
+
+```python
+async def record_quotes(
+    self, *, quotes: Sequence[Quote] = (), want_id: str = "", acting_for: str | None = None,
+) -> RecordQuotesResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc RecordQuotes(RecordQuotesParams) returns (RecordQuotesResult)` |
+| Workflow step | W10.4, Record prices, bars, trades and quotes in batches |
+| Kind | command, on `platform.lake.command.record-quotes` |
+| Role | `dgm` |
+| Served by | the lake, which publishes each, conflated per subject, dataset, venue and asset (W10.5) |
+
+A quote is valid from its time until the next for the same subject, dataset, venue and asset, and names no business date. A side the source left empty is left unset (`ask=None`), never zero. Its parameters and result are `record_prices`'s, with `quotes` for `prices`.
+
+**Errors:** as `record_prices`, and: a bid and an ask in two assets, a quantity not more than zero, an unspecified quote characteristic, a quote naming a business date. `NotGranted` without `dgm`.
+
+```python
+await plugin.record_quotes(quotes=[
+    Quote(meta=meta, bid=Money(Decimal("62510.00"), "USD"), bid_quantity=Decimal("0.84")),  # no offer
+])
+```
+
 ## `decline_want` { #decline_want }
 
 From 0.22.0, contract v18, `preview`. Says what a `dgm` cannot serve of a want, per subject, with a reason.
@@ -1719,6 +1803,8 @@ async def decline_want(
 | `reason` | [`UnansweredReason`](#unansweredreason) | yes | Such as `"not_covered"`, or `"beyond_history"`. |
 
 **Returns** `DeclineWantResult`, empty. **Errors:** `CallFailed` for a want this instance does not serve. `NotGranted` without `dgm`.
+
+From contract v19 a decline stands for the business date or range its want asked, or for the latest where it asked the latest, and for no other date of that dataset and subject: a later want of another date is asked again. In v18 it stood for a day across every date.
 
 ```python
 async def wanted(heard: meridian.Heard) -> None:
@@ -1825,7 +1911,7 @@ async def list_prices(
 | `as_of_ns` | `int` | no | The recorded-time cut: what the lake knew then; 0 for now. |
 | `page_size`, `cursor` | `int`, `str` | no | At most 500 a page, 100 when `0`; the previous page's `next_cursor`. |
 
-Give one of `at_ns`, `business_date` or the range. A read the lake cannot answer from what it holds is wanted of the `dgm` serving the dataset, and answered `asked_source` in `unanswered`; the rows follow, heard with `receive(prices_recorded=...)`.
+Give one of `at_ns`, `business_date` or the range. A read the lake cannot answer from what it holds is wanted of the `dgm` serving the dataset, and answered `asked_source` in `unanswered`; the rows follow, heard with `receive(prices_recorded=...)`. From contract v19 the latest is chosen per subject, dataset, kind, venue and the price's asset, so BTC priced in USD and in USDC on one venue answers both; v18 answered one.
 
 **Returns** `ListPricesResult`: `prices`, each a [`Price`](#price) with its envelope as recorded; `unanswered`, each an [`Unanswered`](#unanswered) naming the subject, dataset, field and reason; `datasets`, each [`DatasetRef`](#datasetref) in the answer, once; the `watermark` it was read at; and `next_cursor`. A default read that fell through to a lower dataset says why the first did not answer.
 
@@ -1865,6 +1951,72 @@ async def list_bars(
 
 **Returns** `ListBarsResult`: `bars`, each a [`Bar`](#bar); `unanswered`, `datasets`, `watermark` and `next_cursor`, as `list_prices`.
 
+## `list_trades` { #list_trades }
+
+From 0.23.0, contract v19 (built, not released), `preview`. Reads trades for up to 500 subjects over a valid-time range within one day of each dataset, or **after a watermark**: the trades each dataset recorded after the sequence the reader last saw there, whatever their valid time, a late or out-of-sequence print among them. From the deployment's default sources, named datasets, or side by side; as of a recorded time.
+
+```python
+async def list_trades(
+    self, *, subjects: Sequence[SubjectRef] = (), sources: SourceChoice | None = None,
+    valid_from_ns: int = 0, valid_until_ns: int = 0, after_watermark: Watermark | None = None,
+    as_of_ns: int = 0, page_size: int = 0, cursor: str = "",
+) -> ListTradesResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc ListTrades(ListTradesParams) returns (ListTradesResult)` |
+| Workflow step | W10.6, Read prices, bars, trades and quotes, point in time, by source |
+| Kind | query, on `platform.lake.query.list-trades` |
+| Role | `signal`, `ems` |
+| Served by | the lake |
+
+| Name | Type | Required | Meaning |
+|---|---|---|---|
+| `subjects` | sequence of [`SubjectRef`](#subjectref) | yes | 1 to 500 instruments. |
+| `sources` | [`SourceChoice`](#sourcechoice) or `None` | no | The deployment's default, `named=[...]` datasets, or `side_by_side=True`. |
+| `valid_from_ns`, `valid_until_ns` | `int` | one of the two ways | A valid-time range, from inclusive to exclusive, within one day of each dataset as it declares its day; a wider range is refused naming it. |
+| `after_watermark` | [`Watermark`](#watermark) or `None` | one of the two ways | The watermark the reader last saw: a previous answer's `watermark`, or one built from what it heard. Older than the lake keeps is answered `beyond_history`. |
+| `as_of_ns` | `int` | no | The recorded-time cut: nothing recorded after it answers. |
+| `page_size`, `cursor` | `int`, `str` | no | At most 500 a page; the previous page's `next_cursor`. |
+
+**Returns** `ListTradesResult`: `trades`, each a [`Trade`](#trade) with its envelope as recorded; `unanswered` (not entitled, not kept and beyond history said per dataset); `datasets`; the `watermark` it was answered at, which a later catch-up names; and `next_cursor`.
+
+**Errors:** `CallFailed` with `kind="invalid"` for no subject or more than 500, or a range wider than one day of a dataset. `NotGranted` without `signal` or `ems`.
+
+```python
+day = await plugin.list_trades(subjects=held, valid_from_ns=open_ns, valid_until_ns=now_ns)
+late = await plugin.list_trades(subjects=held, after_watermark=day.watermark)   # a late print among them
+```
+
+A plugin hearing trades with [`receive`](python-sdk.md#receive) has the SDK make the catch-up read for it.
+
+## `list_quotes` { #list_quotes }
+
+From 0.23.0, contract v19 (built, not released), `preview`. Reads quotes for up to 500 subjects at the latest in force at a valid time, chosen per subject, dataset, venue and the quote's asset, or over a valid-time range within one day of each dataset.
+
+```python
+async def list_quotes(
+    self, *, subjects: Sequence[SubjectRef] = (), sources: SourceChoice | None = None,
+    at_ns: int = 0, valid_from_ns: int = 0, valid_until_ns: int = 0,
+    as_of_ns: int = 0, page_size: int = 0, cursor: str = "",
+) -> ListQuotesResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc ListQuotes(ListQuotesParams) returns (ListQuotesResult)` |
+| Workflow step | W10.6, Read prices, bars, trades and quotes, point in time, by source |
+| Kind | query, on `platform.lake.query.list-quotes` |
+| Role | `signal`, `ems` |
+| Served by | the lake |
+
+Its parameters are `list_trades`'s, with `at_ns` (the latest in force at this valid time; 0 for now) in place of `after_watermark`. A read the lake cannot answer is wanted of the `dgm` serving the dataset, as a price's is. **Returns** `ListQuotesResult`: `quotes`, each a [`Quote`](#quote); `unanswered`, `datasets`, `watermark` and `next_cursor`.
+
+```python
+latest = await plugin.list_quotes(subjects=held)      # BTC in USD and in USDC on one venue: both
+```
+
 ## `list_datasets` { #list_datasets }
 
 From 0.22.0, contract v18, `preview`. Reads the datasets the plugin may read, each with its instance, vendor, aggregator and catalogue entry, the licence of each, and the plugin's own entitlements. The SDK reads it once to join each heard row's dataset (`Heard.dataset`).
@@ -1878,7 +2030,7 @@ async def list_datasets(self) -> ListDatasetsResult
 | gRPC | `rpc ListDatasets(ListDatasetsParams) returns (ListDatasetsResult)` |
 | Workflow step | W10.9, Read the datasets |
 | Kind | query, on `platform.lake.query.list-datasets` |
-| Role | `reporting`, `portfolio`, `compliance`, `signal` |
+| Role | `reporting`, `portfolio`, `compliance`, `signal`; from contract v19 also `ems` |
 | Served by | the lake |
 
 **Returns** `ListDatasetsResult`: `datasets`, each a [`DatasetRef`](#datasetref); `licences`, each dataset's licence enforced; and `entitlements`, the plugin's own.
@@ -2171,6 +2323,10 @@ An instrument's record, as [`resolve_instrument`](#resolve_instrument) answers i
 | `description` | `str` | Its name. |
 | `lifecycle_state` | `InstrumentLifecycleState` | `DEFINE` (its attributes may be incomplete), `ACTIVE` or `DECOMMISSIONED`. |
 | `version`, `valid_from_ns`, `record_time_ns` | `int` | The record's version, when its mapping became true, and when the store recorded it. |
+| `instrument_type` | `InstrumentType` | Its type within its class, where known: `INSTRUMENT_TYPE_MONEY_MARKET_FUND`, or from 0.23.0 `INSTRUMENT_TYPE_BINARY_EVENT_CONTRACT`. |
+| `binary_event_contract` | `BinaryEventContract` | From 0.23.0, contract v19: a [binary event contract](../concepts/instruments.md#binary-event-contracts)'s `payout`, a `Money` naming its cash instrument, and `closes_at_ns`, when trading closes (0 where none is stated). Unset for any other type. |
+
+From 0.23.0 each of its `identifiers` carries its window on the record, `valid_from_ns` and `valid_until_ns` (0 while it is on the record), filled by the instrument store: one that left the record is kept, its window closed.
 
 ### `AvailableBasis` { #availablebasis }
 
@@ -2490,6 +2646,63 @@ From 0.22.0. Open, high, low and close over an interval, `meridian.Bar(...)`: a 
 | `volume` | `Decimal` or `int` | Units of the instrument, never negative. |
 | `vwap` | [`Money`](#money) or `None` | `None` where the source gives none. |
 | `trade_count` | `int` or `None` | `None` where the source gives none. |
+
+### `Trade` { #trade }
+
+From 0.23.0, contract v19. One trade as its source reported it, `meridian.Trade(...)`: a frozen dataclass, keyword only, converted and refused as a call's own parameters are. What a read answers is the generated message of the same name.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `meta` | [`ObservationMeta`](#observationmeta) | Its envelope: valid from its event time, `valid_until_ns` 0, no business date. |
+| `price` | [`Money`](#money) | Its price per unit, in the asset it traded in; for an event contract, what one contract cost in the asset it pays out in. |
+| `quantity` | `Decimal` or `int` | The quantity traded, more than zero. |
+| `attributes` | [`TradeAttributes`](#tradeattributes) or `None` | The platform's trade attributes, converted from the source's condition codes. |
+| `aggressor` | [`Aggressor`](#aggressor) or `None` | The side the source says took liquidity: a taker's side as sent, a maker's inverted. Unset where the source says nothing. |
+| `source_sequence` | `int` | The number the source gave the trade in its own feed. |
+| `cancelled` | `bool` | `True` in a version saying the source withdrew it. |
+
+### `TradeAttributes` { #tradeattributes }
+
+From 0.23.0. What a trade may count for, `meridian.TradeAttributes(...)`: `consolidated` and `market_centre`, each an [`Eligibility`](#eligibility) for the consolidated view and its own market centre's; and `characteristics`, at most 16 [`TradeCharacteristic`](#tradecharacteristic)s. A code the plugin cannot convert goes, as reported, in the envelope's `unconverted`, its eligibilities left unspecified.
+
+### `Eligibility` { #eligibility }
+
+From 0.23.0. Whether a trade may set each statistic of a bar, not whether it did: `high_low`, `open`, `close` and `volume`, each an `Eligible`: `ELIGIBLE_ELIGIBLE`, `ELIGIBLE_NOT_ELIGIBLE`, or unspecified where it is not known. In a string, `"eligible"` or `"not_eligible"`.
+
+### `TradeCharacteristic` { #tradecharacteristic }
+
+From 0.23.0. In a string, spelled as its name without `TRADE_CHARACTERISTIC_`, in lower case (`"odd_lot"`).
+
+| Value | Meaning |
+|---|---|
+| `OPENING_AUCTION`, `CLOSING_AUCTION` | Printed by the venue's opening or closing auction. |
+| `OTHER_AUCTION` | Printed by another auction: a reopening after a halt, an intraday auction. |
+| `ODD_LOT` | Smaller than the instrument's round lot. |
+| `EXTENDED_HOURS` | Outside the venue's regular session. |
+| `OUT_OF_SEQUENCE` | Reported out of its time order. |
+| `LATE_REPORT` | Reported later than its venue's rules require. |
+| `AVERAGE_PRICE` | Priced as an average over several executions. |
+| `NON_REGULAR_SETTLEMENT` | Settling other than on the regular cycle: cash, next day, seller's option. |
+| `INTERMARKET_SWEEP` | Part of an order sweeping several venues at once. |
+| `DERIVATIVELY_PRICED` | Priced from another instrument or a benchmark. |
+| `PRIOR_REFERENCE_PRICE` | Priced at a reference price from earlier in the day. |
+| `CONTINGENT` | Executed contingent on another trade. |
+| `CROSS` | A cross of two orders by one participant. |
+
+### `Aggressor` { #aggressor }
+
+From 0.23.0. `AGGRESSOR_BUY` or `AGGRESSOR_SELL`, the side that took liquidity; unspecified where the source does not say. In a string, `"buy"` or `"sell"`.
+
+### `Quote` { #quote }
+
+From 0.23.0, contract v19. The best bid and offer, on a venue or consolidated, `meridian.Quote(...)`: a frozen dataclass, keyword only.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `meta` | [`ObservationMeta`](#observationmeta) | Its envelope: valid from its time, no business date. |
+| `bid`, `ask` | [`Money`](#money) or `None` | The best price a buyer offered and a seller asked, both in one asset; `None` for an empty side. |
+| `bid_quantity`, `ask_quantity` | `Decimal`, `int` or `None` | The quantity at each, more than zero. |
+| `characteristics` | sequence of `QuoteCharacteristic` | At most 4: `"indicative"` (not firm) or `"halted"` (trading in the subject is halted). |
 
 ### `ObservationMeta` { #observationmeta }
 

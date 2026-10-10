@@ -22,6 +22,14 @@ happens to fall on it in some zone. Real-time data, a last price or a bid,
 is keyed by the moments it was in force, the venue's zone known from its
 [venue](venues.md).
 
+**Trades and quotes name no business date** (contract v19, built, not
+released). A trade is valid from its event time at its venue, a quote from
+its time until the next for the same subject, dataset, venue and asset, and
+the lake refuses either naming a business date. A range read of them lies
+within **one day of each dataset**, as the dataset declares its day below,
+never "one business day" by a calendar; a wider range is refused, naming
+the range.
+
 ## A dataset's day
 
 Which candle or session counts as a business date depends on the dataset,

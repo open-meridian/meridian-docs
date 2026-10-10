@@ -742,6 +742,11 @@
           "required": false,
           "says": "for a case asserting one value of a closed list: the entry it is a value of; a plugin whose source never presents the situation says so by case, which is no exemption from the rest"
         },
+        "about": {
+          "shape": "text",
+          "required": false,
+          "says": "for a case about one kind of data -- closes, bars, trades, quotes, prices on a venue -- that kind, in the contract's words (contract v19); a plugin that declares it never publishes that kind marks the case not presented, with why, which is no exemption from the rest"
+        },
         "since": {
           "shape": "version",
           "required": false,

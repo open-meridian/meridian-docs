@@ -42,8 +42,9 @@ plain date in New York's day ending at the 16:00 close:
   **Datasets** page and the deployment's Data sources page, never recorded.
 - Every response is kept first as a raw record in the plugin's own storage,
   without the key, and every row names the one it came from.
-- Not served: trades, quotes and streaming, which come with the lake's next
-  revision; options; Alpaca's crypto; mutual funds at Tradier.
+- Not served in these versions: trades, quotes and streaming, which come
+  with contract v19 (below); options; Alpaca's crypto; mutual funds at
+  Tradier.
 
 - **An instrument another source named.** The lake asks for a price by
   the deployment's own instrument ID. An instrument the book holds from
@@ -53,6 +54,55 @@ plain date in New York's day ending at the 16:00 close:
   Only a record carrying no symbol is declined, as not covered, and the
   **Datasets** page says why. On a runtime before chart 0.1.292, which first
   lets a `dgm` read an instrument's record, such an instrument is declined.
+
+### Trades and quotes (contract v19)
+
+!!! note "TODO: Alpaca 0.3.0 and Tradier 0.2.0 (contract v19)"
+    Their v19 pushes are in progress, built on open-meridian 0.23.0 and
+    proven against core e149c69 (chart 0.1.293), not yet on `main`. This
+    section is written from those builds; confirm each fact, and the
+    versions, once they land.
+
+Each gains a `trades` dataset, and quotes in `live`:
+
+| Plugin | Dataset | What | Arrives | Default terms |
+|---|---|---|---|---|
+| Alpaca | `trades` | each trade with the platform's trade attributes, converted from its conditions on its tape (the CTA's letters on tapes A and B, the UTP's on C) | streamed for the listings under a standing want; pulled for a range a reader wants | kept two days; one person's |
+| Alpaca | `live` | gains quotes: the best bid and offer with their sizes | streamed at most once a second a listing, or read for a want | as before |
+| Tradier | `trades` | each time and sale with the platform's trade attributes and Tradier's sequence number | streamed only | kept two days; one person's |
+| Tradier | `live` | gains quotes: the consolidated best bid and offer, sizes in shares from Tradier's hundreds | as Alpaca's | as before |
+
+- **Only what a reader follows** is streamed: the listings under a standing
+  want, and nothing while there is none. A free Alpaca account streams IEX
+  alone, at most 30 listings; a listing past that is declined, not
+  entitled, and counted on the Datasets page.
+- **No aggressor.** Neither vendor's stock trades say which side took
+  liquidity, and none is guessed.
+- **Conditions.** Alpaca's are converted into the trade's attributes: what
+  it may set of the consolidated bar and its exchange's, and what it was
+  (an odd lot, extended hours, an intermarket sweep, an auction print). A
+  code with no conversion is kept as reported, its eligibilities not known,
+  and counted. Tradier documents its sessions and not its flags: a print
+  outside the regular session is an extended-hours trade, counted in the
+  volume only, and any flag is kept as reported for a person to map.
+- **Withdrawals and corrections** are the trade's next version under its
+  row key: at Alpaca a cancel, an error or a correction; at Tradier a cancel
+  naming a print recorded here by its sequence number.
+- **Gaps.** Alpaca reads the gap after a reconnect from its trade history,
+  sending only the trades not yet recorded, so a reader catches up from the
+  lake. Tradier's history names no print by its sequence number, so a gap
+  between two sessions is not filled, and a reader's range of trades is
+  declined, not covered; each reconnect is counted on the Connection page.
+- **A quote's empty side** (sent as 0) is left unset.
+- **The suite.** Alpaca passes 17 of the `dgm` suite's 21 cases, and marks
+  four not presented with why (a currency's rate, a crypto asset's price,
+  and the two asking for the side that took liquidity); Tradier passes 16
+  and marks five (those, and an odd lot, which no documented flag says).
+- **Connection** shows the stream's session; **Datasets** counts trades and
+  quotes, and searches and pages the standing wants.
+
+Trades and quotes are read by `signal` and `ems` plugins: license `trades`
+on the Data sources page, and entitle those plugins to it and to `live`.
 
 ## The vendors' terms, summarised
 
@@ -207,14 +257,17 @@ For the person who holds the Tiingo account:
 If Connection says Tiingo refused the token, enter it again; if it says the
 limit was reached, the plugin waits and tries again.
 
-`meridian plugin check --verified` refuses Tiingo until contract v19: a
-fund's NAV is no close, bar, FX rate, stablecoin or venue, and a source
-cannot yet mark those cases of the `dgm` suite not presented (see
-[Write a `dgm` against its suite](write-a-dgm.md#hold-it-to-the-suite)). A
-plain `meridian plugin upload` takes it.
+`meridian plugin check --verified` refuses Tiingo 0.1.0, on open-meridian
+0.22.0: a fund's NAV is no close, bar, FX rate, stablecoin or venue, and on
+0.22.0 a source cannot mark those cases of the `dgm` suite not presented.
+From 0.23.0 (contract v19) it can (see
+[A kind of data your source never publishes](write-a-dgm.md#a-kind-of-data-your-source-never-publishes)),
+and Tiingo is verified once it moves to 0.23.0. A plain
+`meridian plugin upload` takes it.
 
 ## Related
 
+- [Read trades and quotes in a `signal` or `ems` plugin](read-trades-and-quotes.md).
 - [Add a public data plugin](add-a-public-data-plugin.md): Coinbase, Kraken
   and the Federal Reserve's H.10, no key.
 - [Licences and entitlements](../concepts/licences-and-entitlements.md).

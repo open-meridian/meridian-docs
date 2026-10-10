@@ -62,11 +62,20 @@ dataset, and a withdrawn one stops. Entitlements per person, derived from
 each person's access to a plugin and the data the plugin depends on, are
 specified for later.
 
+**A pricing tier is a dataset.** A source's higher-resolution feed, or its
+data at a different price, is a dataset of its own, licensed and entitled
+per plugin instance like any other, with nothing more in the contract. So a
+deployment admin can give the live trades to an `ems` plugin and the
+closes to everything else. Trades and quotes are read only by plugins
+holding `signal` or `ems` (contract v19, built, not released), whatever
+they are entitled to: see [Who reads what](the-lake.md#who-reads-what).
+
 ## Which dataset a default read takes
 
 A reader that names no dataset takes the deployment's **source priority**:
-for each data type, and for prices each kind (close, last, NAV,
-settlement), an ordered list of datasets, first to last. A read falls
+for each data type (prices, bars, and from contract v19 trades and
+quotes), and for prices each kind (close, last, NAV, settlement), an
+ordered list of datasets, first to last. A read falls
 through to the next where one is silent beyond its cadence, does not cover
 the subject, or is not entitled, and says why. With no priority set, a
 default read takes the datasets in the order the lake lists them.

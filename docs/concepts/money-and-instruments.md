@@ -5,7 +5,11 @@ is in. From contract v18 that asset is always an **instrument**: the cash
 instrument of a currency or of a token, in the deployment's
 [instrument store](instruments.md), named by its instrument ID as every
 other instrument is. A US dollar amount names the US dollar's cash
-instrument; a USDC amount names USDC's.
+instrument; a USDC amount names USDC's. From contract v19 (built, not
+released) a trade's price, a quote's two sides and a
+[binary event contract](instruments.md#binary-event-contracts)'s payout are
+each a Money too: 1 USD at Kalshi, 1 in the venue's own USDC instrument at
+Polymarket.
 
 !!! note "Contract v18"
     This page describes contract v18: core from chart 0.1.292 and

@@ -294,6 +294,8 @@
           "ReportMissingVenue",
           "RecordPrices",
           "RecordBars",
+          "RecordTrades",
+          "RecordQuotes",
           "DeclineWant"
         ],
         "reads": [
@@ -354,8 +356,15 @@
       "edge": false,
       "scope": {
         "publishes": [],
-        "reads": [],
-        "hears": []
+        "reads": [
+          "ListTrades",
+          "ListQuotes",
+          "ListDatasets"
+        ],
+        "hears": [
+          "TradesRecorded",
+          "QuotesRecorded"
+        ]
       }
     },
     {
@@ -639,6 +648,7 @@
       "scope": {
         "publishes": [],
         "reads": [
+          "ResolveIdentifier",
           "ResolveInstrument",
           "ListPositions",
           "ListBreaks",
@@ -754,11 +764,15 @@
         "reads": [
           "ListPrices",
           "ListBars",
+          "ListTrades",
+          "ListQuotes",
           "ListDatasets"
         ],
         "hears": [
           "PricesRecorded",
-          "BarsRecorded"
+          "BarsRecorded",
+          "TradesRecorded",
+          "QuotesRecorded"
         ]
       }
     }
@@ -970,7 +984,7 @@
     {
       "name": "ListBars",
       "step": "W10.6",
-      "title": "Read prices and bars, point in time, by source",
+      "title": "Read prices, bars, trades and quotes, point in time, by source",
       "kind": "query",
       "topic": "platform.lake.query.list-bars",
       "roles": {
@@ -1022,6 +1036,7 @@
       "roles": {
         "reads": [
           "compliance",
+          "ems",
           "portfolio",
           "reporting",
           "signal"
@@ -1049,7 +1064,7 @@
     {
       "name": "ListPrices",
       "step": "W10.6",
-      "title": "Read prices and bars, point in time, by source",
+      "title": "Read prices, bars, trades and quotes, point in time, by source",
       "kind": "query",
       "topic": "platform.lake.query.list-prices",
       "roles": {
@@ -1057,6 +1072,20 @@
           "compliance",
           "portfolio",
           "reporting",
+          "signal"
+        ]
+      },
+      "stability": "preview"
+    },
+    {
+      "name": "ListQuotes",
+      "step": "W10.6",
+      "title": "Read prices, bars, trades and quotes, point in time, by source",
+      "kind": "query",
+      "topic": "platform.lake.query.list-quotes",
+      "roles": {
+        "reads": [
+          "ems",
           "signal"
         ]
       },
@@ -1084,6 +1113,20 @@
       "roles": {
         "reads": [
           "operations"
+        ]
+      },
+      "stability": "preview"
+    },
+    {
+      "name": "ListTrades",
+      "step": "W10.6",
+      "title": "Read prices, bars, trades and quotes, point in time, by source",
+      "kind": "query",
+      "topic": "platform.lake.query.list-trades",
+      "roles": {
+        "reads": [
+          "ems",
+          "signal"
         ]
       },
       "stability": "preview"
@@ -1129,6 +1172,20 @@
           "compliance",
           "portfolio",
           "reporting",
+          "signal"
+        ]
+      },
+      "stability": "preview"
+    },
+    {
+      "name": "QuotesRecorded",
+      "step": "W10.5",
+      "title": "Record, sequence and publish each row",
+      "kind": "event",
+      "topic": "platform.lake.{dataset}.event.quotes-recorded",
+      "roles": {
+        "hears": [
+          "ems",
           "signal"
         ]
       },
@@ -1189,7 +1246,7 @@
     {
       "name": "RecordBars",
       "step": "W10.4",
-      "title": "Record prices and bars in batches",
+      "title": "Record prices, bars, trades and quotes in batches",
       "kind": "command",
       "topic": "platform.lake.command.record-bars",
       "roles": {
@@ -1267,9 +1324,35 @@
     {
       "name": "RecordPrices",
       "step": "W10.4",
-      "title": "Record prices and bars in batches",
+      "title": "Record prices, bars, trades and quotes in batches",
       "kind": "command",
       "topic": "platform.lake.command.record-prices",
+      "roles": {
+        "publishes": [
+          "dgm"
+        ]
+      },
+      "stability": "preview"
+    },
+    {
+      "name": "RecordQuotes",
+      "step": "W10.4",
+      "title": "Record prices, bars, trades and quotes in batches",
+      "kind": "command",
+      "topic": "platform.lake.command.record-quotes",
+      "roles": {
+        "publishes": [
+          "dgm"
+        ]
+      },
+      "stability": "preview"
+    },
+    {
+      "name": "RecordTrades",
+      "step": "W10.4",
+      "title": "Record prices, bars, trades and quotes in batches",
+      "kind": "command",
+      "topic": "platform.lake.command.record-trades",
       "roles": {
         "publishes": [
           "dgm"
@@ -1352,7 +1435,8 @@
       "roles": {
         "reads": [
           "custody",
-          "dgm"
+          "dgm",
+          "reporting"
         ]
       },
       "stability": "stable"
@@ -1410,6 +1494,20 @@
       "roles": {
         "hears": [
           "operations"
+        ]
+      },
+      "stability": "preview"
+    },
+    {
+      "name": "TradesRecorded",
+      "step": "W10.5",
+      "title": "Record, sequence and publish each row",
+      "kind": "event",
+      "topic": "platform.lake.{dataset}.event.trades-recorded",
+      "roles": {
+        "hears": [
+          "ems",
+          "signal"
         ]
       },
       "stability": "preview"
