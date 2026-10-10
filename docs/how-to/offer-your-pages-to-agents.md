@@ -135,7 +135,7 @@ session narrowed to some roles.
 The surface lists core's tools beside your plugin's, named `dashboard__...`:
 the Instruments tools, to a deployment admin, from contract v13 seven
 ticket and inbox tools, to any delegation that reaches a level on any plugin,
-and from contract v17 (built, not released) thirteen tools over the parts of
+and from contract v17 thirteen tools over the parts of
 your plugin's area the dashboard draws -- its Summary, settings, archive,
 and launching and stopping it -- each at its page's role and level. Your
 plugin declares nothing for them; see [Core's tools](../api/core-tools.md).

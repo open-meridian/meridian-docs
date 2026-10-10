@@ -7,7 +7,7 @@ Reference pages for building on Open Meridian, taken from the code of each relea
 | [Command line](cli.md) | `meridian`: every command and flag, their defaults, exit codes and `--json` output. It covers installing a deployment, signing in, and uploading, launching and developing plugins. |
 | [Python SDK](python-sdk.md) | The `open-meridian` package, imported as `meridian`: `meridian.connect()`, the `Plugin` object, `receive`, its types, `meridian.Pages` and its templates, `meridian.testing`, `CallerMiddleware`, and the exceptions it raises. |
 | [Typed operations](typed-operations.md) | The workflow steps a plugin calls through its sidecar: each operation's Python method, gRPC rpc, role, parameters, result and errors. |
-| [Core's tools](core-tools.md) | The deployment's own tools on its MCP surface for a plugin's area: who may call each, its inputs, its answer and its refusals, the two exceptions, and where each change is recorded. Built, not released. |
+| [Core's tools](core-tools.md) | The deployment's own tools on its MCP surface for a plugin's area: who may call each, its inputs, its answer and its refusals, the two exceptions, and where each change is recorded. |
 | [Plugin manifest](plugin-manifest.md) | `[tool.meridian]` in a plugin's `pyproject.toml`: its roles and whether it serves pages, and what a change to them takes. |
 | [`plugin dev` events](plugin-dev-events.md) | The JSON event stream of `meridian plugin dev --json` and `meridian plugin events --json`, for scripts and AI agents following a live plugin. |
 

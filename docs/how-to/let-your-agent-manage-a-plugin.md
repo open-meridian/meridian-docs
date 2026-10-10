@@ -6,9 +6,9 @@ archive, and launch or stop it. It acts as you, on a delegation you make,
 and only as far as you could at the same page. This page shows the steps;
 each tool is in [Core's tools](../api/core-tools.md).
 
-!!! note "Built, not released"
-    This page describes core's plugin-area tools, contract v17, built into
-    the dashboard and not yet released in a chart.
+!!! note "Contract v17"
+    This page describes core's plugin-area tools, contract v17, from chart
+    0.1.288.
 
 Two things it never does: read or type a secret setting's value (you enter
 a secret at the plugin's **Settings** form; the agent may clear one), and

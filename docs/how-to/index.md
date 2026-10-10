@@ -15,7 +15,7 @@ Short recipes for one task each. They assume you have a deployment; if not, star
 | [Report the custodian's activity](report-the-custodians-activity.md) | Report each activity on an account from a custody plugin, once, back to the history's first date, and read it from an operations plugin to explain a break. |
 | [Keep older records in the archive](keep-older-records-in-the-archive.md) | Name the archive at install, allow a plugin its archive with a bound, set holds and a plugin's windows, restore archived records, and upgrade SnapTrade to 0.13.0. |
 | [Offer your pages to agents](offer-your-pages-to-agents.md) | Declare a route's inputs as one typed record so the SDK derives its tool on the deployment's MCP surface, answer typed data, refuse by path, and test it as an agent calls it. |
-| [Let your agent manage a plugin's settings and archive](let-your-agent-manage-a-plugin.md) | Connect an agent that reads a plugin's Summary and settings, sets a value with a note, allows its archive, and launches and stops it, as you. Built, not released. |
+| [Let your agent manage a plugin's settings and archive](let-your-agent-manage-a-plugin.md) | Connect an agent that reads a plugin's Summary and settings, sets a value with a note, allows its archive, and launches and stops it, as you. |
 | [Advising on tickets](advise-on-tickets.md) | Run an agent on a schedule that adds advice to open tickets, with the deployment's connector and nothing else, and the prompt to paste. |
 | [Working your tickets](work-your-tickets.md) | Run an agent on a schedule that reads your inbox, advises where a change needs it, and tells you what waits for you, and the prompt to paste. |
 | [Release a plugin version](release-a-plugin.md) | Ship a change to a plugin as a new version. |

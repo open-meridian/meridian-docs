@@ -11,9 +11,9 @@ and launching and stopping it. This page is the reference for those
 thirteen. An agent calls them as the person who delegated to it, and only
 as far as that person could at the page each tool mirrors.
 
-!!! note "Built, not released"
-    This page describes core's plugin-area tools, contract v17, built into
-    the dashboard and not yet released in a chart. Nothing changes for a
+!!! note "Contract v17"
+    This page describes core's plugin-area tools, contract v17, from chart
+    0.1.288. Nothing changes for a
     plugin: the SDK, the CLI and every plugin stay as they are, and a plugin
     still declares contract v16.
 
@@ -304,8 +304,10 @@ Elsewhere the records say it and no page does yet: the client a setting,
 hold, archive, launch or stop was changed through is answered by
 `dashboard__read_plugin_settings` (`changes`), `dashboard__read_holds`,
 `dashboard__read_plugin_summary` and `dashboard__read_moves` (`archive`),
-and `dashboard__read_plugin_catalogue`. The note is kept with the change,
-and no page or tool shows it yet.
+and `dashboard__read_plugin_catalogue`. The note is kept with the change
+and returned by the same read tools, beside who made it and the client, for
+a setting, a hold, an archive allowed or withdrawn, and a launch; no page
+shows it yet, and a stop's note is not yet kept.
 
 Changes made in a browser before v17 name no delegation or client, which is
 true: a browser acts through none. Every launch and stop before v17 was made

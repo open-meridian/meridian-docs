@@ -352,7 +352,7 @@ included. An agent's tools at the dashboard's `/mcp` follow the same rows:
 a tool is listed when the person holds one of its levels on one of its
 roles; see
 [Offer your plugin's pages to agents](../how-to/offer-your-pages-to-agents.md#tools-by-role).
-From contract v17 (built, not released), everything a person can see or do
+From contract v17, everything a person can see or do
 in a plugin's area, an agent can through their delegation, at the same role
 and level, with two exceptions: no agent reads or types a secret setting's
 value, and none changes who holds access; see
