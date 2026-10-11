@@ -31,13 +31,14 @@ developer guide. They are written from the code of
 [meridian-python](https://github.com/open-meridian/meridian-python),
 [meridian-schema](https://github.com/open-meridian/meridian-schema) and
 [meridian-ui](https://github.com/open-meridian/meridian-ui); when those
-change, the pages change with them. Today they describe CLI 0.1.37, SDK
-0.22.0 (contract v18), core's lake (chart 0.1.292), the Alpaca, Tradier, Tiingo, Coinbase,
-Kraken and Fed H.10 data plugins, the sample reporting plugin and kit 0.8.0; and,
-marked built and not released, contract v19: SDK 0.23.0, core's trades and
-quotes (chart 0.1.293), plugin-kalshi, plugin-polymarket, sample reporting
-0.2.0 and kit 0.11.0. The tutorials were walked on CLI 0.1.36 and SDK 0.21.0. A page describes what is built,
-and says so where something is specified and not built yet.
+change, the pages change with them. Today they describe CLI 0.1.38, SDK
+0.23.0 (contract v19), core's lake with its trades and quotes (chart
+0.1.294), the Alpaca, Tradier, Coinbase and Kraken data plugins with trades
+and quotes, the Tiingo and Fed H.10 data plugins, plugin-kalshi,
+plugin-polymarket, the sample reporting plugin 0.2.0 and its Board, and kit
+0.11.0. The tutorials were walked on CLI 0.1.36 and SDK 0.21.0. A page
+describes what is built, and says so where something is specified and not
+built yet.
 
 ## The roles page, the data dictionary and llms.txt
 

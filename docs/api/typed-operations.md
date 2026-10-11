@@ -23,7 +23,7 @@ From 0.20.0, contract v15, it also lists [`re_resolve_activity`](#re_resolve_act
 
 From 0.22.0, contract v18, it also lists eight operations of [the lake](../concepts/the-lake.md) and [the venue master](../concepts/venues.md): [`record_prices`](#record_prices), [`record_bars`](#record_bars) and [`decline_want`](#decline_want), by which a `dgm` plugin records its vendor's prices and bars and answers what the lake wants; [`resolve_venue`](#resolve_venue) and [`report_missing_venue`](#report_missing_venue), by which it names a venue by its venue ID; and [`list_prices`](#list_prices), [`list_bars`](#list_bars) and [`list_datasets`](#list_datasets), by which `reporting`, `portfolio`, `compliance` and `signal` read them. Each of the eight is `preview` in v18. A `dgm` may also call [`resolve_identifier`](#resolve_identifier), [`report_missing_instrument`](#report_missing_instrument) and [`resolve_instrument`](#resolve_instrument), the last to name to its vendor an instrument another source resolved. A [`Money`](#money) names its cash instrument, and every date field takes a `datetime.date` (see [Times and dates](#times-and-dates)).
 
-From 0.23.0, contract v19 (built, not released; chart 0.1.293), it also lists four operations of the lake's trades and quotes: [`record_trades`](#record_trades) and [`record_quotes`](#record_quotes), by which a `dgm` plugin records them, and [`list_trades`](#list_trades) and [`list_quotes`](#list_quotes), by which `signal` and `ems` read them. `ems` also reads [`list_datasets`](#list_datasets), and `reporting` may call [`resolve_identifier`](#resolve_identifier), read-only. Each of the four is `preview` in v19. `reporting` reads no trade and no quote: it is for slower consumers (see [Who reads what](../concepts/the-lake.md#who-reads-what)).
+From 0.23.0, contract v19 (chart 0.1.293 or later), it also lists four operations of the lake's trades and quotes: [`record_trades`](#record_trades) and [`record_quotes`](#record_quotes), by which a `dgm` plugin records them, and [`list_trades`](#list_trades) and [`list_quotes`](#list_quotes), by which `signal` and `ems` read them. `ems` also reads [`list_datasets`](#list_datasets), and `reporting` may call [`resolve_identifier`](#resolve_identifier), read-only. Each of the four is `preview` in v19. `reporting` reads no trade and no quote: it is for slower consumers (see [Who reads what](../concepts/the-lake.md#who-reads-what)).
 
 ## Summary
 
@@ -925,7 +925,7 @@ async def resolve_identifier(
 | Role | `custody`; from contract v18 also `dgm`, resolving its vendor's codes to the instruments its rows name; from contract v19 also `reporting`, read-only |
 | Served by | the instrument store, the deployment's replica of the security master |
 
-**Read-only, for `reporting`** (contract v19, built, not released). A `reporting` plugin names an instrument by an identifier, such as its reporting currency by its ISO 4217 code (`Identifier(scheme="iso4217", value="EUR")`), and the store answers the record it holds for the date. Asked by `reporting`, nothing is minted, joined, offered or listed: nothing matched is `MISS_REASON_NOT_FOUND`, several matched `MISS_REASON_AMBIGUOUS`. At core e149c69 the runtime does not yet tell the store that a resolve is a `reporting` plugin's (see [Instruments](../concepts/instruments.md#resolving-an-identifier)).
+**Read-only, for `reporting`** (contract v19). A `reporting` plugin names an instrument by an identifier, such as its reporting currency by its ISO 4217 code (`Identifier(scheme="iso4217", value="EUR")`), and the store answers the record it holds for the date. Asked by `reporting`, nothing is minted, joined, offered or listed: nothing matched is `MISS_REASON_NOT_FOUND`, several matched `MISS_REASON_AMBIGUOUS`. **Known limit in v19:** core does not yet make a `reporting` plugin's resolve read-only, so a code nothing matches could record a miss, a local record minted for it as for any plugin's resolve. Fixed in v20. A currency's ISO 4217 code resolves to its cash instrument either way (see [Instruments](../concepts/instruments.md#resolving-an-identifier)).
 
 **As of any date the store holds** (contract v19). The store keeps each identifier's window on a record, so an identifier that has since left a record still answers, as of a date it was on it, the record that held it then.
 
@@ -1703,7 +1703,7 @@ Each bar's open, high, low, close and VWAP are in one asset, refused otherwise; 
 
 ## `record_trades` { #record_trades }
 
-From 0.23.0, contract v19 (built, not released), `preview`. Records a batch of 1 to 500 [`Trade`](#trade)s into [the lake](../concepts/the-lake.md), as [`record_prices`](#record_prices) records prices. A `dgm` plugin's, from a dataset declaring `meridian.v1.Trade`.
+From 0.23.0, contract v19, `preview`. Records a batch of 1 to 500 [`Trade`](#trade)s into [the lake](../concepts/the-lake.md), as [`record_prices`](#record_prices) records prices. A `dgm` plugin's, from a dataset declaring `meridian.v1.Trade`.
 
 ```python
 async def record_trades(
@@ -1749,7 +1749,7 @@ await plugin.record_trades(trades=[
 
 ## `record_quotes` { #record_quotes }
 
-From 0.23.0, contract v19 (built, not released), `preview`. Records a batch of 1 to 500 [`Quote`](#quote)s, as [`record_prices`](#record_prices) records prices. A `dgm` plugin's, from a dataset declaring `meridian.v1.Quote`.
+From 0.23.0, contract v19, `preview`. Records a batch of 1 to 500 [`Quote`](#quote)s, as [`record_prices`](#record_prices) records prices. A `dgm` plugin's, from a dataset declaring `meridian.v1.Quote`.
 
 ```python
 async def record_quotes(
@@ -1953,7 +1953,7 @@ async def list_bars(
 
 ## `list_trades` { #list_trades }
 
-From 0.23.0, contract v19 (built, not released), `preview`. Reads trades for up to 500 subjects over a valid-time range within one day of each dataset, or **after a watermark**: the trades each dataset recorded after the sequence the reader last saw there, whatever their valid time, a late or out-of-sequence print among them. From the deployment's default sources, named datasets, or side by side; as of a recorded time.
+From 0.23.0, contract v19, `preview`. Reads trades for up to 500 subjects over a valid-time range within one day of each dataset, or **after a watermark**: the trades each dataset recorded after the sequence the reader last saw there, whatever their valid time, a late or out-of-sequence print among them. From the deployment's default sources, named datasets, or side by side; as of a recorded time.
 
 ```python
 async def list_trades(
@@ -1993,7 +1993,7 @@ A plugin hearing trades with [`receive`](python-sdk.md#receive) has the SDK make
 
 ## `list_quotes` { #list_quotes }
 
-From 0.23.0, contract v19 (built, not released), `preview`. Reads quotes for up to 500 subjects at the latest in force at a valid time, chosen per subject, dataset, venue and the quote's asset, or over a valid-time range within one day of each dataset.
+From 0.23.0, contract v19, `preview`. Reads quotes for up to 500 subjects at the latest in force at a valid time, chosen per subject, dataset, venue and the quote's asset, or over a valid-time range within one day of each dataset.
 
 ```python
 async def list_quotes(

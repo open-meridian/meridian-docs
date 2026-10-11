@@ -99,8 +99,7 @@ person's, on a plugin, and has nothing to do with roles.
     `compliance` and `oms`, from contract v8, read the book and hear it
     change. From contract v18 `dgm` records market data in
     [the lake](the-lake.md), and `reporting`, `portfolio`, `compliance` and
-    `signal` read its prices and bars; from contract v19 (built, not
-    released) `signal` and `ems` read its trades and quotes, and `reporting`
+    `signal` read its prices and bars; from contract v19 `signal` and `ems` read its trades and quotes, and `reporting`
     resolves an identifier, read-only. The other four are reserved names
     that hold no topics until their workflows are built; order routing and
     execution, on the roadmap, will give `ems` and `oms` more. A plugin holding only such roles, or

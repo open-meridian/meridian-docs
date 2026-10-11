@@ -6,10 +6,9 @@ every data source the plugin may read, side by side, read again every few
 seconds. It is a reference implementation, not a trading screen: it shows
 conflated prices and bars, never the tape.
 
-!!! note "Contract v19: built, not released"
-    meridian-sample-reporting 0.2.0 is built on open-meridian 0.23.0
-    (contract v19) and runs on chart 0.1.293 or later. It is not yet
-    released.
+!!! note "Contract v19"
+    meridian-sample-reporting 0.2.0, released 2026-10-10, is built on
+    open-meridian 0.23.0 (contract v19), and runs on chart 0.1.294 or later.
 
 ## What it shows
 

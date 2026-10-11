@@ -7,17 +7,15 @@ for it only by passing every case, and two data plugins of a pair pass it
 unchanged. This page starts one from the template and holds it to the
 suite.
 
-!!! note "Contract v18"
-    This page describes open-meridian 0.22.0 (contract v18) and CLI 0.1.37,
+!!! note "Contract v19"
+    This page describes open-meridian 0.23.0 (contract v19) and CLI 0.1.38,
     whose `plugin new --role dgm` writes this template, for a runtime
-    serving contract v18, chart 0.1.292 or later.
-
-!!! note "Contract v19: built, not released"
-    open-meridian 0.23.0 (contract v19, chart 0.1.293 or later) adds trades
-    and quotes, eight cases to the suite, and a case about a kind of data
-    your source never publishes marked not presented, with why. CLI 0.1.37
-    still writes the template on 0.22.0: move it with `meridian plugin
-    migrate`, then mark the new cases as [below](#a-kind-of-data-your-source-never-publishes).
+    serving contract v19, chart 0.1.294 or later, all released 2026-10-10.
+    0.23.0 adds trades and quotes, eight cases to the suite, and a case
+    about a kind of data your source never publishes marked not presented,
+    with why. CLI 0.1.37 wrote the template on 0.22.0 (contract v18): move
+    such a plugin with `meridian plugin migrate`, then mark the new cases as
+    [below](#a-kind-of-data-your-source-never-publishes).
 
 ## Make the plugin
 
@@ -26,7 +24,7 @@ meridian plugin new my-prices --role dgm
 cd my-prices
 ```
 
-It writes a whole plugin holding `dgm`, pinned to `open-meridian==0.22.0`,
+It writes a whole plugin holding `dgm`, pinned to `open-meridian==0.23.0`,
 that puts a stand-in vendor's daily closes and bars into the lake:
 
 | File | What it is |
@@ -162,8 +160,11 @@ Replace the stand-in vendor, keeping the template's shape in `convert.py`:
       names each trade, so the lake has no gap; a trade heard twice is
       sent once. The SDK carries no WebSocket client: choose your own.
 
-    A `dgm` started anew hears no standing want until a reader asks again;
-    see [the lake](../concepts/the-lake.md#wants-a-read-the-lake-cannot-answer-yet).
+    A `dgm` started anew hears each standing want again within about a
+    minute, from chart 0.1.294, and opens its stream again. Read back the
+    trades printed meanwhile from the vendor's history, as after a drop:
+    where the history names no trade, the restart's gap stays unfilled. See
+    [the lake](../concepts/the-lake.md#wants-a-read-the-lake-cannot-answer-yet).
 
 ## Hold it to the suite
 
@@ -250,7 +251,9 @@ meridian plugin check --verified --run-tests
 ```
 
 `--verified` fails `role-suite` where no test runs the `dgm` suite, and
-`--run-tests` runs it; see [`plugin check`](../api/cli.md#plugin-check).
+`--run-tests` runs it; see [`plugin check`](../api/cli.md#plugin-check). It
+holds only the `custody` and `dgm` suites: a reading role the plugin also
+holds is not checked for its suite.
 
 ## Put it in a deployment
 

@@ -11,14 +11,12 @@ reference implementation of valuing a book at a business date's prices, not
 a firm's valuation policy. You can run it as it is, or read it and build
 your own from the template below.
 
-!!! note "Contract v18"
+!!! note "Contract v19"
+    meridian-sample-reporting 0.2.0, released 2026-10-10, is built on
+    open-meridian 0.23.0 (contract v19), runs on chart 0.1.294 or later, and
+    adds the [Board](watch-the-board.md) and any reporting currency.
     meridian-sample-reporting 0.1.0 is built on open-meridian 0.22.0
     (contract v18), and runs on chart 0.1.292 or later.
-
-!!! note "Contract v19: built, not released"
-    meridian-sample-reporting 0.2.0, on open-meridian 0.23.0 (contract v19,
-    chart 0.1.293 or later), adds the [Board](watch-the-board.md) and any
-    reporting currency. It is not yet released.
 
 ## What the sample reporting plugin shows
 
@@ -130,8 +128,8 @@ and nothing it reads leaves the deployment.
 
 ## Build your own
 
-A reporting plugin of your own uses what the sample does (contract v18,
-open-meridian 0.22.0, CLI 0.1.37):
+A reporting plugin of your own uses what the sample does (contract v19,
+open-meridian 0.23.0, CLI 0.1.38):
 
 - **The reads.** A `reporting` plugin reads positions with
   [`list_positions`](../api/typed-operations.md#list_positions) and prices
@@ -153,14 +151,22 @@ open-meridian 0.22.0, CLI 0.1.37):
     ```
 
   The `reporting` suite's `resolves-its-reporting-currency` case holds a
-  plugin to it from open-meridian 0.23.0.
+  plugin to it from open-meridian 0.23.0. **Known limit in v19:** core
+  does not yet make a `reporting` plugin's resolve read-only, so a code
+  nothing matches could record a miss, a local record minted for it. A
+  currency's ISO 4217 code resolves to its cash instrument either way.
+  Fixed in v20: see
+  [Instruments](../concepts/instruments.md#resolving-an-identifier).
 - **A template.** `meridian plugin new my-report --role reporting` writes a
   `reporting` plugin that shows the positions in its account scope at the
   last close from the lake: each position, its close, the dataset it came
   from, the value it makes and the change over the week, on a **Closes**
   page under Open and View, which is also a read tool, `read_report`, for
-  an agent the person delegated to. Its tests run the `reporting` suite the
-  SDK carries. See [`plugin new`](../api/cli.md#meridian-plugin-new).
+  an agent the person delegated to. From CLI 0.1.38 it resolves its
+  reporting currency by its ISO 4217 code. Its tests run the `reporting`
+  suite the SDK carries; `meridian plugin check --verified` does not hold
+  that suite, only the `custody` and `dgm` suites, so keep the test. See
+  [`plugin new`](../api/cli.md#meridian-plugin-new).
 - **Entitlements.** A deployment admin entitles the plugin to the datasets
   it reads: see [License and entitle a dataset](license-and-entitle-a-dataset.md).
 

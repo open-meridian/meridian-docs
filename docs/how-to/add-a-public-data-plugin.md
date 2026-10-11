@@ -8,16 +8,12 @@ weekly US dollar exchange rates. For the plugins that need a key, see
 [Add a data plugin's key](add-a-data-plugins-key.md); for Kalshi and
 Polymarket, [Add a prediction-market plugin](add-a-prediction-market-plugin.md).
 
-!!! note "Contract v18"
-    meridian-coinbase 0.1.0, meridian-kraken 0.1.0 and meridian-fed-h10
-    0.1.0 are built on open-meridian 0.22.0 (contract v18), and run on chart
-    0.1.292 or later.
-
-!!! note "TODO: Coinbase 0.2.0 and Kraken 0.2.0, trades and quotes (contract v19)"
-    Their v19 pushes are in progress, built on open-meridian 0.23.0 and not
-    yet on `main`: [Trades and quotes](#trades-and-quotes-contract-v19)
-    below is written from those builds. Confirm each fact, and the
-    versions, once they land.
+!!! note "Contract v19"
+    meridian-coinbase 0.2.0 and meridian-kraken 0.2.0, released 2026-10-10,
+    are built on open-meridian 0.23.0 (contract v19), and run on chart
+    0.1.294 or later: each adds [trades and quotes](#trades-and-quotes-contract-v19).
+    meridian-fed-h10 0.1.0, and Coinbase and Kraken 0.1.0, are built on
+    open-meridian 0.22.0 (contract v18), and run on chart 0.1.292 or later.
 
 ## What each serves
 
@@ -109,8 +105,8 @@ from.
 
 ### Trades and quotes (contract v19)
 
-From meridian-coinbase 0.2.0 and meridian-kraken 0.2.0 (TODO: not yet
-landed; built, not released), each serves a third dataset and quotes:
+From meridian-coinbase 0.2.0 and meridian-kraken 0.2.0, each serves a
+third dataset and quotes:
 
 | Plugin | Dataset | What | Default terms |
 |---|---|---|---|
@@ -132,7 +128,10 @@ landed; built, not released), each serves a third dataset and quotes:
   again after a wait doubling from a second to a minute, and the trades
   since the last one recorded are read back from the exchange's history,
   so the lake has every trade and a reader catches up from it by its
-  watermark. A trade heard twice is sent once.
+  watermark. A trade heard twice is sent once. Each reads back at most ten
+  pages of 1,000 trades, and Kraken stays inside its 150 reconnects in ten
+  minutes per IP. The same read-back fills the minute a restarted plugin
+  waits for the lake to deliver its standing wants again (chart 0.1.294).
 - **A quote's empty side** is left unset, never zero.
 - **The suite.** Of the `dgm` suite's 21 cases each passes 17 and marks
   four not presented, with why: at Coinbase an FX rate, the two condition

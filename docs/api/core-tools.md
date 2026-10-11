@@ -24,8 +24,9 @@ only as far as that person could at the page each tool mirrors.
     v17's security fixes marked *from contract v18* below, are in chart
     0.1.292.
 
-!!! note "Contract v19: built, not released"
-    From chart 0.1.293 the source priority takes trades and quotes, and the
+!!! note "Contract v19"
+    Released 2026-10-10 in chart 0.1.294. From chart 0.1.293 the source
+    priority takes trades and quotes, and the
     [Instruments tools](../concepts/instruments.md#through-an-agent) answer
     and take a binary event contract's payout and close, each identifier's
     window, and a conflict's reason. No tool is added, and no core tool

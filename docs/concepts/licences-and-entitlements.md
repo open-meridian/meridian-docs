@@ -9,7 +9,9 @@ by the deployment alone, never sent to the platform:
   its fields.
 
 !!! note "Contract v18"
-    This page describes contract v18, core's lake, from chart 0.1.292.
+    This page describes contract v18, core's lake, from chart 0.1.292; and
+    contract v19's trades and quotes, from chart 0.1.293, released in chart
+    0.1.294.
 
 A licence records what the admin entered. Neither it nor anything else in a
 deployment says the deployment meets a vendor's or an exchange's terms:
@@ -67,7 +69,7 @@ data at a different price, is a dataset of its own, licensed and entitled
 per plugin instance like any other, with nothing more in the contract. So a
 deployment admin can give the live trades to an `ems` plugin and the
 closes to everything else. Trades and quotes are read only by plugins
-holding `signal` or `ems` (contract v19, built, not released), whatever
+holding `signal` or `ems` (contract v19), whatever
 they are entitled to: see [Who reads what](the-lake.md#who-reads-what).
 
 ## Which dataset a default read takes

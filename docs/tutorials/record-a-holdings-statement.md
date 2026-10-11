@@ -28,7 +28,8 @@ Allow 30 minutes.
   this machine. From CLI 0.1.36, `meridian plugin new` builds on SDK 0.21.0 (contract v16), and
   writes the **Setup** page that links accounts, which this tutorial uses; the deployment's sidecar
   must accept contract v16. CLI 0.1.37 builds on SDK 0.22.0
-  (contract v18), and the tutorial runs on it unchanged.
+  (contract v18), and the tutorial runs on it unchanged; CLI 0.1.38 builds on SDK 0.23.0 (contract
+  v19), whose move from 0.22.0 changes only the pins.
 - To have done [Change your plugin's page, live](change-the-page-live.md), or be comfortable with
   `meridian plugin dev`.
 

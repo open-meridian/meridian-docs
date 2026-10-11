@@ -124,8 +124,8 @@ The releases, in their order:
    plugins (Alpaca, Tradier, Tiingo, Coinbase, Kraken and the Federal
    Reserve's H.10), and the sample reporting plugin.
 5. **Live market data**: trades, quotes and streaming prices, and the
-   professional data sources a fund licenses. Built, not released, as
-   contract v19: [trades and quotes](the-lake.md#trades-and-their-attributes)
+   professional data sources a fund licenses. Its first part was released
+   2026-10-10 with contract v19: [trades and quotes](the-lake.md#trades-and-their-attributes)
    for `signal` and `ems` plugins, streamed by the crypto and retail data
    plugins; Kalshi and Polymarket; the sample reporting plugin's
    [Board](../how-to/watch-the-board.md). The professional sources follow

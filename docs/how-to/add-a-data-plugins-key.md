@@ -11,10 +11,12 @@ daily net asset values. The data plugins that need no key, Coinbase,
 Kraken and the Federal Reserve's H.10, are in
 [Add a public data plugin](add-a-public-data-plugin.md).
 
-!!! note "Contract v18"
-    meridian-alpaca 0.2.0, meridian-tradier 0.1.0 and meridian-tiingo 0.1.0
-    are built on open-meridian 0.22.0 (contract v18), and run on chart
-    0.1.292 or later.
+!!! note "Contract v19"
+    meridian-alpaca 0.3.0 and meridian-tradier 0.2.1, released 2026-10-10,
+    are built on open-meridian 0.23.0 (contract v19), and run on chart
+    0.1.294 or later: each adds [trades and quotes](#trades-and-quotes-contract-v19).
+    meridian-tiingo 0.1.0, and Alpaca 0.2.0 and Tradier 0.1.0, are built on
+    open-meridian 0.22.0 (contract v18), and run on chart 0.1.292 or later.
 
 ## What each serves
 
@@ -42,8 +44,13 @@ plain date in New York's day ending at the 16:00 close:
   **Datasets** page and the deployment's Data sources page, never recorded.
 - Every response is kept first as a raw record in the plugin's own storage,
   without the key, and every row names the one it came from.
-- Not served in these versions: trades, quotes and streaming, which come
-  with contract v19 (below); options; Alpaca's crypto; mutual funds at
+- **Each record's rows under its own key.** Where the deployment holds two
+  records of one listing, one the vendor's and one a custodian's not yet
+  merged, each record's rows are its own, the row key naming the record
+  (`SPY:1d:2026-10-08@LCL-...`), never one recorded over the other. A day
+  read again unchanged is kept unchanged. Rows recorded before Alpaca 0.3.0
+  and Tradier 0.2.0 keep their keys and stand beside the new ones.
+- Not served: options; Alpaca's crypto (the crypto pair's); mutual funds at
   Tradier.
 
 - **An instrument another source named.** The lake asks for a price by
@@ -57,13 +64,8 @@ plain date in New York's day ending at the 16:00 close:
 
 ### Trades and quotes (contract v19)
 
-!!! note "TODO: Alpaca 0.3.0 and Tradier 0.2.0 (contract v19)"
-    Their v19 pushes are in progress, built on open-meridian 0.23.0 and
-    proven against core e149c69 (chart 0.1.293), not yet on `main`. This
-    section is written from those builds; confirm each fact, and the
-    versions, once they land.
-
-Each gains a `trades` dataset, and quotes in `live`:
+From meridian-alpaca 0.3.0 and meridian-tradier 0.2.0, each gains a
+`trades` dataset, and quotes in `live`:
 
 | Plugin | Dataset | What | Arrives | Default terms |
 |---|---|---|---|---|
@@ -88,11 +90,18 @@ Each gains a `trades` dataset, and quotes in `live`:
 - **Withdrawals and corrections** are the trade's next version under its
   row key: at Alpaca a cancel, an error or a correction; at Tradier a cancel
   naming a print recorded here by its sequence number.
-- **Gaps.** Alpaca reads the gap after a reconnect from its trade history,
-  sending only the trades not yet recorded, so a reader catches up from the
-  lake. Tradier's history names no print by its sequence number, so a gap
-  between two sessions is not filled, and a reader's range of trades is
-  declined, not covered; each reconnect is counted on the Connection page.
+- **Gaps.** A stream that breaks is opened again a second later, the wait
+  doubling to a minute, and subscribed again from what is wanted. Alpaca
+  reads the gap after a reconnect from its trade history, sending only the
+  trades not yet recorded, so a reader catches up from the lake. Tradier's
+  history names no print by its sequence number, so a gap between two
+  sessions is not filled, and a reader's range of trades is declined, not
+  covered; each reconnect is counted on the Connection page.
+- **A restart.** A plugin started anew, relaunched or upgraded, streams
+  again once the lake delivers its standing wants again, within about a
+  minute from chart 0.1.294. Alpaca fills that minute from its trade
+  history; Tradier cannot, for the same reason, so trades printed while it
+  restarts are not in the lake.
 - **A quote's empty side** (sent as 0) is left unset.
 - **The suite.** Alpaca passes 17 of the `dgm` suite's 21 cases, and marks
   four not presented with why (a currency's rate, a crypto asset's price,
@@ -107,6 +116,8 @@ on the Data sources page, and entitle those plugins to it and to `live`.
 ## The vendors' terms, summarised
 
 Not legal advice: read each vendor's own terms before relying on this.
+What a deployment may keep, show or use is for its deployment admin and its
+users to settle with each vendor.
 
 - **Alpaca**: its market data is for personal, non-commercial use, and is
   not republished or redistributed without Alpaca's written consent. The
@@ -164,11 +175,20 @@ on the Data sources page while the instance runs. Tradier is the same, from
 1. In the dashboard, open the plugin under **Manage**, then **Settings**.
 2. Enter the key, and **Save**:
     - Alpaca: **API key ID** and **API secret key**;
-    - Tradier: **API access token**.
+    - Tradier: **API access token**. Leave **Tradier's developer sandbox**
+      (`sandbox`, off by default) off for a Tradier Brokerage account's
+      token. From Tradier 0.2.1 it is for testing with a developer sandbox
+      token instead: the plugin then asks `sandbox.tradier.com`, whose data
+      is delayed 15 minutes and which does not stream, so its quotes are
+      marked delayed, no trades are streamed, and live prices are still
+      kept current once a minute.
 3. Open the plugin's **Connection** page. It says whether each part of the
    key is set (never its value), whether the vendor answered, and which
    feeds the key is entitled to: for Alpaca, IEX in real time and SIP past
-   15 minutes on a free key; for Tradier, whether its quotes are real time.
+   15 minutes on a free key; for Tradier, whether its quotes are real time,
+   or, with the sandbox on, "Tradier's developer sandbox: delayed 15
+   minutes, no streaming". Tradier's **Datasets** page names the host it
+   asks.
 
 The form never shows a secret again: **set** says who set it, when, and
 through which client. To replace a key, enter the new one; to remove it,
@@ -188,9 +208,12 @@ for its admin, and each is a tool for an agent, `read_connection` and
 ## Checking it live
 
 Each repository's `make live` asks for the key at a prompt that does not
-echo, asks the vendor for a week of closes and the latest prices, and
-prints what came back and that the key is in no raw record; never the key.
-It runs on your own machine with your own key, never in CI.
+echo, asks the vendor for a week of closes and the latest prices, and from
+Alpaca 0.3.0 and Tradier 0.2.0 listens to its stream for twenty seconds,
+printing the condition codes or flags seen; then it prints that the key is
+in no raw record, never the key. Tradier's `make live SANDBOX=1` asks the
+developer sandbox with a sandbox token. It runs on your own machine with
+your own key, never in CI.
 
 ## Tiingo: mutual funds' daily NAVs
 

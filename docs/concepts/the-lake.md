@@ -16,12 +16,12 @@ the deployment.
     operations are `preview` in v18. A runtime serving v16 or earlier
     refuses a plugin built on 0.22.0 at registration, naming both versions.
 
-!!! note "Contract v19: built, not released"
+!!! note "Contract v19"
     The lake's second part, trades and quotes, is contract v19: core's lake
-    from chart 0.1.293 and open-meridian 0.23.0. Its operations are
-    `preview` in v19. A runtime serving v18 or earlier refuses a plugin
-    built on 0.23.0 at registration, naming both versions; a plugin on
-    0.22.0 runs unchanged on chart 0.1.293.
+    from chart 0.1.293 and open-meridian 0.23.0, released 2026-10-10 in
+    chart 0.1.294. Its operations are `preview` in v19. A runtime serving
+    v18 or earlier refuses a plugin built on 0.23.0 at registration, naming
+    both versions; a plugin on 0.22.0 runs unchanged on chart 0.1.294.
 
 ## Two stores, two questions
 
@@ -201,12 +201,23 @@ holds no stream. A streaming plugin records trades only for subjects under
 a standing want, and declares its live trades in a dataset apart from its
 live prices, so an admin licenses and keeps them apart.
 
-!!! warning "Known in v19: a restarted `dgm` streams nothing until asked again"
-    A `dgm` hears a standing want when it is made, and contract v19 gives it
-    no way to read the standing wants back. A `dgm` process started anew
-    streams nothing until a reader's read makes a want again. A reader
-    reading on a timetable, as the sample reporting plugin's Board does,
-    makes one within its next read.
+**A restarted `dgm` resumes.** A `dgm` holds nothing it cannot lose, and
+contract v19 gives it no way to read the standing wants back. So from chart
+0.1.294 the lake delivers each standing want still asked for again once a
+minute, the same want under the same ID: a `dgm` already holding it hears
+what it holds, and one relaunched or upgraded resumes its stream within
+about a minute. On chart 0.1.293 a restarted `dgm` streamed nothing until a
+reader's read made a want again.
+
+!!! warning "Known limit in v19: trades during a restart"
+    A trade printed while a `dgm` restarts, in the minute before its
+    standing wants reach it again, is in the lake only where the plugin
+    reads its vendor's history back when its stream opens. Alpaca, Coinbase
+    and Kraken do, sending only the trades not yet recorded. Tradier cannot:
+    its time and sales history names no trade by its ID, so reading it
+    again would record trades twice, and a restart's gap stays unfilled. A
+    reader catches up from the lake by its watermark, so it misses only
+    what the lake never had.
 
 ## Kept, or served and not kept
 

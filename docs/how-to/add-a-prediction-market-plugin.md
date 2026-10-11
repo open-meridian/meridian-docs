@@ -10,10 +10,11 @@ They pass one `dgm` suite between them. Each contract they price is a
 [binary event contract](../concepts/instruments.md#binary-event-contracts)
 in the deployment's instrument store.
 
-!!! note "Contract v19: built, not released"
-    plugin-kalshi 0.1.0 and plugin-polymarket 0.1.0 are built on
-    open-meridian 0.23.0 (contract v19) and proven against core e149c69's
-    runtime and plugin harness (chart 0.1.293). Neither is released yet.
+!!! note "Contract v19"
+    plugin-kalshi 0.1.0 and plugin-polymarket 0.1.0, released 2026-10-10,
+    are built on open-meridian 0.23.0 (contract v19), proven against core's
+    runtime and plugin harness at chart 0.1.293, and run on chart 0.1.294
+    or later.
 
 ## What each serves
 

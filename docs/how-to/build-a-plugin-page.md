@@ -144,7 +144,7 @@ market-direction convention, and the kit applies them.
 | 0.8.0 | Icon actions: a button marked `data-om-icon="refresh"` is drawn as a circular arrow, in the page and as a header action in the dashboard's header. See [Icon actions](#icon-actions). |
 | 0.9.0 | `om-entry-grid`: a table of typed inputs a person enters rows in, posted with the page's own form, the server's messages placed on their cells, a spreadsheet's paste and a CSV in a dialog |
 | 0.10.0 | Every page fits one screen: a height budget the dashboard holds to the screen, compact chrome, one-line rows (`table.one-line`, `om-grid`'s `one-line`) with the whole row a click away, `om-pager`, as many rows a page as fit, and the overflow check |
-| 0.11.0 | A search beside the pager, `search` on `om-grid`, `om-pager` and `om-entry-grid`, `search-param` on `om-pager`, and the `om-search` event; and fields gated on a choice, `data-om-applies-when` and `data-om-one-of`. See [To search a list, and show a field only when it applies](#to-search-a-list-and-show-a-field-only-when-it-applies). Served from chart 0.1.293 (contract v19, built, not released). |
+| 0.11.0 | A search beside the pager, `search` on `om-grid`, `om-pager` and `om-entry-grid`, `search-param` on `om-pager`, and the `om-search` event; and fields gated on a choice, `data-om-applies-when` and `data-om-one-of`. See [To search a list, and show a field only when it applies](#to-search-a-list-and-show-a-field-only-when-it-applies). Served from chart 0.1.293 (contract v19). |
 
 **A 0.x release only adds.** Nothing in the kit is removed or renamed within 0.x, so a page built
 against an earlier 0.x keeps working on a later one.

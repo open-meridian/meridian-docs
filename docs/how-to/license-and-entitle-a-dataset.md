@@ -10,7 +10,8 @@ through its tools for an agent. What each term means is in
 
 !!! note "Contract v18"
     This page describes contract v18, core's lake and the Data sources page,
-    from chart 0.1.292.
+    from chart 0.1.292; and contract v19's trades and quotes, from chart
+    0.1.293, released in chart 0.1.294.
 
 You need the deployment admin's capabilities, and a data plugin launched:
 its datasets are listed from the moment it runs. See
@@ -28,7 +29,7 @@ In the dashboard, open **Settings**, then **Data sources**, beside
 | **Priority** | data type and price kind, with the datasets a default read takes first to last |
 
 The page shows no price: prices are read by the plugins entitled to them, on
-their own pages. From chart 0.1.293 (contract v19, built, not released) each
+their own pages. From chart 0.1.293 (contract v19) each
 tab has a search above its rows, beside its pager.
 
 ## Confirm or change a dataset's licence

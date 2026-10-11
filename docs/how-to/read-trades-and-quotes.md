@@ -7,10 +7,10 @@ orders in real time. This page writes a plugin holding one of them that
 reads a day's trades, hears each new one, catches up what it missed, and
 reads the latest quotes, then holds it to its role's suite.
 
-!!! note "Contract v19: built, not released"
-    This page describes open-meridian 0.23.0 (contract v19), for a runtime
-    serving contract v19, chart 0.1.293 or later. The lake's 1b operations
-    are `preview` in v19.
+!!! note "Contract v19"
+    This page describes open-meridian 0.23.0 (contract v19) and CLI 0.1.38,
+    for a runtime serving contract v19, chart 0.1.294 or later, all
+    released 2026-10-10. The lake's 1b operations are `preview` in v19.
 
 ## Which role
 
@@ -35,12 +35,12 @@ give it the role:
 ```sh
 meridian plugin new my-desk
 cd my-desk
-git init -q && git add -A && git commit -qm "my-desk, as plugin new wrote it"
-meridian plugin migrate --to 0.23.0
 ```
 
-CLI 0.1.37 writes the plugin on open-meridian 0.22.0; `plugin migrate`, which
-works only on what git holds, moves its pins to 0.23.0 and changes no code. Then, in `pyproject.toml`:
+CLI 0.1.38 writes the plugin on open-meridian 0.23.0. A plugin CLI 0.1.37
+wrote is on 0.22.0: commit it, and `meridian plugin migrate --to 0.23.0`,
+which works only on what git holds, moves its pins and changes no code.
+Then, in `pyproject.toml`:
 
 ```toml
 [tool.meridian]
@@ -186,6 +186,16 @@ def test_the_ems_suite_passes() -> None:
 A plugin catching up by range alone fails
 `catches-up-trades-after-a-watermark`. Neither role records anything in the
 lake.
+
+`meridian plugin check --verified` does not hold the `signal` or `ems`
+suite: in v19 it checks the `custody` and `dgm` suites only. Run your role's
+suite in your own tests, as above, and in your CI.
+
+**A trade printed while a data plugin restarts** reaches the lake only
+where that plugin reads its vendor's history back on reconnecting: Alpaca,
+Coinbase and Kraken do, Tradier cannot. Catching up by watermark gives you
+every trade the lake has, and none it never had: see
+[the lake](../concepts/the-lake.md#wants-a-read-the-lake-cannot-answer-yet).
 
 ## Put it in a deployment
 

@@ -24,8 +24,7 @@ all keep their IDs, and no other instrument is ever given one, as no venue
 is ever given another's [venue ID](venues.md). A position, an order or a
 row in the lake stores the ID and nothing else about identity; everything
 that moves (a ticker, a symbol, a venue's code) is a dated identifier,
-resolved where outside data arrives. From contract v19 (built, not
-released) the contract says so where an instrument's ID is defined, for
+resolved where outside data arrives. From contract v19 the contract says so where an instrument's ID is defined, for
 every ID a master mints, instruments and venues alike.
 
 **Resolution is dated.** The question is always "which instrument did this
@@ -37,7 +36,7 @@ which version was in force; it never changes which record an ID is.
 
 ### Each identifier's window
 
-From contract v19 (built, not released, chart 0.1.293), every identifier
+From contract v19 (chart 0.1.293), every identifier
 on a record carries its **window**: `valid_from_ns`, when it began naming
 the record, and `valid_until_ns`, when it left, 0 while it is still on it.
 An identifier leaving a record (moved by a merge, removed by a completion,
@@ -56,7 +55,9 @@ The windows are shown with each identifier on the Instruments page and a
 record's history, and answered by its tools. The platform fills them on a
 pull, the identifiers it ended included, so the deployment can offer each
 end; an end is in force only once a person accepts it. A plugin never sets a
-window.
+window. In v19 an identifier pulled from the platform opens its window on
+the day it entered the master, which can make a duplicate record: see
+[Known limits](#known-limits).
 
 ## The security master
 
@@ -103,7 +104,7 @@ identifier should mean one instrument at a time.
 
 ## Binary event contracts
 
-From contract v19 (built, not released), an instrument's type can be a
+From contract v19, an instrument's type can be a
 **binary event contract**, under the class `event_contract`: a contract
 that pays a fixed amount if an event happens, and nothing if not, as Kalshi
 and Polymarket list them. Its record carries two attributes:
@@ -176,7 +177,7 @@ trusted least.
 **An ambiguous miss is flagged, never escalated.** Only a person can say
 which of two records a set of identifiers means, or whether they are one
 security to merge, and the platform holds neither of the deployment's
-records. So from contract v19 (built, not released) an ambiguous resolve
+records. So from contract v19 an ambiguous resolve
 takes no record and goes to no one outside the deployment: the conflict it
 meets is listed on the Instruments page with its reason, `ambiguous` (a
 resolve met both records), for the deployment's own person to settle. A
@@ -189,14 +190,12 @@ it holds for the date. Asked by `reporting`, nothing is minted, joined,
 offered or listed: nothing matched is not found, and several matched is
 ambiguous, with no conflict listed.
 
-!!! warning "TODO: core's read-only resolve for `reporting`"
-    At core e149c69 (chart 0.1.293) the instrument store has the read-only
-    resolve, but the runtime cannot yet tell that a resolve is a
+!!! warning "Known limit in v19: `reporting`'s resolve is not read-only yet"
+    Core does not yet tell the instrument store that a resolve is a
     `reporting` plugin's, so it answers one as it answers any plugin's: a
-    set nothing matched is minted a record. A currency's ISO 4217 code
-    resolves to the currency's cash instrument either way. Confirm, or
-    remove this note, when core chooses the read-only resolve for
-    `reporting`.
+    code nothing matches could record a miss, a local record minted for it.
+    A currency's ISO 4217 code resolves to the currency's cash instrument
+    either way. Fixed in v20.
 
 ## When an instrument is missing
 
@@ -264,5 +263,12 @@ and answer what contract v19 adds, with no new tool:
   so an identifier a later change dropped no longer resolves as of a date
   when it was still valid. That fails safe, never the wrong instrument;
   contract v19 keeps every window instead.
+- **Duplicate records from an earlier-dated report (v19).** An identifier
+  pulled from the platform starts its window on the day it entered the
+  master, not the day it began naming the instrument. A report dated before
+  that day, such as a custodian's older statement, finds no record holding
+  the identifier then, and can create a duplicate local record. Until the
+  fix in v20, merge each duplicate into the platform's record on the
+  **Instruments** page.
 - **No bulk distribution.** A deployment pulls the one instrument it just
   missed. There is no snapshot of the whole master to download.

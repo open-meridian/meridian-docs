@@ -20,21 +20,17 @@ pip install open-meridian
 !!! warning "Not `meridian-sdk`"
     The PyPI package `meridian-sdk` belongs to an unrelated company. Don't install it.
 
-A plugin pins the SDK exactly, `open-meridian==0.23.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.23.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls; from 0.12.0 to 0.13.0, from 0.13.0 to 0.14.0, from 0.19.0 to 0.20.0, from 0.20.0 to 0.21.0, from 0.21.0 to 0.22.0 and from 0.22.0 to 0.23.0, only the pins move. `meridian plugin new` writes a plugin pinned to 0.19.0 from CLI 0.1.34, to 0.20.0 from CLI 0.1.35, to 0.21.0 from CLI 0.1.36, and to 0.22.0 from CLI 0.1.37; run `meridian plugin migrate` to move it to 0.23.0.
+A plugin pins the SDK exactly, `open-meridian==0.23.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.23.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls; from 0.12.0 to 0.13.0, from 0.13.0 to 0.14.0, from 0.19.0 to 0.20.0, from 0.20.0 to 0.21.0, from 0.21.0 to 0.22.0 and from 0.22.0 to 0.23.0, only the pins move. `meridian plugin new` writes a plugin pinned to 0.19.0 from CLI 0.1.34, to 0.20.0 from CLI 0.1.35, to 0.21.0 from CLI 0.1.36, to 0.22.0 from CLI 0.1.37, and to 0.23.0 from CLI 0.1.38.
 
-!!! note "TODO: `plugin new` on 0.23.0"
-    No CLI release pins 0.23.0 in `meridian plugin new` yet: CLI 0.1.37
-    writes a plugin on 0.22.0. Name the release here when it is built.
-
-!!! note "0.23.0: contract v19, built, not released"
-    open-meridian 0.23.0, on PyPI, declares contract v19, the lake's trades
+!!! note "0.23.0: contract v19"
+    open-meridian 0.23.0 declares contract v19, the lake's trades
     and quotes: a `dgm` records them in batches, `signal` and `ems` read and
     hear them, every trade in full and caught up after a watermark;
     `reporting` resolves an identifier; the suites' 1b cases and a case
     about a kind of data a plugin never publishes marked not presented. It
-    needs a runtime serving contract v19 (chart 0.1.293 or later), which
-    refuses nothing a plugin on 0.22.0 sends. Contract v19 itself is built
-    and not yet released. See [Trades and quotes](#trades-and-quotes).
+    needs a runtime serving contract v19 (chart 0.1.294 or later), which
+    refuses nothing a plugin on 0.22.0 sends. Released 2026-10-10. See
+    [Trades and quotes](#trades-and-quotes).
 
 !!! note "0.22.0: contract v18"
     open-meridian 0.22.0 declares contract v18, [the lake](#the-lake): a
@@ -805,7 +801,7 @@ async def a_want_recorded_against(recorder):
     await recorder.receive(observations_wanted=MyDgm(recorder).on_want)
 ```
 
-The cases are listed in [Write a `dgm` against its suite](../how-to/write-a-dgm.md#hold-it-to-the-suite): thirteen in 0.22.0, twenty-one from 0.23.0. A plugin holding `dgm` is verified for it only by passing every case it presents, which [`meridian plugin check --verified --run-tests`](cli.md#plugin-check) holds it to. The reading roles, `reporting`, `portfolio`, `compliance` and `signal`, and from 0.23.0 `ems`, have suites of their own, run the same way.
+The cases are listed in [Write a `dgm` against its suite](../how-to/write-a-dgm.md#hold-it-to-the-suite): thirteen in 0.22.0, twenty-one from 0.23.0. A plugin holding `dgm` is verified for it only by passing every case it presents, which [`meridian plugin check --verified --run-tests`](cli.md#plugin-check) holds it to. The reading roles, `reporting`, `portfolio`, `compliance` and `signal`, and from 0.23.0 `ems`, have suites of their own, run the same way; `meridian plugin check --verified` holds only the `custody` and `dgm` suites, so a reading role's suite is run by the plugin's own tests alone.
 
 **A case not presented.** A case asserting one value of a closed list (`Case.closed_list`) that the plugin's source never presents may be named in `not_presented`, with why. From 0.23.0, so may a case about one kind of data (`Case.about`, in the contract's words: closes, bars, trades, quotes, prices on a venue, a currency's rate against another currency, a crypto asset's price, a security's price) that the plugin declares it never publishes. Every other case is required, and a case not presented without a reason fails:
 
@@ -817,7 +813,7 @@ report = run("dgm", PRODUCERS, not_presented={
 
 ### Trades and quotes { #trades-and-quotes }
 
-From 0.23.0, contract v19 (built, not released), `preview`. Still typed operations only: no WebSocket client, no reconnecting stream, no bar builder.
+From 0.23.0, contract v19, `preview`. Still typed operations only: no WebSocket client, no reconnecting stream, no bar builder.
 
 **A `dgm` records them** from a dataset declaring `data_types=["meridian.v1.Trade", "meridian.v1.Quote"]` (or one of them) and `modes=["stream"]`, with [`record_trades`](typed-operations.md#record_trades) and [`record_quotes`](typed-operations.md#record_quotes), 1 to 500 a call. Each is keyed by UTC instants and names no business date. A trade carries its [`TradeAttributes`](typed-operations.md#tradeattributes), converted at the edge from its source's condition codes, a code with no conversion kept in `meta.unconverted`; and its `aggressor` where its source says which side took liquidity (a source naming the resting order's side records the other). A withdrawn trade is the next version under its row key, `cancelled=True`. A quote's empty side is left unset. Keep a standing want of a streamed dataset current from the stream.
 
