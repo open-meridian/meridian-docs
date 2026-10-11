@@ -245,7 +245,7 @@ history says so.
 
 ### SnapTrade 0.11.0
 
-[meridian-snaptrade](https://github.com/open-meridian/meridian-snaptrade)
+[plugin-snaptrade](https://github.com/open-meridian/plugin-snaptrade)
 reports each activity on every linked account as SnapTrade states it: on an
 account's first read in a process, a backfill of every activity SnapTrade
 holds back to its `history_from`, and on each read after, the activities that

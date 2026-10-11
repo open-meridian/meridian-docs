@@ -32,6 +32,9 @@ the cluster, and the dashboard does not upgrade itself.
 | Upgrade from your own pipeline | Plain Helm, Argo CD or Flux, below |
 | Upgrade the command line itself | `meridian upgrade`, which is a different thing |
 
+Take a backup before you upgrade, and copy it off the cluster: `meridian backup --to <dir>`, on chart
+0.1.298 or later with backups set up. See [Back up and restore a deployment](back-up-and-restore.md).
+
 ## To upgrade with the command line
 
 ```bash
@@ -299,5 +302,6 @@ its own values and an upgrade keeps it. `meridian upgrade-deployment` says so be
 ## Related
 
 - [Install a deployment](../getting-started/installation.md)
+- [Back up and restore a deployment](back-up-and-restore.md)
 - [Remove or start over](remove-or-start-over.md)
 - [Command line reference](../api/cli.md)

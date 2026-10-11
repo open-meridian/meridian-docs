@@ -1,7 +1,7 @@
 # The archive
 
-A plugin at the edge (`ccm`, `custody`, `servicing`, `match`, `settlement`,
-`dgm`, `reporting`) speaks to a vendor and keeps what the vendor sent it, its
+A plugin at the edge (`connectivity`, `custody`, `servicing`, `confirmation`, `settlement`,
+`data`, `reporting`) speaks to a vendor and keeps what the vendor sent it, its
 **raw records**, in storage the deployment gives its instance alone. It keeps
 them to reach further back than the vendor does: a custodian may keep two
 years of activity, and the deployment's history should not stop where the

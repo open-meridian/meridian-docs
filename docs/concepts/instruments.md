@@ -7,6 +7,14 @@ identifiers in several schemes. This page explains how Open Meridian keeps
 instrument identity, where it lives, and what a deployment does when it meets
 an instrument it does not know.
 
+!!! note "Contract v20"
+    From contract v20 an identifier the deployment pulled from the platform
+    answers for dates before it entered the master, so an earlier-dated
+    report no longer makes a duplicate record; a currency the deployment
+    does not hold is fetched from the platform's master, not minted; a
+    `reporting` plugin's resolve is read-only; and wherever a table names an
+    instrument, it is chosen with a search-as-you-type picker. Released 2026-10-12 in chart 0.1.298.
+
 ## Identity is the answer; a ticker is an attribute
 
 Each instrument has one canonical identifier, `INS-` followed by a unique
@@ -55,8 +63,19 @@ The windows are shown with each identifier on the Instruments page and a
 record's history, and answered by its tools. The platform fills them on a
 pull, the identifiers it ended included, so the deployment can offer each
 end; an end is in force only once a person accepts it. A plugin never sets a
-window. In v19 an identifier pulled from the platform opens its window on
-the day it entered the master, which can make a duplicate record: see
+window.
+
+**A window from the platform opens from the start** (contract v20). The platform records an identifier's window from the day the
+master learnt it, which for every record a deployment pulled before then is
+a recent day, not the day the identifier began naming the security. In v19
+a report dated earlier, such as a custodian's older statement, an H.10 rate,
+or a resolve stating no date, found no record holding the identifier then,
+and a duplicate local record was minted beside the platform's. From v20 the
+store opens such a window from the start, or from where another window of
+the same identifier on another security closed, so an earlier-dated report
+finds the record held. On upgrade, each record so corrected is a version of
+its own, naming each window and the date it replaced. A duplicate already
+minted is left as it is, for a person to merge: see
 [Known limits](#known-limits).
 
 ## The security master
@@ -190,12 +209,48 @@ it holds for the date. Asked by `reporting`, nothing is minted, joined,
 offered or listed: nothing matched is not found, and several matched is
 ambiguous, with no conflict listed.
 
-!!! warning "Known limit in v19: `reporting`'s resolve is not read-only yet"
-    Core does not yet tell the instrument store that a resolve is a
-    `reporting` plugin's, so it answers one as it answers any plugin's: a
-    code nothing matches could record a miss, a local record minted for it.
-    A currency's ISO 4217 code resolves to the currency's cash instrument
-    either way. Fixed in v20.
+From contract v20 core enforces it. The store reads
+which plugin instance asked from the message's envelope, which the
+sidecar stamps, and the roles that instance was launched with from the
+deployment's launch records, and answers read-only when none of its roles
+may mint: `custody` and `data` may, `reporting` may not. A plugin holding
+`reporting` beside `custody` or `data` resolves as those do. A plugin cannot
+claim a role by what it sends. In v19 core did not tell the store a resolve
+was a `reporting` plugin's, so a code nothing matched could record a miss
+and mint a local record.
+
+### A currency is fetched from the master
+
+From contract v20, when a plugin or core names a
+currency by its ISO 4217 code and no record the deployment holds carries
+it, the instrument store asks the platform's master for it itself, through
+the conductor, with no person asking or approving, keeps the master's
+record as the deployment's, and answers the resolve with it, found, not
+minted. A currency is curated reference data carrying no account's
+information, so fetching it needs no one's decision, and it stops plugins
+leaving local copies beside the master's (in v19 a data plugin naming a
+currency the deployment did not hold minted a local stub for it).
+
+A stub is minted for the code only when the master does not hold it. While
+the platform cannot be reached, the resolve mints as before, and the store
+asks again at the code's next miss; a stub then met by the master's record
+is listed as a conflict on the Instruments page, for a person to merge.
+Only `iso4217` is fetched so: every other miss waits for a person, as
+below.
+
+### Searching the deployment's records
+
+From contract v20 wherever a table names an
+instrument, such as a table setting's Instrument column, it is chosen with
+a search-as-you-type picker: type part of a name, a symbol or an
+identifier, and once typing pauses it lists up to eight of the deployment's
+records whose identifier values, symbols or description contain it, each
+with its name, identifiers and ID. It holds the record's ID, never a
+symbol. Only the deployment's records are searched; the platform is not
+asked, and nothing lists every record. The picker asks the dashboard's own
+search route, `/admin/instruments/search`, on core's pages, which asks the
+instrument store's list with the words as its `search`; a plugin's framed
+page names its own route.
 
 ## When an instrument is missing
 
@@ -263,12 +318,11 @@ and answer what contract v19 adds, with no new tool:
   so an identifier a later change dropped no longer resolves as of a date
   when it was still valid. That fails safe, never the wrong instrument;
   contract v19 keeps every window instead.
-- **Duplicate records from an earlier-dated report (v19).** An identifier
-  pulled from the platform starts its window on the day it entered the
-  master, not the day it began naming the instrument. A report dated before
-  that day, such as a custodian's older statement, finds no record holding
-  the identifier then, and can create a duplicate local record. Until the
-  fix in v20, merge each duplicate into the platform's record on the
-  **Instruments** page.
+- **Duplicates minted before contract v20 stay until merged.** A local
+  record minted in v19 beside the platform's, by an earlier-dated report or
+  by a data plugin naming a currency the deployment did not hold, is not
+  removed by the upgrade: merge each into the platform's record on the
+  **Instruments** page. The upgrade then opens the platform record's
+  windows from the start.
 - **No bulk distribution.** A deployment pulls the one instrument it just
   missed. There is no snapshot of the whole master to download.

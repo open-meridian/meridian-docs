@@ -9,6 +9,14 @@ are **external accounts**, and a plugin that reads one ties it to one of the
 firm's accounts rather than creating an account of its own. This page
 explains both, and how accounts bound what a plugin may read and write.
 
+!!! note "Contract v20"
+    From contract v20 a deployment admin grants each plugin the accounts it
+    may link to, nothing by default (see
+    [Accounts a plugin may link to](#accounts-a-plugin-may-link-to)), and an
+    account's attributes in the book sit on the account's own row (see
+    [In the book](#in-the-book)), in place of the dashboard's Books tab.
+    Released 2026-10-12 in chart 0.1.298.
+
 ## The firm's accounts
 
 A deployment admin creates accounts on the **Accounts** tab of the dashboard's
@@ -26,6 +34,28 @@ All four are optional and searchable, as the name is, so two accounts of the
 same name at different custodians can be told apart. None of them decides
 anything: who may reach an account is its account groups' and its links'
 business, never its owner's.
+
+### In the book
+
+From contract v20 the Accounts tab also shows each
+account's attributes in the [book of record](the-book-of-record.md), one
+book per deployment, so they sit with the account they belong to: its
+**Base currency** and its **Lot relief**, the lots a sale relieves when it
+names none, are columns of its row. An account's **Edit** has two
+sections, each saved on its own:
+
+- **Account**: its name, custodian, type, owner and note, as above.
+- **In the book**: its base currency (an ISO 4217 code) and its lot relief
+  (first in, first out; last in, first out; highest cost; lowest cost;
+  average cost), each change saved to the book with a **Reason**, its own
+  act, journalled in the account's partition. Beside the title it says
+  since when the book holds the account, the date its opening balance
+  stands for, or "not yet". That date is set only by the book, when a
+  person confirms the opening balance, never here.
+
+"In the book" is shown only for an account that exists: create the account
+first, then edit it. Before v20 the same attributes were on a tab of their
+own, **Books**.
 
 **An account is closed, never deleted.** Closing keeps it and its history:
 
@@ -52,10 +82,13 @@ holdings, say — sees the source's own name for each account. An admin of the
 plugin links each external account to one of the firm's accounts, on the
 plugin's own pages at `admin`, under Manage: the plugin offers the firm's
 accounts, by their identities alone, and sends the link acting for the admin.
-A plugin admin links to any existing account. **A plugin creates an account
-only that way**, when a deployment admin names a new account to link to; it
-may pre-fill the new account's custodian, type, owner and note from what the
-source reported, for the admin to change.
+Before contract v20 a plugin admin could link to any existing account; from
+v20 only to an account the deployment admin granted the plugin (below).
+**A plugin creates an account only that way**, when a deployment admin
+names a new account to link to; it may pre-fill the new account's
+custodian, type, owner and note from what the source reported, for the
+admin to change. From v20 an account made by linking is granted to the
+plugin that made it.
 
 **An account has one external account.** At most one external account is
 linked to an account, through whichever plugin, and the account's statements
@@ -91,6 +124,46 @@ its own links and no other plugin's. In the Python SDK they are
 `AccountScope.links`, from 0.7.0; see
 [`account_scope()`](../api/python-sdk.md#account_scope).
 
+### Accounts a plugin may link to
+
+From contract v20 **the deployment admin grants each
+plugin instance the accounts it may link to**, and its admins link its
+external accounts only within them. The two decisions are layered: the
+deployment admin decides which of the firm's accounts a custodian's data
+may ever be tied to; the plugin's admin, who sees the custodian's own
+accounts, chooses which of those each one is.
+
+- **Nothing is granted by default.** A new plugin instance links to no
+  account until a deployment admin grants it some, on the plugin's
+  **Accounts** tab in the dashboard's admin view of the plugin
+  (`/admin/plugins/<instance>?tab=accounts`): **Grant** an account, with a
+  note saying why, or **Withdraw** one. Each grant and each withdrawal is
+  its own record. The plugin's admins read the tab; only a deployment admin
+  changes it.
+- **A plugin sees only what it was granted.** When a plugin offers the
+  firm's accounts for linking, it is answered the accounts granted to its
+  instance, not the deployment's whole list.
+- **A link outside the grant is refused**
+  (`REFUSAL_REASON_ACCOUNT_NOT_LINKABLE`), and nothing is linked.
+- **A grant is not access.** It lets the plugin's admins link to the
+  account; it gives nobody anything to read or write. Who reads the
+  account's statements through the plugin is still access, `read` or
+  `write` on its role over an account group.
+- **Withdrawing an account keeps its link.** A link made while the account
+  was granted stands until someone removes it; the withdrawal stops new
+  links.
+- **A connectivity plugin needs no grant.** It links no external accounts:
+  it reaches accounts only through the `ems` it serves, which names the
+  venue's account.
+- **At the upgrade to contract v20**, each account a plugin already linked
+  is granted to it, recorded as made then, so nothing that worked stops.
+
+An agent reads the grant with
+[`dashboard__read_linkable_accounts`](../api/core-tools.md#dashboard__read_linkable_accounts);
+no tool sets it. In the Python SDK, a plugin's
+`read_accounts_for_linking` answers the granted accounts, and a link naming
+another raises `CommandRefused` with that reason.
+
 ## How accounts bound a plugin
 
 A plugin does not declare which accounts it works on. Its reach is derived
@@ -101,8 +174,9 @@ from two things: the permissions that name it, and its own links.
 | **Read scope** | Every account some person may read through this plugin, and every account one of its external accounts is linked to |
 | **Write scope** | Every open account some person may write through this plugin, and every open account one of its external accounts is linked to |
 
-A person's data level on a plugin, from contract v15 on each of its roles, is
-`read` or `write`, the same for every plugin, and `write` includes `read`. A
+A person's account access on a plugin, from contract v15 on each of its
+roles, is `read` or `write`, the same for every plugin, and `write` includes
+`read`. A
 plugin's scopes are the union over its roles. A permission gives it on the accounts of
 an account group; see [Access](access.md). `admin` on a plugin reaches no
 account, and adds nothing to its scope.

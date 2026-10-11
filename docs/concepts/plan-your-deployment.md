@@ -131,6 +131,8 @@ The releases, in their order:
    [Board](../how-to/watch-the-board.md). The professional sources follow
    when their keys exist.
 6. **Prepared changes**: an agent prepares a change, and a person makes it.
+   Released 2026-10-12 with contract v20: see
+   [Prepared changes](prepared-changes.md).
 7. **Service accounts**: a plugin's scheduled work runs as a named account.
 8. **The order path**: orders, their state decided by the book, sent to
    venues and filled.
@@ -151,12 +153,12 @@ value. No trading yet.
 | A 401(k) plan's own fund codes linked to their instruments | [`custody`](roles.md#custody) | SnapTrade, its Plan-code links table | Local | Exists |
 | The IRA's core position, an FDIC-insured deposit, counted as cash | [`custody`](roles.md#custody) | SnapTrade, by its own flag or its Cash links table | Local | Exists |
 | An opening balance per account, with its lots, and daily reconciliation, each break explained | [`operations`](roles.md#operations) | The sample operations plugin | Local | Exists |
-| Daily closes for stocks and ETFs | [`dgm`](roles.md#dgm) | Alpaca and Tradier | Local | Exists: see [Add a data plugin's key](../how-to/add-a-data-plugins-key.md) |
-| US dollar exchange rates | [`dgm`](roles.md#dgm) | The Federal Reserve's H.10 rates | Local | Exists: see [Add a public data plugin](../how-to/add-a-public-data-plugin.md) |
-| A mutual fund's daily NAV | [`dgm`](roles.md#dgm) | Tiingo | Local | Exists: see [Add a data plugin's key](../how-to/add-a-data-plugins-key.md#tiingo-mutual-funds-daily-navs) |
+| Daily closes for stocks and ETFs | [`data`](roles.md#data) | Alpaca and Tradier | Local | Exists: see [Using a data plugin](../how-to/using-a-data-plugin.md#alpaca-and-tradier) |
+| US dollar exchange rates | [`data`](roles.md#data) | The Federal Reserve's H.10 rates | Local | Exists: see [Using a data plugin](../how-to/using-a-data-plugin.md#the-federal-reserves-h10) |
+| A mutual fund's daily NAV | [`data`](roles.md#data) | Tiingo | Local | Exists: see [Using a data plugin](../how-to/using-a-data-plugin.md#tiingo-mutual-funds-daily-navs) |
 | The book valued, by account and in total | [`reporting`](roles.md#reporting) | The sample reporting plugin | Local | Exists: see [Value the book](../how-to/value-the-book.md) |
-| A plan-only fund valued at the custodian's own mark | [`dgm`](roles.md#dgm) | SnapTrade | Local | Planned, not scheduled |
-| Trading from the deployment | [`ccm`](roles.md#ccm) | SnapTrade | Local | Planned, in the order path |
+| A plan-only fund valued at the custodian's own mark | [`data`](roles.md#data) | SnapTrade | Local | Planned, not scheduled |
+| Trading from the deployment | [`connectivity`](roles.md#connectivity) | SnapTrade | Local | Planned, in the order path |
 
 **Configuration.** The person is their own deployment admin and the only
 person with access. SnapTrade's key is a secret setting on its form. Accounts
@@ -181,9 +183,9 @@ reports to its investors, and trades once the order path is built.
 | Holdings, cash and activity from a custodian or prime broker with no plugin | [`custody`](roles.md#custody) | Yours | Local | Build your own |
 | Holdings and activity read directly from Alpaca or Tradier | [`custody`](roles.md#custody) | Alpaca, Tradier | Planned | Planned, not scheduled |
 | Opening balances, daily reconciliation, breaks resolved by people | [`operations`](roles.md#operations) | The sample operations plugin, or yours | Local | Exists |
-| Consolidated end-of-day prices under the fund's own licence | [`dgm`](roles.md#dgm) | Databento, Massive | Planned | Planned, in live market data |
-| Mutual fund NAVs | [`dgm`](roles.md#dgm) | Tiingo, under the fund's own licence | Local | Exists: see [Add a data plugin's key](../how-to/add-a-data-plugins-key.md#tiingo-mutual-funds-daily-navs) |
-| Exchange rates | [`dgm`](roles.md#dgm) | The Federal Reserve's H.10 rates | Local | Exists: see [Add a public data plugin](../how-to/add-a-public-data-plugin.md) |
+| Consolidated end-of-day prices under the fund's own licence | [`data`](roles.md#data) | Databento, Massive | Planned | Planned, in live market data |
+| Mutual fund NAVs | [`data`](roles.md#data) | Tiingo, under the fund's own licence | Local | Exists: see [Using a data plugin](../how-to/using-a-data-plugin.md#tiingo-mutual-funds-daily-navs) |
+| Exchange rates | [`data`](roles.md#data) | The Federal Reserve's H.10 rates | Local | Exists: see [Using a data plugin](../how-to/using-a-data-plugin.md#the-federal-reserves-h10) |
 | The book valued daily, consolidated and by account | [`reporting`](roles.md#reporting) | The sample reporting plugin, or yours | Local | Exists: see [Value the book](../how-to/value-the-book.md) |
 | Post-trade concentration checks against the book | [`compliance`](roles.md#compliance) | Yours | Local | Build your own: it reads positions and account figures today |
 | Restricted lists and standing limits in a common form | [`compliance`](roles.md#compliance) | Yours | Local | Planned, with the order path |
@@ -192,7 +194,7 @@ reports to its investors, and trades once the order path is built.
 | An agent drafting an adjustment that a person makes | any | Any | — | Planned, in prepared changes |
 | A nightly job running as a named account | any | Any | — | Planned, in service accounts |
 | Orders decided, worked and sent | [`portfolio`](roles.md#portfolio), [`oms`](roles.md#oms), [`ems`](roles.md#ems) | Yours | Local | Planned, in the order path |
-| Orders placed at a broker | [`ccm`](roles.md#ccm) | SnapTrade; Alpaca and Tradier | Local; planned | Planned: SnapTrade in the order path, Alpaca and Tradier after it |
+| Orders placed at a broker | [`connectivity`](roles.md#connectivity) | SnapTrade; Alpaca and Tradier | Local; planned | Planned: SnapTrade in the order path, Alpaca and Tradier after it |
 
 **Configuration.** Accounts carry an owner label per fund or sleeve, and
 account groups follow them: operations staff hold `write` on the accounts
@@ -221,8 +223,8 @@ deployment records and checks, and the firm answers to MAS.
 | Each client's accounts and positions, reconciled daily with the carrying broker's | core, and [`operations`](roles.md#operations) | The sample operations plugin, or yours | Local | Exists |
 | Positions, cash and activity from the carrying broker for US equities | [`custody`](roles.md#custody) | Alpaca, its Broker API | Planned | Planned, not scheduled |
 | Spot crypto balances and activity from an exchange | [`custody`](roles.md#custody) | Yours, reading OKX | Local | Build your own |
-| Crypto prices | [`dgm`](roles.md#dgm) | Coinbase and Kraken; OKX later | Local; planned | Coinbase and Kraken exist: see [Add a public data plugin](../how-to/add-a-public-data-plugin.md); OKX planned |
-| US equity prices under the firm's licence | [`dgm`](roles.md#dgm) | Databento, Massive | Planned | Planned, in live market data |
+| Crypto prices | [`data`](roles.md#data) | Coinbase and Kraken; OKX later | Local; planned | Coinbase and Kraken exist: see [Using a data plugin](../how-to/using-a-data-plugin.md#coinbase-and-kraken); OKX planned |
+| US equity prices under the firm's licence | [`data`](roles.md#data) | Databento, Massive | Planned | Planned, in live market data |
 | Money in, out and between accounts, and journals between the firm's accounts and its clients' | [`custody`](roles.md#custody), or [`settlement`](roles.md#settlement) for a separate payment rail | The carrying broker's plugin | Planned | Planned, after the order path |
 | A firm-account mark, and custodial, joint and trust accounts | core | none | — | Planned, after the order path |
 | Opening a client's account at the carrying broker | [`custody`](roles.md#custody) | The carrying broker's plugin | Planned | Planned, not scheduled |
@@ -230,7 +232,7 @@ deployment records and checks, and the firm answers to MAS.
 | Statements, confirmations and tax forms a client can list | core, the file in the plugin's storage | The carrying broker's plugin | Planned | Planned, not scheduled |
 | Clients reaching their own accounts through the firm's app | [`portfolio`](roles.md#portfolio) and [`reporting`](roles.md#reporting) | Yours, acting as a service account | Local | Build your own, after service accounts |
 | The Travel Rule's information on each crypto transfer, and proof a client owns a self-hosted address | [`custody`](roles.md#custody) | Yours | Local | Spec to bring: an on-chain transfer's details are not in the contract yet |
-| Orders for US equities and crypto | [`oms`](roles.md#oms), [`ccm`](roles.md#ccm) | The carrying broker's and the exchange's | Planned | Planned: the contract in the order path, these plugins after it |
+| Orders for US equities and crypto | [`oms`](roles.md#oms), [`connectivity`](roles.md#connectivity) | The carrying broker's and the exchange's | Planned | Planned: the contract in the order path, these plugins after it |
 | Returns to MAS, kept as sent | [`reporting`](roles.md#reporting) | Yours | Local | Build your own; returns built from trades wait for the order path |
 
 **Configuration.** A hold of five years on every edge plugin's raw records,

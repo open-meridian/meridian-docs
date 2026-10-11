@@ -41,6 +41,14 @@ naming them: each person who has signed in, and each login a user group
 names, signed in yet or not. It warns; it does not refuse. A deployment
 enforces entitlements per plugin and per field in v18, not per person.
 
+**The data plugin knows its datasets' licences** (contract v20). A data plugin reads the licence a deployment admin set on each
+dataset its own catalogue declares, and no other's, so its **Datasets** page
+says **Licensed** or **Not licensed yet** exactly, and the plugin's admin,
+who sets no licence, sees what is still waiting for the deployment admin.
+Before v20 a data plugin did not know, and its page guessed from the wants it
+heard. Every licence change is answered there with the plugin's next read.
+A licence still says only what the admin entered.
+
 ## Entitlements
 
 An entitlement names a dataset, a running plugin instance, and the fields it
@@ -99,7 +107,11 @@ saying why. A note is required through the tools, and optional at the page.
 The Data sources page has five tools on the deployment's MCP surface, at
 the deployment admin's level: see
 [Core's tools](../api/core-tools.md#the-data-sources-page). None reads a
-price. A tool's answer is the page shown to the same person.
+price. A tool's answer is the page shown to the same person. From contract
+v20 each of the page's three acts, setting a licence,
+an entitlement and a source priority, can also be
+[prepared](prepared-changes.md) by an agent or a person, for the deployment
+admin to make.
 
 A plugin's own page reached through an agent answers what it shows the
 person, prices included where the plugin shows them. An agent's client may
@@ -111,9 +123,8 @@ should read them with that in mind.
 
 - [License and entitle a dataset](../how-to/license-and-entitle-a-dataset.md):
   the page and its tools, step by step.
-- [Add a data plugin's key](../how-to/add-a-data-plugins-key.md): Alpaca's,
-  Tradier's and Tiingo's terms, summarised; and
-  [Add a public data plugin](../how-to/add-a-public-data-plugin.md):
+- [Using a data plugin](../how-to/using-a-data-plugin.md#the-data-plugins):
+  each data plugin's terms, summarised: Alpaca's, Tradier's, Tiingo's,
   Coinbase's, Kraken's and the Federal Reserve Board's.
 - The data dictionary, field by field:
   [`DatasetLicence`](../boundaries/sidecar.md#meridian.v1.DatasetLicence),

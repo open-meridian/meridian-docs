@@ -152,6 +152,16 @@ while a dashboard page is open. Each agent you connect keeps its own place in yo
 every client reads each new notice once, and marking notices read changes no
 ticket. Notices are kept for 90 days; tickets have no expiry.
 
+**Prepared changes** (contract v20). Beside its
+notices, the Inbox has a second tab, **Prepared changes**: each change an
+agent or a person prepared for you to make, waiting, one line each (the
+act, who prepared it and through which client, why, its state and when),
+under a search and a pager, its count beside the tab's name. Each opens on
+its own page, where you make it (or open it on the page it is made on),
+discard it, or, if it is yours, share or withdraw it. A notice names a
+prepared change as it names a ticket, and `dashboard__read_inbox` answers
+both. See [Prepared changes](prepared-changes.md).
+
 ## Text is data
 
 Every title, text, note and notice was written by someone other than whoever

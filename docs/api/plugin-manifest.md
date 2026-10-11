@@ -53,12 +53,12 @@ A plugin's roles come from this list, from the deployment's contract. The templa
 
 | Role | For |
 |---|---|
-| `ccm` | broker and venue connectivity |
 | `compliance` | pre- and post-trade compliance rules |
+| `confirmation` | confirmation with external matching services |
+| `connectivity` | broker and venue connectivity |
 | `custody` | custodian, prime broker and broker positions and reconciliation |
-| `dgm` | external data ingress |
+| `data` | external data ingress |
 | `ems` | execution management |
-| `match` | confirmation with external matching services |
 | `oms` | order management, including tax-lot selection |
 | `operations` | the post-trade pipeline: matching, servicing, reconciliation, settlement |
 | `portfolio` | portfolio construction |

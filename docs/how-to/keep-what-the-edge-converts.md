@@ -4,7 +4,7 @@ A plugin at the edge speaks to a vendor and converts what the vendor says into t
 From contract v11 ("the edge keeps its own") the contract asks it to keep what it converted from,
 say how it came by every value the vendor did not send, and count each asset once, so that a reader
 written from the contract alone reconciles any custodian the same way. This page shows what a
-custody plugin does for each, with [meridian-snaptrade](https://github.com/open-meridian/meridian-snaptrade)
+custody plugin does for each, with [plugin-snaptrade](https://github.com/open-meridian/plugin-snaptrade)
 0.9.0 as the worked example.
 
 !!! note "Released 2026-10-05"
@@ -47,7 +47,7 @@ async with await meridian.connect(settings=SETTINGS, declaration=DECLARATION) as
 
 `meridian plugin upload` runs the SDK's `meridian-declaration` in the image it built, with no
 network, and sends what it prints with the version, so a deployment admin sees it before launch.
-A plugin holding no edge role (`ccm`, `custody`, `dgm`, `match`, `reporting`, `servicing`,
+A plugin holding no edge role (`connectivity`, `custody`, `data`, `confirmation`, `reporting`, `servicing`,
 `settlement`) may not ask for storage: upload refuses it, `meridian plugin check` fails it
 (`edge-storage`), and the deployment refuses it at registration.
 
@@ -197,5 +197,5 @@ A case asserting one value of a closed list your vendor never presents may be na
 `not_presented`, with why; every other case needs a producer. `meridian plugin check --verified`
 fails a custody plugin with no such test (`role-suite`), and `--run-tests` runs it. From CLI
 0.1.37 the rule is held only under `--verified`; CLI 0.1.36 and earlier hold every
-custody plugin to it. A `dgm` plugin passes its own suite the same way: see
-[Write a `dgm` against its suite](write-a-dgm.md#hold-it-to-the-suite).
+custody plugin to it. A data plugin passes its own suite the same way: see
+[Write a data plugin against its suite](write-a-data-plugin.md#hold-it-to-the-suite).

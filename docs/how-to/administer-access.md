@@ -13,6 +13,17 @@ A **permission** joins three things:
 
 So a permission reads: *the people in this user group, using these plugins, on these accounts.* See [Access](../concepts/access.md) and [Accounts](../concepts/accounts.md) for the model.
 
+`admin`, `write` and `read` are the **access levels**; `read` or `write`, the levels that reach
+accounts, are a person's **account access**.
+
+!!! note "Contract v20"
+    From contract v20 the **Books** tab is merged into **Accounts** (see
+    [To set an account's attributes in the book](#to-set-an-accounts-attributes-in-the-book)),
+    a deployment admin grants each plugin the accounts it may link to (see
+    [To grant a plugin accounts to link](#to-grant-a-plugin-accounts-to-link)), and the **Agents**
+    tab sets what people's agents may do with each act (see
+    [Prepared changes](../concepts/prepared-changes.md#what-agents-may-do)). Released 2026-10-12 in chart 0.1.298.
+
 ## To open Settings
 
 1. Sign in to the dashboard.
@@ -22,8 +33,9 @@ Only a deployment admin sees the button. In Settings it is a house, named **Home
 back to your plugins. The breadcrumb beside the mark reads **Settings**, and in a plugin's view
 **Settings / Plugins /** and the plugin's name.
 
-Settings' tabs include **Plugins**, **Permissions**, **User groups**, **Account groups**,
-**Access groups**, **Accounts**, **Books** and **Connected clients**. Each lists its
+Settings' tabs are **Plugins**, **Permissions**, **User groups**, **Account groups**,
+**Access groups**, **Accounts**, **Holds**, **Agents** and **Connected clients** (before contract
+v20, **Books** in place of **Agents**). Each lists its
 records in a table with a search box above it, which keeps the rows holding every word you type,
 and headings that sort it. On the three group tabs the section is headed **User**, **Account** or
 **Access**. Where a tab makes records, **+ Add** beside its heading opens a dialog headed with what it makes, such as **New
@@ -49,9 +61,24 @@ focus the marker, and the note shows whole in a bubble.
 To find an account, type in the search box above the table: it keeps the rows whose name,
 identifier, custodian, type, owner or note hold every word you type.
 
-To change one, choose **Edit** on its row. What you save replaces all four, so a field you empty is
-cleared. To close one, choose **Close**. A closed account is kept, and nobody works in it. Accounts
-are never deleted.
+To change one, choose **Edit** on its row. What you save under **Account** replaces all four, so a
+field you empty is cleared. To close one, choose **Close**. A closed account is kept, and nobody
+works in it. Accounts are never deleted.
+
+## To set an account's attributes in the book
+
+From contract v20 the tab's **Base currency** and **Lot relief** columns are
+each account's attributes in the [book of record](../concepts/the-book-of-record.md). To change
+them:
+
+1. Choose **Edit** on the account's row. The dialog has two sections, **Account** and **In the
+   book**, each with its own save.
+2. Under **In the book**, which says since when the account is in the book, set the **Base
+   currency**, three capital letters, and **Lot relief, when a sale names none**.
+3. Enter a **Reason**, and choose **Save**.
+
+Each attribute you change is its own entry in the account's journal, with your reason. **In the
+book** is shown only for an account that already exists. Before v20 this was the **Books** tab.
 
 ## To group accounts
 
@@ -153,7 +180,8 @@ only `admin`, is granted on no account group: configuring is not an act on an ac
 access group is granted on an account group. The same permission cannot be granted twice.
 
 An access group already granted on no account group cannot gain a `read` or `write` entry, which
-would need one: the page says which permission to withdraw, or give the data level in another group.
+would need one: the page says which permission to withdraw, or give the account access in another
+group.
 
 ## To make someone a deployment admin
 
@@ -169,17 +197,22 @@ it to **All plugins (admin)** as well.
 1. Make an access group giving the plugin's role at **Admin**, or at **Admin, read** or **Admin,
    write** if they also work in it. On a plugin holding several roles, give each role they are to
    administer its own row: a setting serving several roles is set only by an admin of every one.
-2. Grant it to a user group they are in: on **None** for admin alone, or on an account group for a
-   data level beside it.
+2. Grant it to a user group they are in: on **None** for admin alone, or on an account group for
+   account access beside it.
 
 They find the plugin on their home with **Manage**, which opens on its **Summary**, its status and
 the figures it reports, with its **Settings** and its pages at `admin` after it. Its settings are
 also in the dashboard's admin view of the plugin, at `/admin/plugins/<instance>`, which shows them
-the tabs **Overview**, **Settings** and **Access**; they read **Access** and change nothing there,
-since only a deployment admin grants. From contract v15 **Access** lists each grant with its
-**Role**: the user group, the role, the level and the accounts, a grant holding nothing flagged
-with the plugin's roles, paged. How they fill the form is in
-[Set a plugin's settings](set-a-plugins-settings.md).
+the tabs **Overview**, **Settings** and **Access**, and from contract v20 **Accounts**; they read
+who holds access on **Access** and the accounts granted on **Accounts**, and change neither, since
+only a deployment admin grants. From contract v15 **Access** lists each grant with its **Role**:
+the user group, the role, the level and the accounts, a grant holding nothing flagged with the
+plugin's roles, paged. From contract v20 it also lists the plugin's acts under
+**What agents may do**: who may make each by hand, what their agents may (May make, Prepare only
+or May not, capped where the deployment's ceiling is stricter) and whether it needs a second pair
+of eyes, which an admin of the act's role sets with **Edit** on its row (see
+[Prepared changes](../concepts/prepared-changes.md#what-agents-may-do)). How they fill the form is
+in [Set a plugin's settings](set-a-plugins-settings.md).
 
 To make every plugin's admins one group, grant **All plugins (admin)** on **None**. To keep
 configuring plugins apart from administering the deployment, withdraw the permission first run made
@@ -191,11 +224,29 @@ unless granted.
 On the **Permissions** tab, choose **Withdraw** on its row and confirm. The people in the user group
 lose what it gave them.
 
+## To grant a plugin accounts to link
+
+From contract v20 a plugin that links external accounts links them only to
+the accounts a deployment admin granted it, and a new plugin instance is granted none. To grant
+some:
+
+1. On the **Plugins** tab, open the plugin, then its **Accounts** tab, **Accounts it may link to**.
+2. Under **Grant**, choose an account, say why, and choose **Grant**. Grant each account its admins
+   may link one of the source's accounts to.
+3. To take one back, choose **Withdraw** on its row and confirm. Its link, if one was made, is kept;
+   no new link can name it.
+
+The tab says, for each account granted, whether the plugin has linked it yet, and who last changed
+the grant and when. A grant lets the plugin's admins link; it gives nobody anything to read or
+write, which is still a permission. At the upgrade to v20 each plugin is granted the accounts its
+links already named. See [Accounts a plugin may link to](../concepts/accounts.md#accounts-a-plugin-may-link-to).
+
 ## To link an external account
 
 A plugin that reads a broker or custodian names accounts as that source does. Linking tells the
 deployment which of your accounts that is. Until a source's account is linked, the deployment
-refuses the plugin's rows for it.
+refuses the plugin's rows for it. From contract v20 the plugin offers only the accounts granted
+to it (above).
 
 Each plugin links its own external accounts, on its own pages at `admin`, because only the plugin
 knows what its accounts mean. An admin of the plugin links them, under **Manage**. For SnapTrade:

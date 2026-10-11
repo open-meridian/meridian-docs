@@ -14,8 +14,8 @@ piece of data lives.
 | [Projects and deployments](projects-and-deployments.md) | How a deployment is registered on the platform, how it proves who it is, and the one-time codes it is set up with |
 | [Plugins, roles and grants](plugins.md) | What a plugin is, what it may do on the bus, how that is decided, and how people reach its pages, by Manage, Open and View |
 | [Roles](roles.md) | Each of the thirteen roles: its persona, duties, what it leaves to another role and what it holds; the principles a plugin must fit, and how an idea maps to the least roles |
-| [Access](access.md) | How people sign in to a deployment, and how the dashboard decides what each of them may reach, per role of a plugin from contract v15 |
-| [Accounts](accounts.md) | The firm's accounts, and how an account at a broker or custodian is tied to one |
+| [Access](access.md) | How people sign in to a deployment, and how the dashboard decides what each of them may reach, per role of a plugin from contract v15; from contract v20 the access levels and account access, and a person's own settings |
+| [Accounts](accounts.md) | The firm's accounts, how an account at a broker or custodian is tied to one, and from contract v20 the accounts a plugin may link to and each account's attributes in the book |
 | [The book of record](the-book-of-record.md) | The firm's own record of what each account holds, how it differs from the street and the edge, and how operations opens and reconciles it |
 | [The custodian's activity](the-custodians-activity.md) | What a custody plugin reports of what happened on an account, and how operations explains a break and proposes its entry from it |
 | [The archive](the-archive.md) | An edge plugin's raw records: each kind's window, archived, kept or deleted past it, the deployment admin's archive, bound and holds, restore, and the record every move leaves. |
@@ -26,6 +26,7 @@ piece of data lives.
 | [Venues](venues.md) | The platform's venue master: a venue ID, its MIC and vendors' codes, pulled one at a time, and where a deployment names a venue |
 | [Dates and time](dates-and-time.md) | Moments and plain dates, a daily price keyed by its business date, a dataset's day, and a date checked at both ends |
 | [Tickets and the inbox](tickets-and-the-inbox.md) | How a problem someone sees reaches the people who can act on it: who sees a ticket, advice that changes nothing, the acts only a person takes, and the inbox |
+| [Prepared changes](prepared-changes.md) | An agent or a person prepares a change and a person makes it; what agents may do with each act, set by the deployment admin and a plugin's admin; the second pair of eyes; lapse (contract v20) |
 | [Development deployments](development-deployments.md) | A deployment installed for writing plugins, and why a firm's own deployment is never one |
 
 !!! note "What Open Meridian does today"
@@ -36,6 +37,9 @@ piece of data lives.
     can act on it. From contract v18 it keeps the lake: prices and bars from data
     plugins, licensed and entitled per dataset, and the book valued from them.
     From contract v19 it adds trades and quotes, streamed, for `signal` and
-    `ems` plugins. Order routing and execution are on the roadmap and
+    `ems` plugins. From contract v20 it adds prepared
+    changes, which keep a person in the loop of an agent's work, the
+    accounts a deployment admin grants each plugin, and one first-use path
+    per role. Order routing and execution are on the roadmap and
     are not available yet. Where a page describes something that is specified
     but not built, it says so.

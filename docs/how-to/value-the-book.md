@@ -6,17 +6,29 @@ Valuing the book is a `reporting` plugin's: it reads the
 quantity by its price, and shows the result. It records nothing: a
 valuation is computed and shown, never kept in core or published back.
 
-The sample reporting plugin, meridian-sample-reporting, does this: a
+The sample reporting plugin, from plugin-sample-reporting, does this: a
 reference implementation of valuing a book at a business date's prices, not
 a firm's valuation policy. You can run it as it is, or read it and build
 your own from the template below.
+
+!!! note "Contract v20"
+    plugin-sample-reporting 0.3.0, released 2026-10-12, is built on
+    open-meridian 0.24.0 (contract v20), runs on chart 0.1.298 or later,
+    and adds the reporting role's Datasets page and figures, and each
+    person's own [Board](watch-the-board.md#your-own-board).
 
 !!! note "Contract v19"
     meridian-sample-reporting 0.2.0, released 2026-10-10, is built on
     open-meridian 0.23.0 (contract v19), runs on chart 0.1.294 or later, and
     adds the [Board](watch-the-board.md) and any reporting currency.
     meridian-sample-reporting 0.1.0 is built on open-meridian 0.22.0
-    (contract v18), and runs on chart 0.1.292 or later.
+    (contract v18), and runs on chart 0.1.292 or later. From v20 the plugin
+    repositories are named `plugin-<name>`: this one is
+    plugin-sample-reporting; the plugin keeps its name.
+
+How to set up any reporting plugin, its common Datasets page and figures,
+and each person's own views, from contract v20, is
+[Using a reporting plugin](using-a-reporting-plugin.md).
 
 ## What the sample reporting plugin shows
 
@@ -78,8 +90,7 @@ never as zero**, and counted in what the total leaves out:
 
 1. **Data sources.** Launch at least one data plugin and entitle this plugin
    to its datasets, setting the source priority where two datasets price
-   the same thing: see [Add a data plugin's key](add-a-data-plugins-key.md),
-   [Add a public data plugin](add-a-public-data-plugin.md) and
+   the same thing: see [Using a data plugin](using-a-data-plugin.md) and
    [License and entitle a dataset](license-and-entitle-a-dataset.md).
    Nothing is priced without one.
 2. **A book.** Accounts with opening balances, recorded through an
@@ -89,7 +100,7 @@ never as zero**, and counted in what the total leaves out:
    `reporting`:
 
     ```sh
-    meridian plugin upload --dir meridian-sample-reporting
+    meridian plugin upload --dir plugin-sample-reporting
     meridian plugin launch sample-reporting <version> --instance sample-reporting-1
     ```
 
@@ -128,8 +139,8 @@ and nothing it reads leaves the deployment.
 
 ## Build your own
 
-A reporting plugin of your own uses what the sample does (contract v19,
-open-meridian 0.23.0, CLI 0.1.38):
+A reporting plugin of your own uses what the sample does (contract v20,
+open-meridian 0.24.0, CLI 0.1.39):
 
 - **The reads.** A `reporting` plugin reads positions with
   [`list_positions`](../api/typed-operations.md#list_positions) and prices
@@ -151,11 +162,10 @@ open-meridian 0.23.0, CLI 0.1.38):
     ```
 
   The `reporting` suite's `resolves-its-reporting-currency` case holds a
-  plugin to it from open-meridian 0.23.0. **Known limit in v19:** core
-  does not yet make a `reporting` plugin's resolve read-only, so a code
-  nothing matches could record a miss, a local record minted for it. A
-  currency's ISO 4217 code resolves to its cash instrument either way.
-  Fixed in v20: see
+  plugin to it from open-meridian 0.23.0. In v19 core did not yet make a
+  `reporting` plugin's resolve read-only, so a code nothing matched could
+  record a miss, a local record minted for it; from contract v20 core enforces it, and a currency the deployment does not
+  hold is fetched from the platform's master: see
   [Instruments](../concepts/instruments.md#resolving-an-identifier).
 - **A template.** `meridian plugin new my-report --role reporting` writes a
   `reporting` plugin that shows the positions in its account scope at the
@@ -165,8 +175,17 @@ open-meridian 0.23.0, CLI 0.1.38):
   an agent the person delegated to. From CLI 0.1.38 it resolves its
   reporting currency by its ISO 4217 code. Its tests run the `reporting`
   suite the SDK carries; `meridian plugin check --verified` does not hold
-  that suite, only the `custody` and `dgm` suites, so keep the test. See
-  [`plugin new`](../api/cli.md#meridian-plugin-new).
+  that suite, only the `custody` and `data` suites, so keep the test. From
+  CLI 0.1.39 the template is built on the role's
+  common part, `meridian.roles.reporting`: a **Datasets** page under Manage
+  (`read_datasets`), the figures "Last valued" and "Not priced", and the
+  **Reporting currency** setting; `role-pages` holds it under `--verified`.
+  See [`plugin new`](../api/cli.md#meridian-plugin-new).
+- **Each person's own views** (contract v20). Declare
+  a setting `per_person=True`, save a person's values for them with
+  `plugin.set_own_settings(...)` from a page under Open, and read them from
+  each of their requests as `request.own_settings`. See
+  [The Python SDK](../api/python-sdk.md#own_settings).
 - **Entitlements.** A deployment admin entitles the plugin to the datasets
   it reads: see [License and entitle a dataset](license-and-entitle-a-dataset.md).
 

@@ -88,7 +88,7 @@ Each is easier to make now than after the install.
 
 | Choice | Use it when | What you agree to |
 |---|---|---|
-| One the deployment brings | Trying Open Meridian, or developing against it | It runs in your cluster and its roles and passwords are made for you. It survives `meridian down`. It is lost with the cluster, and **nobody backs it up**. |
+| One the deployment brings | Trying Open Meridian, or developing against it | It runs in your cluster and its roles and passwords are made for you. It survives `meridian down`. It is lost with the cluster, and **nobody backs it up** unless you [turn on backups](../how-to/back-up-and-restore.md). |
 | One you already run | Anything you depend on | Your own Postgres, in Docker or managed by your cloud. You make two roles first. |
 
 If you use your own Postgres, create two roles now. The **migrating** role may create tables; the

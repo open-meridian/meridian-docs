@@ -234,27 +234,34 @@ street; see [Accounts](accounts.md#how-accounts-bound-a-plugin).
 A position is delivered whole, its lots and pending settlements included, so
 a plugin that hears it needs no second read.
 
-## The Books tab
+## An account's attributes, on the Accounts tab { #the-accounts-tab }
 
-A deployment admin sees the book on the **Books** tab of the dashboard's
-**Settings**. It lists every open account, one row each, with:
+From contract v20 a deployment admin sees the book's
+attributes of each account on the **Accounts** tab of the dashboard's
+**Settings**, with the account itself: there is one book per deployment, so
+they sit with the account they belong to. Each account's row has two
+columns from the book:
 
 | Column | What it shows |
 |---|---|
-| **Account** | The account's name and identifier |
 | **Base currency** | The account's base currency in the book |
 | **Lot relief** | The method a sale relieves lots by when it names none: first in, first out; last in, first out; highest cost; lowest cost; or average cost |
-| **In the book since** | The date the account's opening balance stands for, or *Not yet* before it has one |
 
-**Edit** on a row opens a dialog headed with the account's name, such as
-**Main's book**. It
+An account's **Edit** has a section of its own, **In the book**, beside
+**Account**. Beside its title it says since when the account is in the book,
+the date its opening balance stands for, or *not yet* before it has one. It
 sets the **Base currency**, three capital letters, and **Lot relief, when a
-sale names none**, and asks for a **Reason**. Each attribute you change is its
-own entry in the account's journal, with your reason and you as the one who
-made it; saving with nothing changed is refused, saying the book holds these
-already. An account may have attributes before its opening balance. If the
-book does not answer, the tab says so, and the rest of Settings is drawn
-without it.
+sale names none**, and asks for a **Reason**, with its own **Save**. Each
+attribute you change is its own entry in the account's journal, with your
+reason and you as the one who made it; saving with nothing changed is
+refused, saying the book holds these already. An account may have
+attributes before its opening balance. If the book does not answer, the
+tab says so above the accounts, and the rest is drawn without it. See
+[In the book](accounts.md#in-the-book).
+
+Before contract v20 the same attributes, and the date, were on a tab of
+their own, **Books**, one row an account, with the same dialog headed with
+the account's name.
 
 The tab shows no position, lot or break. The dashboard reads every account's
 attributes and no account's data, as a deployment admin reaches no account's

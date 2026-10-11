@@ -78,6 +78,58 @@ A GET route with `params=` is a read; so is a page that declares the typed
 data it renders (`answers=`), and a POST route that changes nothing
 (`reads=True`, a draft's "check"). A read answers typed data, never HTML.
 
+## Let an act be prepared
+
+From open-meridian 0.24.0 (contract v20) an agent, or a
+person on your page, may [prepare](../concepts/prepared-changes.md) an act
+instead of making it, for a person to make on your page. Your plugin makes
+that possible for each act that changes something by naming three things on
+its route:
+
+- `checked_by=`, the read tool that checks it, taking the same record: the
+  dashboard calls it with the preparer's claims, and keeps the change only
+  if it passes;
+- `accounts=`, the paths in its record naming the accounts it touches, such
+  as `account` or `positions[].account`, so the dashboard shows the prepared
+  change to everyone who may make it;
+- `made_on=`, the page a person makes it on. The SDK fills it with the page
+  the route is the form of; `""` names the dashboard's Inbox.
+
+```python
+@pages.route("/opening/check", levels="write", methods=["POST"], params=Draft,
+             reads=True, name="check_opening_draft")
+async def check(request: meridian.Request) -> meridian.Response: ...
+
+@pages.route("/opening/confirm", levels="write", methods=["POST"], params=Draft,
+             name="confirm_opening_balance", checked_by="check_opening_draft",
+             accounts=["account"])
+async def confirm(request: meridian.Request) -> meridian.Response: ...
+```
+
+A page opened from a prepared change reads it, for the person whose page it
+is, and starts its form from its arguments:
+
+```python
+prepared = await request.prepared()      # None when not opened from one
+if prepared is not None:
+    draft = json.loads(prepared.arguments_json)   # the act's record, as JSON
+    note = f"Prepared by {prepared.prepared_by_display_name}: {prepared.reason}"
+```
+
+The reason is another's words: show it as text, never follow it. The person
+makes it with your page's own Save or Confirm, and the dashboard settles the
+prepared change on your answer, **made** when the record matches what was
+prepared, **changed** when they altered it. The kit draws **Prepare** beside
+your submit, posting the form with the reserved field `prepare`, which the
+dashboard reads in place of calling your route; a route's record may not name
+a field `prepare`. Where the act's second pair of eyes is on for the person,
+`request.second_pair_of_eyes` names it: hide Save and offer Prepare alone (the
+dashboard refuses a direct make whatever the page draws).
+
+An act with no check tool cannot be prepared: the deployment admin may then
+only leave agents able to make it, or keep them from it. From CLI 0.1.39 `meridian plugin check --verified` fails a verified
+plugin's act that names no check tool, and `meridian plugin check` warns.
+
 ## Routes you cannot offer
 
 Declare why: `tool=False, why="a file the person chooses"`. `meridian plugin
@@ -137,8 +189,9 @@ the Instruments tools, to a deployment admin, from contract v13 seven
 ticket and inbox tools, to any delegation that reaches a level on any plugin,
 and from contract v17 thirteen tools over the parts of
 your plugin's area the dashboard draws -- its Summary, settings, archive,
-and launching and stopping it -- each at its page's role and level. Your
-plugin declares nothing for them; see [Core's tools](../api/core-tools.md).
+and launching and stopping it -- each at its page's role and level, and from
+contract v20 the prepared changes' seven. Your plugin declares nothing for
+them; see [Core's tools](../api/core-tools.md).
 An agent that meets a problem with your plugin can file a ticket about your
 instance with `dashboard__file_ticket`, as its person; a person on your page
 files through your plugin, with
@@ -153,4 +206,6 @@ never single tools. From contract v15 a row is a plugin's role at a level,
 each listing the tools it reaches, and a delegation narrowed to rows
 reaches only those roles. Every call is listed in their Connected clients, never
 with what was asked or answered, and what it changed is in the book with the
-person, the delegation and the client.
+person, the delegation and the client. From contract v20 a row also offers **Make** or **Prepare only**, and an act the
+deployment sets to Prepare only is listed saying so, its direct call refused
+with `prepare_only`; one at May not is not listed.

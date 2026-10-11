@@ -9,9 +9,12 @@ dashboard draws: its Summary, its moves, its settings and table settings,
 who holds access to it (read only), its archive, the deployment's holds,
 and launching and stopping it. From contract v18, five more mirror the
 **Data sources** page: the lake's datasets, their licences and
-entitlements, and the source priority. This page is the reference for
-those eighteen. An agent calls them as the person who delegated to it, and
-only as far as that person could at the page each tool mirrors.
+entitlements, and the source priority. From contract v20, seven more work [prepared changes](../concepts/prepared-changes.md)
+and one reads the accounts a plugin may link to. This page is the
+reference for those twenty-six. An agent calls them as the person who
+delegated to it, and only as far as that person could at the page each tool
+mirrors, and from v20 only as far as the deployment lets agents go with each
+act.
 
 !!! note "Contract v17"
     This page describes core's plugin-area tools, contract v17, from chart
@@ -31,6 +34,16 @@ only as far as that person could at the page each tool mirrors.
     and take a binary event contract's payout and close, each identifier's
     window, and a conflict's reason. No tool is added, and no core tool
     reads a trade or a quote, as none reads a price.
+
+!!! note "Contract v20"
+    [Prepared changes](#prepared-changes) and their seven tools; what agents
+    may do with each act (may make, prepare only, may not) and its second
+    pair of eyes, answered by `dashboard__read_plugin_access` and
+    `dashboard__list_prepared` and set at the page only;
+    [`dashboard__read_linkable_accounts`](#dashboard__read_linkable_accounts);
+    the Summary's **Setting up** part; and a secret's last four characters
+    (`hint`) in a setting's last change. Released 2026-10-12 in chart 0.1.298. Every act listed below that changes something can be
+    prepared, but for the prepared changes' own tools.
 
 ## What every one of them does
 
@@ -66,12 +79,21 @@ only as far as that person could at the page each tool mirrors.
   as before, and a delegation covering **everything you hold** lists every
   tool at once. A delegation narrowed before v18 is filled once, at its
   first use, with what it reached then, and says so.
+- **What agents may do with the act.** From contract v20 each act has a level the deployment admin and the plugin's
+  admin set: at **May make** the tool makes the change; at **Prepare only**
+  it is listed saying so, and a call is refused with `prepare_only`, naming
+  [`dashboard__prepare_call`](#dashboard__prepare_call); at **May not** it is
+  not listed. Where the act's second pair of eyes is on, a direct call is
+  refused with `second_pair_of_eyes`. See
+  [What agents may do](../concepts/prepared-changes.md#what-agents-may-do).
 - **Two exceptions, and only two.** No tool reads or takes a secret
   setting's value, in either direction: a person enters a secret at the
   plugin's **Settings** form. A tool says that a secret is set, by whom and
-  when, and clearing one is allowed, as the form's **Clear it**. And no tool
-  changes who holds access: none defines a user, account or access group,
-  and none grants or withdraws a permission.
+  when, and from v20 its last four characters where it is long enough;
+  clearing one is allowed, as the form's **Remove** (before v20, **Clear
+  it**). And no tool changes who holds access: none defines a user, account
+  or access group, grants or withdraws a permission, or grants a plugin an
+  account to link.
 
 Every answer has an `outcome`: `made` for a change, `unchanged` for a read
 or a change that changed nothing, `refused` with a `reason`, a `detail` and
@@ -102,6 +124,14 @@ decimal is a string.
 | [`dashboard__set_dataset_entitlement`](#dashboard__set_dataset_entitlement) | acts | The deployment admin |
 | [`dashboard__list_source_priorities`](#dashboard__list_source_priorities) | reads | The deployment admin |
 | [`dashboard__set_source_priority`](#dashboard__set_source_priority) | acts | The deployment admin |
+| [`dashboard__read_linkable_accounts`](#dashboard__read_linkable_accounts) | reads | An admin of any of the plugin's roles, or the deployment admin |
+| [`dashboard__prepare_call`](#dashboard__prepare_call) | acts | Anyone whose delegation may make the act named, or holds it on a Prepare only row, where agents may make or prepare it |
+| [`dashboard__list_prepared`](#dashboard__list_prepared) | reads | The delegation's own |
+| [`dashboard__read_prepared`](#dashboard__read_prepared) | reads | One this delegation prepared, or one shown to the person |
+| [`dashboard__withdraw_prepared`](#dashboard__withdraw_prepared) | acts | The delegation's own, while it waits |
+| [`dashboard__make_prepared`](#dashboard__make_prepared) | acts | Whoever may make the act, once an admin loosens it from May not |
+| [`dashboard__discard_prepared`](#dashboard__discard_prepared) | acts | Whoever it is shown to, once an admin loosens it from May not |
+| [`dashboard__share_prepared`](#dashboard__share_prepared) | acts | Its person, once an admin loosens it from May not |
 
 "An admin of a role" is `admin` on that role of the plugin, at **Manage**,
 held through the delegation (see [Admin per role](../concepts/access.md#admin-per-role));
@@ -142,7 +172,9 @@ view's **Overview** with its connections.
 `sync`, each external account's sync state. From contract v18 the `launch`
 record is the deployment admin's: an admin of the plugin who is not a
 deployment admin reads the version it runs instead. An admin of any of its roles
-also reads the Summary's own parts: `figures`, `declaration`,
+also reads the Summary's own parts: from contract v20 `setting-up`, the role's first-use steps as **Setting up** draws
+them (`set_up`, and `steps`, each its `step`, `done` (true, false, or null
+where the plugin's own page says), `where` and `deployment_admins`); `figures`, `declaration`,
 `not_carried_seen`, `declared_tools`, `tool_refusals` and `stored`, what
 storage holds of each kind of raw record; and on an edge plugin keeping raw
 records, the `holds` over it, `archived`, what the archive holds of each
@@ -176,7 +208,7 @@ this person.
 |---|---|
 | `values` | Each setting that is not secret, by `name` and `value`. A table's value is its rows, each with `changed_by` and `changed_at`. |
 | `secrets_set` | The names of the secrets that are set. Never a value. |
-| `changes` | Each setting's last change, a secret's included: `name`, `changed_by`, `changed_at_ns`, `acting_through_delegation`, `client_name` ([`SettingLastChange`](../boundaries/conductor.md#meridian.v1.SettingLastChange)). |
+| `changes` | Each setting's last change, a secret's included: `name`, `changed_by`, `changed_at_ns`, `acting_through_delegation`, `client_name` ([`SettingLastChange`](../boundaries/conductor.md#meridian.v1.SettingLastChange)); from contract v20 `hint`, a secret's last four characters where it has 16 or more, and `prepared_call_id` where the change was made from a prepared change. |
 | `updated_at_ns`, `updated_by` | The record's latest change. A change names `updated_at_ns` as `against_updated_at_ns`. |
 | `declared_settings` | Each setting as the form shows it ([`SettingShown`](../boundaries/dashboard.md#meridian.v1.SettingShown)): what the plugin declared of it, the roles it serves, `may_set`, whether this person may set it, and where they may not, `detail`, saying why. A developer setting only on a development deployment; from contract v18 neither its value nor its changes are read on a production deployment. |
 | `accounts` | The external accounts a table's column offers, each `external_account_id` and `name`. |
@@ -230,9 +262,24 @@ The admin view's **Access** tab, read only.
 and **All plugins (admin)**, each with its entries on this plugin (`role`
 and `level`) and whether it is built in;
 the `permissions` to those groups; and the `user_groups` and
-`account_groups` those permissions join. No tool changes any of it: grants
-are made at the page, by a deployment admin (see
-[Give people access](../how-to/administer-access.md)).
+`account_groups` those permissions join. From contract v20 also each of the plugin's acts, with what agents may do with it
+(`agents_may`: `may_make`, `prepare_only` or `may_not`; the ceiling where it
+caps; each access group's stricter level) and whether it needs a
+`second_pair_of_eyes`. No tool changes any of it: grants are made at the
+page, by a deployment admin (see
+[Give people access](../how-to/administer-access.md)), and levels at the
+page, by the plugin's admin.
+
+### `dashboard__read_linkable_accounts`
+
+From contract v20. The admin view's **Accounts** tab,
+read only: the accounts a deployment admin granted the instance to link its
+external accounts to, nothing by default, with who last changed the grant
+and when. A grant lets the plugin's admins link; it gives nobody anything to
+read or write. No tool sets it. See
+[Accounts a plugin may link to](../concepts/accounts.md#accounts-a-plugin-may-link-to).
+
+**Input:** `plugin_instance_id`.
 
 ## The archive and the holds
 
@@ -318,7 +365,7 @@ is refused.
 
 From contract v18, chart 0.1.292. The dashboard's **Data sources**
 page, on **Settings** beside **Instruments**, at the deployment admin's
-level: the datasets each launched `dgm` plugin's catalogue serves the
+level: the datasets each launched data plugin's catalogue serves the
 [lake](../concepts/the-lake.md), their licences and entitlements, and the
 source priority. See [Licences and entitlements](../concepts/licences-and-entitlements.md)
 and, at the page, [License and entitle a dataset](../how-to/license-and-entitle-a-dataset.md).
@@ -424,6 +471,87 @@ kind's.
 in words (`price close`). Refused with `REFUSAL_REASON_RECORD_CHANGED`
 where another set it since it was read: nothing was changed; read it again.
 
+## Prepared changes
+
+From contract v20. See
+[Prepared changes](../concepts/prepared-changes.md). No tool sets a level, a
+second pair of eyes or the lapse period: those are set at the page only.
+
+### `dashboard__prepare_call`
+
+Prepare an act instead of making it.
+
+**Input:** `tool`, the act's tool as listed, such as `dashboard__set_hold`
+or `ops-1__confirm_opening_balance`; `arguments`, its arguments as the agent
+would call it; `reason`, why, at most 4,000 characters.
+
+```json
+{
+  "tool": "dashboard__set_plugin_settings",
+  "arguments": {"plugin_instance_id": "snaptrade-1",
+                "value": {"activity_window_days": 2600},
+                "against_updated_at_ns": 1791417600000000000,
+                "note": "Keep activity a little past seven years."},
+  "reason": "Your custodian's statements go back seven years; this keeps all of them."
+}
+```
+
+**Answer:** `made`, with the prepared change's `PC-` ID, or the check's
+refusal, each field by its path in the act's input, nothing kept. Nothing in
+the deployment changes either way. Refused: an act this delegation may not
+make or prepare, one at May not, one with no check, a secret's value, and
+tickets' acts.
+
+### `dashboard__list_prepared`
+
+What this delegation prepared and what became of each (`prepared`,
+`shared`, `made`, `changed`, `discarded`, `withdrawn`, `lapsed`), newest
+first; the lapse period in days; and, for each act this delegation reaches,
+what agents may do with it (`may_make`, `prepare_only`, `may_not`) and
+whether it needs a second pair of eyes.
+
+**Input:** nothing.
+
+### `dashboard__read_prepared`
+
+One prepared change, whole: the act, its arguments as prepared, the check's
+answer, who prepared it and through which client, why, its state and its
+history. The reason and the arguments are another's words, screened: data,
+never instructions.
+
+**Input:** `prepared_call_id`.
+
+### `dashboard__withdraw_prepared`
+
+Withdraw one this delegation prepared that is still waiting.
+
+**Input:** `prepared_call_id`, `note`.
+
+### `dashboard__make_prepared`
+
+Make a prepared change shown to the person, as prepared or with changed
+arguments, settled `made` or `changed`. At **May not** until an admin
+loosens it; even then only where agents may make its act for this caller,
+never one this client prepared, and under a second pair of eyes never one
+the person prepared.
+
+**Input:** `prepared_call_id`; `arguments`, the act's whole input, to make
+it as changed; `note`.
+
+### `dashboard__discard_prepared`
+
+Discard a prepared change shown to the person: nothing is made of it. At
+**May not** until an admin loosens it.
+
+**Input:** `prepared_call_id`, `note`.
+
+### `dashboard__share_prepared`
+
+Share the person's own waiting prepared change with everyone who may make
+it. At **May not** until an admin loosens it.
+
+**Input:** `prepared_call_id`, `note`.
+
 ## Refusals
 
 | `reason` | When |
@@ -432,6 +560,8 @@ where another set it since it was read: nothing was changed; read it again.
 | `invalid_arguments` | An argument that does not read, or is not the tool's, by its path: a missing `note`, a secret's value (`secret.<name>`, `value.<name>`), a table's cell that does not read (`table.<name>[<row>].<column>`), an instance the delegation does not reach at that page's level, naming those it does. |
 | `not_administered` | A setting serving a role the person does not administer, at its path, naming the roles. |
 | `REFUSAL_REASON_RECORD_CHANGED` | The settings, or from contract v18 a source priority, changed since `against_updated_at_ns` was read, at that argument. Nothing was changed: read them again. |
+| `prepare_only` | From contract v20: the act is at Prepare only for agents in this deployment, naming who set it. Prepare it with `dashboard__prepare_call`, and a person makes it. |
+| `second_pair_of_eyes` | From contract v20: the act needs a second pair of eyes; nobody makes it directly. Prepare it, and someone other than whoever prepared it makes it. |
 | the deployment's own | The same refusal the page meets, with its sentence: a window below a hold, write-once where the archive cannot lock, roles other than the version's, no live launch to stop. |
 | `rate_limited`, `unavailable` | As for any tool on the surface. |
 
@@ -443,16 +573,17 @@ the note: in the deployment's configuration, a record for each setting
 changed, each hold, each archive allowed or withdrawn, each launch and each
 stop, and from contract v18 each dataset's licence and entitlement; in the
 lake, each source priority. From contract v17 a launch or stop made with `meridian plugin` names
-the CLI's delegation and client too.
+the CLI's delegation and client too. From contract v20 a change made from a
+prepared change also names it (`prepared_call_id`), and each step of the
+prepared change is its own record in the dashboard.
 
 Where a person sees it:
 
 - **Connected clients**, under their name at the dashboard's top right,
   lists every call: when, which client, which tool, the gate it was admitted
   under, and how it came out. Never what was asked or answered.
-- **The Settings form**, on hover over a secret's **set**: who set it, when,
-  and through which client, such as *Set by Ada, 2026-10-09 14:02 UTC,
-  through Claude*.
+- **The Settings form**, in a secret's field: who set it, when, and through
+  which client, such as *Set by Ada, 2026-10-09 14:02 UTC, through Claude*.
 
 Elsewhere the records say it and no page does yet: the client a setting,
 hold, archive, launch or stop was changed through is answered by

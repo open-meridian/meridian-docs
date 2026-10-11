@@ -2,7 +2,7 @@
 
 The **lake** is where a deployment keeps what its data sources say: prices
 and bars, and from contract v19 trades and quotes, each as one source stated
-it, kept side by side, never overwritten. A plugin holding `dgm` puts them
+it, kept side by side, never overwritten. A plugin holding `data` puts them
 in, converted at the edge from its vendor's form. The reading roles,
 `reporting`, `portfolio`, `compliance` and `signal`, read prices and bars and
 hear them as they are recorded; trades and quotes are read by `signal` and
@@ -22,6 +22,14 @@ the deployment.
     chart 0.1.294. Its operations are `preview` in v19. A runtime serving
     v18 or earlier refuses a plugin built on 0.23.0 at registration, naming
     both versions; a plugin on 0.22.0 runs unchanged on chart 0.1.294.
+
+!!! note "Contract v20"
+    From contract v20 the role `dgm` is named `data` ("data plugin"); a
+    restarted data plugin fills the gap its restart left from the venue's
+    history, where the vendor allows (see
+    [A restarted data plugin resumes](#a-restarted-data-plugin-resumes));
+    and a data plugin reads its own datasets' licences. In core and
+    open-meridian 0.24.0, released 2026-10-12 in chart 0.1.298.
 
 ## Two stores, two questions
 
@@ -87,7 +95,7 @@ instants and name **no business date**: see [Dates and time](dates-and-time.md).
 ## Datasets
 
 Every row belongs to a **dataset**: one plugin instance's stream of one
-kind of data from one vendor. A `dgm`'s version declares its datasets in
+kind of data from one vendor. A data plugin's version declares its datasets in
 its **catalogue**, shown before it is launched and approved with it. Each
 declares:
 
@@ -104,13 +112,13 @@ declares:
 
 A catalogue is checked when the version is uploaded and again when its
 plugin registers: a key twice, a type the lake does not have, a zone that is
-no time zone, or a catalogue on a version not holding `dgm` is refused,
+no time zone, or a catalogue on a version not holding `data` is refused,
 naming the field. A stopped instance's datasets leave the deployment's
 configuration with it.
 
 ## Recorded once, restated as a new version
 
-A `dgm` records rows in batches of 1 to 500, each batch recorded whole or
+A data plugin records rows in batches of 1 to 500, each batch recorded whole or
 refused naming the row and the field. Each row carries:
 
 - its **row key**, the plugin's own, made from its raw record, so the same
@@ -175,14 +183,14 @@ unresolved, beyond its history, or not kept.
 
 A read the lake cannot answer from what it holds becomes a **want**, sent
 to the instance serving the dataset alone: the subjects, the kinds and the
-date or range wanted. The `dgm` fetches them and records them against the
+date or range wanted. The `data` fetches them and records them against the
 want, or declines what it cannot serve, per subject, with a reason. The
 reader's answer says the source was asked, and the reader hears the rows
 when they are recorded. Identical wants from several readers are one want.
 
 A reader that keeps asking for the same subjects, such as a reporting
 plugin valuing the instruments in the book, leaves a **standing want**: the
-`dgm` keeps those subjects current until no reader has asked for a whole
+`data` keeps those subjects current until no reader has asked for a whole
 cadence, and the lake withdraws it. That is how a data plugin learns what
 matters without reading the book, which its role does not reach.
 
@@ -201,23 +209,35 @@ holds no stream. A streaming plugin records trades only for subjects under
 a standing want, and declares its live trades in a dataset apart from its
 live prices, so an admin licenses and keeps them apart.
 
-**A restarted `dgm` resumes.** A `dgm` holds nothing it cannot lose, and
-contract v19 gives it no way to read the standing wants back. So from chart
-0.1.294 the lake delivers each standing want still asked for again once a
-minute, the same want under the same ID: a `dgm` already holding it hears
-what it holds, and one relaunched or upgraded resumes its stream within
-about a minute. On chart 0.1.293 a restarted `dgm` streamed nothing until a
+### A restarted data plugin resumes
+
+A data plugin holds nothing it cannot lose, and contract v19 gives it no
+way to read the standing wants back. So from chart 0.1.294 the lake
+delivers each standing want still asked for again once a minute, the same
+want under the same ID: a data plugin already holding it hears what it
+holds, and one relaunched or upgraded resumes its stream within about a
+minute. On chart 0.1.293 a restarted data plugin streamed nothing until a
 reader's read made a want again.
 
-!!! warning "Known limit in v19: trades during a restart"
-    Within a running plugin, a dropped connection is refilled from the
-    venue's history by Coinbase, Kraken and Alpaca, from the last trade
-    each recorded. Tradier cannot refill it: its time and sales history
-    names no trade by its ID. That last trade is held in the plugin's
-    memory, which a restart loses, so a trade printed while a `dgm`
-    restarts, before it resumes streaming, is recorded by none of them
-    today. A reader catches up from the lake by its watermark, so it misses
-    only what the lake never had.
+**The gap is filled from the venue's history** (contract v20). Within a running plugin, a dropped connection is refilled from
+the venue's history, from the last trade the plugin recorded. In v19 that
+last trade was held in the plugin's memory, which a restart loses, so a
+trade printed while a data plugin restarted was recorded by none of them.
+From v20 a data plugin asks the lake instead: on start, before resuming its
+stream, it reads the last trade its own instance recorded of each subject
+it streams (`list_trades` with `latest_recorded`, its own rows only), reads
+the venue's history from each, and records what it missed. A trade
+recorded again is answered unchanged by its row key, so nothing is
+doubled. The data suite holds a plugin that records trades to it
+(`a-restarts-gap-backfilled`).
+
+It reaches only as far as the vendor allows. A venue whose history names
+each trade, and reaches back past the restart, fills it: Coinbase 0.3.0,
+Kraken 0.3.0 and Alpaca 0.4.0, released 2026-10-12. **Tradier cannot**: its
+time and sales history names no trade by an ID, so a gap across a restart
+stays, as a gap between two of its stream sessions does. A reader catches
+up from the lake by its watermark, so it misses only what the lake never
+had.
 
 ## Kept, or served and not kept
 
@@ -289,8 +309,9 @@ dashboard's **Data sources** page, beside **Instruments** on **Settings**,
 and through its five tools:
 see [License and entitle a dataset](../how-to/license-and-entitle-a-dataset.md).
 The page shows no price: prices are the reading roles', shown on their
-plugins' pages. Each `dgm` shows its own connection and what it serves on
-its pages under Manage.
+plugins' pages. Each data plugin shows its own connection and what it
+serves on its pages under Manage, the same pages on every one: see
+[Using a data plugin](../how-to/using-a-data-plugin.md).
 
 ## Valuing the book, and the Board
 
@@ -310,7 +331,7 @@ every few seconds, conflated, with no tape: see
 - [Money and instruments](money-and-instruments.md),
   [Venues](venues.md) and [Dates and time](dates-and-time.md): what a row's
   amount, venue and date name.
-- [Write a `dgm` against its suite](../how-to/write-a-dgm.md): a data
+- [Write a data plugin against its suite](../how-to/write-a-data-plugin.md): a data
   plugin, from the template.
 - [Read trades and quotes in a `signal` or `ems` plugin](../how-to/read-trades-and-quotes.md).
 - [The lake in the Python SDK](../api/python-sdk.md#the-lake) and

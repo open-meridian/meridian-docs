@@ -113,6 +113,7 @@ nav:
       - Venues: concepts/venues.md
       - Dates and time: concepts/dates-and-time.md
       - Tickets and the inbox: concepts/tickets-and-the-inbox.md
+      - Prepared changes: concepts/prepared-changes.md
       - Development deployments: concepts/development-deployments.md
   - How-to:
       - how-to/index.md
@@ -127,10 +128,12 @@ nav:
       - Report the custodian's activity: how-to/report-the-custodians-activity.md
       - Keep older records in the archive: how-to/keep-older-records-in-the-archive.md
       - License and entitle a dataset: how-to/license-and-entitle-a-dataset.md
-      - Add a data plugin's key: how-to/add-a-data-plugins-key.md
-      - Add a public data plugin: how-to/add-a-public-data-plugin.md
+      - Using a data plugin: how-to/using-a-data-plugin.md
+      - Using a custody plugin: how-to/using-a-custody-plugin.md
+      - Using an operations plugin: how-to/using-an-operations-plugin.md
+      - Using a reporting plugin: how-to/using-a-reporting-plugin.md
       - Add a prediction-market plugin: how-to/add-a-prediction-market-plugin.md
-      - Write a dgm against its suite: how-to/write-a-dgm.md
+      - Write a data plugin against its suite: how-to/write-a-data-plugin.md
       - Read trades and quotes: how-to/read-trades-and-quotes.md
       - Value the book: how-to/value-the-book.md
       - Watch the market on the Board: how-to/watch-the-board.md
@@ -140,6 +143,7 @@ nav:
       - Working your tickets: how-to/work-your-tickets.md
       - Release a plugin version: how-to/release-a-plugin.md
       - Upgrade a deployment: how-to/upgrade-a-deployment.md
+      - Back up and restore a deployment: how-to/back-up-and-restore.md
       - Remove or start over: how-to/remove-or-start-over.md
       - Troubleshoot an install: how-to/troubleshoot-install.md
   - Tutorials:
@@ -158,7 +162,7 @@ nav:
           - The lake: boundaries/lake.md
           - The book of record: boundaries/bor.md
           - The conductor's accounts: boundaries/conductor.md
-          - The dashboard's tickets: boundaries/dashboard.md
+          - The dashboard's records: boundaries/dashboard.md
           - The sidecar: boundaries/sidecar.md
           - The envelope: boundaries/envelope.md
           - Shared types: boundaries/shared.md

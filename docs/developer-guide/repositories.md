@@ -11,10 +11,16 @@ pieces a plugin links are Apache-2.0, so a plugin you write stays yours.
 | [meridian-python](https://github.com/open-meridian/meridian-python) | The Python SDK for writing plugins, and the reference plugin `meridian plugin new` starts from | Apache-2.0 |
 | [meridian-schema](https://github.com/open-meridian/meridian-schema) | The contract a plugin links: the sidecar's gRPC service, the typed operations a plugin's roles may take, and the metadata every message carries, with Rust and Python code generation | Apache-2.0 |
 | [meridian-ui](https://github.com/open-meridian/meridian-ui) | The plugin UI kit: the brand's tokens, colour schemes, CSS components and framework-free web components, which the dashboard serves to every plugin's page | Apache-2.0 |
-| [meridian-snaptrade](https://github.com/open-meridian/meridian-snaptrade) | A plugin that reads brokerage accounts through SnapTrade, their positions, cash and freshness, and records them as the custodian's view, with each account's activity as SnapTrade states it (from 0.11.0, contract v14). It holds the `custody` role, links its accounts on the kit's account map, and is the example other connectors copy | Apache-2.0 |
+| [plugin-snaptrade](https://github.com/open-meridian/plugin-snaptrade) | A plugin that reads brokerage accounts through SnapTrade, their positions, cash and freshness, and records them as the custodian's view, with each account's activity as SnapTrade states it (from 0.11.0, contract v14). It holds the `custody` role, links its accounts on the kit's account map, and is the example other connectors copy | Apache-2.0 |
 | [meridian-docs](https://github.com/open-meridian/meridian-docs) | This site | — |
 
 All seven are public. The organisation's other repositories are private.
+
+**Plugin repositories are named `plugin-<name>`** from v20: Open Meridian's
+own plugins, such as plugin-snaptrade (until then meridian-snaptrade),
+plugin-kalshi and plugin-polymarket; the platform's repositories keep
+`meridian-*`; and a plugin of your own is best named
+`meridian-plugin-<name>`. A plugin's package and image keep their names.
 
 ## Why two licences
 
@@ -33,7 +39,7 @@ what lets a vendor, or a firm, keep its plugin to itself.
 **meridian-ui** is Apache-2.0 too: a plugin's page links the kit, from the
 plugin's own origin.
 
-**meridian-snaptrade** is Apache-2.0 like the SDK it is built on: it is meant
+**plugin-snaptrade** is Apache-2.0 like the SDK it is built on: it is meant
 as a plugin other vendors copy, so it models the promise that a vendor keeps
 their plugin.
 

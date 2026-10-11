@@ -1,6 +1,6 @@
 # License and entitle a dataset
 
-A data plugin (one holding `dgm`) puts its vendor's prices into the
+A data plugin (one holding `data`) puts its vendor's prices into the
 deployment's [lake](../concepts/the-lake.md), each in a dataset its catalogue
 declares. Before another plugin can read a dataset, a deployment admin
 entitles it; and the admin confirms or changes the terms the lake keeps it
@@ -13,9 +13,15 @@ through its tools for an agent. What each term means is in
     from chart 0.1.292; and contract v19's trades and quotes, from chart
     0.1.293, released in chart 0.1.294.
 
+!!! note "Contract v20"
+    From contract v20 a data plugin's **Datasets** page says whether each of
+    its datasets is licensed, and each dialog on this page has **Prepare**
+    beside **Save**, to keep the change for another person to make (see
+    [Prepared changes](../concepts/prepared-changes.md)). Released 2026-10-12 in chart 0.1.298.
+
 You need the deployment admin's capabilities, and a data plugin launched:
 its datasets are listed from the moment it runs. See
-[Add a data plugin's key](add-a-data-plugins-key.md).
+[Using a data plugin](using-a-data-plugin.md).
 
 ## Open the page
 
@@ -119,4 +125,5 @@ that client.
 
 - [Licences and entitlements](../concepts/licences-and-entitlements.md).
 - [The lake](../concepts/the-lake.md): datasets, default reads and wants.
-- [Add a data plugin's key](add-a-data-plugins-key.md): Alpaca and Tradier.
+- [Using a data plugin](using-a-data-plugin.md): its first-use path, of
+  which this is the third step.

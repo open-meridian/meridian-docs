@@ -4,7 +4,7 @@
   "scope_is": "the matrix's at this revision of meridian-schema: publishes, the operations a role may call; reads, the queries it may ask; hears, the deliveries it receives. The SDK that vendors this file says which contract version that is.",
   "roles": [
     {
-      "name": "ccm",
+      "name": "connectivity",
       "status": "ruled",
       "persona": "the desk's connection to a broker or venue",
       "archetype": "Venue connectivity, an edge",
@@ -76,7 +76,7 @@
           "duty": "Records a verdict on each act it checks, naming the version of the order or placement it checked."
         },
         {
-          "duty": "Sets the limits of a mandate and the firm-wide credit limits a market-access ccm enforces."
+          "duty": "Sets the limits of a mandate and the firm-wide credit limits a market-access connectivity plugin enforces."
         },
         {
           "duty": "In the fast and high-frequency tiers, posts standing approved limits execution may act within, in place of a verdict on each order."
@@ -94,7 +94,7 @@
           "to": [
             "oms",
             "ems",
-            "ccm"
+            "connectivity"
           ]
         },
         {
@@ -108,7 +108,7 @@
           "to": [
             "oms",
             "ems",
-            "ccm"
+            "connectivity"
           ]
         }
       ],
@@ -226,7 +226,7 @@
         {
           "what": "trading",
           "to": [
-            "ccm"
+            "connectivity"
           ]
         }
       ],
@@ -250,7 +250,7 @@
       }
     },
     {
-      "name": "dgm",
+      "name": "data",
       "status": "ruled",
       "persona": "the firm's data management",
       "archetype": "External data ingress, an edge",
@@ -301,7 +301,9 @@
         "reads": [
           "ResolveIdentifier",
           "ResolveInstrument",
-          "ResolveVenue"
+          "ResolveVenue",
+          "ListTrades",
+          "ListDatasets"
         ],
         "hears": [
           "ObservationsWanted",
@@ -342,7 +344,7 @@
         {
           "what": "the venue",
           "to": [
-            "ccm"
+            "connectivity"
           ]
         },
         {
@@ -368,7 +370,7 @@
       }
     },
     {
-      "name": "match",
+      "name": "confirmation",
       "status": "ruled",
       "persona": "the middle office",
       "archetype": "Confirmation and affirmation, an edge",
@@ -441,7 +443,7 @@
         {
           "what": "the venue",
           "to": [
-            "ccm"
+            "connectivity"
           ]
         },
         {
@@ -499,7 +501,7 @@
           "to": [
             "oms",
             "ems",
-            "ccm"
+            "connectivity"
           ]
         },
         {
@@ -628,7 +630,7 @@
             "portfolio",
             "oms",
             "ems",
-            "ccm"
+            "connectivity"
           ]
         },
         {
@@ -904,7 +906,7 @@
       "topic": "platform.lake.command.decline-want",
       "roles": {
         "publishes": [
-          "dgm"
+          "data"
         ]
       },
       "stability": "preview"
@@ -1036,6 +1038,7 @@
       "roles": {
         "reads": [
           "compliance",
+          "data",
           "ems",
           "portfolio",
           "reporting",
@@ -1125,6 +1128,7 @@
       "topic": "platform.lake.query.list-trades",
       "roles": {
         "reads": [
+          "data",
           "ems",
           "signal"
         ]
@@ -1139,7 +1143,7 @@
       "topic": "platform.lake.event.observations-wanted",
       "roles": {
         "hears": [
-          "dgm"
+          "data"
         ]
       },
       "stability": "preview"
@@ -1251,7 +1255,7 @@
       "topic": "platform.lake.command.record-bars",
       "roles": {
         "publishes": [
-          "dgm"
+          "data"
         ]
       },
       "stability": "preview"
@@ -1329,7 +1333,7 @@
       "topic": "platform.lake.command.record-prices",
       "roles": {
         "publishes": [
-          "dgm"
+          "data"
         ]
       },
       "stability": "preview"
@@ -1342,7 +1346,7 @@
       "topic": "platform.lake.command.record-quotes",
       "roles": {
         "publishes": [
-          "dgm"
+          "data"
         ]
       },
       "stability": "preview"
@@ -1355,7 +1359,7 @@
       "topic": "platform.lake.command.record-trades",
       "roles": {
         "publishes": [
-          "dgm"
+          "data"
         ]
       },
       "stability": "preview"
@@ -1382,7 +1386,7 @@
       "roles": {
         "publishes": [
           "custody",
-          "dgm"
+          "data"
         ]
       },
       "stability": "stable"
@@ -1395,7 +1399,7 @@
       "topic": "platform.reference.event.venue-missing",
       "roles": {
         "publishes": [
-          "dgm"
+          "data"
         ]
       },
       "stability": "preview"
@@ -1435,7 +1439,7 @@
       "roles": {
         "reads": [
           "custody",
-          "dgm",
+          "data",
           "reporting"
         ]
       },
@@ -1450,7 +1454,7 @@
       "roles": {
         "reads": [
           "compliance",
-          "dgm",
+          "data",
           "oms",
           "operations",
           "portfolio",
@@ -1467,7 +1471,7 @@
       "topic": "platform.reference.query.resolve-venue",
       "roles": {
         "reads": [
-          "dgm"
+          "data"
         ]
       },
       "stability": "preview"
@@ -1520,7 +1524,7 @@
       "topic": "platform.lake.event.want-withdrawn",
       "roles": {
         "hears": [
-          "dgm"
+          "data"
         ]
       },
       "stability": "preview"
@@ -1580,6 +1584,18 @@
       "step": "W4.13",
       "title": "Report a move of raw records",
       "stability": "preview"
+    },
+    {
+      "name": "ReadPreparedCall",
+      "step": "W4.14",
+      "title": "Read the prepared change a page was opened from",
+      "stability": "preview"
+    },
+    {
+      "name": "SetOwnSettings",
+      "step": "W6.31",
+      "title": "Save one's own settings for a plugin",
+      "stability": "preview"
     }
   ],
   "combinations": [
@@ -1609,7 +1625,7 @@
       "name": "an aggregator of brokerage accounts that also trades",
       "roles": [
         "custody",
-        "ccm"
+        "connectivity"
       ]
     }
   ],
@@ -1810,7 +1826,7 @@
       ],
       "reshaped": false,
       "why": "Comparing targets with positions and proposing orders is the investment decision. One vendor's plugin may hold portfolio, oms and ems for unattended trading, and the duties stay separate in the records; the mandate's limits stay compliance's.",
-      "deployment_needs": "an oms plugin to work the orders and a ccm plugin for the broker",
+      "deployment_needs": "an oms plugin to work the orders and a connectivity plugin for the broker",
       "people": "write",
       "needs": [
         {
@@ -1831,10 +1847,10 @@
       "request": "Trade bonds by request for quote",
       "least_roles": [
         "ems",
-        "ccm"
+        "connectivity"
       ],
       "reshaped": false,
-      "why": "ems, or ccm, or both. Coordinating a request for quote across dealers is ems's; speaking to the venue that carries it is ccm's. A trader's quote screen is ems alone, the venue's adapter ccm alone, and a vendor offering both in one plugin holds both. The order still comes from portfolio and is worked by oms. The request's parameters, its due, firm-until and expiry times among them, are standard fields of the order path, converted by the ccm at the edge, never a venue's extras.",
+      "why": "ems, or connectivity, or both. Coordinating a request for quote across dealers is ems's; speaking to the venue that carries it is connectivity's. A trader's quote screen is ems alone, the venue's adapter connectivity alone, and a vendor offering both in one plugin holds both. The order still comes from portfolio and is worked by oms. The request's parameters, its due, firm-until and expiry times among them, are standard fields of the order path, converted by the connectivity plugin at the edge, never a venue's extras.",
       "deployment_needs": "a portfolio plugin to decide and an oms plugin to work the order",
       "people": "write",
       "needs": [
@@ -1844,7 +1860,7 @@
           "pending": "the order path's revisions, after the book's"
         },
         {
-          "role": "ccm",
+          "role": "connectivity",
           "what": "sending placements and reporting the venue's answers",
           "pending": "the order path's first revision, after the book's"
         },

@@ -41,8 +41,8 @@ no file it expects to find again. What it needs, it reads from the deployment
 when it starts. What must last — holdings, statements, instruments,
 configuration — lives in the deployment's own stores.
 
-A plugin at the edge, one holding `ccm`, `custody`, `servicing`, `match`,
-`settlement`, `dgm` or `reporting`, may also own storage the deployment
+A plugin at the edge, one holding `connectivity`, `custody`, `servicing`, `confirmation`,
+`settlement`, `data` or `reporting`, may also own storage the deployment
 grants its instance alone, for the raw records its vendor sent it, and
 rebuild from it; no other plugin reads it. From contract v16
 its older records may move to an archive the deployment provides:
@@ -61,12 +61,12 @@ roles apart; see [Access per role](access.md#access-per-role).
 
 | Role | What a plugin with it is for |
 |---|---|
-| `ccm` | Broker and venue connectivity |
 | `compliance` | Pre- and post-trade compliance rules |
+| `confirmation` | Post-trade confirmation and affirmation with external matching services |
+| `connectivity` | Broker and venue connectivity |
 | `custody` | Custodian, prime broker and broker statements, positions and cash, into the street store; reconciling them with the book is `operations`' |
-| `dgm` | External data ingress |
+| `data` | External data ingress |
 | `ems` | Execution management |
-| `match` | Confirmation with external matching services |
 | `oms` | Order management, including tax-lot selection |
 | `operations` | The post-trade pipeline: matching, servicing, reconciliation, settlement |
 | `portfolio` | Portfolio construction |
@@ -74,6 +74,23 @@ roles apart; see [Access per role](access.md#access-per-role).
 | `servicing` | Non-trading transactions: corporate actions, lifecycle events, coupons |
 | `settlement` | External settlement rails |
 | `signal` | Signal generation |
+
+From contract v20 three roles are renamed: `dgm` is
+`data`, `ccm` is `connectivity` and `match` is `confirmation`, so that
+order matching, at an `ems` or a connectivity plugin's crossing venue, has
+no namesake. In words, a plugin holding a role is a **data plugin**, a
+**custody plugin**, an **operations plugin**, a **reporting plugin** and so
+on, the code name beside it where a person configures access. A plugin's
+metadata, its grants and a deployment's access entries naming an old name
+are rewritten: the plugin's by `meridian plugin migrate`, the deployment's
+once by core at its upgrade.
+
+Every plugin of a role, from contract v20, has the same first-use path and
+the same pages in the same order, so someone who knows the role knows the
+plugin: see [Using a data plugin](../how-to/using-a-data-plugin.md),
+[a custody plugin](../how-to/using-a-custody-plugin.md),
+[an operations plugin](../how-to/using-an-operations-plugin.md) and
+[a reporting plugin](../how-to/using-a-reporting-plugin.md).
 
 Each role's entry, with its persona, its duties, what it leaves to which other
 role and what it holds today, is on [Roles](roles.md), with the principles a
@@ -97,10 +114,11 @@ person's, on a plugin, and has nothing to do with roles.
     hears them change, within its read scope; from contract v8 it writes the
     [book of record](the-book-of-record.md). `portfolio`, `reporting`,
     `compliance` and `oms`, from contract v8, read the book and hear it
-    change. From contract v18 `dgm` records market data in
+    change. From contract v18 `data` records market data in
     [the lake](the-lake.md), and `reporting`, `portfolio`, `compliance` and
     `signal` read its prices and bars; from contract v19 `signal` and `ems` read its trades and quotes, and `reporting`
-    resolves an identifier, read-only. The other four are reserved names
+    resolves an identifier, read-only; from contract v20 `data` also reads its own last recorded trades and its own
+    datasets' licences. The other four are reserved names
     that hold no topics until their workflows are built; order routing and
     execution, on the roadmap, will give `ems` and `oms` more. A plugin holding only such roles, or
     naming no role at all, is admitted with no topics rather than refused. It

@@ -4,7 +4,7 @@ From contract v14 a custody plugin reports each activity on an account as the
 custodian states it, beside the statements it already reports, and an
 operations plugin reads it to explain a break and propose its adjustment.
 This page shows what each side does, with
-[meridian-snaptrade](https://github.com/open-meridian/meridian-snaptrade)
+[plugin-snaptrade](https://github.com/open-meridian/plugin-snaptrade)
 0.11.0 as the worked example of a custody plugin. Why activity is evidence and
 never a source, and what operations does with it, is in
 [The custodian's activity](../concepts/the-custodians-activity.md).

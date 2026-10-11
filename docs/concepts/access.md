@@ -16,6 +16,17 @@ records.
 The steps for granting access are in
 [Give people access](../how-to/administer-access.md).
 
+!!! note "Contract v20"
+    From contract v20 the three levels are called the **access levels**, and
+    `read` or `write`, where they reach accounts, a person's **account
+    access** (before v20, "data levels"). A deployment admin grants each
+    plugin the accounts its admins may link to (see
+    [A plugin's admins](#a-plugins-admins)); what people's agents may do with
+    each act is set per act (see [Delegations and agents](#delegations-and-agents));
+    and a plugin may keep settings that are each person's own (see
+    [Admin shares, write keeps one's own, read sees what is shared](#admin-shares-write-keeps-ones-own-read-sees-what-is-shared)).
+    Released 2026-10-12 in chart 0.1.298.
+
 ## Signing in
 
 The dashboard signs people in one of three ways, chosen in the first-run
@@ -172,7 +183,7 @@ store and authored in the dashboard's **Settings**.
 A person's access is the union of every permission whose user group they
 belong to. There are no deny rules: access only adds up.
 
-### Three levels
+### Three access levels
 
 | Level | What it gives on the plugin |
 |---|---|
@@ -182,10 +193,10 @@ belong to. There are no deny rules: access only adds up.
 
 `write` includes `read`. `admin` includes neither, and neither includes
 `admin`: it is configuration, kept apart from the data. A person may hold
-`admin` on a plugin's role and, beside it, one data level, `read` or `write`,
-the higher one granted. An access group may name a plugin's role at `admin`
-and at one data level; naming it at both `read` and `write` is refused, since
-`write` already includes `read`.
+`admin` on a plugin's role and, beside it, one level of account access,
+`read` or `write`, the higher one granted. An access group may name a
+plugin's role at `admin` and at one level of account access; naming it at
+both `read` and `write` is refused, since `write` already includes `read`.
 
 `read` covers queries and receiving events; `write` covers commands. Each
 access entry names a single plugin, and from contract v15 one of its roles,
@@ -193,7 +204,7 @@ so each plugin's access is granted, and can be counted, on its own. A plugin
 holding one role, which is every plugin today, is granted exactly as before:
 see [Access per role](#access-per-role).
 
-The data levels are combined **permission by permission**, never dimension by
+Account access is combined **permission by permission**, never dimension by
 dimension. For each plugin and role, a person holds a set of accounts they may
 read and a set they may write, and each permission contributes only its own accounts
 at its own level. Write on one account group through one permission and read
@@ -216,7 +227,7 @@ dashboard tells the plugin about the person is cut to it:
 
 | Button | The plugin is told | The person may |
 |---|---|---|
-| **Manage** | `admin`, and no account | Configure the plugin. The plugin's sidecar refuses every read and command sent for them but two: reading the deployment's accounts, answered with their identities alone (name, state, custodian, type, owner and note, never holdings or balances), and linking an external account |
+| **Manage** | `admin`, and no account | Configure the plugin. The plugin's sidecar refuses every read and command sent for them but two: reading the deployment's accounts, answered with their identities alone (name, state, custodian, type, owner and note, never holdings or balances), from contract v20 only those granted to the plugin, and linking an external account |
 | **Open** | `write`, every account they may read, and the accounts they may write | See every account they may read, and act on those their `write` grants name |
 | **View** | `read`, and every account they may read | See every account they may read, and act on nothing |
 
@@ -242,11 +253,42 @@ when a page at `admin` shows account data; see
 
 A person holding `admin` on a plugin is one of its **admins**. They configure
 it: its settings, in the dashboard's admin view of the plugin, and its own
-pages at `admin`, under Manage. A plugin admin is **account agnostic**: they
-see every account's identity, and link the plugin's external accounts to any
-existing account, but reach no account's data. The barrier between business
-lines is the `read` and `write` levels', and their account groups. Only a
-deployment admin names a new account, and only a deployment admin grants.
+pages at `admin`, under Manage. A plugin admin reaches no account's data. The
+barrier between business lines is account access, `read` and `write`, and
+their account groups. Only a deployment admin names a new account, and only a
+deployment admin grants.
+
+**The deployment admin grants, the plugin admin chooses within the grant.**
+Before contract v20 a plugin admin was account agnostic: they saw every
+account's identity, and linked the plugin's external accounts to any
+existing account. From contract v20 a deployment admin
+grants each plugin instance the accounts it may link to, nothing by
+default, and its admins see and link only those; a connectivity plugin,
+which links no accounts, needs none. A grant lets them link and gives nobody
+anything to read or write. See
+[Accounts a plugin may link to](accounts.md#accounts-a-plugin-may-link-to).
+The same layering runs through the deployment: the deployment admin
+licenses a dataset and entitles plugins to it, and sets the ceiling on what
+agents may do with each act; a plugin's admin chooses within each.
+
+#### Admin shares, write keeps one's own, read sees what is shared
+
+From contract v20 a plugin may declare a setting that
+is **each person's own** (`per_person`), such as a watchlist or a saved
+chart. For a reporting plugin the levels then read:
+
+| Level | What the person does |
+|---|---|
+| `admin` | Chooses the data and accounts the plugin may use, within the deployment admin's grant, and designs the shared dashboards, on its Settings |
+| `write` | Builds and saves their own views, watchlists and charts, per person, on the plugin's pages under Open |
+| `read` | Sees the admin's shared dashboards |
+
+No new level is added. A person's own settings are kept by the dashboard
+under that person, handed to the plugin with each of their requests under
+Open and View (never under Manage), and each change is its own record,
+shown to that person alone: no other person reads them, no deployment admin,
+and no tool. A secret is never a person's own. Other roles may follow the
+same pattern; whether a plugin offers it is the plugin's choice.
 
 From contract v15 `admin` is held on a role of a plugin: a role's admin
 administers that role's side of it, its pages at `admin` and the settings
@@ -361,6 +403,14 @@ delegation keeps the tools that change something its consent page listed: one ad
 release or a plugin, waits until the person consents again from that client, where the consent page
 names it as new. The consent page fits one screen, every tool each row grants in view before
 **Allow**.
+
+From contract v20 what an agent may do with each act
+is also the firm's to set: the deployment admin and the plugin's admin set,
+per act, whether agents **may make** it, may only **prepare** it for a
+person to make, or **may not** reach it, and whether its change needs a
+**second pair of eyes**. On the consent page a person can only be stricter:
+beside each row, **Make** or **Prepare only**. See
+[Prepared changes](prepared-changes.md).
 
 #### On upgrading to contract v15
 

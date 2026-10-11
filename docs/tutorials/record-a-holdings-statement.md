@@ -29,7 +29,8 @@ Allow 30 minutes.
   writes the **Setup** page that links accounts, which this tutorial uses; the deployment's sidecar
   must accept contract v16. CLI 0.1.37 builds on SDK 0.22.0
   (contract v18), and the tutorial runs on it unchanged; CLI 0.1.38 builds on SDK 0.23.0 (contract
-  v19), whose move from 0.22.0 changes only the pins.
+  v19), whose move from 0.22.0 changes only the pins; CLI 0.1.39 builds on SDK 0.24.0 (contract
+  v20), whose move from 0.23.0 rewrites only the renamed roles, `custody` not among them.
 - To have done [Change your plugin's page, live](change-the-page-live.md), or be comfortable with
   `meridian plugin dev`.
 
@@ -142,7 +143,11 @@ Open the dashboard, sign in, and choose the gear at the top right, **Settings**.
 **Accounts** tab, choose **+ Add**, name it `Demo brokerage account`, and choose **Create**.
 See [Give people access](../how-to/administer-access.md) for more on the tab.
 
-That is all the plugin needs from Settings. You do not group the account or grant a
+From contract v20 the plugin links only to the accounts a deployment admin granted it: on the
+plugin's **Accounts** tab in the dashboard's admin view, grant it `Demo brokerage account`. See
+[To grant a plugin accounts to link](../how-to/administer-access.md#to-grant-a-plugin-accounts-to-link).
+
+That is all the plugin needs from Settings. You do not group the account or grant a person a
 permission on it: the link you make in step 6 is the plugin's right to write it.
 
 ## 5. Report the source's accounts

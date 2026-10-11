@@ -4,7 +4,7 @@ A plugin's unit tests prove its own code. To prove that what it sends lands wher
 it beside a real sidecar, broker, street store and book, from a released runtime image, and compare
 the stores with what you expect. Core publishes a deployment for exactly this beside every runtime
 image: the **plugin harness**. This page shows how to run your plugin on it from a `make e2e`
-target, with [meridian-snaptrade](https://github.com/open-meridian/meridian-snaptrade)'s target as
+target, with [plugin-snaptrade](https://github.com/open-meridian/plugin-snaptrade)'s target as
 the worked example.
 
 !!! warning "A development deployment, for a test"
@@ -272,7 +272,7 @@ differ from one day to the next: replace it with a fixed word, such as `D0`, bef
 
 ## Worked example: SnapTrade's `make e2e`
 
-[meridian-snaptrade](https://github.com/open-meridian/meridian-snaptrade) reads brokerage accounts
+[plugin-snaptrade](https://github.com/open-meridian/plugin-snaptrade) reads brokerage accounts
 and holds the `custody` role. In synthetic mode it serves invented data for three connections with
 no SnapTrade key. Its `make e2e` builds its image, then, on the harness its `Makefile` pins beside
 the runtime, with itself as the one plugin, instance `snaptrade`:

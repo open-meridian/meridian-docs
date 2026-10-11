@@ -145,6 +145,7 @@ market-direction convention, and the kit applies them.
 | 0.9.0 | `om-entry-grid`: a table of typed inputs a person enters rows in, posted with the page's own form, the server's messages placed on their cells, a spreadsheet's paste and a CSV in a dialog |
 | 0.10.0 | Every page fits one screen: a height budget the dashboard holds to the screen, compact chrome, one-line rows (`table.one-line`, `om-grid`'s `one-line`) with the whole row a click away, `om-pager`, as many rows a page as fit, and the overflow check |
 | 0.11.0 | A search beside the pager, `search` on `om-grid`, `om-pager` and `om-entry-grid`, `search-param` on `om-pager`, and the `om-search` event; and fields gated on a choice, `data-om-applies-when` and `data-om-one-of`. See [To search a list, and show a field only when it applies](#to-search-a-list-and-show-a-field-only-when-it-applies). Served from chart 0.1.293 (contract v19). |
+| 0.12.0 | An `instrument` column on `om-entry-grid` with its `src`, found as you type; the patterns **Facts**, **Next step** and **Prepare**; and `meridian:open` with `data-om-opens`, a link from a framed page to one of the dashboard's own tabs. See [Kit 0.12.0: role pages, instruments and Prepare](#kit-0120-role-pages-instruments-and-prepare). Served from chart 0.1.298 (contract v20). |
 
 **A 0.x release only adds.** Nothing in the kit is removed or renamed within 0.x, so a page built
 against an earlier 0.x keeps working on a later one.
@@ -384,7 +385,7 @@ if form.get("intent") == ["link-several"]:
 
 Offer `link-several` only once the handler takes it: a map without it never sends that intent, and
 the one-pair `link` form stays for a suggestion taken alone. The SnapTrade plugin,
-[meridian-snaptrade](https://github.com/open-meridian/meridian-snaptrade), links its accounts this
+[plugin-snaptrade](https://github.com/open-meridian/plugin-snaptrade), links its accounts this
 way. The kit's README lists every property, method and event of the map.
 
 ## To show records on a phone: `om-grid` with `narrow`
@@ -521,6 +522,70 @@ tab, the links tables, Tickets and the Inbox are searched; the completion
 form shows a type under its class and a binary event contract's payout and
 close only for that type, and the licence's "Kept for" only when it is
 kept.
+
+## Kit 0.12.0: role pages, instruments and Prepare
+
+!!! note "Contract v20"
+    Kit 0.12.0 is built for contract v20, released 2026-10-12 and served
+    from chart 0.1.298.
+
+**An instrument column.** An `om-entry-grid` column of type `instrument`,
+with the grid's `src`, is a search-as-you-type picker: typing in a cell asks
+`src` for at most eight matches once typing pauses (`GET <src>?q=<text>&limit=8`,
+on the page's own origin), each shown with its name, identifiers and ID;
+arrows and Enter, or a click, choose one, and Escape puts the cell back. The
+cell posts the instrument's ID and shows its name; words typed and not chosen
+hold the submit. On core's pages `src` is `/admin/instruments/search`; on a
+plugin's framed page, the plugin's own route. Nothing lists every record.
+
+```html
+<om-entry-grid name="watchlist" caption="Watchlist" src="/instruments/search">
+  <script type="application/json">{
+    "columns": [{ "key": "instrument", "label": "Instrument", "type": "instrument", "required": true }],
+    "rows": []
+  }</script>
+</om-entry-grid>
+```
+
+**Facts.** A section of facts about one thing, one line a row, its label a
+row header (`th scope="row"`), its value and note (`.hint`), and the whole a
+click away (`.more` with `row-detail`), the table named by `aria-label`. A
+data plugin's Connection draws "Key", "Limits and use" and "Stream" this
+way; the SDK's `meridian/kit.html` gains the macro `facts`. A fact that does
+not apply says so ("No key needed", "Does not stream") rather than leaving
+its row out.
+
+**Next step.** A "not set up yet" state, the Empty pattern's title, what to
+do, and a link to where: "No key yet: enter it in Settings".
+
+**A link to the dashboard's own tab.** Framed, a link marked
+`data-om-opens="settings"` (or `summary`, a table setting's key, or, for a
+deployment admin, `data-sources`) asks the dashboard to open that tab for
+the instance, with the frame message `meridian:open`, version 1. The
+dashboard opens it only for a person who may, and ignores anything else;
+it is a request, never a navigation the page makes. Standalone, the link's
+words still name the place.
+
+```html
+<p>No key yet: <a data-om-opens="settings">enter it in Settings</a>.</p>
+```
+
+**Prepare.** Beside an act's submit, a submit button of the same form
+with the reserved field `prepare`, so the form posts as it would to make the
+change, plus `prepare=1`; the dashboard reads it, checks the change and
+keeps it as a [prepared change](../concepts/prepared-changes.md), never
+calling the act's route. Offer it only for an act whose declaration names a
+check tool. Under the act's second pair of eyes, leave the submit out and
+offer Prepare alone; the kit cannot tell a framed page the gate is on, so
+the page's server decides, from `request.caller.second_pair_of_eyes`.
+
+```html
+<div class="row"><button type="submit" name="prepare" value="1">Prepare</button><button class="primary">Confirm</button></div>
+```
+
+The SDK's role templates (`meridian/roles/<role>/<page>.html`, from
+open-meridian 0.24.0) are drawn from these patterns: see
+[Each role's common part](../api/python-sdk.md#each-roles-common-part).
 
 ## Inside the dashboard's frame
 

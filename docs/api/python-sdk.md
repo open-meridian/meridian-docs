@@ -20,11 +20,28 @@ pip install open-meridian
 !!! warning "Not `meridian-sdk`"
     The PyPI package `meridian-sdk` belongs to an unrelated company. Don't install it.
 
-A plugin pins the SDK exactly, `open-meridian==0.23.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.23.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls; from 0.12.0 to 0.13.0, from 0.13.0 to 0.14.0, from 0.19.0 to 0.20.0, from 0.20.0 to 0.21.0, from 0.21.0 to 0.22.0 and from 0.22.0 to 0.23.0, only the pins move. `meridian plugin new` writes a plugin pinned to 0.19.0 from CLI 0.1.34, to 0.20.0 from CLI 0.1.35, to 0.21.0 from CLI 0.1.36, to 0.22.0 from CLI 0.1.37, and to 0.23.0 from CLI 0.1.38.
+A plugin pins the SDK exactly, `open-meridian==0.24.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.24.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls; from 0.12.0 to 0.13.0, from 0.13.0 to 0.14.0, from 0.19.0 to 0.20.0, from 0.20.0 to 0.21.0, from 0.21.0 to 0.22.0 and from 0.22.0 to 0.23.0, only the pins move, and from 0.23.0 to 0.24.0 it rewrites the renamed roles (see [0.23.0 to 0.24.0](#0230-to-0240)). `meridian plugin new` writes a plugin pinned to 0.19.0 from CLI 0.1.34, to 0.20.0 from CLI 0.1.35, to 0.21.0 from CLI 0.1.36, to 0.22.0 from CLI 0.1.37, to 0.23.0 from CLI 0.1.38, and to 0.24.0 from CLI 0.1.39.
+
+!!! note "0.24.0: contract v20"
+    open-meridian 0.24.0 declares contract v20. An act can be [prepared](#prepared) rather than made (`checked_by=`,
+    `accounts=`, `made_on=`, `request.prepared()`); a setting may be
+    [each person's own](#own_settings) (`per_person`,
+    `plugin.set_own_settings`, `request.own_settings`); a plugin links only
+    to the accounts a deployment admin granted it; a data plugin reads its
+    own datasets' licences and backfills a restart's gap
+    (`meridian.roles.data.backfill_restart`); the roles `dgm`, `ccm` and
+    `match` are named `data`, `connectivity` and `confirmation`; and each
+    role's common part is [`meridian.roles`](#each-roles-common-part), with
+    typed settings (`@meridian.settings`, `meridian.environment()`,
+    `meridian.sample_data()`) and the kit's macros (`meridian/kit.html`).
+    From 0.23.0 `meridian plugin migrate` rewrites the old role names; see
+    [0.23.0 to 0.24.0](#0230-to-0240). It needs a runtime serving contract
+    v20 (chart 0.1.298 or later), and CLI 0.1.39's `plugin new` writes a
+    plugin on it. Released 2026-10-11.
 
 !!! note "0.23.0: contract v19"
     open-meridian 0.23.0 declares contract v19, the lake's trades
-    and quotes: a `dgm` records them in batches, `signal` and `ems` read and
+    and quotes: a data plugin records them in batches, `signal` and `ems` read and
     hear them, every trade in full and caught up after a watermark;
     `reporting` resolves an identifier; the suites' 1b cases and a case
     about a kind of data a plugin never publishes marked not presented. It
@@ -34,10 +51,43 @@ A plugin pins the SDK exactly, `open-meridian==0.23.0`, in its `pyproject.toml`.
 
 !!! note "0.22.0: contract v18"
     open-meridian 0.22.0 declares contract v18, [the lake](#the-lake): a
-    `dgm`'s catalogue, prices and bars recorded in batches, wants, the
+    `data`'s catalogue, prices and bars recorded in batches, wants, the
     readers, a `Money` naming its instrument and real dates. It needs a
     runtime serving contract v18 (chart 0.1.292 or later), which refuses
     nothing a plugin on 0.21.0 sends. See [Plugin manifest](plugin-manifest.md).
+
+### 0.23.0 to 0.24.0 { #0230-to-0240 }
+
+`meridian plugin migrate --to 0.24.0` moves the pins and
+rewrites one thing, the renamed roles, wherever a plugin names a role: its
+`pyproject.toml`'s `[tool.meridian] roles`, a `roles=` argument, the role
+`meridian.suites.run`, `run_async`, `suite` or `names` is given, and the role
+`Caller.level_for`, `read_for` or `write_for` asks; `dgm` becomes `data`, `ccm`
+`connectivity` and `match` `confirmation`. Nothing else a plugin calls changed
+shape. The release is marked breaking for the rename alone. Then, by hand
+where they apply:
+
+- **An act you want preparable** names its check tool, accounts and page
+  (`checked_by=`, `accounts=`; `made_on=` is filled for you): see
+  [Prepared changes](#prepared). A verified plugin's act without a check fails
+  `meridian plugin check --verified` from CLI 0.1.39.
+- **A form field named `prepare`** is refused: rename it.
+- **A data plugin** meets the data suite's three new cases: map
+  `a-restarts-gap-backfilled` (or, where it records no trades, it is about
+  trades and may be marked not presented) and `reads-its-datasets-licences`;
+  map `the-takers-side-stated` or, where the source never states the
+  aggressor, mark it with why. See
+  [Write a data plugin](../how-to/write-a-data-plugin.md).
+- **A plugin linking external accounts** is answered only the accounts a
+  deployment admin granted it, nothing at first: say so on its page, and
+  expect `REFUSAL_REASON_ACCOUNT_NOT_LINKABLE` for any other.
+- **A plugin of a role with a common part** (`data`, `custody`,
+  `operations`, `reporting`) may move its pages onto
+  [`meridian.roles`](#each-roles-common-part), and is held to the role's
+  pages by `role-pages` under `--verified` from CLI 0.1.39.
+- **`synthetic`**, each plugin's own until now, may become
+  `meridian.sample_data()` (`sample_data`), the ruled convention: a plugin
+  chooses when, at its next versioned push.
 
 | Optional extra | Installs | For |
 |---|---|---|
@@ -94,15 +144,17 @@ A plugin that serves pages declares them with [`meridian.Pages`](#pages) and pas
 | `Storage`, `RecordKind` | frozen dataclasses | [The archive](#the-archive); `RecordKind` from 0.21.0 |
 | `StoredSpan`, `MoveOutcome` | generated protobuf message and enum | [The archive](#the-archive), from 0.21.0 |
 | `ActivityKind`, `ActivityRef` | generated protobuf enum and message | [Typed operations](typed-operations.md#activitykind), from 0.19.0 |
-| `DatasetDeclaration`, `DatasetLicence` | frozen dataclasses | [A dgm's catalogue](#a-dgms-catalogue), from 0.22.0 |
+| `DatasetDeclaration`, `DatasetLicence` | frozen dataclasses | [A data plugin's catalogue](#a-data-plugins-catalogue), from 0.22.0 |
 | `Price`, `Bar`, `ObservationMeta`, `SourceTime` | frozen dataclasses | [Typed operations](typed-operations.md#price), from 0.22.0 |
 | `ObservationMode`, `PriceKind`, `PriceBasis`, `SourceTimeKind`, `UnansweredReason`, `VenueKind`, `Source`, `SourceChoice`, `SubjectRef`, `DatasetRef`, `Unanswered`, `VenueRecord` | generated protobuf enums and messages | [Typed operations](typed-operations.md#types), the lake's, from 0.22.0 |
 | `Trade`, `TradeAttributes`, `Eligibility`, `Quote` | frozen dataclasses | [Typed operations](typed-operations.md#trade), from 0.23.0 |
 | `Aggressor`, `Eligible`, `TradeCharacteristic`, `QuoteCharacteristic` | generated protobuf enums | [Typed operations](typed-operations.md#tradecharacteristic), from 0.23.0 |
+| `roles` | module | [Each role's common part](#each-roles-common-part), from 0.24.0 |
+| `settings`, `setting`, `environment`, `sample_data` | decorator, functions | [Typed settings](#typed-settings), from 0.24.0 |
 | `CallerMiddleware` | ASGI middleware | [`CallerMiddleware`](#callermiddleware) |
 | `MeridianError`, `Refused`, `NoSidecar`, `NotRegistered`, `NotGranted`, `CallFailed`, `NotLinked`, `CommandRefused` | exceptions | [Exceptions](#exceptions); `CommandRefused` from 0.13.0, its `fields` from 0.14.0 |
 | `DEFAULT_ADDRESS` | `str` | `"127.0.0.1:9191"`, where a sidecar listens |
-| `SCHEMA_VERSION` | `str` | the contract version sent at registration: `"v19"` from 0.23.0, `"v18"` in 0.22.0 (no SDK declares v17, a revision of core's alone), `"v16"` in 0.21.0, `"v15"` in 0.20.0, `"v14"` in 0.19.0, `"v13"` in 0.18.0, `"v12"` in 0.17.0, `"v11"` in 0.16.0, `"v10"` in 0.15.0, `"v9"` in 0.14.0, `"v8"` in 0.13.0, `"v7"` in 0.12.0, `"v6"` in 0.11.0, `"v5"` in 0.10.0 and 0.10.1, `"v4"` in 0.9.0, `"v3"` in 0.8.0, `"v2"` before |
+| `SCHEMA_VERSION` | `str` | the contract version sent at registration: `"v20"` from 0.24.0, `"v19"` in 0.23.0, `"v18"` in 0.22.0 (no SDK declares v17, a revision of core's alone), `"v16"` in 0.21.0, `"v15"` in 0.20.0, `"v14"` in 0.19.0, `"v13"` in 0.18.0, `"v12"` in 0.17.0, `"v11"` in 0.16.0, `"v10"` in 0.15.0, `"v9"` in 0.14.0, `"v8"` in 0.13.0, `"v7"` in 0.12.0, `"v6"` in 0.11.0, `"v5"` in 0.10.0 and 0.10.1, `"v4"` in 0.9.0, `"v3"` in 0.8.0, `"v2"` before |
 
 The module `meridian.testing` holds [`PageClient`](#testing) and [`heartbeat`](#testing), for a plugin's own tests.
 
@@ -131,7 +183,7 @@ Registers with the sidecar and returns the admitted plugin. A `Plugin` you hold 
 | `interface` | `Interface` or `None` | `None` | The pages the plugin serves on loopback, if any. |
 | `settings` | sequence of `Setting` | `()` | The settings the plugin needs an admin of it to give it, on the dashboard's Settings form, or a table on its own tab beside it. A plugin sets none of them itself. |
 | `reads_external_accounts` | `bool` | `False` | `True` when the plugin reads accounts at an external source and names them by that source's identifiers. An admin of the plugin links those to accounts, and the sidecar translates them on the way in. |
-| `declaration` | `Declaration` or `None` | `None` | The version's declaration, the same one `meridian plugin upload` reads from the image: its secret settings' names, what it does not carry and the storage it asks for. See [Keep what your custody plugin converts](../how-to/keep-what-the-edge-converts.md). From 0.21.0, where its storage declares kinds of raw record, `connect` declares each kind's two window settings and the restore route besides; see [The archive](#the-archive). From 0.22.0, a `dgm`'s catalogue; see [A dgm's catalogue](#a-dgms-catalogue). |
+| `declaration` | `Declaration` or `None` | `None` | The version's declaration, the same one `meridian plugin upload` reads from the image: its secret settings' names, what it does not carry and the storage it asks for. See [Keep what your custody plugin converts](../how-to/keep-what-the-edge-converts.md). From 0.21.0, where its storage declares kinds of raw record, `connect` declares each kind's two window settings and the restore route besides; see [The archive](#the-archive). From 0.22.0, a data plugin's catalogue; see [A data plugin's catalogue](#a-data-plugins-catalogue). |
 
 The contract version it sends is `SCHEMA_VERSION`, `"v19"` from 0.23.0, `"v18"` in 0.22.0, `"v16"` in 0.21.0. A sidecar accepts a range of versions, v2 through the one its runtime serves, v19 at contract v19: a plugin built for an older version it still supports registers, and one built for a newer version than the sidecar knows is refused at registration, naming both, rather than running without what it was built for. After an upgrade, relaunch plugins so they get the newer sidecar (`meridian upgrade-deployment` names the ones that need it).
 
@@ -243,7 +295,7 @@ Returns who may use this plugin: each user group naming it, and each person who 
 
 The account sets are this plugin's: what the group or person may read through it, and write through it. Every write account is also listed as read.
 
-From contract v15 each also carries `roles`, a `RoleAccess` for each of the plugin's roles the group or person holds a data level on: `role`, `level` (`read` or `write`, never `admin`, since the table lists data access only), and `read_positions` and `write_positions`, the role's accounts as positions in that same message's `read_account_ids`. The two sets above stay the union over the roles.
+From contract v15 each also carries `roles`, a `RoleAccess` for each of the plugin's roles the group or person holds account access on: `role`, `level` (`read` or `write`, never `admin`, since the table lists account access only), and `read_positions` and `write_positions`, the role's accounts as positions in that same message's `read_account_ids`. The two sets above stay the union over the roles.
 
 #### `file_ticket()` { #file_ticket }
 
@@ -375,7 +427,7 @@ From 0.12.0. A plugin whose roles hear rows receives them with `plugin.receive`,
 | `activity_re_resolved` | `ActivityReResolved` | An [`ActivityReResolvedEvent`](typed-operations.md#activityreresolvedevent): an activity recorded before its instrument resolved, re-resolved, its re-resolution kept beside it. Caught up from the `re_resolutions` of [`list_activities`](typed-operations.md#list_activities). From 0.20.0, `preview`. | W2.16 |
 | `prices_recorded` | `PricesRecorded` | A `PricesRecordedEvent`: one [`Price`](typed-operations.md#price) the lake recorded, in `price`, for a subject named in `subjects=`. Heard by `reporting`, `portfolio`, `compliance` and `signal`, from a dataset the plugin is entitled to. Caught up by [`list_prices`](typed-operations.md#list_prices). From 0.22.0, `preview`. | W10.5 |
 | `bars_recorded` | `BarsRecorded` | A `BarsRecordedEvent`: one [`Bar`](typed-operations.md#bar), in `bar`, likewise. Caught up by [`list_bars`](typed-operations.md#list_bars). From 0.22.0, `preview`. | W10.5 |
-| `observations_wanted` | `ObservationsWanted` | An `ObservationsWantedEvent`, heard by the `dgm` serving its dataset alone: `want_id`, `dataset`, `data_type`, `subjects`, `kinds`, `interval_ns`, the `business_date` or valid range wanted, and `standing`. See [Wants](#wants). From 0.22.0, `preview`. | W10.7 |
+| `observations_wanted` | `ObservationsWanted` | An `ObservationsWantedEvent`, heard by the data plugin serving its dataset alone: `want_id`, `dataset`, `data_type`, `subjects`, `kinds`, `interval_ns`, the `business_date` or valid range wanted, and `standing`. See [Wants](#wants). From 0.22.0, `preview`. | W10.7 |
 | `want_withdrawn` | `WantWithdrawn` | A `WantWithdrawnEvent`, `want_id` and `dataset`: a standing want no reader asked for within its dataset's cadence. From 0.22.0, `preview`. | W10.7 |
 | `trades_recorded` | `TradesRecorded` | A `TradesRecordedEvent`: one [`Trade`](typed-operations.md#trade) the lake recorded, in `trade`, for a subject named in `subjects=`. Heard by `signal` and `ems`, every one, never conflated. Caught up by [`list_trades`](typed-operations.md#list_trades) after the watermark last seen. From 0.23.0, `preview`. | W10.5 |
 | `quotes_recorded` | `QuotesRecorded` | A `QuotesRecordedEvent`: one [`Quote`](typed-operations.md#quote), in `quote`, latest value first per subject, dataset, venue and asset. Heard by `signal` and `ems`. Caught up by [`list_quotes`](typed-operations.md#list_quotes). From 0.23.0, `preview`. | W10.5 |
@@ -700,11 +752,11 @@ The sidecar checks each before it leaves, refusing `CallFailed` with `kind="inva
 
 ## The lake { #the-lake }
 
-From 0.22.0, contract v18, `preview`. [The lake](../concepts/the-lake.md) keeps what sources say about prices, append-only and point in time. A `dgm` plugin puts prices and bars in; `reporting`, `portfolio`, `compliance` and `signal` read and hear them. From 0.23.0, contract v19, it puts trades and quotes in too, which `signal` and `ems` read and hear: see [Trades and quotes](#trades-and-quotes). The SDK carries the typed operations and nothing of any vendor's: no HTTP or WebSocket client, no vendor-file parser, no reconnecting stream. Each operation is in [Typed operations](typed-operations.md#record_prices); each field in the [lake's data dictionary](../boundaries/lake.md).
+From 0.22.0, contract v18, `preview`. [The lake](../concepts/the-lake.md) keeps what sources say about prices, append-only and point in time. A data plugin puts prices and bars in; `reporting`, `portfolio`, `compliance` and `signal` read and hear them. From 0.23.0, contract v19, it puts trades and quotes in too, which `signal` and `ems` read and hear: see [Trades and quotes](#trades-and-quotes). The SDK carries the typed operations and nothing of any vendor's: no HTTP or WebSocket client, no vendor-file parser, no reconnecting stream. Each operation is in [Typed operations](typed-operations.md#record_prices); each field in the [lake's data dictionary](../boundaries/lake.md).
 
-### A dgm's catalogue { #a-dgms-catalogue }
+### A data plugin's catalogue { #a-data-plugins-catalogue }
 
-A `dgm` declares the datasets it serves in its declaration, from code, beside its settings and storage: `Declaration(catalogue=[DatasetDeclaration(...)])`. A dataset's ID in a deployment is the instance, a colon and its key, `f"{plugin.identity.instance_id}:daily"`, which each row names.
+A data plugin declares the datasets it serves in its declaration, from code, beside its settings and storage: `Declaration(catalogue=[DatasetDeclaration(...)])`. A dataset's ID in a deployment is the instance, a colon and its key, `f"{plugin.identity.instance_id}:daily"`, which each row names.
 
 ```python
 from meridian import DatasetDeclaration, DatasetLicence, Declaration, RecordKind, Storage
@@ -746,15 +798,15 @@ DECLARATION = Declaration(
 
 `DatasetLicence`, keyword only, every field optional: `kept` (`False`: served, not kept), `retention_days` (0 to 36,500; 0 for no limit set), `derived_use`, `display`, `default_fields` (at most 64 dictionary entries; none for every field) and `personal_use`. It records what the vendor's terms say, which a deployment admin confirms or replaces (see [Licences and entitlements](../concepts/licences-and-entitlements.md)), never whether a deployment meets them.
 
-**Raises** `ValueError` when the declaration is built, naming the dataset: a key out of form, a vendor or aggregator too long, a data type or field no dictionary entry names, one named twice, no mode or a mode twice, a negative cadence or history, a zone that is no IANA zone, a day end out of range, a venue that is no `VEN-` ID, and a catalogue on a version not holding `dgm`. The upload's JSON carries the catalogue only where one is declared, its modes as words. The sidecar holds a catalogue to the same rules at registration, and refuses the plugin naming the field.
+**Raises** `ValueError` when the declaration is built, naming the dataset: a key out of form, a vendor or aggregator too long, a data type or field no dictionary entry names, one named twice, no mode or a mode twice, a negative cadence or history, a zone that is no IANA zone, a day end out of range, a venue that is no `VEN-` ID, and a catalogue on a version not holding `data`. The upload's JSON carries the catalogue only where one is declared, its modes as words. The sidecar holds a catalogue to the same rules at registration, and refuses the plugin naming the field.
 
 ### Recording
 
-A `dgm` records with [`record_prices`](typed-operations.md#record_prices) and [`record_bars`](typed-operations.md#record_bars), 1 to 500 rows a call, refused outside the bound before anything is sent, recorded whole or refused naming the row and field. Resolve each subject first with [`resolve_identifier`](typed-operations.md#resolve_identifier), and each venue with [`resolve_venue`](typed-operations.md#resolve_venue); report what does not resolve. A want for an instrument another source resolved, such as a custodian's, names the deployment's ID: read its record with [`resolve_instrument`](typed-operations.md#resolve_instrument) and name it to the vendor by an identifier the vendor takes. The answer counts the rows `recorded`, `restated` and `unchanged`.
+A data plugin records with [`record_prices`](typed-operations.md#record_prices) and [`record_bars`](typed-operations.md#record_bars), 1 to 500 rows a call, refused outside the bound before anything is sent, recorded whole or refused naming the row and field. Resolve each subject first with [`resolve_identifier`](typed-operations.md#resolve_identifier), and each venue with [`resolve_venue`](typed-operations.md#resolve_venue); report what does not resolve. A want for an instrument another source resolved, such as a custodian's, names the deployment's ID: read its record with [`resolve_instrument`](typed-operations.md#resolve_instrument) and name it to the vendor by an identifier the vendor takes. The answer counts the rows `recorded`, `restated` and `unchanged`.
 
 ### Wants { #wants }
 
-A `dgm` hears what the lake wants of it with `receive(observations_wanted=..., want_withdrawn=...)`, records against a want with `want_id=`, and declines per subject with [`decline_want`](typed-operations.md#decline_want):
+A data plugin hears what the lake wants of it with `receive(observations_wanted=..., want_withdrawn=...)`, records against a want with `want_id=`, and declines per subject with [`decline_want`](typed-operations.md#decline_want):
 
 ```python
 async def wanted(heard: meridian.Heard) -> None:
@@ -782,14 +834,14 @@ named = await plugin.list_prices(subjects=held, sources=meridian.SourceChoice(na
 
 and hears what is recorded after with `receive(prices_recorded=..., bars_recorded=..., subjects=...)`; see [Receive](#receive).
 
-### The `dgm` suite { #the-dgm-suite }
+### The data suite { #the-data-suite }
 
 `meridian.suites` carries each role's conformance suite, as for `custody`: a plugin maps each case to its own recorded or synthetic exchange with its vendor, runs its own conversion against a `Recorder` (its typed operations, recorded rather than sent, answered as a sidecar answers them), and `run` compares what it sent with the case.
 
 ```python
 from meridian.suites import run
 
-report = run("dgm", PRODUCERS, instance_id="my-prices-1")
+report = run("data", PRODUCERS, instance_id="my-prices-1")
 assert report.passed, report.failures
 ```
 
@@ -798,24 +850,32 @@ A case naming a row the plugin hears, such as a want, gives it what `recorder.an
 ```python
 async def a_want_recorded_against(recorder):
     recorder.answer("ObservationsWanted", lambda _: synthetic_want())
-    await recorder.receive(observations_wanted=MyDgm(recorder).on_want)
+    await recorder.receive(observations_wanted=MyData(recorder).on_want)
 ```
 
-The cases are listed in [Write a `dgm` against its suite](../how-to/write-a-dgm.md#hold-it-to-the-suite): thirteen in 0.22.0, twenty-one from 0.23.0. A plugin holding `dgm` is verified for it only by passing every case it presents, which [`meridian plugin check --verified --run-tests`](cli.md#plugin-check) holds it to. The reading roles, `reporting`, `portfolio`, `compliance` and `signal`, and from 0.23.0 `ems`, have suites of their own, run the same way; `meridian plugin check --verified` holds only the `custody` and `dgm` suites, so a reading role's suite is run by the plugin's own tests alone.
+The cases are listed in [Write a data plugin against its suite](../how-to/write-a-data-plugin.md#hold-it-to-the-suite): thirteen in 0.22.0, twenty-one in 0.23.0, twenty-four from 0.24.0, when the suite is named `data`, `dgm` before. A plugin holding `data` is verified for it only by passing every case it presents, which [`meridian plugin check --verified --run-tests`](cli.md#plugin-check) holds it to. The reading roles, `reporting`, `portfolio`, `compliance` and `signal`, and from 0.23.0 `ems`, have suites of their own, run the same way; `meridian plugin check --verified` holds only the `custody` and `data` suites, so a reading role's suite is run by the plugin's own tests alone.
 
 **A case not presented.** A case asserting one value of a closed list (`Case.closed_list`) that the plugin's source never presents may be named in `not_presented`, with why. From 0.23.0, so may a case about one kind of data (`Case.about`, in the contract's words: closes, bars, trades, quotes, prices on a venue, a currency's rate against another currency, a crypto asset's price, a security's price) that the plugin declares it never publishes. Every other case is required, and a case not presented without a reason fails:
 
 ```python
-report = run("dgm", PRODUCERS, not_presented={
+report = run("data", PRODUCERS, not_presented={
     "a-trade-recorded": "daily closes and bars only: this source states no trades",
 })
 ```
+
+From 0.24.0 so may a case about one field (`Case.about_field`, a dictionary entry such as `meridian.v1.Trade.aggressor`) that the plugin's source never states, though it publishes the kind: see [A field your source never states](../how-to/write-a-data-plugin.md#a-field-your-source-never-states).
+
+### A restart's gap { #a-restarts-gap }
+
+From 0.24.0, contract v20. A data plugin that records trades reads, on start, the last trade its own instance recorded of each subject it streams, `list_trades(subjects=..., latest_recorded=True)`, and records what the venue's history states since. `meridian.roles.data.backfill_restart(plugin, subjects, history)` does it, in batches of 500, `history` answering the trades after a given one (the lake's row, its subject, dataset, venue and time in its `meta`), and answers how many it sent. A trade recorded again is answered unchanged by its row key. The data suite's `a-restarts-gap-backfilled` holds it.
+
+A data plugin also reads [`list_datasets`](typed-operations.md#list_datasets), answered only its own declared datasets with their licences, so its Datasets page says whether each is licensed (`Served.licensed` in [`meridian.roles.data`](#each-roles-common-part)).
 
 ### Trades and quotes { #trades-and-quotes }
 
 From 0.23.0, contract v19, `preview`. Still typed operations only: no WebSocket client, no reconnecting stream, no bar builder.
 
-**A `dgm` records them** from a dataset declaring `data_types=["meridian.v1.Trade", "meridian.v1.Quote"]` (or one of them) and `modes=["stream"]`, with [`record_trades`](typed-operations.md#record_trades) and [`record_quotes`](typed-operations.md#record_quotes), 1 to 500 a call. Each is keyed by UTC instants and names no business date. A trade carries its [`TradeAttributes`](typed-operations.md#tradeattributes), converted at the edge from its source's condition codes, a code with no conversion kept in `meta.unconverted`; and its `aggressor` where its source says which side took liquidity (a source naming the resting order's side records the other). A withdrawn trade is the next version under its row key, `cancelled=True`. A quote's empty side is left unset. Keep a standing want of a streamed dataset current from the stream.
+**A data plugin records them** from a dataset declaring `data_types=["meridian.v1.Trade", "meridian.v1.Quote"]` (or one of them) and `modes=["stream"]`, with [`record_trades`](typed-operations.md#record_trades) and [`record_quotes`](typed-operations.md#record_quotes), 1 to 500 a call. Each is keyed by UTC instants and names no business date. A trade carries its [`TradeAttributes`](typed-operations.md#tradeattributes), converted at the edge from its source's condition codes, a code with no conversion kept in `meta.unconverted`; and its `aggressor` where its source says which side took liquidity (a source naming the resting order's side records the other). A withdrawn trade is the next version under its row key, `cancelled=True`. A quote's empty side is left unset. Keep a standing want of a streamed dataset current from the stream.
 
 **`signal` and `ems` read them**, with [`list_trades`](typed-operations.md#list_trades) (over a range within a day, or `after_watermark=`) and [`list_quotes`](typed-operations.md#list_quotes) (at the latest, per asset, or over a range), and hear them with `receive(trades_recorded=..., quotes_recorded=..., subjects=[...])`; see [Receive](#receive). `reporting` reads neither. See [Read trades and quotes in a `signal` or `ems` plugin](../how-to/read-trades-and-quotes.md).
 
@@ -912,6 +972,7 @@ One setting the plugin needs, declared at `connect`.
 | `columns` | `tuple[Column, ...]` | `()` | A table's columns, in the order its tab shows them. Only with `kind=list`, which needs at least one. From 0.19.0. |
 | `most_rows` | `int` | `0` | The most rows a table holds, at most 500; `0` is 500. From 0.19.0. |
 | `roles` | sequence of `str` | `()` | The roles it serves, from those the plugin was launched with: it is shown to an admin of any of them and set only by one holding admin on every one. Not who may read the value: the plugin reads every setting it declared. None on a plugin holding one role or none. From 0.20.0; see [Roles](#roles). |
+| `per_person` | `bool` | `False` | From 0.24.0: each person's own, saved for them and read from their requests, never on the Settings form and never in `Settings.values`. Never secret, never required. See [A person's own settings](#own_settings). |
 
 ```python
 plugin = await meridian.connect(
@@ -1059,6 +1120,9 @@ From 0.20.0, contract v15, a person holds a level on each role of a plugin, and 
 | `Caller.from_header(header: str) -> Caller` | classmethod | Decode a `Meridian-Caller` header: base64url, unpadded. |
 | `may_read(account_id: str) -> bool` | method | Whether they may read the account through this plugin in this session: `account_id in read`. |
 | `may_write(account_id: str) -> bool` | method | Whether they may write the account through this plugin in this session: `account_id in write`. |
+| `prepared_call_id` | `str` | The prepared change this request was opened from or makes, `PC-…`; empty for none. Read it with `await request.prepared()`. Added in 0.24.0. |
+| `own_settings` | `Mapping[str, str]` | The person's own values of settings declared `per_person`, as the dashboard keeps them, under Open and View; empty under Manage. `request.own_settings` reads them typed. Added in 0.24.0. |
+| `second_pair_of_eyes` | `frozenset[str]` | The plugin's acts whose second pair of eyes is on for this person now, by tool name: hide Save for them and offer Prepare. For showing only: the dashboard refuses a direct make whatever the page draws. Added in 0.24.0. |
 
 The levels are the same for every plugin, granted in the deployment's access groups. A plugin names no parts of itself, so there is nothing finer to ask than, from 0.20.0, the person's level on each of its roles, which are the deployment's, not the plugin's. The sidecar checks every command sent for a person again, whatever the plugin believes: it admits one only in a session at `write`, and from contract v15 only by their `write` on a role whose grants include the command, the account among that role's write accounts, refusing otherwise and naming the role. See [Access](../concepts/access.md#access-per-role).
 
@@ -1245,6 +1309,83 @@ A page's template extends the kit's base template, `meridian/base.html`, which `
 A request that changes something carries this plugin's CSRF token. The plugin's host keeps the person's session in a cookie, and every plugin's host is the same site as the dashboard, so the cookie's SameSite does not stop another plugin's page from posting here as the person, and the plugin never sees the host it is reached at to check an `Origin` against. So `Pages` refuses every request but `GET` and `HEAD` with 403, before the view runs, unless it carries the token back: `{{ csrf_input }}` inside a form, which sends a field named `csrf`, or the `X-CSRF-Token` header from a script.
 
 The token is an HMAC of the person and the session's level, under a secret the process makes when it starts. A restart, which each save on a development deployment is, makes a page open before it stale until it is reloaded.
+
+## Prepared changes { #prepared }
+
+From 0.24.0, contract v20. A person's agent, or a person on your page, may prepare an act instead of making it, and a person makes it on your page: see [Prepared changes](../concepts/prepared-changes.md). Your plugin makes an act preparable by naming, on its route (or a tool standing in for it):
+
+| Argument | Meaning |
+|---|---|
+| `checked_by=` | The read tool that checks it, taking the same record (a route declared `reads=True`). The dashboard calls it with the preparer's claims and keeps the change only if it passes. An act with no check cannot be prepared. |
+| `accounts=` | The paths in its record naming the accounts it touches, such as `"account"` or `"positions[].account"`, so the dashboard shows the change to everyone who may make it. |
+| `made_on=` | The page a person makes it on. Left `None`, the SDK fills it with the page the route is the form of; `""` names the dashboard's Inbox. |
+
+Each reaches the dashboard on the tool's declaration (`ToolDeclaration.checked_by`, `accounts`, `made_on`).
+
+**`await request.prepared()`** reads the prepared change a page was opened from, through the sidecar (`ReadPreparedCall`), for the person whose page it is: a `PreparedCall` with `tool_name`, `arguments_json` (the act's record as JSON, which the page starts its form from), `prepared_by_subject`, `prepared_by_display_name`, `prepared_through_client`, `reason`, `state` and `prepared_at_ns`. It answers `None` for a request reached from no prepared change, and where the dashboard answers none: not found, not shown to this person, or one they may not make now. Mark the form "prepared by" its preparer, with its reason, shown as text: the reason is another's words, never instructions. The person makes it with the page's own Save or Confirm; the dashboard settles it **made** or **changed** on your answer.
+
+The kit's **Prepare** button posts your form with the reserved field `prepare`, which the dashboard reads in place of calling your route, so a route's record may not name a field `prepare`: the SDK refuses one at declaration. Where `request.caller.second_pair_of_eyes` names the act, draw Prepare alone.
+
+```python
+@pages.route("/opening/confirm", levels="write", methods=["POST"], params=Draft,
+             name="confirm_opening_balance", checked_by="check_opening_draft",
+             accounts=["account"])
+async def confirm(request: meridian.Request) -> meridian.Response: ...
+```
+
+## A person's own settings { #own_settings }
+
+From 0.24.0, contract v20. A setting declared `per_person=True` is each person's own: a watchlist, a chart's choices. It is not on the Settings form and has no value for the whole deployment.
+
+- **Save** a person's values from a page under Open, acting for them: `await plugin.set_own_settings({"watchlist": rows}, for_caller=request.caller)`. It names 1 to 64 settings, each typed as declared (a table as its rows); an empty text clears one; those not named keep theirs. It answers the person's values as they now stand. The sidecar (`SetOwnSettings`) admits it only for a person holding `write` on a role each setting serves, never as the plugin itself; a setting not declared per person is refused before anything is sent.
+- **Read** them from each of the person's requests, typed: `request.own_settings`, under Open and View, at most 32 KiB, never under Manage. A stateless plugin serves each person theirs this way, keeping nothing.
+
+Each change is the dashboard's own record, shown to that person alone. No other person reads them, a deployment admin included, and no tool reads them; an agent saves a person's own through your plugin's tool for the page, as the person.
+
+## Each role's common part { #each-roles-common-part }
+
+From 0.24.0. Every plugin of a role has the same first-use path, pages, sections, labels, verbs and order, and the same Summary figures (see [Using a data plugin](../how-to/using-a-data-plugin.md)). `meridian.roles` holds each role's part, in `data`, `custody`, `operations` and `reporting`:
+
+- **A record per common page**, named `<Page>Read`, holding the common fields, the page's tool's answer (`answers=`), which a plugin extends: `data.ConnectionRead`, `data.DatasetsRead` (with `Served`, `Want`, `Credential`); `custody.ConnectionsRead`, `AccountLinksRead`, `StatementsRead`, `HistoryRead`; `operations.BreaksRead`, `ReconciliationsRead`, `OpeningBalancesRead`; `reporting.DatasetsRead`.
+- **`figures(...)`**, the role's figures in its order, each a plain value or a `meridian.Figure`, for the plugin to follow with its own within the eight: `data.figures(connection=..., entitled_at_vendor=..., stream=..., last_recorded=..., rate_use=...)`, `custody.figures(...)`, `operations.figures(...)`, `reporting.figures(last_valued=..., not_priced=...)`.
+- **The role's common settings**: custody's `poll_seconds()` and `stale_after_hours()`, operations' `reconcile()`, `due_business_days()` and `street_fresh_within_hours()`, reporting's `reporting_currency()`.
+- **Templates** `meridian/roles/<role>/<page>.html`, each extending `meridian/base.html`, drawing the common sections from the record, with the blocks `vendor_notices`, `vendor_rows` (one per section, its title in `section`), `vendor_columns` (one per grid row, the row in `row`) and `vendor_sections` for the vendor's nuance.
+- **`data.backfill_restart`**: see [A restart's gap](#a-restarts-gap).
+
+```python
+from meridian.roles import data
+
+@pages.page("/", "Connection", levels="admin", answers=data.ConnectionRead, name="read_connection")
+async def connection(request: meridian.Request) -> meridian.Response:
+    return pages.answer("connection.html", data.ConnectionRead(mode="Live", ...))
+```
+
+Never rename, reorder or drop a common page, section, row, column, label, setting or figure: `meridian plugin check --verified` fails it from CLI 0.1.39 (`role-pages`). Custody's, operations' and reporting's items are offered as candidates until a second plugin of the role needs them.
+
+## Typed settings { #typed-settings }
+
+From 0.24.0. A plugin's settings may be one class, its fields the settings:
+
+```python
+@meridian.settings
+class Settings:
+    environment: str = meridian.environment()
+    api_token: str = meridian.setting("API access token", secret=True, required=True,
+                                      applies_when=("environment", "live"))
+    poll_seconds: int = meridian.setting("Read every", default=60, at_least=10)
+    sample_data: bool = meridian.sample_data()
+
+plugin = await meridian.connect(settings=Settings)
+async for current in plugin.settings(Settings):
+    ...
+```
+
+- **`meridian.setting(label, ...)`** takes `Setting`'s fields by keyword, and `at_least` and `at_most` to bound an integer.
+- **`meridian.environment()`**: the setting `environment`, a required choice labelled "Environment", **Live** (`live`, the default) or **Sandbox** (`sandbox`), declared first, for a vendor with more than one environment; a credential differing by it is gated with `applies_when=("environment", "sandbox")`.
+- **`meridian.sample_data()`**: the setting `sample_data`, "Sample data", off, a developer setting, last; the one convention for a plugin answering from made-up data on a development deployment, in place of each plugin's own `synthetic`.
+- The class is a frozen dataclass of the values, with `declared()`, `label(name)` and `.missing`; `plugin.settings(Settings)` delivers an instance at each change, `plugin.first_settings(Settings)` the first.
+
+Every page's template loader also holds the kit's macros, `meridian/kit.html` (`facts` among them).
 
 ## `meridian.testing` { #testing }
 

@@ -21,6 +21,16 @@ developer how to declare a table and read its rows.
     contract. A runtime serving v13 refuses a plugin built on 0.19.0, naming
     both versions.
 
+!!! note "Contract v20"
+    From contract v20 a secret's field says where it stands in its
+    placeholder, with its last four characters for a long one, and an
+    optional secret has **Remove** in place of **Clear it** (see
+    [A secret](#a-secret)); the form and each table's tab have **Prepare**
+    beside Save (see [Prepare instead of saving](#prepare-instead-of-saving));
+    an instrument column is a search-as-you-type picker; and a plugin may
+    declare a setting each person keeps for themselves (see
+    [A person's own settings](#a-persons-own-settings)). Released 2026-10-12 in chart 0.1.298.
+
 ## Open the form
 
 Only an admin of the plugin sees it; a deployment admin is one through the
@@ -76,20 +86,38 @@ changes.
 ## A secret
 
 A secret, such as a vendor's API key, is write-only. Its field is always
-empty and says only **set** or **not set**. Typing into it replaces the
-value; leaving it empty leaves it as it is; ticking **Clear it** removes it.
-Nobody reads a secret back, a deployment admin included: it is never shown,
-logged, reported or bundled, and is sealed before it is stored. A setting held
+empty, and says in its placeholder where the secret stands: **Not set**, or
+who set it and when, such as *Set by Ada, 2026-10-09 14:02 UTC*. Leaving the
+field empty keeps the secret; typing into it replaces it. Nobody reads a
+secret back, a deployment admin included: it is never shown, logged,
+reported or bundled, and is sealed before it is stored.
+
+From contract v20:
+
+- **Its last four characters.** For a secret of 16 characters or more set
+  from v20, the placeholder begins with its last four, such as *Ends in
+  a9F2 · set by Ada, 2026-10-09 14:02 UTC*, so you can tell which key is in
+  place without seeing it. They are kept apart from the secret, and are not
+  the value: a shorter secret shows none, and one set before v20 shows none
+  until it is set again.
+- **Remove.** An optional secret that is set has a small **Remove** beside
+  its field, which asks first and removes it alone; the plugin then has no
+  value for it until it is set again. A required secret is only ever
+  replaced, never removed. **Clear it**, the tick box under every secret,
+  is gone.
+
+Before v20 the field said only **set** or **not set**, and a tick box,
+**Clear it**, removed the secret. A setting held
 sealed is never shown, whatever the plugin declares of it later: a plugin
 re-declaring it as not secret clears it (see
 [A setting re-declared](#a-setting-re-declared)). What changed for secrets in
 v14 is in their records: a setting that becomes secret has its earlier plain
 values redacted (see [Who changed what](#who-changed-what)).
 
-From contract v17, hovering over a secret's **set**
-says who set it and when, and through which client where they used one,
-such as *Set by Ada, 2026-10-09 14:02 UTC, through Claude*. Never its value.
-An agent never reads or types a secret: it may only clear one, with a note.
+From contract v17 the form says who set a secret and when, and through which
+client where they used one, such as *Set by Ada, 2026-10-09 14:02 UTC,
+through Claude*. Never its value. An agent never reads or types a secret: it
+may only clear one, with a note.
 
 ## A table setting
 
@@ -131,7 +159,7 @@ anything, so the two refuse alike:
 | Date | A real date, `YYYY-MM-DD`. |
 | Choice | One of the column's options, chosen from them. |
 | External account | One of the external accounts this plugin reported, chosen from them. |
-| Instrument | One of the deployment's instrument records, found by searching them and held by its ID, never a symbol. One the deployment does not hold is refused. |
+| Instrument | One of the deployment's instrument records, found by searching them and held by its ID, never a symbol. One the deployment does not hold is refused. From contract v20 the cell is a search-as-you-type picker: type part of a name, a symbol or an identifier, and once you pause it lists up to eight of the deployment's records, each with its name, identifiers and ID; choose one with the arrows and Enter, or a click, and Escape puts the cell back. The cell shows the name and keeps the ID. Words typed and not chosen hold the save. Only the deployment's own records are searched; nothing lists every record, and the platform is not asked. |
 
 A column marked required must be filled on every row. A cell that does not
 read is marked, and the tab names it by row and column, with its path, as in
@@ -147,6 +175,33 @@ types those stamps, and a plugin declaring a column named `changed_by` or
 `changed_at` is refused when it registers.
 
 A table is never a secret.
+
+## Prepare instead of saving
+
+From contract v20 the form and each table's tab have
+**Prepare** beside **Save**. It checks the change as Save would and keeps
+it, unsaved, as a [prepared change](../concepts/prepared-changes.md) for
+someone who may make it: it appears in their Inbox, and the form opens
+started from it, marked "prepared by" you with your note. Nothing changes
+until a person makes it. Where the act's **second pair of eyes** is on,
+the form offers Prepare alone: nobody saves that change directly, and
+someone other than you makes it.
+
+An agent prepares a settings change the same way, through
+`dashboard__prepare_call`, and whether it may only prepare, rather than
+save, is what the deployment admin and the plugin's admin set for the act
+(see [What agents may do](../concepts/prepared-changes.md#what-agents-may-do)).
+
+## A person's own settings
+
+From contract v20 a plugin may declare a setting
+**each person's own** (`per_person`), such as a reporting plugin's
+watchlist. It is not on the Settings form and has no value for the whole
+deployment. Each person who holds `write` on a role it serves saves their
+own on the plugin's own pages, under Open; the dashboard keeps them under
+that person, hands them back with each of their requests, and records each
+change, shown to that person alone. Nobody else reads them, a deployment
+admin included, and no tool reads them. A secret is never a person's own.
 
 ## Who changed what
 

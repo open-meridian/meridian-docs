@@ -34,9 +34,11 @@ meridian down --delete-namespace
 ```
 
 !!! danger
-    This deletes the namespace. If the deployment brought its own database, all its data goes, and
-    nothing backs it up. The deployment's private key goes too. It lived only in that cluster, and
-    there is no copy anywhere. `meridian down` never touches the cluster itself.
+    This deletes the namespace. If the deployment brought its own database, all its data goes. The
+    deployment's private key goes too. It lived only in that cluster, and unless you have a backup
+    of the deployment there is no copy anywhere: see
+    [Back up and restore a deployment](back-up-and-restore.md). `meridian down` never touches the
+    cluster itself.
 
 A delegation this machine held at the deployment is forgotten either way.
 
@@ -91,11 +93,17 @@ first; `--yes` answers for a script. Not to be confused with `meridian down`, wh
 
 ## What to back up
 
-- **A database you run:** back it up as you back up any other.
-- **A database the deployment brought:** nothing backs it up. That is fine for a trial and wrong for
-  anything you depend on.
+From chart 0.1.298 a deployment backs itself up on a schedule once you set it up, sealed to an
+identity you keep: see [Back up and restore a deployment](back-up-and-restore.md).
+
+- **A database the deployment brought:** its backups include it. Without backups set up, nothing
+  backs it up. That is fine for a trial and wrong for anything you depend on.
+- **A database you run:** back it up as you back up any other. A deployment's backups hold its keys,
+  credentials and values, and leave that database to its provider unless you set
+  `backup.database: true`.
 
 ## Related
 
+- [Back up and restore a deployment](back-up-and-restore.md)
 - [Projects and deployments](../concepts/projects-and-deployments.md)
 - [Troubleshoot an install](troubleshoot-install.md)

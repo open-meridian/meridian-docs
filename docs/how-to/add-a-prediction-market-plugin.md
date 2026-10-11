@@ -1,14 +1,21 @@
 # Add a prediction-market plugin
 
-Two data plugins (each holding `dgm`) put prediction markets' public market
+Two data plugins (each holding `data`) put prediction markets' public market
 data into the deployment's [lake](../concepts/the-lake.md), with no key and
 no account: **Kalshi**, from
 [plugin-kalshi](https://github.com/open-meridian/plugin-kalshi), and
 **Polymarket**, from
 [plugin-polymarket](https://github.com/open-meridian/plugin-polymarket).
-They pass one `dgm` suite between them. Each contract they price is a
+They pass one data suite between them. Each contract they price is a
 [binary event contract](../concepts/instruments.md#binary-event-contracts)
 in the deployment's instrument store.
+
+!!! note "Contract v20"
+    plugin-kalshi 0.2.0 and plugin-polymarket 0.2.0, released 2026-10-12,
+    are built on open-meridian 0.24.0 (contract v20), and run on chart
+    0.1.298 or later: each takes the data role's common pages and
+    figures, reads its dataset's licence, and has its `synthetic` setting
+    renamed `sample_data` (see [Using a data plugin](using-a-data-plugin.md)).
 
 !!! note "Contract v19"
     plugin-kalshi 0.1.0 and plugin-polymarket 0.1.0, released 2026-10-10,
@@ -89,7 +96,7 @@ meridian plugin launch kalshi <version> --instance kalshi-1
 
 Polymarket is the same, from `plugin-polymarket`, named `polymarket`, as
 `polymarket-1`. The repositories are named `plugin-<name>`; the plugins
-keep their names, `kalshi` and `polymarket`. The launch asks for the `dgm`
+keep their names, `kalshi` and `polymarket`. The launch asks for the `data`
 role and storage for its raw responses, and no key. Their settings, on each
 plugin's **Settings** form:
 
@@ -100,7 +107,7 @@ plugin's **Settings** form:
 - **Synthetic mode**, on a development deployment only: answers from
   exchanges committed with the plugin instead of calling the venue.
 
-Each marks the `dgm` suite's cases about kinds of data it never publishes
+Each marks the data suite's cases about kinds of data it never publishes
 as not presented, with why (daily closes and bars, trades, a currency's
 rate, a security's price, and at Kalshi a stablecoin's price), and passes
 every other case.
@@ -140,5 +147,6 @@ page shows. Neither shows a price.
 - [Binary event contracts](../concepts/instruments.md#binary-event-contracts).
 - [Watch the market on the Board](watch-the-board.md): the Prediction
   markets panel.
-- [Add a public data plugin](add-a-public-data-plugin.md): Coinbase, Kraken
+- [Using a data plugin](using-a-data-plugin.md): every data plugin's
+  first-use path and pages, and Alpaca, Tradier, Tiingo, Coinbase, Kraken
   and H.10.

@@ -747,6 +747,11 @@
           "required": false,
           "says": "for a case about one kind of data -- closes, bars, trades, quotes, prices on a venue -- that kind, in the contract's words (contract v19); a plugin that declares it never publishes that kind marks the case not presented, with why, which is no exemption from the rest"
         },
+        "about_field": {
+          "shape": "text",
+          "required": false,
+          "says": "for a case about one field a source may never state -- a trade's aggressor, its conditions -- that field, by its dictionary entry (contract v20); a plugin that declares its source never states it marks the case not presented, with why, which is no exemption from the rest"
+        },
         "since": {
           "shape": "version",
           "required": false,

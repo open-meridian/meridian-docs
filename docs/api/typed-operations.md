@@ -21,9 +21,11 @@ From 0.19.0, contract v14, it also lists three operations of [the custodian's ac
 
 From 0.20.0, contract v15, it also lists [`re_resolve_activity`](#re_resolve_activity), by which a `custody` plugin re-resolves an activity it recorded before its instrument resolved, and `list_activities` answers each re-resolution beside the activities, which `operations` hears with `receive(activity_re_resolved=...)`. Both rows are `preview` in v15.
 
-From 0.22.0, contract v18, it also lists eight operations of [the lake](../concepts/the-lake.md) and [the venue master](../concepts/venues.md): [`record_prices`](#record_prices), [`record_bars`](#record_bars) and [`decline_want`](#decline_want), by which a `dgm` plugin records its vendor's prices and bars and answers what the lake wants; [`resolve_venue`](#resolve_venue) and [`report_missing_venue`](#report_missing_venue), by which it names a venue by its venue ID; and [`list_prices`](#list_prices), [`list_bars`](#list_bars) and [`list_datasets`](#list_datasets), by which `reporting`, `portfolio`, `compliance` and `signal` read them. Each of the eight is `preview` in v18. A `dgm` may also call [`resolve_identifier`](#resolve_identifier), [`report_missing_instrument`](#report_missing_instrument) and [`resolve_instrument`](#resolve_instrument), the last to name to its vendor an instrument another source resolved. A [`Money`](#money) names its cash instrument, and every date field takes a `datetime.date` (see [Times and dates](#times-and-dates)).
+From 0.22.0, contract v18, it also lists eight operations of [the lake](../concepts/the-lake.md) and [the venue master](../concepts/venues.md): [`record_prices`](#record_prices), [`record_bars`](#record_bars) and [`decline_want`](#decline_want), by which a data plugin records its vendor's prices and bars and answers what the lake wants; [`resolve_venue`](#resolve_venue) and [`report_missing_venue`](#report_missing_venue), by which it names a venue by its venue ID; and [`list_prices`](#list_prices), [`list_bars`](#list_bars) and [`list_datasets`](#list_datasets), by which `reporting`, `portfolio`, `compliance` and `signal` read them. Each of the eight is `preview` in v18. A data plugin may also call [`resolve_identifier`](#resolve_identifier), [`report_missing_instrument`](#report_missing_instrument) and [`resolve_instrument`](#resolve_instrument), the last to name to its vendor an instrument another source resolved. A [`Money`](#money) names its cash instrument, and every date field takes a `datetime.date` (see [Times and dates](#times-and-dates)).
 
-From 0.23.0, contract v19 (chart 0.1.293 or later), it also lists four operations of the lake's trades and quotes: [`record_trades`](#record_trades) and [`record_quotes`](#record_quotes), by which a `dgm` plugin records them, and [`list_trades`](#list_trades) and [`list_quotes`](#list_quotes), by which `signal` and `ems` read them. `ems` also reads [`list_datasets`](#list_datasets), and `reporting` may call [`resolve_identifier`](#resolve_identifier), read-only. Each of the four is `preview` in v19. `reporting` reads no trade and no quote: it is for slower consumers (see [Who reads what](../concepts/the-lake.md#who-reads-what)).
+From 0.23.0, contract v19 (chart 0.1.293 or later), it also lists four operations of the lake's trades and quotes: [`record_trades`](#record_trades) and [`record_quotes`](#record_quotes), by which a data plugin records them, and [`list_trades`](#list_trades) and [`list_quotes`](#list_quotes), by which `signal` and `ems` read them. `ems` also reads [`list_datasets`](#list_datasets), and `reporting` may call [`resolve_identifier`](#resolve_identifier), read-only. Each of the four is `preview` in v19. `reporting` reads no trade and no quote: it is for slower consumers (see [Who reads what](../concepts/the-lake.md#who-reads-what)).
+
+From 0.24.0, contract v20, no operation is added. The role `dgm` is named `data` (a data plugin), and this page names it so throughout, for every release; `ccm` is `connectivity` and `match` `confirmation`, holding no operation. A data plugin also reads [`list_trades`](#list_trades), its own last recorded trades (`latest_recorded`), and [`list_datasets`](#list_datasets), its own datasets' licences; [`read_accounts_for_linking`](#read_accounts_for_linking) answers only the accounts granted to the plugin's instance; and a resolve of a currency the deployment does not hold is answered from the platform's master. Two calls every plugin may make are in the Python SDK: reading the [prepared change](python-sdk.md#prepared) a page was opened from (`ReadPreparedCall`), and saving [a person's own settings](python-sdk.md#own_settings) (`SetOwnSettings`).
 
 ## Summary
 
@@ -39,11 +41,11 @@ From 0.23.0, contract v19 (chart 0.1.293 or later), it also lists four operation
 | [`list_activities`](#list_activities) | `ListActivities` | W2.11 List an account's activity | query | `operations` | `ListActivitiesResult` |
 | [`re_resolve_activity`](#re_resolve_activity) | `ReResolveActivity` | W2.15 Re-resolve a recorded activity | command | `custody` | `ReResolveActivityResult` |
 | [`list_sync_statuses`](#list_sync_statuses) | `ListSyncStatuses` | W2.14 Read an account's sync status | query | `operations` | `ListSyncStatusesResult` |
-| [`resolve_identifier`](#resolve_identifier) | `ResolveIdentifier` | W3.1 Resolve an identifier set | query | `custody`, `dgm` from v18, `reporting` from v19 | `ResolveIdentifierResult` |
-| [`report_missing_instrument`](#report_missing_instrument) | `ReportMissingInstrument` | W3.2 Report that a resolution missed | event | `custody`, `dgm` from v18 | `Published` |
+| [`resolve_identifier`](#resolve_identifier) | `ResolveIdentifier` | W3.1 Resolve an identifier set | query | `custody`, `data` from v18, `reporting` from v19 | `ResolveIdentifierResult` |
+| [`report_missing_instrument`](#report_missing_instrument) | `ReportMissingInstrument` | W3.2 Report that a resolution missed | event | `custody`, `data` from v18 | `Published` |
 | [`read_accounts_for_linking`](#read_accounts_for_linking) | `ReadAccountsForLinking` | W6.4 Link a plugin's external account | query | `custody` | `ReadAccountsForLinkingResult` |
 | [`link_external_account`](#link_external_account) | `LinkExternalAccount` | W6.4 Link a plugin's external account | command | `custody` | `LinkExternalAccountResult` |
-| [`resolve_instrument`](#resolve_instrument) | `ResolveInstrument` | W3.6 Resolve an instrument for display | query | `portfolio`, `reporting`, `compliance`, `oms`, `operations`, `dgm` from v18 | `ResolveInstrumentResult` |
+| [`resolve_instrument`](#resolve_instrument) | `ResolveInstrument` | W3.6 Resolve an instrument for display | query | `portfolio`, `reporting`, `compliance`, `oms`, `operations`, `data` from v18 | `ResolveInstrumentResult` |
 | [`record_opening_balance`](#record_opening_balance) | `RecordOpeningBalance` | W9.1 Record an account's opening balance | command | `operations` | `RecordOpeningBalanceResult` |
 | [`record_break`](#record_break) | `RecordBreak` | W9.4 Record a break | command | `operations` | `RecordBreakResult` |
 | [`record_account_figures`](#record_account_figures) | `RecordAccountFigures` | W9.5 Record the account's figures | command | `operations` | `RecordAccountFiguresResult` |
@@ -55,13 +57,13 @@ From 0.23.0, contract v19 (chart 0.1.293 or later), it also lists four operation
 | [`list_breaks`](#list_breaks) | `ListBreaks` | W9.11 Read breaks | query | `operations`, `oms`, `compliance`, `portfolio`, `reporting` | `ListBreaksResult` |
 | [`list_account_figures`](#list_account_figures) | `ListAccountFigures` | W9.12 Read the account's figures | query | `operations`, `portfolio`, `compliance`, `reporting` | `ListAccountFiguresResult` |
 | [`list_account_attributes`](#list_account_attributes) | `ListAccountAttributes` | W9.14 Read an account's attributes | query | `portfolio`, `reporting`, `compliance`, `oms`, `operations` | `ListAccountAttributesResult` |
-| [`record_prices`](#record_prices) | `RecordPrices` | W10.4 Record prices and bars in batches | command | `dgm` | `RecordPricesResult` |
-| [`record_bars`](#record_bars) | `RecordBars` | W10.4 Record prices and bars in batches | command | `dgm` | `RecordBarsResult` |
-| [`record_trades`](#record_trades) | `RecordTrades` | W10.4 Record prices, bars, trades and quotes in batches | command | `dgm`, from v19 | `RecordTradesResult` |
-| [`record_quotes`](#record_quotes) | `RecordQuotes` | W10.4 Record prices, bars, trades and quotes in batches | command | `dgm`, from v19 | `RecordQuotesResult` |
-| [`decline_want`](#decline_want) | `DeclineWant` | W10.7 Want what a read could not answer | command | `dgm` | `DeclineWantResult` |
-| [`resolve_venue`](#resolve_venue) | `ResolveVenue` | W3.14 Resolve a venue | query | `dgm` | `ResolveVenueResult` |
-| [`report_missing_venue`](#report_missing_venue) | `ReportMissingVenue` | W3.15 Report a venue the deployment does not hold | event | `dgm` | `Published` |
+| [`record_prices`](#record_prices) | `RecordPrices` | W10.4 Record prices and bars in batches | command | `data` | `RecordPricesResult` |
+| [`record_bars`](#record_bars) | `RecordBars` | W10.4 Record prices and bars in batches | command | `data` | `RecordBarsResult` |
+| [`record_trades`](#record_trades) | `RecordTrades` | W10.4 Record prices, bars, trades and quotes in batches | command | `data`, from v19 | `RecordTradesResult` |
+| [`record_quotes`](#record_quotes) | `RecordQuotes` | W10.4 Record prices, bars, trades and quotes in batches | command | `data`, from v19 | `RecordQuotesResult` |
+| [`decline_want`](#decline_want) | `DeclineWant` | W10.7 Want what a read could not answer | command | `data` | `DeclineWantResult` |
+| [`resolve_venue`](#resolve_venue) | `ResolveVenue` | W3.14 Resolve a venue | query | `data` | `ResolveVenueResult` |
+| [`report_missing_venue`](#report_missing_venue) | `ReportMissingVenue` | W3.15 Report a venue the deployment does not hold | event | `data` | `Published` |
 | [`list_prices`](#list_prices) | `ListPrices` | W10.6 Read prices and bars, point in time, by source | query | `reporting`, `portfolio`, `compliance`, `signal` | `ListPricesResult` |
 | [`list_bars`](#list_bars) | `ListBars` | W10.6 Read prices and bars, point in time, by source | query | `reporting`, `portfolio`, `compliance`, `signal` | `ListBarsResult` |
 | [`list_trades`](#list_trades) | `ListTrades` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `signal`, `ems`, from v19 | `ListTradesResult` |
@@ -922,10 +924,12 @@ async def resolve_identifier(
 | gRPC | `rpc ResolveIdentifier(ResolveIdentifierParams) returns (ResolveIdentifierResult)` |
 | Workflow step | W3.1, Resolve an identifier set |
 | Kind | query, on `platform.reference.query.resolve-identifier` |
-| Role | `custody`; from contract v18 also `dgm`, resolving its vendor's codes to the instruments its rows name; from contract v19 also `reporting`, read-only |
+| Role | `custody`; from contract v18 also `data`, resolving its vendor's codes to the instruments its rows name; from contract v19 also `reporting`, read-only |
 | Served by | the instrument store, the deployment's replica of the security master |
 
-**Read-only, for `reporting`** (contract v19). A `reporting` plugin names an instrument by an identifier, such as its reporting currency by its ISO 4217 code (`Identifier(scheme="iso4217", value="EUR")`), and the store answers the record it holds for the date. Asked by `reporting`, nothing is minted, joined, offered or listed: nothing matched is `MISS_REASON_NOT_FOUND`, several matched `MISS_REASON_AMBIGUOUS`. **Known limit in v19:** core does not yet make a `reporting` plugin's resolve read-only, so a code nothing matches could record a miss, a local record minted for it as for any plugin's resolve. Fixed in v20. A currency's ISO 4217 code resolves to its cash instrument either way (see [Instruments](../concepts/instruments.md#resolving-an-identifier)).
+**Read-only, for `reporting`** (contract v19). A `reporting` plugin names an instrument by an identifier, such as its reporting currency by its ISO 4217 code (`Identifier(scheme="iso4217", value="EUR")`), and the store answers the record it holds for the date. Asked by `reporting`, nothing is minted, joined, offered or listed: nothing matched is `MISS_REASON_NOT_FOUND`, several matched `MISS_REASON_AMBIGUOUS`. From contract v20 core enforces it, from the asking instance's launched roles; in v19 it did not, so a code nothing matched could record a miss, a local record minted for it as for any plugin's resolve (see [Instruments](../concepts/instruments.md#resolving-an-identifier)).
+
+**A currency is fetched, not minted** (contract v20). A resolve naming a currency by its ISO 4217 code (`iso4217`) that no record the deployment holds carries is answered with the platform master's record, which the instrument store fetches itself, with no person; a local record is minted for the code only when the master does not hold it, or while the platform cannot be reached (see [A currency is fetched from the master](../concepts/instruments.md#a-currency-is-fetched-from-the-master)).
 
 **As of any date the store holds** (contract v19). The store keeps each identifier's window on a record, so an identifier that has since left a record still answers, as of a date it was on it, the record that held it then.
 
@@ -983,7 +987,7 @@ async def report_missing_instrument(
 | gRPC | `rpc ReportMissingInstrument(ReportMissingInstrumentParams) returns (Published)` |
 | Workflow step | W3.2, Report that a resolution missed |
 | Kind | event, on `platform.reference.event.instrument-missing` |
-| Role | `custody`; from contract v18 also `dgm` |
+| Role | `custody`; from contract v18 also `data` |
 | Heard by | the conductor, which asks the platform whether it already knows the instrument (W3.3) |
 
 | Name | Type | Required | Meaning |
@@ -1016,7 +1020,7 @@ await plugin.report_missing_instrument(
 
 ## `read_accounts_for_linking` { #read_accounts_for_linking }
 
-Reads the deployment's accounts, so the plugin's own page at `admin` can offer the ones an external account may be linked to. It is read only for an admin of the plugin, the one viewing the page under Manage, and is answered every account's identity: a plugin admin is account agnostic, and links to any existing account.
+Reads the deployment's accounts, so the plugin's own page at `admin` can offer the ones an external account may be linked to. It is read only for an admin of the plugin, the one viewing the page under Manage, and is answered each account's identity. From contract v20 it is answered only the accounts a deployment admin granted the plugin's instance, nothing by default (see [Accounts a plugin may link to](../concepts/accounts.md#accounts-a-plugin-may-link-to)); before v20, every account in the deployment, a plugin admin being account agnostic.
 
 ```python
 async def read_accounts_for_linking(
@@ -1040,7 +1044,7 @@ async def read_accounts_for_linking(
 
 | Field | Type | Meaning |
 |---|---|---|
-| `accounts` | sequence of [`AccountRecord`](#accountrecord) | Every account in the deployment, open and closed: each one's identifier, name, state, custodian, type, owner and note. No holdings. |
+| `accounts` | sequence of [`AccountRecord`](#accountrecord) | From contract v20 every account granted to the instance, before it every account in the deployment, open and closed: each one's identifier, name, state, custodian, type, owner and note. No holdings. Empty until a deployment admin grants some. |
 
 Offer only open accounts. A link to a closed account is refused.
 
@@ -1110,6 +1114,7 @@ The four `new_account_*` attributes are free text, which a page may pre-fill fro
 - `NotGranted` without an `acting_for`, or with one from a session not opened by Manage; for a `new_account_name` from an admin who is not a deployment admin; or for an external account this plugin did not report, an empty one included.
 - `not vouched for` for an `acting_for` that is not accepted.
 - `handler error` from the conductor for a link it refuses, with its reason: both `account_id` and `new_account_name`, an account that does not exist or is closed, an account that already has an external account linked, or an attribute that is too long.
+- From contract v20, `CommandRefused` with `REFUSAL_REASON_ACCOUNT_NOT_LINKABLE` for an `account_id` a deployment admin has not granted the plugin's instance. A new account made by linking is granted to the instance that made it.
 - `no handler` or `timeout` from the conductor.
 - `NotGranted` without the `custody` role.
 
@@ -1149,7 +1154,7 @@ async def resolve_instrument(
 | gRPC | `rpc ResolveInstrument(ResolveInstrumentParams) returns (ResolveInstrumentResult)` |
 | Workflow step | W3.6, Resolve an instrument for display |
 | Kind | query, on `platform.reference.query.resolve-instrument` |
-| Role | `portfolio`, `reporting`, `compliance`, `oms`, `operations`; from contract v18 also `dgm`, reading the record of an instrument another source resolved to name it to its vendor |
+| Role | `portfolio`, `reporting`, `compliance`, `oms`, `operations`; from contract v18 also `data`, reading the record of an instrument another source resolved to name it to its vendor |
 | Served by | the instrument store |
 
 | Name | Type | Required | Meaning |
@@ -1593,7 +1598,7 @@ async def list_account_figures(
 
 ## `list_account_attributes` { #list_account_attributes }
 
-From 0.13.0. Reads the book's attributes of the accounts within the plugin's read scope, or one account's: the base currency, the default method of relieving lots, and the standing opening balance, with its entry, its date and its sources; or those changed since a watermark. A plugin learns from it that an account is in the book, and from which date it reconciles, without proposing an opening balance again. A deployment admin sets the first two on the dashboard's [Books tab](../concepts/the-book-of-record.md#the-books-tab). See [Reads are within the read scope](#reads).
+From 0.13.0. Reads the book's attributes of the accounts within the plugin's read scope, or one account's: the base currency, the default method of relieving lots, and the standing opening balance, with its entry, its date and its sources; or those changed since a watermark. A plugin learns from it that an account is in the book, and from which date it reconciles, without proposing an opening balance again. A deployment admin sets the first two on the dashboard's [Accounts tab](../concepts/the-book-of-record.md#the-accounts-tab), in an account's **In the book** (the **Books** tab before contract v20). See [Reads are within the read scope](#reads).
 
 ```python
 async def list_account_attributes(
@@ -1628,7 +1633,7 @@ if page.attributes and page.attributes[0].HasField("opening_balance"):
 
 ## `record_prices` { #record_prices }
 
-From 0.22.0, contract v18, `preview`. Records a batch of 1 to 500 [`Price`](#price)s into [the lake](../concepts/the-lake.md), whole or refused naming the row and the field. A `dgm` plugin's.
+From 0.22.0, contract v18, `preview`. Records a batch of 1 to 500 [`Price`](#price)s into [the lake](../concepts/the-lake.md), whole or refused naming the row and the field. A data plugin's.
 
 ```python
 async def record_prices(
@@ -1641,7 +1646,7 @@ async def record_prices(
 | gRPC | `rpc RecordPrices(RecordPricesParams) returns (RecordPricesResult)` |
 | Workflow step | W10.4, Record prices and bars in batches |
 | Kind | command, on `platform.lake.command.record-prices` |
-| Role | `dgm` |
+| Role | `data` |
 | Served by | the lake, which records, sequences and publishes each row on its dataset's subject (W10.5) |
 
 | Name | Type | Required | Meaning |
@@ -1654,7 +1659,7 @@ The sidecar stamps each row's `source.instance` and `source.plugin_version`; the
 
 **Returns** `RecordPricesResult`: `recorded`, the rows new; `restated`, the rows recorded as a new version of a row key already recorded with a changed value; `unchanged`, those repeating a version's values (by decimal value: 764.2 is 764.20); and the dataset's `watermark`.
 
-**Errors:** `CallFailed` with `kind="invalid"` naming the row and field by its path (`prices[3].meta.business_date`): a dataset the instance does not declare or that does not serve prices, a subject the instrument store does not hold, a business date that is no day, a source time given twice, a venue that is no venue ID, a Money naming no asset or two. `NotGranted` without `dgm`.
+**Errors:** `CallFailed` with `kind="invalid"` naming the row and field by its path (`prices[3].meta.business_date`): a dataset the instance does not declare or that does not serve prices, a subject the instrument store does not hold, a business date that is no day, a source time given twice, a venue that is no venue ID, a Money naming no asset or two. `NotGranted` without `data`.
 
 ```python
 from datetime import date
@@ -1696,14 +1701,14 @@ async def record_bars(
 | gRPC | `rpc RecordBars(RecordBarsParams) returns (RecordBarsResult)` |
 | Workflow step | W10.4, Record prices and bars in batches |
 | Kind | command, on `platform.lake.command.record-bars` |
-| Role | `dgm` |
+| Role | `data` |
 | Served by | the lake |
 
 Each bar's open, high, low, close and VWAP are in one asset, refused otherwise; its volume is never negative; its VWAP and trade count are left unset where the source gives none, which is not zero. The interval is its envelope's valid time, and a daily bar names its business date. Its parameters, result and errors are `record_prices`'s, with `bars` for `prices`.
 
 ## `record_trades` { #record_trades }
 
-From 0.23.0, contract v19, `preview`. Records a batch of 1 to 500 [`Trade`](#trade)s into [the lake](../concepts/the-lake.md), as [`record_prices`](#record_prices) records prices. A `dgm` plugin's, from a dataset declaring `meridian.v1.Trade`.
+From 0.23.0, contract v19, `preview`. Records a batch of 1 to 500 [`Trade`](#trade)s into [the lake](../concepts/the-lake.md), as [`record_prices`](#record_prices) records prices. A data plugin's, from a dataset declaring `meridian.v1.Trade`.
 
 ```python
 async def record_trades(
@@ -1716,12 +1721,12 @@ async def record_trades(
 | gRPC | `rpc RecordTrades(RecordTradesParams) returns (RecordTradesResult)` |
 | Workflow step | W10.4, Record prices, bars, trades and quotes in batches |
 | Kind | command, on `platform.lake.command.record-trades` |
-| Role | `dgm` |
+| Role | `data` |
 | Served by | the lake, which records each and publishes every one on its dataset's subject, never conflated (W10.5) |
 
 Each trade is keyed by UTC instants: valid from its event time at its venue, `valid_until_ns` 0, and **no business date**. Its venue is the venue it printed on (a consolidated dataset's trade names its market centre). A correction or a withdrawal is the next version under the same row key, a withdrawal with `cancelled=True`. Its parameters and result are `record_prices`'s, with `trades` for `prices`.
 
-**Errors:** as `record_prices`, and: a quantity not more than zero, an unspecified trade characteristic, a trade naming a business date, a dataset not serving trades. `NotGranted` without `dgm`.
+**Errors:** as `record_prices`, and: a quantity not more than zero, an unspecified trade characteristic, a trade naming a business date, a dataset not serving trades. `NotGranted` without `data`.
 
 ```python
 from decimal import Decimal
@@ -1749,7 +1754,7 @@ await plugin.record_trades(trades=[
 
 ## `record_quotes` { #record_quotes }
 
-From 0.23.0, contract v19, `preview`. Records a batch of 1 to 500 [`Quote`](#quote)s, as [`record_prices`](#record_prices) records prices. A `dgm` plugin's, from a dataset declaring `meridian.v1.Quote`.
+From 0.23.0, contract v19, `preview`. Records a batch of 1 to 500 [`Quote`](#quote)s, as [`record_prices`](#record_prices) records prices. A data plugin's, from a dataset declaring `meridian.v1.Quote`.
 
 ```python
 async def record_quotes(
@@ -1762,12 +1767,12 @@ async def record_quotes(
 | gRPC | `rpc RecordQuotes(RecordQuotesParams) returns (RecordQuotesResult)` |
 | Workflow step | W10.4, Record prices, bars, trades and quotes in batches |
 | Kind | command, on `platform.lake.command.record-quotes` |
-| Role | `dgm` |
+| Role | `data` |
 | Served by | the lake, which publishes each, conflated per subject, dataset, venue and asset (W10.5) |
 
 A quote is valid from its time until the next for the same subject, dataset, venue and asset, and names no business date. A side the source left empty is left unset (`ask=None`), never zero. Its parameters and result are `record_prices`'s, with `quotes` for `prices`.
 
-**Errors:** as `record_prices`, and: a bid and an ask in two assets, a quantity not more than zero, an unspecified quote characteristic, a quote naming a business date. `NotGranted` without `dgm`.
+**Errors:** as `record_prices`, and: a bid and an ask in two assets, a quantity not more than zero, an unspecified quote characteristic, a quote naming a business date. `NotGranted` without `data`.
 
 ```python
 await plugin.record_quotes(quotes=[
@@ -1777,7 +1782,7 @@ await plugin.record_quotes(quotes=[
 
 ## `decline_want` { #decline_want }
 
-From 0.22.0, contract v18, `preview`. Says what a `dgm` cannot serve of a want, per subject, with a reason.
+From 0.22.0, contract v18, `preview`. Says what a data plugin cannot serve of a want, per subject, with a reason.
 
 A read the lake cannot answer from what it holds becomes a want, heard only by the instance serving its dataset, with `receive(observations_wanted=...)`: an `ObservationsWantedEvent` with its `want_id`, `dataset`, `data_type`, `subjects`, `kinds` (for prices), `interval_ns` (for bars), a `business_date` or a valid range, and `standing`. The plugin fetches what it covers and records it with `want_id=`; what it cannot, it declines. A standing want asks that its subjects be kept current until a `WantWithdrawnEvent` (`want_id`, `dataset`), heard with `receive(want_withdrawn=...)`, withdraws it.
 
@@ -1793,7 +1798,7 @@ async def decline_want(
 | gRPC | `rpc DeclineWant(DeclineWantParams) returns (DeclineWantResult)` |
 | Workflow step | W10.7, Want what a read could not answer |
 | Kind | command, on `platform.lake.command.decline-want` |
-| Role | `dgm` |
+| Role | `data` |
 | Served by | the lake, which tells the waiting readers |
 
 | Name | Type | Required | Meaning |
@@ -1802,7 +1807,7 @@ async def decline_want(
 | `subjects` | sequence of [`SubjectRef`](#subjectref) | yes | The subjects declined. |
 | `reason` | [`UnansweredReason`](#unansweredreason) | yes | Such as `"not_covered"`, or `"beyond_history"`. |
 
-**Returns** `DeclineWantResult`, empty. **Errors:** `CallFailed` for a want this instance does not serve. `NotGranted` without `dgm`.
+**Returns** `DeclineWantResult`, empty. **Errors:** `CallFailed` for a want this instance does not serve. `NotGranted` without `data`.
 
 From contract v19 a decline stands for the business date or range its want asked, or for the latest where it asked the latest, and for no other date of that dataset and subject: a later want of another date is asked again. In v18 it stood for a day across every date.
 
@@ -1831,7 +1836,7 @@ async def resolve_venue(
 | gRPC | `rpc ResolveVenue(ResolveVenueParams) returns (ResolveVenueResult)` |
 | Workflow step | W3.14, Resolve a venue |
 | Kind | query, on `platform.reference.query.resolve-venue` |
-| Role | `dgm` |
+| Role | `data` |
 | Served by | the instrument store |
 
 | Name | Type | Required | Meaning |
@@ -1841,7 +1846,7 @@ async def resolve_venue(
 
 **Returns** `ResolveVenueResult`: `found`, when exactly one venue held is named; `venue`, its [`VenueRecord`](#venuerecord); and `miss_reason`, `MISS_REASON_NOT_FOUND` or `MISS_REASON_AMBIGUOUS`, when not.
 
-**Errors:** `no handler` or `timeout` from the instrument store. `NotGranted` without `dgm`.
+**Errors:** `no handler` or `timeout` from the instrument store. `NotGranted` without `data`.
 
 ```python
 answer = await plugin.resolve_venue(
@@ -1866,7 +1871,7 @@ async def report_missing_venue(
 | gRPC | `rpc ReportMissingVenue(ReportMissingVenueParams) returns (Published)` |
 | Workflow step | W3.15, Report a venue the deployment does not hold |
 | Kind | event, on `platform.reference.event.venue-missing` |
-| Role | `dgm` |
+| Role | `data` |
 | Heard by | the conductor, which asks the platform for the venue by its public codes, once and again only after ten minutes; and the lake, which counts the miss against the instance's datasets |
 
 | Name | Type | Required | Meaning |
@@ -1877,7 +1882,7 @@ async def report_missing_venue(
 | `reason` | `MissReason` or `None` | no | The `miss_reason` `resolve_venue` answered. |
 | `observed_at_ns` | `int` | no | When the plugin observed the miss. |
 
-**Returns** `Published`. **Errors:** `NotGranted` without `dgm`.
+**Returns** `Published`. **Errors:** `NotGranted` without `data`.
 
 ## `list_prices` { #list_prices }
 
@@ -1911,7 +1916,7 @@ async def list_prices(
 | `as_of_ns` | `int` | no | The recorded-time cut: what the lake knew then; 0 for now. |
 | `page_size`, `cursor` | `int`, `str` | no | At most 500 a page, 100 when `0`; the previous page's `next_cursor`. |
 
-Give one of `at_ns`, `business_date` or the range. A read the lake cannot answer from what it holds is wanted of the `dgm` serving the dataset, and answered `asked_source` in `unanswered`; the rows follow, heard with `receive(prices_recorded=...)`. From contract v19 the latest is chosen per subject, dataset, kind, venue and the price's asset, so BTC priced in USD and in USDC on one venue answers both; v18 answered one.
+Give one of `at_ns`, `business_date` or the range. A read the lake cannot answer from what it holds is wanted of the data plugin serving the dataset, and answered `asked_source` in `unanswered`; the rows follow, heard with `receive(prices_recorded=...)`. From contract v19 the latest is chosen per subject, dataset, kind, venue and the price's asset, so BTC priced in USD and in USDC on one venue answers both; v18 answered one.
 
 **Returns** `ListPricesResult`: `prices`, each a [`Price`](#price) with its envelope as recorded; `unanswered`, each an [`Unanswered`](#unanswered) naming the subject, dataset, field and reason; `datasets`, each [`DatasetRef`](#datasetref) in the answer, once; the `watermark` it was read at; and `next_cursor`. A default read that fell through to a lower dataset says why the first did not answer.
 
@@ -1959,7 +1964,7 @@ From 0.23.0, contract v19, `preview`. Reads trades for up to 500 subjects over a
 async def list_trades(
     self, *, subjects: Sequence[SubjectRef] = (), sources: SourceChoice | None = None,
     valid_from_ns: int = 0, valid_until_ns: int = 0, after_watermark: Watermark | None = None,
-    as_of_ns: int = 0, page_size: int = 0, cursor: str = "",
+    as_of_ns: int = 0, page_size: int = 0, cursor: str = "", latest_recorded: bool = False,
 ) -> ListTradesResult
 ```
 
@@ -1968,7 +1973,7 @@ async def list_trades(
 | gRPC | `rpc ListTrades(ListTradesParams) returns (ListTradesResult)` |
 | Workflow step | W10.6, Read prices, bars, trades and quotes, point in time, by source |
 | Kind | query, on `platform.lake.query.list-trades` |
-| Role | `signal`, `ems` |
+| Role | `signal`, `ems`; from contract v20 also `data`, for its own rows |
 | Served by | the lake |
 
 | Name | Type | Required | Meaning |
@@ -1979,10 +1984,11 @@ async def list_trades(
 | `after_watermark` | [`Watermark`](#watermark) or `None` | one of the two ways | The watermark the reader last saw: a previous answer's `watermark`, or one built from what it heard. Older than the lake keeps is answered `beyond_history`. |
 | `as_of_ns` | `int` | no | The recorded-time cut: nothing recorded after it answers. |
 | `page_size`, `cursor` | `int`, `str` | no | At most 500 a page; the previous page's `next_cursor`. |
+| `latest_recorded` | `bool` | no | From contract v20, a data plugin's: the last trade **its own instance** recorded of each subject, per dataset and venue, from its own datasets alone, in place of a range or a watermark. What it reads on start to backfill a restart's gap from the venue's history. A subject it never recorded answers nothing. |
 
 **Returns** `ListTradesResult`: `trades`, each a [`Trade`](#trade) with its envelope as recorded; `unanswered` (not entitled, not kept and beyond history said per dataset); `datasets`; the `watermark` it was answered at, which a later catch-up names; and `next_cursor`.
 
-**Errors:** `CallFailed` with `kind="invalid"` for no subject or more than 500, or a range wider than one day of a dataset. `NotGranted` without `signal` or `ems`.
+**Errors:** `CallFailed` with `kind="invalid"` for no subject or more than 500, or a range wider than one day of a dataset. `NotGranted` without `signal` or `ems`, or from contract v20 `data` (which reads only its own rows, with `latest_recorded`).
 
 ```python
 day = await plugin.list_trades(subjects=held, valid_from_ns=open_ns, valid_until_ns=now_ns)
@@ -1990,6 +1996,14 @@ late = await plugin.list_trades(subjects=held, after_watermark=day.watermark)   
 ```
 
 A plugin hearing trades with [`receive`](python-sdk.md#receive) has the SDK make the catch-up read for it.
+
+A data plugin starting again (contract v20):
+
+```python
+last = await plugin.list_trades(subjects=streamed, latest_recorded=True)
+```
+
+or `meridian.roles.data.backfill_restart`, which reads it and records what the venue's history states since (see [Write a data plugin](../how-to/write-a-data-plugin.md)).
 
 ## `list_quotes` { #list_quotes }
 
@@ -2011,7 +2025,7 @@ async def list_quotes(
 | Role | `signal`, `ems` |
 | Served by | the lake |
 
-Its parameters are `list_trades`'s, with `at_ns` (the latest in force at this valid time; 0 for now) in place of `after_watermark`. A read the lake cannot answer is wanted of the `dgm` serving the dataset, as a price's is. **Returns** `ListQuotesResult`: `quotes`, each a [`Quote`](#quote); `unanswered`, `datasets`, `watermark` and `next_cursor`.
+Its parameters are `list_trades`'s, with `at_ns` (the latest in force at this valid time; 0 for now) in place of `after_watermark`. A read the lake cannot answer is wanted of the data plugin serving the dataset, as a price's is. **Returns** `ListQuotesResult`: `quotes`, each a [`Quote`](#quote); `unanswered`, `datasets`, `watermark` and `next_cursor`.
 
 ```python
 latest = await plugin.list_quotes(subjects=held)      # BTC in USD and in USDC on one venue: both
@@ -2030,10 +2044,12 @@ async def list_datasets(self) -> ListDatasetsResult
 | gRPC | `rpc ListDatasets(ListDatasetsParams) returns (ListDatasetsResult)` |
 | Workflow step | W10.9, Read the datasets |
 | Kind | query, on `platform.lake.query.list-datasets` |
-| Role | `reporting`, `portfolio`, `compliance`, `signal`; from contract v19 also `ems` |
+| Role | `reporting`, `portfolio`, `compliance`, `signal`; from contract v19 also `ems`; from contract v20 also `data` |
 | Served by | the lake |
 
 **Returns** `ListDatasetsResult`: `datasets`, each a [`DatasetRef`](#datasetref); `licences`, each dataset's licence enforced; and `entitlements`, the plugin's own.
+
+**A data plugin's own datasets** (contract v20). Asked by a data plugin, it answers only the datasets its own catalogue declares, each with the licence a deployment admin set on it, so its Datasets page says "Licensed" or "Not licensed yet" exactly; a dataset still on its catalogue's default answers no licence set by the deployment.
 
 ## Types { #types }
 
@@ -2763,7 +2779,7 @@ From 0.22.0. In a string, spelled as its name without `UNANSWERED_REASON_`, in l
 |---|---|
 | `UNANSWERED_REASON_NOT_ENTITLED` | The plugin is not entitled to the dataset, or the field. |
 | `UNANSWERED_REASON_NOT_COVERED` | No dataset covers the subject. |
-| `UNANSWERED_REASON_ASKED_SOURCE` | Wanted of the `dgm` serving it; the rows follow when recorded. |
+| `UNANSWERED_REASON_ASKED_SOURCE` | Wanted of the data plugin serving it; the rows follow when recorded. |
 | `UNANSWERED_REASON_SOURCE_SILENT` | The dataset recorded nothing for the subject within its cadence. |
 | `UNANSWERED_REASON_UNRESOLVED` | The subject is not one the deployment's instruments resolve. |
 | `UNANSWERED_REASON_BEYOND_HISTORY` | Older than the history the dataset reaches, or the lake keeps. |

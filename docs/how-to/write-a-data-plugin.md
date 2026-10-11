@@ -1,30 +1,36 @@
-# Write a `dgm` against its suite
+# Write a data plugin against its suite
 
-A `dgm` plugin puts a vendor's market data into the deployment's
-[lake](../concepts/the-lake.md), converted at the edge. The role has a
-conformance suite, carried by the SDK: a plugin holding `dgm` is verified
-for it only by passing every case, and two data plugins of a pair pass it
-unchanged. This page starts one from the template and holds it to the
-suite.
+A data plugin, one holding the role `data`, puts a vendor's market data
+into the deployment's [lake](../concepts/the-lake.md), converted at the
+edge. The role has a conformance suite, carried by the SDK: a plugin
+holding `data` is verified for it only by passing every case, and two data
+plugins of a pair pass it unchanged. This page starts one from the template
+and holds it to the suite. How a person then uses it is
+[Using a data plugin](using-a-data-plugin.md).
 
-!!! note "Contract v19"
-    This page describes open-meridian 0.23.0 (contract v19) and CLI 0.1.38,
-    whose `plugin new --role dgm` writes this template, for a runtime
-    serving contract v19, chart 0.1.294 or later, all released 2026-10-10.
-    0.23.0 adds trades and quotes, eight cases to the suite, and a case
-    about a kind of data your source never publishes marked not presented,
-    with why. CLI 0.1.37 wrote the template on 0.22.0 (contract v18): move
-    such a plugin with `meridian plugin migrate`, then mark the new cases as
-    [below](#a-kind-of-data-your-source-never-publishes).
+!!! note "Contract v20"
+    This page describes open-meridian 0.24.0 (contract v20) and CLI 0.1.39,
+    whose `plugin new --role data` writes this template on the role's common
+    part, both released 2026-10-11, for a runtime serving contract v20,
+    chart 0.1.298 (2026-10-12) or later. CLI 0.1.38 wrote the template on 0.23.0
+    (contract v19) as `--role dgm`: move such a plugin with `meridian plugin
+    migrate`, then map the new cases as [below](#hold-it-to-the-suite).
+    From contract v20 the role `dgm` is named **`data`** ("data plugin"):
+    `meridian plugin migrate` from 0.23.0 rewrites the name wherever a
+    plugin names its role, and core rewrites a deployment's grants and
+    access once at its upgrade.
+    0.24.0 adds three cases to the suite: a restart's gap backfilled, the
+    plugin reading its datasets' licences, and the taker's side stated, a
+    case about a field your source may never state.
 
 ## Make the plugin
 
 ```sh
-meridian plugin new my-prices --role dgm
+meridian plugin new my-prices --role data
 cd my-prices
 ```
 
-It writes a whole plugin holding `dgm`, pinned to `open-meridian==0.23.0`,
+It writes a whole plugin holding `data`, pinned to `open-meridian==0.24.0`,
 that puts a stand-in vendor's daily closes and bars into the lake:
 
 | File | What it is |
@@ -32,8 +38,8 @@ that puts a stand-in vendor's daily closes and bars into the lake:
 | `src/my_prices/declaration.py` | The version's declaration: its settings, its storage for raw records, and its **catalogue**, the dataset it serves. |
 | `src/my_prices/vendor.py` | The stand-in vendor, answering from responses written into it. Replace it with your vendor's client. |
 | `src/my_prices/convert.py` | The conversion: the vendor's text into the lake's rows, every subject and venue resolved first, what does not resolve reported; and its answer to a want. |
-| `src/my_prices/page.py`, `templates/` | Its two pages under Manage, **Connection** and **Datasets**, each also a read tool for an agent, `read_connection` and `read_datasets`. Neither shows a price. |
-| `tests/test_suite.py` | The `dgm` suite, each case mapped to one of the vendor's responses. |
+| `src/my_prices/page.py`, `templates/` | Its two pages under Manage, **Connection** and **Datasets**, the data role's common pages built on `meridian.roles.data` (from 0.24.0), each also a read tool for an agent, `read_connection` and `read_datasets`. Neither shows a price. Each template extends the role's and adds the vendor's nuance only at its blocks: see [The role's common pages](#the-roles-common-pages). |
+| `tests/test_suite.py` | The data suite, each case mapped to one of the vendor's responses. |
 | `tests/test_page.py` | Its pages' tests. |
 
 `AGENTS.md` teaches a coding agent the role's rules beside the template's
@@ -69,10 +75,11 @@ DECLARATION = Declaration(settings=SETTINGS, storage=Storage(retention_days=365)
 
 The default licence is what the vendor's standard terms say, which a
 deployment admin confirms or replaces; never a claim that a deployment
-meets them. Put the vendor's key in a secret setting (see
-[Add a data plugin's key](add-a-data-plugins-key.md)). Each part, and what
-the SDK refuses, is in the
-[Python SDK reference](../api/python-sdk.md#a-dgms-catalogue).
+meets them. Put the vendor's key in a secret setting, and, for a vendor with
+a sandbox as well as its live service, declare `meridian.environment()`
+first (see [Using a data plugin](using-a-data-plugin.md#its-settings)).
+Each part, and what the SDK refuses, is in the
+[Python SDK reference](../api/python-sdk.md#a-data-plugins-catalogue).
 
 ## Convert at the edge
 
@@ -160,12 +167,43 @@ Replace the stand-in vendor, keeping the template's shape in `convert.py`:
       names each trade, so the lake has no gap; a trade heard twice is
       sent once. The SDK carries no WebSocket client: choose your own.
 
-    A `dgm` started anew hears each standing want again within about a
-    minute, from chart 0.1.294, and opens its stream again. Trades printed
-    meanwhile are lost unless your plugin can find where it stopped, which
-    none of the released data plugins does today: each keeps its last trade
-    in memory, which a restart loses. See
-    [the lake](../concepts/the-lake.md#wants-a-read-the-lake-cannot-answer-yet).
+    A data plugin started anew hears each standing want again within about
+    a minute, from chart 0.1.294, and opens its stream again.
+
+9. **Backfill a restart's gap** (contract v20). A
+   plugin holds nothing it cannot lose, so the last trade it heard is gone
+   when it restarts. From 0.24.0 it asks the lake instead: on start, before
+   resuming its stream, it reads the last trade its own instance recorded of
+   each subject it streams
+   ([`list_trades`](../api/typed-operations.md#list_trades) with
+   `latest_recorded=True`), reads the venue's history from each, and records
+   what it missed. `meridian.roles.data.backfill_restart` does this, given
+   the subjects and a function answering the venue's trades after a given
+   one:
+
+    ```python
+    from meridian.roles import data
+
+    async def missed(last) -> list[meridian.Trade]:
+        # `last` is the lake's row: its subject, dataset, venue and time in `last.meta`.
+        return await vendor.trades_since(last)
+
+    await data.backfill_restart(plugin, subjects, missed)
+    ```
+
+    A trade recorded again is answered unchanged by its row key, so the
+    overlap costs nothing. A subject never recorded starts from the stream.
+    Where your vendor's history names no trade you can find again, or does
+    not reach back far enough, say so on the Datasets page rather than
+    guessing: the gap stays. See
+    [the lake](../concepts/the-lake.md#a-restarted-data-plugin-resumes).
+
+10. **Read its datasets' licences** (contract v20).
+    A data plugin reads [`list_datasets`](../api/typed-operations.md#list_datasets),
+    answered only for the datasets its own catalogue declares, with the
+    licence a deployment admin set on each, so its Datasets page says
+    "Licensed" or "Not licensed yet" exactly. The template reads them on
+    start and on a configuration change (`Converter.read_licences`).
 
 ## Hold it to the suite
 
@@ -176,8 +214,8 @@ answers as a sidecar does:
 ```python
 from meridian.suites import run
 
-def test_every_case_of_the_dgm_suite_passes() -> None:
-    report = run("dgm", PRODUCERS, instance_id="reference-1")
+def test_every_case_of_the_data_suite_passes() -> None:
+    report = run("data", PRODUCERS, instance_id="reference-1")
     assert report.passed, report.failures
 ```
 
@@ -210,6 +248,14 @@ From open-meridian 0.23.0 (contract v19) eight more, about trades and quotes:
 | `a-one-sided-quote` | a best bid and no offer | records the bid, the ask unset |
 | `a-standing-want-streamed` | a standing want of a streamed dataset, and a trade for its subject on the stream | records the trade for that subject |
 
+From open-meridian 0.24.0 (contract v20) three more:
+
+| Case | Given | The plugin |
+|---|---|---|
+| `the-takers-side-stated` | a trade naming the side that took liquidity, a buy | records the aggressor as a buy |
+| `a-restarts-gap-backfilled` | the plugin starting, the lake holding a trade it recorded of a streamed subject before it stopped, and the venue's history stating two trades since | reads its last recorded trade (`list_trades` with `latest_recorded`), and records the two |
+| `reads-its-datasets-licences` | the plugin starting where a deployment admin licensed one of its declared datasets and not another | reads `list_datasets` |
+
 A case your vendor never presents, such as an FX rate from an equity
 source, maps to the recording path it would take. When you replace the
 stand-in vendor, map each case to a recorded or synthetic exchange with your
@@ -223,7 +269,8 @@ trades, quotes, prices on a venue, a currency's rate against another
 currency, a crypto asset's price, a security's price). From open-meridian
 0.23.0 (contract v19) a plugin that declares it never publishes that kind
 names the case in `not_presented`, with why, and is verified on the rest;
-a case with no `about` is every `dgm`'s, and stays required. The template
+a case with no `about` is every data plugin's, and stays required, as
+`reads-its-datasets-licences` is. The template
 derives its list from its own catalogue, so a dataset declaring trades or
 quotes makes those cases required again:
 
@@ -232,11 +279,31 @@ KINDS = {"trades": "meridian.v1.Trade", "quotes": "meridian.v1.Quote"}
 DECLARED = {kind for dataset in DECLARATION.catalogue for kind in dataset.data_types}
 NOT_PRESENTED = {
     case.name: f"its datasets publish daily closes and bars, and no {case.about}"
-    for case in suite("dgm").cases
+    for case in suite("data").cases
     if case.about in KINDS and KINDS[case.about] not in DECLARED
 }
-report = run("dgm", PRODUCERS, not_presented=NOT_PRESENTED, instance_id="reference-1")
+report = run("data", PRODUCERS, not_presented=NOT_PRESENTED, instance_id="reference-1")
 ```
+
+### A field your source never states
+
+From open-meridian 0.24.0 (contract v20) the same goes
+for one field of a kind you do publish. A case about a field says which in
+its `about_field`: `meridian.v1.Trade.aggressor` for the side that took
+liquidity (`the-takers-side-stated`, `the-makers-side-inverted`), and
+`meridian.v1.TradeAttributes.characteristics` for what a condition says
+(`a-condition-converted`, `a-condition-not-converted`). A source that
+records trades but never states that field, as no US stock feed states the
+aggressor, names those cases in `not_presented`, with why:
+
+```python
+NOT_PRESENTED["the-takers-side-stated"] = "the vendor's stock trades never say which side took liquidity"
+NOT_PRESENTED["the-makers-side-inverted"] = "the vendor's stock trades never say which side took liquidity"
+```
+
+The SDK's runner refuses a name in `not_presented` that is neither a case
+with an `about` your catalogue does not declare nor a case with an
+`about_field`, so every other case stays required.
 
 On 0.22.0 (contract v18) only a closed-list case could be marked so, and a
 source that never published a bar, a venue or an FX rate fell short of the
@@ -251,10 +318,57 @@ pip install -e . pytest
 meridian plugin check --verified --run-tests
 ```
 
-`--verified` fails `role-suite` where no test runs the `dgm` suite, and
+`--verified` fails `role-suite` where no test runs the data suite, and
 `--run-tests` runs it; see [`plugin check`](../api/cli.md#plugin-check). It
-holds only the `custody` and `dgm` suites: a reading role the plugin also
-holds is not checked for its suite.
+holds only the `custody` and `data` suites: a reading role the plugin also
+holds is not checked for its suite. From CLI 0.1.39
+it also fails `role-pages` where the plugin's Connection and Datasets pages,
+their tools and its settings are not the role's, in the role's order (see
+below); without `--verified` it says so as advice.
+
+## The role's common pages
+
+From open-meridian 0.24.0 (contract v20) every data
+plugin has the same pages, sections, labels and order, so a person who
+knows one knows any (see [Using a data plugin](using-a-data-plugin.md)).
+The SDK's `meridian.roles.data` holds the common part:
+
+- **`ConnectionRead`** and **`DatasetsRead`**, the records the two pages
+  draw and their tools answer (`answers=`), under fixed names: `mode`,
+  `credentials` (each a `Credential`, its label and whether it is set),
+  `entitled_at_vendor`, `limit`, `calls`, `rate_limited`, `last_call_at`,
+  `last_error` and `sessions` (None for a source that does not stream); and
+  `served` (each a `Served`, with `licensed`), `wants` (each a `Want`) and
+  `reads_instruments`. Extend either with your own fields.
+- **The templates** `meridian/roles/data/connection.html` and
+  `datasets.html`, which draw the common sections (Connection's "Key",
+  "Limits and use" and "Stream"; Datasets' "Served", "Wants" and
+  "Subjects") and their "not set up yet" states. Your template extends
+  one, and adds the vendor's nuance only at its blocks: `vendor_notices`,
+  `vendor_rows` (one per section, its title in `section`),
+  `vendor_columns` and `vendor_sections`:
+
+    ```jinja
+    {% extends "meridian/roles/data/connection.html" %}
+    {% block vendor_rows %}
+    {% if section == "Key" %}<tr><th scope="row">Feeds</th><td>IEX live, SIP history</td></tr>{% endif %}
+    {% endblock %}
+    ```
+
+- **`figures(...)`**, the role's Summary figures in its order:
+  "Connection", "Entitled at the vendor", "Stream", "Last recorded" and
+  "Rate use", then up to three of your own.
+- **Settings**: `meridian.environment()` first, for a vendor with a
+  sandbox as well as its live service, each credential differing by it
+  gated with `applies_when=("environment", "sandbox")`; your credentials,
+  labelled in the vendor's own words; your own settings; then
+  `meridian.sample_data()`.
+
+Never rename, reorder or drop a common page, section, row, column, label,
+setting or figure. A vendor without a common item says so in it ("No key
+needed", "Does not stream") rather than leaving it out. `role-pages` checks
+what the version declares, not whether the SDK drew it, so a plugin written
+without the SDK keeps the role the same way.
 
 ## Put it in a deployment
 
@@ -275,5 +389,5 @@ page: see [License and entitle a dataset](license-and-entitle-a-dataset.md).
   the plugin on core's plugin harness, whose runner licenses and entitles a
   dataset and prints the lake's store.
 - [Keep what your custody plugin converts](keep-what-the-edge-converts.md):
-  conversion at the edge and raw records, for `custody`, which `dgm`
+  conversion at the edge and raw records, for `custody`, which `data`
   follows.

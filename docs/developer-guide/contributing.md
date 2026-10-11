@@ -1,7 +1,7 @@
 # Contributing
 
 This page is for working on Open Meridian's public repositories: meridian-core,
-meridian-cli, meridian-python, meridian-schema, meridian-ui, meridian-snaptrade and meridian-docs. It
+meridian-cli, meridian-python, meridian-schema, meridian-ui, plugin-snaptrade and meridian-docs. It
 covers how each is checked, the rules every change keeps, and how to raise a bug or an idea.
 
 !!! note "Issues, not pull requests"
@@ -49,7 +49,7 @@ produce subtly different output, so the host is never asked to have one.
 | meridian-schema | `make codegen` regenerates the Rust and Python bindings, in a pinned container |
 | meridian-python | Conformance tests assert against the same pinned message bytes as the Rust runtime, so the two agree with the contract rather than with each other |
 | meridian-ui | `make serve` serves the kit's gallery, every component light and dark, in each scheme |
-| meridian-snaptrade | `make preview` writes each of its pages on synthetic data |
+| plugin-snaptrade | `make preview` writes each of its pages on synthetic data |
 
 ## Rules every change keeps
 

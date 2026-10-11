@@ -37,7 +37,9 @@ meridian plugin new my-desk
 cd my-desk
 ```
 
-CLI 0.1.38 writes the plugin on open-meridian 0.23.0. A plugin CLI 0.1.37
+CLI 0.1.38 writes the plugin on open-meridian 0.23.0, and CLI 0.1.39 on
+0.24.0 (contract v20), whose move from 0.23.0 rewrites only the renamed
+roles, neither `signal` nor `ems` among them. A plugin CLI 0.1.37
 wrote is on 0.22.0: commit it, and `meridian plugin migrate --to 0.23.0`,
 which works only on what git holds, moves its pins and changes no code.
 Then, in `pyproject.toml`:
@@ -188,16 +190,18 @@ A plugin catching up by range alone fails
 lake.
 
 `meridian plugin check --verified` does not hold the `signal` or `ems`
-suite: in v19 it checks the `custody` and `dgm` suites only. Run your role's
+suite: in v19 it checks the `custody` and `data` suites only. Run your role's
 suite in your own tests, as above, and in your CI.
 
 **Gaps upstream.** Within a running data plugin, a dropped connection is
 refilled from the venue's history by Alpaca, Coinbase and Kraken; Tradier
-cannot refill it. A trade printed while a data plugin restarts is recorded
-by none of them today: each resumes streaming within about a minute, and
-the gap stays. Catching up by watermark gives you
-every trade the lake has, and none it never had: see
-[the lake](../concepts/the-lake.md#wants-a-read-the-lake-cannot-answer-yet).
+cannot refill it. In v19 a trade printed while a data plugin restarted was
+recorded by none of them. From contract v20 a data
+plugin starting again reads its last recorded trade from the lake and fills
+the gap from the venue's history where the vendor allows: Alpaca 0.4.0,
+Coinbase 0.3.0 and Kraken 0.3.0, not Tradier. Catching up by watermark gives
+you every trade the lake has, and none it never had: see
+[the lake](../concepts/the-lake.md#a-restarted-data-plugin-resumes).
 
 ## Put it in a deployment
 
@@ -219,7 +223,6 @@ A plugin reads nothing it is not entitled to, whatever its role.
 - [`list_trades`](../api/typed-operations.md#list_trades),
   [`list_quotes`](../api/typed-operations.md#list_quotes) and
   [Receive](../api/python-sdk.md#receive).
-- [Write a `dgm` against its suite](write-a-dgm.md): recording them.
-- [Add a public data plugin](add-a-public-data-plugin.md) and
-  [Add a data plugin's key](add-a-data-plugins-key.md): the sources that
-  stream them.
+- [Write a data plugin against its suite](write-a-data-plugin.md): recording them.
+- [Using a data plugin](using-a-data-plugin.md#the-data-plugins): the
+  sources that stream them.
