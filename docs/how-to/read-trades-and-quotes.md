@@ -191,9 +191,11 @@ lake.
 suite: in v19 it checks the `custody` and `dgm` suites only. Run your role's
 suite in your own tests, as above, and in your CI.
 
-**A trade printed while a data plugin restarts** reaches the lake only
-where that plugin reads its vendor's history back on reconnecting: Alpaca,
-Coinbase and Kraken do, Tradier cannot. Catching up by watermark gives you
+**Gaps upstream.** Within a running data plugin, a dropped connection is
+refilled from the venue's history by Alpaca, Coinbase and Kraken; Tradier
+cannot refill it. A trade printed while a data plugin restarts is recorded
+by none of them today: each resumes streaming within about a minute, and
+the gap stays. Catching up by watermark gives you
 every trade the lake has, and none it never had: see
 [the lake](../concepts/the-lake.md#wants-a-read-the-lake-cannot-answer-yet).
 

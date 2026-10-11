@@ -210,14 +210,14 @@ about a minute. On chart 0.1.293 a restarted `dgm` streamed nothing until a
 reader's read made a want again.
 
 !!! warning "Known limit in v19: trades during a restart"
-    A trade printed while a `dgm` restarts, in the minute before its
-    standing wants reach it again, is in the lake only where the plugin
-    reads its vendor's history back when its stream opens. Alpaca, Coinbase
-    and Kraken do, sending only the trades not yet recorded. Tradier cannot:
-    its time and sales history names no trade by its ID, so reading it
-    again would record trades twice, and a restart's gap stays unfilled. A
-    reader catches up from the lake by its watermark, so it misses only
-    what the lake never had.
+    Within a running plugin, a dropped connection is refilled from the
+    venue's history by Coinbase, Kraken and Alpaca, from the last trade
+    each recorded. Tradier cannot refill it: its time and sales history
+    names no trade by its ID. That last trade is held in the plugin's
+    memory, which a restart loses, so a trade printed while a `dgm`
+    restarts, before it resumes streaming, is recorded by none of them
+    today. A reader catches up from the lake by its watermark, so it misses
+    only what the lake never had.
 
 ## Kept, or served and not kept
 

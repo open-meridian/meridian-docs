@@ -130,8 +130,10 @@ third dataset and quotes:
   so the lake has every trade and a reader catches up from it by its
   watermark. A trade heard twice is sent once. Each reads back at most ten
   pages of 1,000 trades, and Kraken stays inside its 150 reconnects in ten
-  minutes per IP. The same read-back fills the minute a restarted plugin
-  waits for the lake to deliver its standing wants again (chart 0.1.294).
+  minutes per IP. This refills a drop within a running plugin only: the
+  last trade recorded is held in memory, which a restart loses. A plugin
+  restarted resumes streaming within about a minute (chart 0.1.294), and
+  the trades printed in that gap are not recorded.
 - **A quote's empty side** is left unset, never zero.
 - **The suite.** Of the `dgm` suite's 21 cases each passes 17 and marks
   four not presented, with why: at Coinbase an FX rate, the two condition

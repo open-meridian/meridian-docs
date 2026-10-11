@@ -99,8 +99,9 @@ From meridian-alpaca 0.3.0 and meridian-tradier 0.2.0, each gains a
   covered; each reconnect is counted on the Connection page.
 - **A restart.** A plugin started anew, relaunched or upgraded, streams
   again once the lake delivers its standing wants again, within about a
-  minute from chart 0.1.294. Alpaca fills that minute from its trade
-  history; Tradier cannot, for the same reason, so trades printed while it
+  minute from chart 0.1.294. Neither fills that gap: Alpaca refills a drop
+  only within a running process, and a process started anew has nothing to
+  catch up from; Tradier refills neither. Trades printed while either
   restarts are not in the lake.
 - **A quote's empty side** (sent as 0) is left unset.
 - **The suite.** Alpaca passes 17 of the `dgm` suite's 21 cases, and marks

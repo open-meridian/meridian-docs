@@ -161,9 +161,10 @@ Replace the stand-in vendor, keeping the template's shape in `convert.py`:
       sent once. The SDK carries no WebSocket client: choose your own.
 
     A `dgm` started anew hears each standing want again within about a
-    minute, from chart 0.1.294, and opens its stream again. Read back the
-    trades printed meanwhile from the vendor's history, as after a drop:
-    where the history names no trade, the restart's gap stays unfilled. See
+    minute, from chart 0.1.294, and opens its stream again. Trades printed
+    meanwhile are lost unless your plugin can find where it stopped, which
+    none of the released data plugins does today: each keeps its last trade
+    in memory, which a restart loses. See
     [the lake](../concepts/the-lake.md#wants-a-read-the-lake-cannot-answer-yet).
 
 ## Hold it to the suite
