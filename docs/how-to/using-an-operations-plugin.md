@@ -20,6 +20,13 @@ something only it has, it says so.
     balance among them. The sample operations plugin 0.9.1 is built on
     contract v18.
 
+!!! note "Contract v21"
+    The sample operations plugin 0.11.0, released 2026-10-12, is built on
+    open-meridian 0.25.0 (contract v21) and runs on chart 0.1.299 or
+    later. It closes cleared breaks automatically as the operations role's
+    [service account](../concepts/service-accounts.md) (see
+    [Close cleared breaks automatically](#close-cleared-breaks-automatically)).
+
 ## The first-use path
 
 | # | Step | Whose | Where |
@@ -72,6 +79,40 @@ balances**, where the page opens started from the prepared draft, marked
 the page offers Prepare alone, and someone other than whoever prepared it
 confirms it.
 
+## Close cleared breaks automatically
+
+A break whose difference has gone at the next reconciliation is not closed
+by silence: it is closed as cleared, citing the statement where it cleared,
+a justified act. Until contract v21 a person closes them, in one action on
+**Breaks**. From the sample operations plugin 0.11.0 (contract v21), with
+its setting **Close cleared breaks automatically** (`auto_close_cleared`,
+off by default) turned on, each reconciliation that
+finds cleared breaks calls the plugin's own act `close_cleared_breaks`,
+checked by `check_close_cleared_breaks`, as the
+[service account](../concepts/service-accounts.md) the `operations` role
+runs as, after the run's figures. The plugin chooses no account and holds
+no credential:
+
+1. A deployment admin creates a service account, owned by a person, and
+   grants it `write` on the plugin's `operations` role over the accounts it
+   reconciles.
+2. An admin of the plugin's `operations` role chooses it on the plugin's
+   **Access** tab, under **Runs as**.
+
+See [Run a plugin's autonomous work as a service account](run-a-plugins-work-as-a-service-account.md).
+What each run's call came to is said on **Breaks**, beside the cleared
+breaks, and in the plugin's log:
+
+| Came to | When | What Breaks says, and what happens |
+|---|---|---|
+| **Made** | the account is set to **act**, and every level lets agents make the act with no second pair of eyes | "Closed N cleared break(s) automatically, as the service account the operations role runs as." The breaks are closed as cleared; the book's entry names the service account and its owner, and Breaks names the closer "service account SA-… owned by …" |
+| **Prepared** | otherwise, the default | "Closing them automatically was prepared (PC-…) for a person who may close them to make." The prepared change waits in the Inbox of everyone who may close those breaks, and the account's owner, its reason naming how many cleared breaks of which account and the statement's date that found no difference for them; the breaks stay open until a person makes it. It is not prepared again for the same statement and breaks until a person asks, with **Reconcile now**, or the plugin restarts |
+| **Refused** | the role runs as no service account | "Closing them automatically waits for a service account: the operations role runs as none. A deployment admin grants one, and an admin of this plugin chooses it on its Access tab." A person closes them, as before, in one action |
+| **Refused** | the account is disabled, removed or not granted | "Closing them automatically was refused: …", with the reason. Nothing is closed |
+| **Failed** | the plugin's act refused, or the call failed | "Closing them automatically was refused by this plugin's act: …" or "Closing them automatically failed: …". Nothing is closed |
+
+None of them fails the reconciliation.
+
 ## Its figures
 
 **Open breaks**, **Overdue breaks**, **Awaiting an opening balance**,
@@ -84,3 +125,4 @@ sample's, now every operations plugin's.
 - [The custodian's activity](../concepts/the-custodians-activity.md):
   what explains a break.
 - [Prepared changes](../concepts/prepared-changes.md).
+- [Run a plugin's autonomous work as a service account](run-a-plugins-work-as-a-service-account.md).

@@ -27,6 +27,13 @@ The steps for granting access are in
     [Admin shares, write keeps one's own, read sees what is shared](#admin-shares-write-keeps-ones-own-read-sees-what-is-shared)).
     Released 2026-10-12 in chart 0.1.298.
 
+!!! note "Contract v21"
+    From contract v21 a deployment has users that are not people:
+    [service accounts](service-accounts.md), which a plugin's autonomous
+    work runs as. One is granted per role as anyone is, and never signs in
+    (see [Service accounts](#service-accounts)). Released 2026-10-12 in
+    chart 0.1.299.
+
 ## Signing in
 
 The dashboard signs people in one of three ways, chosen in the first-run
@@ -411,6 +418,24 @@ person to make, or **may not** reach it, and whether its change needs a
 **second pair of eyes**. On the consent page a person can only be stricter:
 beside each row, **Make** or **Prepare only**. See
 [Prepared changes](prepared-changes.md).
+
+#### Service accounts
+
+From contract v21 work a plugin does with no person's
+request to serve -- a scheduled sweep, a strategy, an agent inside the
+plugin -- acts as a [service account](service-accounts.md), never on a
+person's delegation: a delegation does not outlive its person. A deployment
+admin creates one, with a person as its owner, and grants it per role as
+anyone is, by its `SA-` ID in a user group's logins; it is granted nothing
+at first. An admin of a role chooses, on the plugin's **Access** tab under
+**Runs as**, which of the service accounts granted on that role the role's
+work runs as, at a level no higher than its grant: the deployment admin's
+grant is what may be chosen, and the role's admin chooses within it.
+
+A service account never signs in, holds no password or token, and holds no
+delegation. It is refused every admin route whatever it is granted, and it
+is bound by what agents may do with each act as a person's agent is, with
+its own setting, **prepare only** or **act**, the strictest of them.
 
 #### On upgrading to contract v15
 

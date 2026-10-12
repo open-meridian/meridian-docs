@@ -63,7 +63,9 @@ never updated or deleted: a correction is a later entry naming what it
 corrects. Every entry that moves a position is a set of movement lines, and a
 position is its account's opening balance plus every entry's lines since.
 Each entry records its kind (`opening-balance`, `adjustment`, `reversal`,
-`break-recorded` and others, an open list), its cause, who made it, the plugin
+`break-recorded` and others, an open list), its cause, who made it (a
+person, from contract v21 a service account with its owner, or the plugin
+itself for a finding), the plugin
 instance that sent it, when it was sent, received and committed, and the
 business date it stands for. Every record an entry changes is numbered from
 the account's partition, with no holes, so a reader that misses one can tell.
@@ -218,6 +220,22 @@ date. Then a person ends it, with a reason, in one of three ways:
   moving nothing: a settlement landing, or the custodian catching up.
 
 A break is never closed by silence, and a statement never overwrites the book.
+
+### A person, or a service account { #a-person-or-a-service-account }
+
+From contract v21 the book's justified acts -- an
+opening balance, a break's cause and handling, its resolution, closing it as
+cleared -- are a user's: a person, or a
+[service account](service-accounts.md) a plugin's autonomous work acted as,
+through the plugin's own act. The reason is still required, and the book
+refuses either act sent for nobody (`REFUSAL_REASON_ACTOR_REQUIRED`).
+Whether a service account may make an act is the admins' levels and its own
+setting, which by default only prepare it for a person to make: the book
+records, and does not police. An entry a service account made names it, by
+its `SA-` ID, and its owner when it acted, so it never reads as a person's
+act nor as the plugin's own finding. The first such act is the sample
+operations plugin's close of cleared breaks (see
+[Using an operations plugin](../how-to/using-an-operations-plugin.md#close-cleared-breaks-automatically)).
 
 ## Who reads the book
 

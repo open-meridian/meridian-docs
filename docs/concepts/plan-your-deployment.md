@@ -87,7 +87,7 @@ the firm's own admins:
 | **Holds** | How long the raw records a plugin received or sent are kept at the least, and whether older ones move to cold storage | From contract v16, **the archive**: a deployment admin's hold per edge role or for all, each plugin's archive allowed with a bound, and its windows set by its admin ([The archive](the-archive.md)). A runtime before v16 keeps each version's own retention |
 | **Region** | Where the deployment and its storage run | Yours: the deployment runs where you install it. Showing the storage's region on Settings is planned, not scheduled |
 | **Egress** | The address the deployment calls out from, and which outside hosts each plugin calls | Your cluster's network today. A plugin declaring its hosts, and the admin approving them, is planned, not scheduled |
-| **Service accounts** | A named account, with an owner, that a plugin's scheduled work runs as | Planned, in **service accounts** |
+| **Service accounts** | A named account, with an owner, that a plugin's scheduled work runs as | Exists, from contract v21: see [Service accounts](service-accounts.md) |
 
 ## How to read a plan
 
@@ -134,6 +134,8 @@ The releases, in their order:
    Released 2026-10-12 with contract v20: see
    [Prepared changes](prepared-changes.md).
 7. **Service accounts**: a plugin's scheduled work runs as a named account.
+   Released 2026-10-12 with contract v21: see
+   [Service accounts](service-accounts.md).
 8. **The order path**: orders, their state decided by the book, sent to
    venues and filled.
 
@@ -191,8 +193,8 @@ reports to its investors, and trades once the order path is built.
 | Restricted lists and standing limits in a common form | [`compliance`](roles.md#compliance) | Yours | Local | Planned, with the order path |
 | A verdict on each order before it goes out | [`compliance`](roles.md#compliance) | Yours | Local | Planned, in the order path |
 | Investor reports, kept as sent | [`reporting`](roles.md#reporting) | Yours | Local | Build your own: it reads positions and the lake's prices today |
-| An agent drafting an adjustment that a person makes | any | Any | — | Planned, in prepared changes |
-| A nightly job running as a named account | any | Any | — | Planned, in service accounts |
+| An agent drafting an adjustment that a person makes | any | Any | — | Exists, from contract v20: [Prepared changes](prepared-changes.md) |
+| A nightly job running as a named account | any | Any | — | Exists, from contract v21: [Service accounts](service-accounts.md) |
 | Orders decided, worked and sent | [`portfolio`](roles.md#portfolio), [`oms`](roles.md#oms), [`ems`](roles.md#ems) | Yours | Local | Planned, in the order path |
 | Orders placed at a broker | [`connectivity`](roles.md#connectivity) | SnapTrade; Alpaca and Tradier | Local; planned | Planned: SnapTrade in the order path, Alpaca and Tradier after it |
 

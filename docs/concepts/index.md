@@ -27,6 +27,7 @@ piece of data lives.
 | [Dates and time](dates-and-time.md) | Moments and plain dates, a daily price keyed by its business date, a dataset's day, and a date checked at both ends |
 | [Tickets and the inbox](tickets-and-the-inbox.md) | How a problem someone sees reaches the people who can act on it: who sees a ticket, advice that changes nothing, the acts only a person takes, and the inbox |
 | [Prepared changes](prepared-changes.md) | An agent or a person prepares a change and a person makes it; what agents may do with each act, set by the deployment admin and a plugin's admin; the second pair of eyes; lapse (contract v20) |
+| [Service accounts](service-accounts.md) | A user of the deployment that is not a person, which a plugin's autonomous work runs as: its owner, prepare only or act, granted per role, what binds it and what is recorded (contract v21) |
 | [Development deployments](development-deployments.md) | A deployment installed for writing plugins, and why a firm's own deployment is never one |
 
 !!! note "What Open Meridian does today"
@@ -40,6 +41,8 @@ piece of data lives.
     `ems` plugins. From contract v20 it adds prepared
     changes, which keep a person in the loop of an agent's work, the
     accounts a deployment admin grants each plugin, and one first-use path
-    per role. Order routing and execution are on the roadmap and
+    per role. From contract v21 it adds service
+    accounts, which a plugin's autonomous work runs as, preparing by
+    default. Order routing and execution are on the roadmap and
     are not available yet. Where a page describes something that is specified
     but not built, it says so.

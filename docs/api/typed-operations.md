@@ -27,6 +27,8 @@ From 0.23.0, contract v19 (chart 0.1.293 or later), it also lists four operation
 
 From 0.24.0, contract v20, no operation is added. The role `dgm` is named `data` (a data plugin), and this page names it so throughout, for every release; `ccm` is `connectivity` and `match` `confirmation`, holding no operation. A data plugin also reads [`list_trades`](#list_trades), its own last recorded trades (`latest_recorded`), and [`list_datasets`](#list_datasets), its own datasets' licences; [`read_accounts_for_linking`](#read_accounts_for_linking) answers only the accounts granted to the plugin's instance; and a resolve of a currency the deployment does not hold is answered from the platform's master. Two calls every plugin may make are in the Python SDK: reading the [prepared change](python-sdk.md#prepared) a page was opened from (`ReadPreparedCall`), and saving [a person's own settings](python-sdk.md#own_settings) (`SetOwnSettings`).
 
+From 0.25.0, contract v21, no operation is added. A plugin's autonomous work calls one of its own acts as the [service account](../concepts/service-accounts.md) its role runs as, through the sidecar's `CallAsServiceAccount`, which the SDK offers as [`meridian.runs_as`](python-sdk.md#runs_as). Where the dashboard makes the act, the act's route is reached with a service account's claims and sends what it sends for a person, `acting_for` the header it received (see [Acting for a person](#acting-for-a-person)); the book records the service account and its owner as the entry's actor.
+
 ## Summary
 
 | Python method | gRPC rpc | Workflow step | Kind | Role | Returns |
@@ -178,7 +180,9 @@ For `record_holdings_statement`, `record_holding`, `record_activity`, `re_resolv
 
 A person narrows what a plugin may do and never widens it.
 
-Of the book's commands, the findings (`record_break`, `record_account_figures` and `record_encumbrances`) are a plugin's to send as itself. The rest are justified acts, which the book refuses without a person and a reason: see [The book's commands](#the-books-commands).
+**A service account's header** (contract v21). An act's route reached for a call the dashboard admitted for the role's [service account](../concepts/service-accounts.md) reads a caller whose `subject_kind` is a service account, naming its owner (see [`Caller`](python-sdk.md#caller)). Pass its header as `acting_for`, as for a person: the sidecar admits the command as it admits a person's under Open, by the account's `write` on the role and its accounts there, and stamps the service account, its kind and its owner beside it (`acting_for_kind`, `owner_subject`). Such claims are good for that one call, for at most 60 seconds, and reach no read or command of the deployment's configuration but filing a ticket and reading back what was filed: `read_accounts_for_linking`, `link_external_account`, reading a prepared change and saving a person's own settings are refused.
+
+Of the book's commands, the findings (`record_break`, `record_account_figures` and `record_encumbrances`) are a plugin's to send as itself. The rest are justified acts, which the book refuses without a person, from contract v21 a person or a service account, and a reason: see [The book's commands](#the-books-commands).
 
 For `read_accounts_for_linking` and `link_external_account`, it is required. They touch the deployment's configuration, which a plugin reaches only acting for an admin of the plugin in a session opened by **Manage**, at `admin`, and never as itself. Without an assertion, or with one from a session at any other level, the sidecar refuses the call with `NotGranted`. They are the only reads and commands the sidecar admits for a person in a Manage session: that session reaches no account's data.
 
@@ -186,7 +190,7 @@ For `read_accounts_for_linking` and `link_external_account`, it is required. The
 
 From 0.13.0. Every command of the book answers after its entry commits, with every record it changed: see [Book entry result](#book-entry-result).
 
-- **A finding or a person's act.** A break, the figures and the encumbrances are findings, which the plugin may send as itself, acting for nobody. An opening balance, a break's cause and handling, its resolution and closing it as cleared are a person's: send them `acting_for` that person, with their `reason`, or the book refuses them with `REFUSAL_REASON_ACTOR_REQUIRED` or `REFUSAL_REASON_REASON_REQUIRED`. The book records the person, or the plugin's instance, as the entry's actor.
+- **A finding or a person's act.** A break, the figures and the encumbrances are findings, which the plugin may send as itself, acting for nobody. An opening balance, a break's cause and handling, its resolution and closing it as cleared are a person's: send them `acting_for` that person, with their `reason`, or the book refuses them with `REFUSAL_REASON_ACTOR_REQUIRED` or `REFUSAL_REASON_REASON_REQUIRED`. The book records the person, or the plugin's instance, as the entry's actor. From contract v21 they are a user's, a person's or a [service account](../concepts/service-accounts.md)'s: a route reached for the role's service account sends them `acting_for` its header, the reason still required, and the book records the service account and its owner.
 - **One arm of a oneof, by keyword.** Where a message holds one of several things, the method takes each as a keyword: a break's `position=` or `figure=`, a resolution's `adjustment=`, `reversal=`, `entries=` or `explanation=`, a basis adjustment's `cost_change=` or `stated_cost=`, a cause's item. Two at once raise `ValueError` naming the oneof, before anything is sent.
 - **The book's own refusals** carry a code, and the SDK raises them as [`CommandRefused`](#the-books-refusals). From 0.14.0 an incomplete entry's refusal also names each field it lacks: see [What the book requires](#what-the-book-requires).
 
@@ -261,7 +265,7 @@ From 0.13.0. The book of record refuses with a code, which the sidecar carries b
 
 | Reason | Number | Sent when |
 |---|---|---|
-| `REFUSAL_REASON_ACTOR_REQUIRED` | 2 | A person's act sent for nobody: an opening balance, a break's handling, its resolution or closing, or an account's attribute. |
+| `REFUSAL_REASON_ACTOR_REQUIRED` | 2 | A person's act sent for nobody: an opening balance, a break's handling, its resolution or closing, or an account's attribute. From contract v21 a user's act, a person's or a service account's. |
 | `REFUSAL_REASON_REASON_REQUIRED` | 3 | A justified act sent without its reason or explanation. |
 | `REFUSAL_REASON_OPENING_BALANCE_RECORDED` | 4 | A second opening balance while one stands. |
 | `REFUSAL_REASON_NO_OPENING_BALANCE` | 5 | A break, figures, encumbrances or an entry for an account with no opening balance. |
@@ -1461,7 +1465,7 @@ await plugin.resolve_break(
 
 ## `close_breaks_as_cleared` { #close_breaks_as_cleared }
 
-From 0.13.0. For a person: closes breaks whose difference has gone, a settlement landing or the custodian catching up, citing the statement where it was gone, and moves nothing. A break is never closed by silence.
+From 0.13.0. For a person, or from contract v21 the role's [service account](../concepts/service-accounts.md): closes breaks whose difference has gone, a settlement landing or the custodian catching up, citing the statement where it was gone, and moves nothing. A break is never closed by silence.
 
 ```python
 async def close_breaks_as_cleared(
@@ -2410,7 +2414,7 @@ What a journal entry records. From 0.13.0.
 |---|---|---|
 | `entry_id` | `str` | Minted by the book. |
 | `kind` | `str` | `opening-balance`, `placeholder-moved`, `figures-recorded`, `break-recorded`, `break-handled`, `break-resolved`, `break-closed`, `adjustment`, `reversal`, `attribute-set` or `encumbrances-recorded`: an open list, which a reader takes as data. |
-| `actor` | `Actor` | Who made it, set by the book from what the sidecar stamped: `person`, with the person's `subject`, or `system`, with the `instance_id` of the plugin that reported a finding as itself, empty for the book's own act. |
+| `actor` | `Actor` | Who made it, set by the book from what the sidecar stamped: `person`, with the person's `subject`, or `system`, with the `instance_id` of the plugin that reported a finding as itself, empty for the book's own act. From contract v21 also `service_account`, with the service account's `subject` (its `SA-` ID) and its `owner_subject` when it acted. |
 | `event_time_ns`, `received_at_ns` | `int` | The time on the message that caused it, and when the book received it. When it committed is its cause's `committed_at_ns`. |
 | `effective_date` | `str` | The ISO 8601 business date it stands for. |
 | `control_sequence` | `int` | The control partition's sequence in force. |

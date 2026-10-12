@@ -37,9 +37,10 @@ meridian plugin new my-desk
 cd my-desk
 ```
 
-CLI 0.1.38 writes the plugin on open-meridian 0.23.0, and CLI 0.1.39 on
+CLI 0.1.38 writes the plugin on open-meridian 0.23.0, CLI 0.1.39 on
 0.24.0 (contract v20), whose move from 0.23.0 rewrites only the renamed
-roles, neither `signal` nor `ems` among them. A plugin CLI 0.1.37
+roles, neither `signal` nor `ems` among them, and CLI 0.1.41 on 0.25.0
+(contract v21), whose move from 0.24.0 changes only the pins. A plugin CLI 0.1.37
 wrote is on 0.22.0: commit it, and `meridian plugin migrate --to 0.23.0`,
 which works only on what git holds, moves its pins and changes no code.
 Then, in `pyproject.toml`:

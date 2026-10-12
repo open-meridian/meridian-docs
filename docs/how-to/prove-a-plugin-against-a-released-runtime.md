@@ -176,6 +176,7 @@ Each prints what it found and exits 0, or exits non-zero saying why. Every wait 
 | `licence DATASET kept=true\|false retention_days=N derived_use=true\|false display=true\|false personal_use=true\|false [default_fields=A,B] [note=TEXT]` | From a runtime serving contract v18: sets a dataset's licence on the Data sources page, as a deployment admin does, replacing it whole; a term left out is false. See [License and entitle a dataset](license-and-entitle-a-dataset.md). |
 | `entitle DATASET [--fields A,B] [--withdraw] [note=TEXT]` | From contract v18: entitles the plugin to a dataset, every field or those named, or withdraws it, and waits until the bus admits the plugin to the dataset's subject before the entitlement is recorded. |
 | `priority DATA_TYPE [--kind KIND] DATASET ... [note=TEXT] [--against N]` | From contract v18: sets the priority a default read takes for `meridian.v1.Price`, one kind of it (`close`, `last`, `nav`, `settlement`), or `meridian.v1.Bar`: the datasets first to last, replaced whole, against the priority as the page shows it. |
+| `service-account create NAME --owner PERSON [--setting prepare_only\|act] [--purpose TEXT]`, `set SA [--setting ...] [--name NAME] [--owner PERSON]`, `disable\|enable\|remove SA`, `grant SA --role ROLE --level read\|write`, `runs-as (SA \| none) --role ROLE [--level write\|read]`, `list` | From a runtime serving contract v21: a [service account](../concepts/service-accounts.md), as a deployment admin makes it on Settings' Service accounts tab: created with a name, an owner (one of the run's people, or `harness`) and a setting, prepare only unless `--setting act`, its `SA-` ID printed; changed; disabled (by its owner too), re-enabled or removed. `grant` grants it a level on one of the plugin's roles, on All accounts, by its ID in a user group's logins; `runs-as` chooses, on the plugin's Access tab, what the role's autonomous work runs as, or none; `list` prints each account's ID, name, setting and state. With `--expect-refused TEXT`, fails unless the change is refused saying `TEXT`. |
 
 **The admin holds Manage alone until granted.** As a deployment's first administrator does, the
 harness's admin opens every plugin under Manage and reads or acts on no account's data through one.
@@ -264,7 +265,8 @@ entry|<account>|<kind>|<effective date>|<actor>
   2 resolved, 3 closed), `<confirmed cause>` and `<source>`. `<resolved by>` is `entries`,
   `explanation` or `cleared`, empty while the break is open.
 - `<recorded by>` and `<actor>` are a person's subject, such as `local|harness` for the harness's
-  admin, `instance <id>` for a finding a plugin sent as itself, or `book` for the book's own act.
+  admin, `instance <id>` for a finding a plugin sent as itself, from contract v21 `service account <SA- ID> owned by <subject>` for an act a plugin's autonomous work made
+  as its role's service account, or `book` for the book's own act.
 - Entries are listed in the order each account's were made.
 
 A date the run decides, such as an opening balance's as of the statement it was composed from, can

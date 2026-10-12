@@ -20,6 +20,12 @@ Two things it never does: read or type a secret setting's value (you enter
 a secret at the plugin's **Settings** form; the agent may clear one), and
 change who holds access.
 
+Your agent acts for you, while your delegation lasts. Work with no person
+behind it, such as an agent inside a plugin or a nightly sweep, runs from
+contract v21 as a
+[service account](../concepts/service-accounts.md), never on your
+delegation.
+
 ## Connect the agent
 
 In your agent, add the deployment's MCP surface as a connector, at your

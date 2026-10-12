@@ -24,6 +24,13 @@ accounts, are a person's **account access**.
     tab sets what people's agents may do with each act (see
     [Prepared changes](../concepts/prepared-changes.md#what-agents-may-do)). Released 2026-10-12 in chart 0.1.298.
 
+!!! note "Contract v21"
+    From contract v21 Settings gains a **Service accounts** tab, where a
+    deployment admin creates the users a plugin's autonomous work runs as,
+    and a plugin's **Access** tab gains **Runs as** (see
+    [To give a plugin's work a service account](#to-give-a-plugins-work-a-service-account)).
+    Released 2026-10-12 in chart 0.1.299.
+
 ## To open Settings
 
 1. Sign in to the dashboard.
@@ -34,8 +41,9 @@ back to your plugins. The breadcrumb beside the mark reads **Settings**, and in 
 **Settings / Plugins /** and the plugin's name.
 
 Settings' tabs are **Plugins**, **Permissions**, **User groups**, **Account groups**,
-**Access groups**, **Accounts**, **Holds**, **Agents** and **Connected clients** (before contract
-v20, **Books** in place of **Agents**). Each lists its
+**Access groups**, **Accounts**, **Holds**, **Agents**, from contract v21
+**Service accounts**, and **Connected clients** (before contract v20, **Books** in place of
+**Agents**). Each lists its
 records in a table with a search box above it, which keeps the rows holding every word you type,
 and headings that sort it. On the three group tabs the section is headed **User**, **Account** or
 **Access**. Where a tab makes records, **+ Add** beside its heading opens a dialog headed with what it makes, such as **New
@@ -100,7 +108,9 @@ edited.
 3. Say who is in it, in any of three ways:
     - **People.** Choose them from the searchable list, which names each person by their user ID,
       then their login ID. It lists everybody the dashboard can name: people already in a user
-      group, people holding a delegation, and the accounts the deployment holds itself.
+      group, people holding a delegation, and the accounts the deployment holds itself; from
+      contract v21 also each service account, by its `SA-` ID, named
+      such as *The sweep (service account)*.
     - **Other logins, one per line.** For somebody not listed yet, such as a person from your
       directory who has never been named here. For an account the deployment holds itself, a login
       is `local|name`.
@@ -211,8 +221,11 @@ plugin's roles, paged. From contract v20 it also lists the plugin's acts under
 **What agents may do**: who may make each by hand, what their agents may (May make, Prepare only
 or May not, capped where the deployment's ceiling is stricter) and whether it needs a second pair
 of eyes, which an admin of the act's role sets with **Edit** on its row (see
-[Prepared changes](../concepts/prepared-changes.md#what-agents-may-do)). How they fill the form is
-in [Set a plugin's settings](set-a-plugins-settings.md).
+[Prepared changes](../concepts/prepared-changes.md#what-agents-may-do)). From contract v21 it also shows, under **Runs as**, the service account each role's autonomous work
+runs as, which an admin of the role chooses (see
+[To give a plugin's work a service account](#to-give-a-plugins-work-a-service-account)), and its
+dialogs open, **What agents may do**'s **Edit** among them, which on chart 0.1.298 opened none.
+How they fill the form is in [Set a plugin's settings](set-a-plugins-settings.md).
 
 To make every plugin's admins one group, grant **All plugins (admin)** on **None**. To keep
 configuring plugins apart from administering the deployment, withdraw the permission first run made
@@ -240,6 +253,23 @@ The tab says, for each account granted, whether the plugin has linked it yet, an
 the grant and when. A grant lets the plugin's admins link; it gives nobody anything to read or
 write, which is still a permission. At the upgrade to v20 each plugin is granted the accounts its
 links already named. See [Accounts a plugin may link to](../concepts/accounts.md#accounts-a-plugin-may-link-to).
+
+## To give a plugin's work a service account
+
+From contract v21 a plugin's autonomous work, such as the sample operations
+plugin's sweep, changes something only as a
+[service account](../concepts/service-accounts.md), a user of the deployment that is not a person:
+
+1. On the **Service accounts** tab, choose **+ Add**: its name, purpose, owner (a person who
+   answers for it) and setting, **Prepare only** (the default) or **Act**.
+2. Grant it `write` on the plugin's role, over the account groups it is to act on, as anyone is
+   granted: its `SA-` ID in a user group's logins, that user group granted an access group.
+3. An admin of the plugin's role chooses it on the plugin's **Access** tab, under **Runs as**.
+
+The tab lists each account on one line: name, owner, setting, state, **Runs for**, last used and
+last refusal, with **What it did**, **Edit**, **Disable**, **Re-enable** and **Remove**. Each
+change is its own record. See
+[Run a plugin's autonomous work as a service account](run-a-plugins-work-as-a-service-account.md).
 
 ## To link an external account
 
@@ -298,3 +328,5 @@ operations write, custody read*. See [Manage, Open and View](../concepts/plugins
 
 - [Plugins, roles and grants](../concepts/plugins.md): roles, and what a plugin may do.
 - [Recover administration](recover-administration.md): if nobody can open Settings.
+- [Service accounts](../concepts/service-accounts.md): the users a plugin's autonomous work runs
+  as (contract v21).

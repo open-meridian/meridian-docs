@@ -6,7 +6,7 @@ Short recipes for one task each. They assume you have a deployment; if not, star
 | Guide | Use it to |
 |---|---|
 | [Choose how people sign in](choose-sign-in.md) | Pick OpenID Connect, LDAP or accounts the deployment holds, and answer the wizard for it. |
-| [Give people access](administer-access.md) | Set up accounts, their attributes in the book, groups and permissions in the dashboard's Settings, make a plugin's admins, and grant a plugin the accounts it may link to. |
+| [Give people access](administer-access.md) | Set up accounts, their attributes in the book, groups and permissions in the dashboard's Settings, make a plugin's admins, grant a plugin the accounts it may link to, and from contract v21 give a plugin's work a service account. |
 | [Reset a lost password](reset-a-lost-password.md) | Get a local administrator back in with a code from the platform. |
 | [Recover administration](recover-administration.md) | Get back in when nobody can administer the deployment. |
 | [Set a plugin's settings](set-a-plugins-settings.md) | Fill a plugin's Settings form and each table's own tab, see who changed what, and declare a table setting and read its rows from code. |
@@ -26,6 +26,7 @@ Short recipes for one task each. They assume you have a deployment; if not, star
 | [Watch the market on the Board](watch-the-board.md) | Set the sample reporting plugin's watchlist and read its Board, a calm view of the latest prices from every source side by side, on the page or through `read_board` (contract v19). |
 | [Offer your pages to agents](offer-your-pages-to-agents.md) | Declare a route's inputs as one typed record so the SDK derives its tool on the deployment's MCP surface, answer typed data, refuse by path, and test it as an agent calls it. |
 | [Let your agent manage a plugin's settings and archive](let-your-agent-manage-a-plugin.md) | Connect an agent that reads a plugin's Summary and settings, sets a value with a note, allows its archive, and launches and stops it, as you; or, from contract v20, prepares the change for you to make. |
+| [Run a plugin's autonomous work as a service account](run-a-plugins-work-as-a-service-account.md) | Create a service account with its owner and setting, grant it on a plugin's role, choose what the role runs as, and watch it and stop it as its owner (contract v21). |
 | [Advising on tickets](advise-on-tickets.md) | Run an agent on a schedule that adds advice to open tickets, with the deployment's connector and nothing else, and the prompt to paste. |
 | [Working your tickets](work-your-tickets.md) | Run an agent on a schedule that reads your inbox, advises where a change needs it, and tells you what waits for you, and the prompt to paste. |
 | [Release a plugin version](release-a-plugin.md) | Ship a change to a plugin as a new version. |

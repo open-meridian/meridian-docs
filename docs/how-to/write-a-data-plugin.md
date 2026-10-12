@@ -21,7 +21,10 @@ and holds it to the suite. How a person then uses it is
     access once at its upgrade.
     0.24.0 adds three cases to the suite: a restart's gap backfilled, the
     plugin reading its datasets' licences, and the taker's side stated, a
-    case about a field your source may never state.
+    case about a field your source may never state. CLI 0.1.41, released
+    2026-10-12, writes the template on open-meridian 0.25.0 (contract v21,
+    chart 0.1.299 or later), whose move from 0.24.0 changes only the
+    pins.
 
 ## Make the plugin
 
@@ -30,7 +33,7 @@ meridian plugin new my-prices --role data
 cd my-prices
 ```
 
-It writes a whole plugin holding `data`, pinned to `open-meridian==0.24.0`,
+It writes a whole plugin holding `data`, pinned to `open-meridian==0.24.0` (0.25.0 from CLI 0.1.41),
 that puts a stand-in vendor's daily closes and bars into the lake:
 
 | File | What it is |

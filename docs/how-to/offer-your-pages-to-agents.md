@@ -130,6 +130,14 @@ An act with no check tool cannot be prepared: the deployment admin may then
 only leave agents able to make it, or keep them from it. From CLI 0.1.39 `meridian plugin check --verified` fails a verified
 plugin's act that names no check tool, and `meridian plugin check` warns.
 
+From open-meridian 0.25.0 (contract v21) your plugin's
+own autonomous work calls its acts the same way, as the
+[service account](../concepts/service-accounts.md) its role runs as
+([`meridian.runs_as`](../api/python-sdk.md#runs_as)), and is prepared or
+made by the same levels. An act it calls so names its check tool: a service
+account set to prepare only is refused one with none, and from CLI 0.1.41
+`meridian plugin check` fails it (`runs-as-checked`).
+
 ## Routes you cannot offer
 
 Declare why: `tool=False, why="a file the person chooses"`. `meridian plugin

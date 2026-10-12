@@ -12,7 +12,7 @@ pip install open-meridian
 |---|---|
 | PyPI name | `open-meridian` |
 | Import name | `meridian` |
-| Version | 0.23.0 |
+| Version | 0.25.0 |
 | Python | 3.11 or newer |
 | Dependencies | `grpcio>=1.68,<2`, `protobuf>=5.28,<7`, `jinja2>=3.1,<4` (from 0.10.0, for [pages](#pages)) |
 | Licence | Apache-2.0 |
@@ -20,7 +20,23 @@ pip install open-meridian
 !!! warning "Not `meridian-sdk`"
     The PyPI package `meridian-sdk` belongs to an unrelated company. Don't install it.
 
-A plugin pins the SDK exactly, `open-meridian==0.24.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.24.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls; from 0.12.0 to 0.13.0, from 0.13.0 to 0.14.0, from 0.19.0 to 0.20.0, from 0.20.0 to 0.21.0, from 0.21.0 to 0.22.0 and from 0.22.0 to 0.23.0, only the pins move, and from 0.23.0 to 0.24.0 it rewrites the renamed roles (see [0.23.0 to 0.24.0](#0230-to-0240)). `meridian plugin new` writes a plugin pinned to 0.19.0 from CLI 0.1.34, to 0.20.0 from CLI 0.1.35, to 0.21.0 from CLI 0.1.36, to 0.22.0 from CLI 0.1.37, to 0.23.0 from CLI 0.1.38, and to 0.24.0 from CLI 0.1.39.
+A plugin pins the SDK exactly, `open-meridian==0.25.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.25.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls; from 0.12.0 to 0.13.0, from 0.13.0 to 0.14.0, from 0.19.0 to 0.20.0, from 0.20.0 to 0.21.0, from 0.21.0 to 0.22.0 and from 0.22.0 to 0.23.0, only the pins move, from 0.23.0 to 0.24.0 it rewrites the renamed roles (see [0.23.0 to 0.24.0](#0230-to-0240)), and from 0.24.0 to 0.25.0 only the pins move (see [0.24.0 to 0.25.0](#0240-to-0250)). `meridian plugin new` writes a plugin pinned to 0.19.0 from CLI 0.1.34, to 0.20.0 from CLI 0.1.35, to 0.21.0 from CLI 0.1.36, to 0.22.0 from CLI 0.1.37, to 0.23.0 from CLI 0.1.38, to 0.24.0 from CLI 0.1.39, and to 0.25.0 from CLI 0.1.41.
+
+!!! note "0.25.0: contract v21"
+    open-meridian 0.25.0 declares contract v21. A plugin's autonomous work -- a scheduled sweep, a strategy, an agent
+    inside the plugin -- calls its own acts as the
+    [service account](../concepts/service-accounts.md) its role runs as,
+    [`meridian.runs_as(role)`](#runs_as), answered made or prepared; a
+    refusal names its field (`NotGranted.fields`, `CallFailed.fields`), and
+    a sidecar older than v21 is said to be (`CallFailed`, kind
+    `"unimplemented"`). An act's route reached for such a call reads a
+    [`Caller`](#caller) whose `subject_kind` is a service account, naming
+    its `owner_subject` (`meridian.SubjectKind`), and acts as for a person;
+    `meridian.testing` calls a tool so (`subject_kind=`, `owner_subject=`).
+    Nothing a plugin calls changed shape: `meridian plugin migrate` moves
+    the pins (see [0.24.0 to 0.25.0](#0240-to-0250)). It needs a runtime
+    serving contract v21 (chart 0.1.299 or later), and CLI 0.1.41's
+    `plugin new` writes a plugin on it. Released 2026-10-12.
 
 !!! note "0.24.0: contract v20"
     open-meridian 0.24.0 declares contract v20. An act can be [prepared](#prepared) rather than made (`checked_by=`,
@@ -55,6 +71,25 @@ A plugin pins the SDK exactly, `open-meridian==0.24.0`, in its `pyproject.toml`.
     readers, a `Money` naming its instrument and real dates. It needs a
     runtime serving contract v18 (chart 0.1.292 or later), which refuses
     nothing a plugin on 0.21.0 sends. See [Plugin manifest](plugin-manifest.md).
+
+### 0.24.0 to 0.25.0 { #0240-to-0250 }
+
+`meridian plugin migrate --to 0.25.0` moves the pins
+and rewrites nothing: contract v21 adds, and changes the shape of nothing a
+plugin calls. Then, by hand where they apply:
+
+- **Work the plugin does on its own** that changes something calls the
+  plugin's own act as its role's service account,
+  [`meridian.runs_as(role)`](#runs_as), and reads whether it was made or
+  prepared. Each act called so names its check tool (`checked_by=`): from
+  CLI 0.1.41 `meridian plugin check` fails one that names none
+  (`runs-as-checked`).
+- **An act's route** may be reached for a service account: it acts as for
+  a person, `acting_for=request.caller.header`. Show
+  `request.caller.subject_kind` and `owner_subject` where the page says who
+  acted.
+- **A test that compares a refusal's attributes** finds `fields` on
+  `NotGranted` and `CallFailed` too, empty where the sidecar named none.
 
 ### 0.23.0 to 0.24.0 { #0230-to-0240 }
 
@@ -150,11 +185,13 @@ A plugin that serves pages declares them with [`meridian.Pages`](#pages) and pas
 | `Trade`, `TradeAttributes`, `Eligibility`, `Quote` | frozen dataclasses | [Typed operations](typed-operations.md#trade), from 0.23.0 |
 | `Aggressor`, `Eligible`, `TradeCharacteristic`, `QuoteCharacteristic` | generated protobuf enums | [Typed operations](typed-operations.md#tradecharacteristic), from 0.23.0 |
 | `roles` | module | [Each role's common part](#each-roles-common-part), from 0.24.0 |
+| `runs_as` | function | [A service account runs the plugin's autonomous work](#runs_as), from 0.25.0 |
+| `SubjectKind` | generated protobuf enum | [`Caller`](#caller): whom the claims vouch for, from 0.25.0 |
 | `settings`, `setting`, `environment`, `sample_data` | decorator, functions | [Typed settings](#typed-settings), from 0.24.0 |
 | `CallerMiddleware` | ASGI middleware | [`CallerMiddleware`](#callermiddleware) |
 | `MeridianError`, `Refused`, `NoSidecar`, `NotRegistered`, `NotGranted`, `CallFailed`, `NotLinked`, `CommandRefused` | exceptions | [Exceptions](#exceptions); `CommandRefused` from 0.13.0, its `fields` from 0.14.0 |
 | `DEFAULT_ADDRESS` | `str` | `"127.0.0.1:9191"`, where a sidecar listens |
-| `SCHEMA_VERSION` | `str` | the contract version sent at registration: `"v20"` from 0.24.0, `"v19"` in 0.23.0, `"v18"` in 0.22.0 (no SDK declares v17, a revision of core's alone), `"v16"` in 0.21.0, `"v15"` in 0.20.0, `"v14"` in 0.19.0, `"v13"` in 0.18.0, `"v12"` in 0.17.0, `"v11"` in 0.16.0, `"v10"` in 0.15.0, `"v9"` in 0.14.0, `"v8"` in 0.13.0, `"v7"` in 0.12.0, `"v6"` in 0.11.0, `"v5"` in 0.10.0 and 0.10.1, `"v4"` in 0.9.0, `"v3"` in 0.8.0, `"v2"` before |
+| `SCHEMA_VERSION` | `str` | the contract version sent at registration: `"v21"` from 0.25.0, `"v20"` in 0.24.0, `"v19"` in 0.23.0, `"v18"` in 0.22.0 (no SDK declares v17, a revision of core's alone), `"v16"` in 0.21.0, `"v15"` in 0.20.0, `"v14"` in 0.19.0, `"v13"` in 0.18.0, `"v12"` in 0.17.0, `"v11"` in 0.16.0, `"v10"` in 0.15.0, `"v9"` in 0.14.0, `"v8"` in 0.13.0, `"v7"` in 0.12.0, `"v6"` in 0.11.0, `"v5"` in 0.10.0 and 0.10.1, `"v4"` in 0.9.0, `"v3"` in 0.8.0, `"v2"` before |
 
 The module `meridian.testing` holds [`PageClient`](#testing) and [`heartbeat`](#testing), for a plugin's own tests.
 
@@ -389,6 +426,14 @@ its `TicketState`, its `TicketResolution` once resolved or closed, how often it
 was seen and when first and last; never people's notes, nor who owns or works
 it. `next_cursor` is empty when nothing follows. A plugin that sees its ticket
 resolved can stop filing it.
+
+From 0.25.0, contract v21, `for_caller` may be a
+[service account](../concepts/service-accounts.md): in an act's route the
+dashboard reached for the role's service account, `request.caller`. The
+ticket, and what is read back, is then the service account's, naming it and
+its owner, within the plugin's rate. Filing a ticket and reading back what
+was filed are the only calls to the deployment's configuration a service
+account's claims reach.
 
 #### `report()`
 
@@ -1102,7 +1147,7 @@ From 0.20.0, contract v15, a person holds a level on each role of a plugin, and 
 
 | Member | Type | Meaning |
 |---|---|---|
-| `subject` | `str` | The person, as the deployment's directory names them. Deployment-local, never an address. |
+| `subject` | `str` | The person, as the deployment's directory names them. Deployment-local, never an address. From 0.25.0, a service account's `SA-` ID where `subject_kind` says so. |
 | `display_name` | `str` | Their name, for display. |
 | `level` | `int`, an [`AccessLevel`](#accesslevel) | The level the session was opened at. `ACCESS_LEVEL_UNSPECIFIED` is a session that holds nothing. Added in 0.10.0. |
 | `admin` | `bool` property | Whether the session was opened by Manage: `level` is `ACCESS_LEVEL_ADMIN`. Added in 0.10.0. |
@@ -1123,6 +1168,8 @@ From 0.20.0, contract v15, a person holds a level on each role of a plugin, and 
 | `prepared_call_id` | `str` | The prepared change this request was opened from or makes, `PC-…`; empty for none. Read it with `await request.prepared()`. Added in 0.24.0. |
 | `own_settings` | `Mapping[str, str]` | The person's own values of settings declared `per_person`, as the dashboard keeps them, under Open and View; empty under Manage. `request.own_settings` reads them typed. Added in 0.24.0. |
 | `second_pair_of_eyes` | `frozenset[str]` | The plugin's acts whose second pair of eyes is on for this person now, by tool name: hide Save for them and offer Prepare. For showing only: the dashboard refuses a direct make whatever the page draws. Added in 0.24.0. |
+| `subject_kind` | `int`, a `SubjectKind` | Whom the claims vouch for: `SUBJECT_KIND_UNSPECIFIED`, a person, as every caller before contract v21; `SUBJECT_KIND_SERVICE_ACCOUNT`, a [service account](../concepts/service-accounts.md), set by the dashboard only for an act's route reached for a call it admitted for the role's service account (see [A service account runs the plugin's autonomous work](#runs_as)). Added in 0.25.0. |
+| `owner_subject` | `str` | A service account's owner when the call was admitted, the person answerable for it; empty for a person. Added in 0.25.0. |
 
 The levels are the same for every plugin, granted in the deployment's access groups. A plugin names no parts of itself, so there is nothing finer to ask than, from 0.20.0, the person's level on each of its roles, which are the deployment's, not the plugin's. The sidecar checks every command sent for a person again, whatever the plugin believes: it admits one only in a session at `write`, and from contract v15 only by their `write` on a role whose grants include the command, the account among that role's write accounts, refusing otherwise and naming the role. See [Access](../concepts/access.md#access-per-role).
 
@@ -1333,6 +1380,90 @@ The kit's **Prepare** button posts your form with the reserved field `prepare`, 
 async def confirm(request: meridian.Request) -> meridian.Response: ...
 ```
 
+## A service account runs the plugin's autonomous work { #runs_as }
+
+From 0.25.0, contract v21. Work your plugin does with
+no person's request to serve -- a scheduled sweep, a strategy, an agent
+inside the plugin -- changes nothing in the deployment by itself: it calls
+one of your plugin's own acts as the
+[service account](../concepts/service-accounts.md) its role runs as. A
+deployment admin creates and grants the account, a role's admin chooses it,
+and the admins' levels and the account's setting decide whether the act is
+made or prepared. Your plugin chooses none of it and holds no credential.
+
+```python
+async with meridian.runs_as("operations") as act:
+    reply = await act(
+        "close_cleared_breaks",                  # one of the role's acts, by its tool's name
+        {"account": "ACC-1", "reason": "The difference was gone at the statement."},
+        reason="2 cleared breaks of ACC-1: the statement found no difference for them.",
+    )
+if reply.outcome == "made":
+    answer = json.loads(reply.answer_json)       # the act's route's own typed answer
+else:                                            # "prepared": a person makes it
+    log.info("prepared %s for the people who may make it", reply.prepared_call_id)
+```
+
+**`meridian.runs_as(role, *, plugin=None)`** is an async context. Entered,
+it holds the plugin `connect` registered (or the one `plugin=` names) and
+refuses, before anything is sent, a role the plugin was not launched with
+(`ValueError`) or no registered plugin (`NotRegistered`). Inside it, **`await
+act(tool_name, arguments, *, reason)`** calls one act:
+
+| Argument | Meaning |
+|---|---|
+| `tool_name` | One of the plugin's declared acts on `role`, by its tool's name: never a read, another role's act or a core `dashboard__` tool. |
+| `arguments` | The act's typed record of inputs: the record itself, a mapping, or its JSON object, sent as `arguments_json` (a `Decimal` as its string, a date in ISO 8601). Anything but a JSON object raises before anything is sent. |
+| `reason` | Why, 1 to 4,000 characters, plain text: kept as a prepared change's reason, and untrusted as one is. |
+
+Refused here, before anything is sent, with `ValueError` (or `TypeError`
+for the wrong type): an empty `tool_name` or `reason`, either past its bound,
+a core `dashboard__` tool, and arguments that are not a JSON object or past
+the field's bound. Otherwise it answers a `CallAsServiceAccountReply`:
+
+| `outcome` | Means | Carries |
+|---|---|---|
+| `"made"` | The dashboard called the act's route as the service account | `answer_json`, the route's own answer. A route that refuses is still `made`: read its `outcome` in `answer_json` |
+| `"prepared"` | Kept as a [prepared change](../concepts/prepared-changes.md) for everyone who may make it and the account's owner; nothing changed | `prepared_call_id`, its `PC-` ID |
+
+A refusal is raised naming the field, as the dashboard named it, in
+`.fields`:
+
+| Raised | `.fields` | When |
+|---|---|---|
+| `NotGranted` | `role` | The account is disabled, removed or not held; it holds less than `write` on the role; or the role runs it at `read` |
+| `NotGranted` | `tool_name` | The act is at May not |
+| `CallFailed`, kind `"refused"` | `role` | The role runs as no service account: its admin has not chosen one |
+| `CallFailed`, kind `"refused"` | `tool_name` | The act names no check tool, and the account is set to prepare only |
+| `CallFailed`, kind `"refused"` | the check's own | The act's check tool refused it: nothing kept |
+| `CallFailed`, kind `"invalid"` | `role`, `tool_name`, `reason` | A role the instance was not launched with; a tool that is not one of the role's acts; a reason that is not plain text (a control, zero-width or bidirectional override character) |
+| `CallFailed`, kind `"unimplemented"` | | The plugin's sidecar is older than contract v21 |
+
+**Nothing is declared for it.** The work calls acts the plugin already
+declares, each naming its check tool (`checked_by=`, see
+[Prepared changes](#prepared)) so it can be prepared: an act with none is
+refused to an account set to prepare only, and from CLI 0.1.41
+`meridian plugin check` fails a plugin that calls one through `runs_as`
+(`runs-as-checked`).
+
+**The act's route acts as for a person.** Made, the dashboard sends the
+arguments to the act's route with claims minted for that call alone, good
+for at most 60 seconds: `request.caller.subject_kind` is
+`SubjectKind.SUBJECT_KIND_SERVICE_ACCOUNT`, `subject` the account's `SA-`
+ID and `owner_subject` the person answerable for it, at `write` with the
+account's accounts on the role, with no delegation and no client. Do what
+you do for a person, handing `request.caller.header` back as `acting_for`:
+the sidecar admits the command by the account's grants and stamps the
+account, its kind and its owner, so the book records the service account.
+Such claims open no page, and reach no read or command of the deployment's
+configuration but [filing a ticket](#file_ticket) and reading back what was
+filed: `request.prepared()` answers none, and saving a person's own
+settings and linking are refused.
+
+The call is sent as the plugin itself, never for a person, and recorded by
+the dashboard: the account's row shows its last use and last refusal, and
+its page each call by its act and outcome, never its arguments.
+
 ## A person's own settings { #own_settings }
 
 From 0.24.0, contract v20. A setting declared `per_person=True` is each person's own: a watchlist, a chart's choices. It is not on the Settings form and has no value for the whole deployment.
@@ -1409,13 +1540,13 @@ client.assert_no_account_data("AAPL", "125", "12,500.00")  # what the stand-in h
 | `post(path, level, form=None, *, headers=None, roles=None)` | A form posted from the plugin's page, carrying its CSRF token back unless `form` gives one of its own. `headers`, from 0.10.1, sends more, such as the `Referer` of the page it was posted from. `roles`, from 0.20.0, narrows the session as `caller` does. |
 | `request(method, path, level, *, form=None, query=None, headers=None, roles=None)` | The request as given, with no token added: for testing that one without a token, or with somebody else's, is refused. `roles` as `post`'s. |
 | `caller(level, *, roles=None, deployment_admin=None)` | The client's person, as a `Caller` in a session at `level`: a deployment admin as the client was made, unless `deployment_admin` says (from 0.10.1). From 0.20.0 the session carries an entry for each of the client's roles at `level`, or for those `roles` names; a mapping gives each its own level within the button, `{"operations": "write", "custody": "read"}` under Open. A role the client was not made with raises `ValueError`, and so does a level the button cannot carry: under Open a role is at `write` or `read`, under View at `read`, under Manage at `admin`. |
-| `call_tool(name, arguments=None, *, level=None, ..., roles=None)` | Calls a tool as the deployment's `/mcp` would; see [Offer your plugin's pages to agents](../how-to/offer-your-pages-to-agents.md#test-it-as-the-surface-calls-it). `roles`, from 0.20.0, as `caller`'s. |
+| `call_tool(name, arguments=None, *, level=None, ..., roles=None, subject=None, subject_kind=..., owner_subject="")` | Calls a tool as the deployment's `/mcp` would; see [Offer your plugin's pages to agents](../how-to/offer-your-pages-to-agents.md#test-it-as-the-surface-calls-it). `roles`, from 0.20.0, as `caller`'s. From 0.25.0, `subject_kind=meridian.SubjectKind.SUBJECT_KIND_SERVICE_ACCOUNT` calls it as the dashboard calls an act it admitted for a role's [service account](#runs_as): `subject` its `SA-` ID (the client's person's otherwise), `owner_subject` the person answerable for it, and no delegation and no client. |
 | `every_page()` | Each declared page, in order, under Manage, Open and View: a list of `Rendered`, each with `page`, `level` and `response`, 200 where the page serves the level and 403 where it does not. On a client made with roles, from 0.20.0, under each level for each role alone and for all of them together, each `Rendered` naming them in `roles`. |
 | `assert_no_account_data(*held)` | Fails, naming the page and what it showed, when under Manage a page at `admin` does not answer 200, any other page does not answer 403, or a page at `admin` shows any of `held`, as given or as a template escapes it. `held` is the account data the test put where the plugin reads it: holdings, quantities, values, balances, a statement's rows. Called with nothing to look for, it raises `ValueError`. |
 
 `meridian.testing.heartbeat(*, healthy=True, detail="", figures=())`, from 0.11.0, is the heartbeat a plugin's sidecar receives from a plugin reporting these: its figures as the wire carries them, in the plugin's order. It raises as setting `plugin.figures` does, so a test of the figures a plugin computes asserts on it, or on the refusal. See [Figures](#figures).
 
-`meridian.testing.caller_header(level, *, read=(), write=(), subject=..., display_name=..., deployment_admin=False, delegation_id="", client_name="", tool_name="", roles=())` makes the header alone, for a test that serves the pages another way. `delegation_id` and `client_name`, from 0.14.0, are a person's who came through a client rather than a browser. `roles`, from 0.20.0, are the roles the session carries an entry for, as `caller`'s, each role's accounts as positions in the claims' read accounts, as the dashboard mints them. It is unsigned: only a plugin's tests read it, never a sidecar.
+`meridian.testing.caller_header(level, *, read=(), write=(), subject=..., display_name=..., deployment_admin=False, delegation_id="", client_name="", tool_name="", roles=())` makes the header alone, for a test that serves the pages another way. `delegation_id` and `client_name`, from 0.14.0, are a person's who came through a client rather than a browser. `roles`, from 0.20.0, are the roles the session carries an entry for, as `caller`'s, each role's accounts as positions in the claims' read accounts, as the dashboard mints them. `subject_kind` and `owner_subject`, from 0.25.0, make it a service account's, `subject` its `SA-` ID. It is unsigned: only a plugin's tests read it, never a sidecar.
 
 A plugin holding several roles holds each page to them in its tests:
 
@@ -1465,8 +1596,8 @@ Every exception carries the sidecar's own words, so a log line says whether the 
 | `Refused` | `reason: str` | `connect`: the sidecar declined registration, for example because access control has not loaded, the role carries no grants, or the schema does not match. A refusal is a statement about configuration. It is not retried, and asking again changes nothing. |
 | `NoSidecar` | `address: str`, `waited_seconds: float` | `connect`: no sidecar answered at `address` within `wait` seconds. It may still be starting, or not be there at all. |
 | `NotRegistered` | | Any method, after `leave()`. |
-| `NotGranted` | `topic: str`, `reason: str` | A typed operation was refused permission. `topic` holds the operation's name (for example `"RecordHolding"`), and `reason` names what was missing. |
-| `CallFailed` | `topic: str`, `kind: str`, `detail: str` | A typed operation did not produce an answer. `topic` holds the operation's name. `kind` says which failure it was; see [Typed operations](typed-operations.md#errors). |
+| `NotGranted` | `topic: str`, `reason: str`, `fields: tuple[str, ...]` | A typed operation was refused permission. `topic` holds the operation's name (for example `"RecordHolding"`), and `reason` names what was missing. `fields`, from 0.25.0, names the fields the refusal is about where the sidecar named any, such as `role` or `tool_name` from [`runs_as`](#runs_as); empty otherwise. |
+| `CallFailed` | `topic: str`, `kind: str`, `detail: str`, `fields: tuple[str, ...]` | A typed operation did not produce an answer. `topic` holds the operation's name. `kind` says which failure it was; see [Typed operations](typed-operations.md#errors). From 0.25.0 `fields` names the fields a refusal is about where the sidecar named any, and `kind` is `"unimplemented"` from [`runs_as`](#runs_as) beside a sidecar older than contract v21. |
 | `NotLinked` | as `CallFailed`, with `kind="refused"` | A typed operation named an external account nobody has linked to an account, so nothing was recorded for it. A subclass of `CallFailed`, so code that caught `CallFailed` still catches it. Raised only when the refusal carries the code `REFUSAL_REASON_EXTERNAL_ACCOUNT_NOT_LINKED`. Not worth retrying: the next statement after an admin links the account records it. Added in 0.7.0; see [Typed operations](typed-operations.md#an-unlinked-external-account). |
 | `CommandRefused` | as `CallFailed`, with `kind="refused"`; `reason: int`, `reason_name: str`, `fields: tuple[str, ...]` | The book of record refused a command with a code of its own, such as `REFUSAL_REASON_OPENING_BALANCE_RECORDED`; `reason` is the code's number and `reason_name` its name. `fields`, from 0.14.0, names each field an incomplete entry left out, by its path in the call (`positions[0].settled_quantity`, `positions[1].lots[0].terms.cost`), for `REFUSAL_REASON_INCOMPLETE`, and is empty for every other refusal. A subclass of `CallFailed`. Not retried: the same command meets the same refusal. Added in 0.13.0; see [Typed operations](typed-operations.md#the-books-refusals). From 0.21.0 also the sidecar's refusal of a deletion inside the deployment's hold, `REFUSAL_REASON_WITHIN_HOLD`, from [`delete_unit()`](#delete_unit): the unit is kept, and a later pass may try again once the hold has passed. |
 

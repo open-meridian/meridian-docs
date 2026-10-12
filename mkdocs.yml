@@ -114,6 +114,7 @@ nav:
       - Dates and time: concepts/dates-and-time.md
       - Tickets and the inbox: concepts/tickets-and-the-inbox.md
       - Prepared changes: concepts/prepared-changes.md
+      - Service accounts: concepts/service-accounts.md
       - Development deployments: concepts/development-deployments.md
   - How-to:
       - how-to/index.md
@@ -139,6 +140,7 @@ nav:
       - Watch the market on the Board: how-to/watch-the-board.md
       - Offer your pages to agents: how-to/offer-your-pages-to-agents.md
       - Let your agent manage a plugin: how-to/let-your-agent-manage-a-plugin.md
+      - Run a plugin's work as a service account: how-to/run-a-plugins-work-as-a-service-account.md
       - Advising on tickets: how-to/advise-on-tickets.md
       - Working your tickets: how-to/work-your-tickets.md
       - Release a plugin version: how-to/release-a-plugin.md

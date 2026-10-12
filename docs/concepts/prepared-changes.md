@@ -12,6 +12,13 @@ firm say, per act, how far its people's agents may go.
     Agents tab are built in core for contract v20, with open-meridian 0.24.0
     and the kit 0.12.0, released 2026-10-12 in chart 0.1.298.
 
+!!! note "Contract v21"
+    From contract v21 a [service account](service-accounts.md) prepares
+    too: a plugin's autonomous work held to preparing an act prepares it,
+    for everyone who may make it and the account's owner (see
+    [Prepared by a service account](#prepared-by-a-service-account)).
+    Released 2026-10-12 in chart 0.1.299.
+
 ## Preparing, making
 
 Any act that can be checked can be prepared:
@@ -119,6 +126,31 @@ prepare this act; the person who makes this change is not whoever prepared
 it. Neither is described here as meeting any supervisory or regulatory
 rule: whether they serve one is for the firm to judge.
 
+## Prepared by a service account
+
+From contract v21 a plugin's autonomous work acts as
+a [service account](service-accounts.md), and the levels and the second
+pair of eyes bind it as they bind a person's agent, with its own setting,
+**prepare only** or **act**, the strictest of them. Held to preparing, it
+prepares the act through its check tool, as an agent does; an act with no
+check tool is refused to an account set to prepare only.
+
+- **It goes to everyone who may make it, at once**, and its owner is always
+  shown it: there is no person whose own it is, so there is nothing to
+  share. Its preparer is shown as the account and its owner, such as *The sweep, a
+  service account owned by Cat Ruiz*.
+- **Its owner counts as the person behind it.** Under a second pair of eyes
+  the owner never makes what it prepared; with the gate off the owner may,
+  like anyone who may make the act.
+- **Its owner sees its contents within their own read access.** Where it
+  names an account the owner may not read, its arguments are withheld from
+  them, on its page and through `dashboard__read_prepared`.
+- **It lapses with the account**: disabling or removing the service account
+  lapses every change it prepared that still waits, each its own record
+  saying why, and its owner is told.
+- **No service account makes, discards or shares a prepared change**,
+  whatever its setting: those are core's acts, which it does not reach.
+
 ## Deciding through an agent
 
 Making, discarding and sharing a prepared change are acts too, each with
@@ -175,3 +207,5 @@ naming each one's check (see
 - [Set a plugin's settings](../how-to/set-a-plugins-settings.md#prepare-instead-of-saving).
 - [Tickets and the inbox](tickets-and-the-inbox.md).
 - [Access](access.md).
+- [Service accounts](service-accounts.md): the plugin's autonomous work,
+  preparing by default (contract v21).

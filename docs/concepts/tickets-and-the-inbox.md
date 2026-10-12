@@ -28,7 +28,12 @@ signing in again, a feed that is down, a statement that is too old: these are
 the plugin's health, shown on its Summary as a figure in warn, with what to do
 about it beside it, and they clear when the condition clears. A person who
 reads one there may choose to file a ticket about it. A plugin never files as
-itself.
+itself. From contract v21 a plugin's autonomous work
+may file, and read back what it filed, as its role's
+[service account](service-accounts.md): the ticket names the account and
+its owner, within the plugin's rate. It adds no note; seeing the problem
+again, it files again under the same key, which brings the open ticket up to
+date.
 
 ## Filing a ticket
 
@@ -162,6 +167,16 @@ discard it, or, if it is yours, share or withdraw it. A notice names a
 prepared change as it names a ticket, and `dashboard__read_inbox` answers
 both. See [Prepared changes](prepared-changes.md).
 
+**A service account's owner** (contract v21). Above
+the tickets' notices, the owner of a [service account](service-accounts.md)
+sees one line for each change to it: **Disabled** or **Removed**, by whom,
+and **Lapsed** for each change it prepared that lapsed with it, naming the
+prepared change. None for a disable the owner made. `dashboard__read_inbox`
+answers them beside the notices, as `service_account_notices`, each with
+its `notice_id`, `kind` (`disabled`, `removed` or `lapsed`), the
+`service_account_id`, the `prepared_call_id` where one lapsed, `by` and
+`changed_ns`, naming and never quoting.
+
 ## Text is data
 
 Every title, text, note and notice was written by someone other than whoever
@@ -173,7 +188,8 @@ data, never instructions.
   carries no attachment.
 - **Provenance beside every text,** set by the deployment from the credential,
   never from what the text says: a person; a person through a client; a plugin
-  for a person; the dashboard's rules. A ticket claiming to come from Open
+  for a person; from contract v21 a plugin for its service account, named
+  with its owner; the dashboard's rules. A ticket claiming to come from Open
   Meridian is shown as its filer's.
 - **Nothing acts on its own.** No tool assigns, resolves, closes, reopens,
   releases or sends. An instruction planted in a ticket can at most produce
@@ -211,7 +227,7 @@ deployment admin's capabilities:
 | `dashboard__list_tickets` | reads | The tickets this delegation may see, newest first, filtered by what they concern, their state, or only the person's own. |
 | `dashboard__read_ticket` | reads | One ticket: its text, what it concerns, the records it names, its state and resolution, and its notes and advice oldest first, each beside its author and provenance. |
 | `dashboard__add_ticket_note` | acts | Appends a note or advice. It changes nothing on the ticket, and refuses any other kind of note. |
-| `dashboard__read_inbox` | reads | The person's notices new since this client last read them, and this client's place moved past them. |
+| `dashboard__read_inbox` | reads | The person's notices new since this client last read them, and this client's place moved past them. From contract v21, beside them, the latest notices of each service account the person owns (`service_account_notices`). |
 | `dashboard__mark_notices_read` | acts | Marks the person's own notices of the tickets named as read. It changes no ticket. |
 | `dashboard__count_tickets` | reads | The tickets this delegation may see, counted by what they concern, by state, or both. Counts carry no text. |
 
