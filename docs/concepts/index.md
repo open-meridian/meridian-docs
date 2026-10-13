@@ -28,6 +28,8 @@ piece of data lives.
 | [Tickets and the inbox](tickets-and-the-inbox.md) | How a problem someone sees reaches the people who can act on it: who sees a ticket, advice that changes nothing, the acts only a person takes, and the inbox |
 | [Prepared changes](prepared-changes.md) | An agent or a person prepares a change and a person makes it; what agents may do with each act, set by the deployment admin and a plugin's admin; the second pair of eyes; lapse (contract v20) |
 | [Service accounts](service-accounts.md) | A user of the deployment that is not a person, which a plugin's autonomous work runs as: its owner, prepare only or act, granted per role, what binds it and what is recorded (contract v21) |
+| [The order lifecycle](the-order-lifecycle.md) | How an order reaches a venue through the book: who does what by role, the states and the transition table, child orders, the release gate and waiting for compliance, connectivity plugins linked to an `ems`, fills moving positions, and trading instructions (contract v22, built, not released) |
+| [Settlement calendars](settlement-calendars.md) | Business-day calendars and date rules the platform keeps and a deployment pulls; a settlement, spot or tenor date worked out one way in core, with its basis; coverage, and the Calendars tab (contract v22, built, not released) |
 | [Development deployments](development-deployments.md) | A deployment installed for writing plugins, and why a firm's own deployment is never one |
 
 !!! note "What Open Meridian does today"
@@ -43,6 +45,8 @@ piece of data lives.
     accounts a deployment admin grants each plugin, and one first-use path
     per role. From contract v21 it adds service
     accounts, which a plugin's autonomous work runs as, preparing by
-    default. Order routing and execution are on the roadmap and
-    are not available yet. Where a page describes something that is specified
+    default. Contract v22, built and not yet released, adds the order path
+    -- orders proposed, released, placed at a venue through a connectivity
+    plugin and filled, their state decided by the book -- and settlement
+    calendars; no connectivity plugin a deployment can launch trades yet. Where a page describes something that is specified
     but not built, it says so.

@@ -82,7 +82,10 @@ them:
 1. Choose **Edit** on the account's row. The dialog has two sections, **Account** and **In the
    book**, each with its own save.
 2. Under **In the book**, which says since when the account is in the book, set the **Base
-   currency**, three capital letters, and **Lot relief, when a sale names none**.
+   currency**, three capital letters, and **Lot relief, when a sale names none**; and from
+   contract v22 (built, not released) **Releases**, **Wait for compliance** (every new account's)
+   or **Do not wait** (see
+   [Whether an account's releases wait for compliance](set-trading-instructions.md#whether-an-accounts-releases-wait-for-compliance)).
 3. Enter a **Reason**, and choose **Save**.
 
 Each attribute you change is its own entry in the account's journal, with your reason. **In the
@@ -253,6 +256,10 @@ The tab says, for each account granted, whether the plugin has linked it yet, an
 the grant and when. A grant lets the plugin's admins link; it gives nobody anything to read or
 write, which is still a permission. At the upgrade to v20 each plugin is granted the accounts its
 links already named. See [Accounts a plugin may link to](../concepts/accounts.md#accounts-a-plugin-may-link-to).
+
+From contract v22 (built, not released) an `ems` is granted here the accounts its admins may map to
+venue account codes, nothing by default; see
+[Route orders through a connectivity plugin](route-orders-through-a-connectivity-plugin.md).
 
 ## To give a plugin's work a service account
 

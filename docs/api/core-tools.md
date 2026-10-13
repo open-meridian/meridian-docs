@@ -10,8 +10,11 @@ who holds access to it (read only), its archive, the deployment's holds,
 and launching and stopping it. From contract v18, five more mirror the
 **Data sources** page: the lake's datasets, their licences and
 entitlements, and the source priority. From contract v20, seven more work [prepared changes](../concepts/prepared-changes.md)
-and one reads the accounts a plugin may link to. From contract v21, one reads the [service accounts](#service-accounts). This
-page is the reference for those twenty-seven. An agent calls them as the person who
+and one reads the accounts a plugin may link to. From contract v21, one reads the [service accounts](#service-accounts). From
+contract v22 (built, not released), four set and list the
+[trading instructions and account attributes](#trading-instructions-and-account-attributes),
+and two read the Instruments page's [Calendars tab](#the-calendars-tab). This
+page is the reference for those thirty-three. An agent calls them as the person who
 delegated to it, and only as far as that person could at the page each tool
 mirrors, and from v20 only as far as the deployment lets agents go with each
 act.
@@ -58,6 +61,27 @@ act.
     [Service accounts](../concepts/service-accounts.md). Released
     2026-10-12 in chart 0.1.299.
 
+!!! note "Contract v22: built, not released"
+    [`dashboard__set_trading_instruction`](#dashboard__set_trading_instruction),
+    [`dashboard__list_trading_instructions`](#dashboard__list_trading_instructions),
+    [`dashboard__set_account_attribute`](#dashboard__set_account_attribute)
+    and [`dashboard__list_account_attributes`](#dashboard__list_account_attributes)
+    mirror the **Trading instructions** page and the Accounts tab's book
+    part, each act at the setter's level, preparable, and at **May not** for
+    agents until the deployment admin loosens it;
+    [`dashboard__list_calendars`](#dashboard__list_calendars) and
+    [`dashboard__read_calendar`](#dashboard__read_calendar) read the
+    Instruments page's **Calendars** tab; and `dashboard__read_plugin_access`
+    answers a connectivity plugin's link, and an `ems`'s connectivity plugins
+    and venue account map, in `connectivity`. Making a connectivity plugin
+    available, linking it to an `ems` and choosing who may route through it
+    are access, set at the page only. See
+    [The order lifecycle](../concepts/the-order-lifecycle.md) and
+    [Settlement calendars](../concepts/settlement-calendars.md).
+
+!!! note "TODO: the chart serving contract v22"
+    Name the chart release here once it is published.
+
 ## What every one of them does
 
 - **The page's gate.** Each tool is listed only through a delegation that
@@ -71,7 +95,9 @@ act.
   does reach.
 - **A note on every change.** Every tool that changes something takes a
   `note` saying why, required, up to 2,000 characters, and keeps it with the
-  change. The pages ask for none.
+  change. The pages ask for none. From contract v22 the two acts on the book,
+  `dashboard__set_trading_instruction` and `dashboard__set_account_attribute`,
+  take a `reason` instead, as the book's entries and their pages do.
 - **Each change its own record**, as the same change made at the page,
   naming the person, the delegation and the client (see
   [Where a change is recorded](#where-a-change-is-recorded)).
@@ -106,8 +132,10 @@ act.
   clearing one is allowed, as the form's **Remove** (before v20, **Clear
   it**). And no tool changes who holds access: none defines a user, account
   or access group, grants or withdraws a permission, or grants a plugin an
-  account to link; and from contract v21 none creates, changes, disables or
-  removes a service account, or chooses what a role runs as.
+  account to link; from contract v21 none creates, changes, disables or
+  removes a service account, or chooses what a role runs as; and from
+  contract v22 none makes a connectivity plugin available, links it to an
+  `ems` or chooses who may route through it.
 
 Every answer has an `outcome`: `made` for a change, `unchanged` for a read
 or a change that changed nothing, `refused` with a `reason`, a `detail` and
@@ -147,6 +175,12 @@ decimal is a string.
 | [`dashboard__discard_prepared`](#dashboard__discard_prepared) | acts | Whoever it is shown to, once an admin loosens it from May not |
 | [`dashboard__share_prepared`](#dashboard__share_prepared) | acts | Its person, once an admin loosens it from May not |
 | [`dashboard__list_service_accounts`](#dashboard__list_service_accounts) | reads | Any delegation that reaches anything: every account for the deployment admin, the person's own otherwise |
+| [`dashboard__list_trading_instructions`](#dashboard__list_trading_instructions) | reads | The deployment admin, every instruction; a plugin's admin, those naming a plugin they administer |
+| [`dashboard__set_trading_instruction`](#dashboard__set_trading_instruction) | acts | The deployment admin, on any target; a plugin's admin, on their plugin or a person, service account or account within it; once an admin loosens it from May not |
+| [`dashboard__list_account_attributes`](#dashboard__list_account_attributes) | reads | The deployment admin |
+| [`dashboard__set_account_attribute`](#dashboard__set_account_attribute) | acts | The deployment admin, once loosened from May not |
+| [`dashboard__list_calendars`](#dashboard__list_calendars) | reads | The deployment admin |
+| [`dashboard__read_calendar`](#dashboard__read_calendar) | reads | The deployment admin |
 
 "An admin of a role" is `admin` on that role of the plugin, at **Manage**,
 held through the delegation (see [Admin per role](../concepts/access.md#admin-per-role));
@@ -285,11 +319,23 @@ caps; each access group's stricter level) and whether it needs a
 `service_account_id` its autonomous work runs as, its `name` and `state`
 (`active`, `disabled`, `removed`), the `level` chosen, and the level the
 account is `granted` on the role now; all but `role` empty where it runs as
-none. No tool changes any of it: grants are made at the
+none. From contract v22 (built, not released) also `connectivity`: for a
+plugin holding `connectivity`, its `connectivity_link` (the
+`connectivity_instance_id`, whether it is `available`, the
+`ems_instance_id` it is linked to, empty for none, and its `users`, each a
+`subject`, a `service_account_id` or a `user_group_id`); for a plugin
+holding `ems`, its `connectivity_links`, each in the same shape, and its
+`venue_account_map` (`ems_instance_id` and `mappings`, each a
+`connectivity_instance_id`, a `venue_account_code` and an `account_id`);
+empty for a plugin holding neither. See
+[Route orders through a connectivity plugin](../how-to/route-orders-through-a-connectivity-plugin.md).
+No tool changes any of it: grants are made at the
 page, by a deployment admin (see
 [Give people access](../how-to/administer-access.md)), levels at the
 page, by the plugin's admin, and from v21 what a role runs as at the page,
-by the role's admin.
+by the role's admin; from v22 a connectivity plugin's availability by a
+deployment admin, and its link and who may route through it by the `ems`'s
+admin, at the page.
 
 ### `dashboard__read_linkable_accounts`
 
@@ -620,6 +666,133 @@ never instructions.
 
 The call's record names its gate as `deployment admin` or `owner`.
 
+## Trading instructions and account attributes
+
+From contract v22, built, not released. The **Trading instructions** page
+(`/admin/trading-instructions`) and the Accounts tab's book part. See
+[The order lifecycle](../concepts/the-order-lifecycle.md#trading-instructions)
+and, at the page,
+[Set trading instructions and whether releases wait](../how-to/set-trading-instructions.md).
+
+The two acts are core acts at the setter's level: each can be prepared
+([`dashboard__prepare_call`](#dashboard__prepare_call)), and each is at
+**May not** for agents until the deployment admin loosens it. Each takes a
+`reason`, 1 to 2,000 characters, kept with the book's entry. A list answers
+`outcome: "read"`; a reason another person or agent wrote is screened as
+others' words. The book refuses and cancels nothing for an instruction:
+each plugin honours it.
+
+### `dashboard__list_trading_instructions`
+
+The Trading instructions page, read only: every instruction in force for a
+deployment admin, those naming a plugin they administer for a plugin's
+admin.
+
+**Input:** nothing.
+
+**Answer:** `instructions`, each with its `target` (the contract's own
+fields, only those set: `all_accounts`, `account_id`, `instance_id`,
+`subject`, `service_account_id`), `target_said` (the target in words, as
+the page shows it), `value` (`active`, `pause` or `stop`), `setter_level`
+(`deployment_admin` or `plugin_admin`), `reason`, `set_by`, the
+`entry_id` that set it and its `last_change` (`partition` and `sequence`);
+and `control_sequence`, the sequence of the trading instructions as of the
+read.
+
+### `dashboard__set_trading_instruction`
+
+The page's **Set an instruction** dialog.
+
+**Input:**
+
+| Argument | What it is |
+|---|---|
+| `target` | What it is on, the contract's fields, one target: `{"all_accounts": true}` (a deployment admin's); `{"instance_id": "…"}`, a plugin; or `account_id`, `subject` (a person, by their deployment-local subject) or `service_account_id`, each beside the plugin's `instance_id` where it is within one. A plugin's admin always names their plugin. A user group is not a target in v22, and `target.user_group_id` is refused |
+| `value` | `active`, `pause` or `stop` |
+| `reason` | Why, kept with the instruction |
+
+The level is stamped from the caller's access, never an argument: a
+deployment admin's, or a plugin admin's for a plugin they administer. A
+target outside the caller's reach is refused `not_permitted`, naming
+`target`.
+
+**Answer:** `instruction`, as the list answers each.
+
+```json
+{"target": {"instance_id": "desk-1"}, "value": "pause",
+ "reason": "Pausing the desk's new orders while the venue is degraded."}
+```
+
+### `dashboard__list_account_attributes`
+
+The Accounts tab's book part, read only: each account's attributes in the
+book. No account's positions or orders.
+
+**Input:** nothing.
+
+**Answer:** `accounts`, each with its `account_id`, `base_currency_code`,
+`lot_relief_default` (`first_in_first_out`, `last_in_first_out`,
+`highest_cost`, `lowest_cost` or `average_cost`, empty where not set),
+`waits_for_compliance` and `opening_balance_as_of`, the date its opening
+balance stands for, empty for none.
+
+### `dashboard__set_account_attribute`
+
+An account's **Edit**, **In the book**: one attribute at a time, each its own
+entry.
+
+**Input:** `account_id`, `reason`, and exactly one of `base_currency_code`
+(three capital letters), `lot_relief_default` (as above) or
+`waits_for_compliance` (`false` lets a release pass the gate without a
+compliance verdict).
+
+**Answer:** the account's `attributes` as they stand, and the `entry_id`.
+
+```json
+{"account_id": "ACC-01JA2Q3R4S5T6V7W8X9Y0Z1A2B", "waits_for_compliance": false,
+ "reason": "No compliance plugin covers this account; releases are reviewed by the desk."}
+```
+
+## The Calendars tab
+
+From contract v22, built, not released. The Instruments page's
+**Calendars** tab, at the deployment admin's level, read only: nothing sets
+a calendar in a deployment. See
+[Settlement calendars](../concepts/settlement-calendars.md).
+
+### `dashboard__list_calendars`
+
+The calendars and date rules the deployment holds, one line each at its
+latest version.
+
+**Input:** `cursor`, the `next_cursor` of the page before; `page_size`, 1
+to 200.
+
+**Answer:** `calendars`, each with its `calendar_id` (`CAL-…`), `name`,
+`kind` (`CALENDAR_KIND_CURRENCY`, `CALENDAR_KIND_TRADING` or
+`CALENDAR_KIND_SECURITIES_SETTLEMENT`), `version`, `coverage_to_date` and
+`refreshed_at_ns`; `rules`, each with its `kind`
+(`DATE_RULE_KIND_SETTLEMENT` or `DATE_RULE_KIND_SPOT`), `subject` (such as
+`US/equity`), `version` and `refreshed_at_ns`; and `next_cursor`, empty on
+the last page.
+
+### `dashboard__read_calendar`
+
+One calendar's days over a range, as the tab shows a year.
+
+**Input:** `calendar_id`; `from_date` and `to_date`, `YYYY-MM-DD`,
+inclusive, `to_date` on or after `from_date`; `as_of_ns`, a recorded time,
+absent or 0 for the latest version.
+
+**Answer:** `found`, false for a calendar the deployment does not hold yet,
+which is then asked of the platform; its `calendar_id` and `version`; its
+`weekends`, each with its `weekdays` (`WEEKDAY_SATURDAY`, …) and
+`valid_from_date`; the `days` listed in the range, each with its `date`,
+`kind` (`CALENDAR_DAY_KIND_CLOSED`, or `CALENDAR_DAY_KIND_OPEN` for a
+weekend day that is a business day), `name` and `source`; its `coverage`
+(`from_date`, `to_date`); and its `sources`, each with its `source_id`,
+`name`, `address` and `read_at_ns`. A read answers `outcome: "unchanged"`.
+
 ## Refusals
 
 | `reason` | When |
@@ -627,6 +800,7 @@ The call's record names its gate as `deployment admin` or `owner`.
 | `not_listed` | The tool is not listed through this delegation, such as a settings tool called by a person holding only `write`; recorded like any call. Also a plugin that has not reported, so its settings are not known yet, and, on `dashboard__set_plugin_settings`, an instance the delegation does not reach. From contract v18, also a tool that changes something added after a narrowed delegation was consented to, saying it waits for fresh consent from that client. |
 | `invalid_arguments` | An argument that does not read, or is not the tool's, by its path: a missing `note`, a secret's value (`secret.<name>`, `value.<name>`), a table's cell that does not read (`table.<name>[<row>].<column>`), an instance the delegation does not reach at that page's level, naming those it does. |
 | `not_administered` | A setting serving a role the person does not administer, at its path, naming the roles. |
+| `not_permitted` | From contract v22: a trading instruction on a target outside the caller's reach, at `target`, saying why; and a book's refusal sent with a permission status and no code. |
 | `REFUSAL_REASON_RECORD_CHANGED` | The settings, or from contract v18 a source priority, changed since `against_updated_at_ns` was read, at that argument. Nothing was changed: read them again. |
 | `prepare_only` | From contract v20: the act is at Prepare only for agents in this deployment, naming who set it. Prepare it with `dashboard__prepare_call`, and a person makes it. |
 | `second_pair_of_eyes` | From contract v20: the act needs a second pair of eyes; nobody makes it directly. Prepare it, and someone other than whoever prepared it makes it. |
@@ -647,7 +821,12 @@ prepared change is its own record in the dashboard. From contract v21
 each change to a service account, and to what a role
 runs as, is its own record in the dashboard, made at the page; a call a
 service account made is recorded on its own page, **Its calls**, not in
-anyone's Connected clients.
+anyone's Connected clients. From contract v22 (built, not released) a
+trading instruction or an account attribute set through a tool is an entry
+in the book, as one set at the page is, with the person, the delegation,
+the client and the reason; and each change to a connectivity plugin's
+availability, link or users, made at the page, is its own record in the
+deployment's configuration.
 
 Where a person sees it:
 
@@ -687,3 +866,8 @@ saying so, at the moment the deployment was upgraded.
   the Data sources page and its tools.
 - [Service accounts](../concepts/service-accounts.md): the users a plugin's
   autonomous work runs as, and `dashboard__list_service_accounts`.
+- [Set trading instructions and whether releases wait](../how-to/set-trading-instructions.md):
+  the trading instructions and account attributes, at the page and through
+  their tools (contract v22).
+- [Settlement calendars](../concepts/settlement-calendars.md): the
+  Calendars tab and its two tools (contract v22).

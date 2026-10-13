@@ -12,7 +12,7 @@ pip install open-meridian
 |---|---|
 | PyPI name | `open-meridian` |
 | Import name | `meridian` |
-| Version | 0.25.0 |
+| Version | 0.25.0; 0.26.0 built, not released |
 | Python | 3.11 or newer |
 | Dependencies | `grpcio>=1.68,<2`, `protobuf>=5.28,<7`, `jinja2>=3.1,<4` (from 0.10.0, for [pages](#pages)) |
 | Licence | Apache-2.0 |
@@ -20,7 +20,34 @@ pip install open-meridian
 !!! warning "Not `meridian-sdk`"
     The PyPI package `meridian-sdk` belongs to an unrelated company. Don't install it.
 
-A plugin pins the SDK exactly, `open-meridian==0.25.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.25.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls; from 0.12.0 to 0.13.0, from 0.13.0 to 0.14.0, from 0.19.0 to 0.20.0, from 0.20.0 to 0.21.0, from 0.21.0 to 0.22.0 and from 0.22.0 to 0.23.0, only the pins move, from 0.23.0 to 0.24.0 it rewrites the renamed roles (see [0.23.0 to 0.24.0](#0230-to-0240)), and from 0.24.0 to 0.25.0 only the pins move (see [0.24.0 to 0.25.0](#0240-to-0250)). `meridian plugin new` writes a plugin pinned to 0.19.0 from CLI 0.1.34, to 0.20.0 from CLI 0.1.35, to 0.21.0 from CLI 0.1.36, to 0.22.0 from CLI 0.1.37, to 0.23.0 from CLI 0.1.38, to 0.24.0 from CLI 0.1.39, and to 0.25.0 from CLI 0.1.41.
+A plugin pins the SDK exactly, `open-meridian==0.25.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.25.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls; from 0.12.0 to 0.13.0, from 0.13.0 to 0.14.0, from 0.19.0 to 0.20.0, from 0.20.0 to 0.21.0, from 0.21.0 to 0.22.0 and from 0.22.0 to 0.23.0, only the pins move, from 0.23.0 to 0.24.0 it rewrites the renamed roles (see [0.23.0 to 0.24.0](#0230-to-0240)), from 0.24.0 to 0.25.0 only the pins move (see [0.24.0 to 0.25.0](#0240-to-0250)), and from 0.25.0 to 0.26.0 (built, not released) only the pins move (see [0.25.0 to 0.26.0](#0250-to-0260)). `meridian plugin new` writes a plugin pinned to 0.19.0 from CLI 0.1.34, to 0.20.0 from CLI 0.1.35, to 0.21.0 from CLI 0.1.36, to 0.22.0 from CLI 0.1.37, to 0.23.0 from CLI 0.1.38, to 0.24.0 from CLI 0.1.39, to 0.25.0 from CLI 0.1.41, and to 0.26.0 from CLI 0.1.42 (being built).
+
+!!! note "0.26.0: contract v22, built, not released"
+    open-meridian 0.26.0 declares contract v22, built and not yet on PyPI:
+    [the order path](#the-order-path) and
+    [settlement calendars](#settlement-calendars). Each role on the order
+    path does its part through typed operations (`propose_order`,
+    `release_order`, `create_placement`, `report_execution` and the rest)
+    and hears the book's records (`receive(order_updated=...,
+    placement_updated=..., execution_recorded=...,
+    trading_instruction_changed=...)`); a refusal by the order's state, a
+    claim or a link is a `CommandRefused` with its code, and the order's
+    transition table ships as `meridian/transitions.json`. Every role works
+    out a date in core (`read_calendar`, `compute_date`). A version declares
+    the algorithms its autonomous work may name
+    (`Declaration(algorithms=[AlgorithmDeclaration(...)])`), and
+    [`runs_as(role, algorithm_id=...)`](#runs_as) names one; a
+    [`Caller`](#caller) carries `algorithm_id` and, for an `ems` or a
+    connectivity plugin, the connectivity plugins the user may route
+    through (`connectivity_instance_ids`). The order path's and the
+    calendars' operations are `preview`. Nothing a plugin calls changed
+    shape: `meridian plugin migrate` moves the pins (see
+    [0.25.0 to 0.26.0](#0250-to-0260)). It needs a runtime serving contract
+    v22.
+
+!!! note "TODO: 0.26.0 on PyPI"
+    Name the release date, the chart serving contract v22, and the CLI
+    release whose `plugin new` pins 0.26.0 (0.1.42) once they are released.
 
 !!! note "0.25.0: contract v21"
     open-meridian 0.25.0 declares contract v21. A plugin's autonomous work -- a scheduled sweep, a strategy, an agent
@@ -71,6 +98,28 @@ A plugin pins the SDK exactly, `open-meridian==0.25.0`, in its `pyproject.toml`.
     readers, a `Money` naming its instrument and real dates. It needs a
     runtime serving contract v18 (chart 0.1.292 or later), which refuses
     nothing a plugin on 0.21.0 sends. See [Plugin manifest](plugin-manifest.md).
+
+### 0.25.0 to 0.26.0 { #0250-to-0260 }
+
+Built, not released. `meridian plugin migrate --to 0.26.0` moves the pins
+and rewrites nothing: contract v22 adds, and changes the shape of nothing a
+plugin calls. Then, by hand where they apply:
+
+- **A suite test** meets two cases every role's suite now holds,
+  `reads-a-calendar` and `asks-for-a-settlement-date`: map each to a call of
+  `read_calendar` and `compute_date` (the role templates' `test_suite.py`
+  show both). A plugin holding `connectivity` or `oms` meets its role's
+  suite, and one holding `portfolio`, `ems`, `compliance`, `operations` or
+  `reporting` that role's order path cases.
+- **A settlement or value date your plugin works out itself** is asked of
+  core instead, with `compute_date`, and recorded with its basis (see
+  [Settlement calendars](#settlement-calendars)).
+- **Work the plugin does on its own that runs an algorithm** declares it,
+  `Declaration(algorithms=[AlgorithmDeclaration("twap-v1", "...")])`, and
+  names it, `meridian.runs_as(role, algorithm_id="twap-v1")`, keeping each
+  identifier stable across versions.
+- **A plugin that reads positions, lots or movement lines** finds a
+  `sleeve` on each, empty for an account's unsleeved part.
 
 ### 0.24.0 to 0.25.0 { #0240-to-0250 }
 
@@ -187,11 +236,14 @@ A plugin that serves pages declares them with [`meridian.Pages`](#pages) and pas
 | `roles` | module | [Each role's common part](#each-roles-common-part), from 0.24.0 |
 | `runs_as` | function | [A service account runs the plugin's autonomous work](#runs_as), from 0.25.0 |
 | `SubjectKind` | generated protobuf enum | [`Caller`](#caller): whom the claims vouch for, from 0.25.0 |
+| `AlgorithmDeclaration` | frozen dataclass | [Algorithms](#algorithms): one algorithm a version declares, from 0.26.0 (built, not released) |
+| `OrderLink`, `OrderChange`, `PlacementChange`, `AllocationInstruction`, `AllocationLine`, `Leg`, `Party`, `ReceiptQuote`, `StrategyInstruction`, `Finality`, `Fee`, `LocateAnswer`, `LocateUse`, `VenueCatalogue`, `VenueOrderType`, `VenueStrategy`, `StrategyParameter`, `VenueEligibility`, `Actor` | frozen dataclasses and a generated protobuf message | [The order path](#the-order-path), from 0.26.0 (built, not released) |
+| `DateBasis`, `DateCheck`, `DateRuleRef`, `SettlementDateInputs`, `SpotDateInputs`, `TenorDateInputs`, `Tenor`, `RollInputs`, `BusinessDayInputs` | frozen dataclasses and generated protobuf messages | [Settlement calendars](#settlement-calendars), from 0.26.0 (built, not released) |
 | `settings`, `setting`, `environment`, `sample_data` | decorator, functions | [Typed settings](#typed-settings), from 0.24.0 |
 | `CallerMiddleware` | ASGI middleware | [`CallerMiddleware`](#callermiddleware) |
 | `MeridianError`, `Refused`, `NoSidecar`, `NotRegistered`, `NotGranted`, `CallFailed`, `NotLinked`, `CommandRefused` | exceptions | [Exceptions](#exceptions); `CommandRefused` from 0.13.0, its `fields` from 0.14.0 |
 | `DEFAULT_ADDRESS` | `str` | `"127.0.0.1:9191"`, where a sidecar listens |
-| `SCHEMA_VERSION` | `str` | the contract version sent at registration: `"v21"` from 0.25.0, `"v20"` in 0.24.0, `"v19"` in 0.23.0, `"v18"` in 0.22.0 (no SDK declares v17, a revision of core's alone), `"v16"` in 0.21.0, `"v15"` in 0.20.0, `"v14"` in 0.19.0, `"v13"` in 0.18.0, `"v12"` in 0.17.0, `"v11"` in 0.16.0, `"v10"` in 0.15.0, `"v9"` in 0.14.0, `"v8"` in 0.13.0, `"v7"` in 0.12.0, `"v6"` in 0.11.0, `"v5"` in 0.10.0 and 0.10.1, `"v4"` in 0.9.0, `"v3"` in 0.8.0, `"v2"` before |
+| `SCHEMA_VERSION` | `str` | the contract version sent at registration: `"v22"` from 0.26.0 (built, not released), `"v21"` in 0.25.0, `"v20"` in 0.24.0, `"v19"` in 0.23.0, `"v18"` in 0.22.0 (no SDK declares v17, a revision of core's alone), `"v16"` in 0.21.0, `"v15"` in 0.20.0, `"v14"` in 0.19.0, `"v13"` in 0.18.0, `"v12"` in 0.17.0, `"v11"` in 0.16.0, `"v10"` in 0.15.0, `"v9"` in 0.14.0, `"v8"` in 0.13.0, `"v7"` in 0.12.0, `"v6"` in 0.11.0, `"v5"` in 0.10.0 and 0.10.1, `"v4"` in 0.9.0, `"v3"` in 0.8.0, `"v2"` before |
 
 The module `meridian.testing` holds [`PageClient`](#testing) and [`heartbeat`](#testing), for a plugin's own tests.
 
@@ -476,6 +528,13 @@ From 0.12.0. A plugin whose roles hear rows receives them with `plugin.receive`,
 | `want_withdrawn` | `WantWithdrawn` | A `WantWithdrawnEvent`, `want_id` and `dataset`: a standing want no reader asked for within its dataset's cadence. From 0.22.0, `preview`. | W10.7 |
 | `trades_recorded` | `TradesRecorded` | A `TradesRecordedEvent`: one [`Trade`](typed-operations.md#trade) the lake recorded, in `trade`, for a subject named in `subjects=`. Heard by `signal` and `ems`, every one, never conflated. Caught up by [`list_trades`](typed-operations.md#list_trades) after the watermark last seen. From 0.23.0, `preview`. | W10.5 |
 | `quotes_recorded` | `QuotesRecorded` | A `QuotesRecordedEvent`: one [`Quote`](typed-operations.md#quote), in `quote`, latest value first per subject, dataset, venue and asset. Heard by `signal` and `ems`. Caught up by [`list_quotes`](typed-operations.md#list_quotes). From 0.23.0, `preview`. | W10.5 |
+| `order_updated` | `OrderUpdated` | An `OrderUpdatedEvent`: the order whole, with what changed. Heard by `oms`, `ems`, `compliance`, `portfolio`, `operations` and `reporting` within their read scopes. Caught up by [`list_orders`](typed-operations.md#list_orders). From 0.26.0 (built, not released), `preview`. | W11.13 |
+| `placement_updated` | `PlacementUpdated` | A `PlacementUpdatedEvent`: the placement whole. Heard by the `ems`, `oms` and `compliance` within scope, and by the connectivity plugin it names alone of its role. From 0.26.0 (built, not released), `preview`. | W11.13 |
+| `execution_recorded` | `ExecutionRecorded` | An `ExecutionRecordedEvent`: an execution, never edited; a bust or correction is another, naming the one it supersedes. Heard by the order's hearers. From 0.26.0 (built, not released), `preview`. | W11.13 |
+| `unplaced_fact_recorded` | `UnplacedFactRecorded` | An `UnplacedFactRecordedEvent`: a venue's fact the book could not place, with its reason. Heard by `operations`. From 0.26.0 (built, not released), `preview`. | W11.13 |
+| `trading_instruction_changed` | `TradingInstructionChanged` | A `TradingInstructionChangedEvent`: an instruction set, whatever the plugin's accounts. Heard by `oms`, `ems`, `connectivity`, `portfolio` and `compliance`; caught up by [`list_trading_instructions`](typed-operations.md#list_trading_instructions), a read naming no account. From 0.26.0 (built, not released), `preview`. | W11.16 |
+| `locate_updated` | `LocateUpdated` | A `LocateUpdatedEvent`: a locate and its uses. Heard by `compliance`, the `oms` and `portfolio`; caught up by [`list_locates`](typed-operations.md#list_locates). From 0.26.0 (built, not released), `preview`. | W11.18 |
+| `report_venue_catalogue` | `ReportVenueCatalogue` | A `VenueCatalogueEvent`: a connectivity plugin's venue catalogue for one venue account code, latest per plugin and code. Heard by the `ems` and the `oms`; read again with [`read_venue_catalogue`](typed-operations.md#read_venue_catalogue) on start and after a loss. From 0.26.0 (built, not released), `preview`. | W11.20 |
 
 ```python
 async def receive(
@@ -495,6 +554,14 @@ async def receive(
     want_withdrawn: Callable[[Heard[WantWithdrawnEvent]], Awaitable[None]] | None = None,
     trades_recorded: Callable[[Heard[TradesRecordedEvent]], Awaitable[None]] | None = None,
     quotes_recorded: Callable[[Heard[QuotesRecordedEvent]], Awaitable[None]] | None = None,
+    # from 0.26.0 (built, not released):
+    order_updated: Callable[[Heard[OrderUpdatedEvent]], Awaitable[None]] | None = None,
+    placement_updated: Callable[[Heard[PlacementUpdatedEvent]], Awaitable[None]] | None = None,
+    execution_recorded: Callable[[Heard[ExecutionRecordedEvent]], Awaitable[None]] | None = None,
+    unplaced_fact_recorded: Callable[[Heard[UnplacedFactRecordedEvent]], Awaitable[None]] | None = None,
+    trading_instruction_changed: Callable[[Heard[TradingInstructionChangedEvent]], Awaitable[None]] | None = None,
+    locate_updated: Callable[[Heard[LocateUpdatedEvent]], Awaitable[None]] | None = None,
+    report_venue_catalogue: Callable[[Heard[VenueCatalogueEvent]], Awaitable[None]] | None = None,
     seed: bool = True,
     subjects: Sequence[str] = (),
 ) -> None
@@ -531,6 +598,15 @@ A plugin catches up from the store, never from the bus, and the SDK does it: a h
 **The lake's rows, from 0.22.0.** A price or a bar is heard only for the subjects named in `subjects=`, by their instrument IDs, at most 500, and none without them, from the datasets the plugin is entitled to. Each is delivered latest value first: the sidecar keeps one value waiting per key (a price's dataset, subjects, venue and kind; a bar's dataset, subjects, venue and interval start), a later value replacing one not yet delivered, and the SDK hands on the newest per key, never an older value after a newer one. On start, after a `Lost` and after a broken stream it reads them again by `list_prices` or `list_bars`, latest first and side by side, marked `caught_up`. Each carries its dataset in [`Heard.dataset`](#heard). A plugin built before 0.22.0, naming no `subjects`, is unchanged. From 0.23.0 a price's key holds the asset it is in too, so BTC priced in USD and in USDC on one venue are two values, neither replacing the other.
 
 **Trades and quotes, from 0.23.0.** Quotes are heard as prices are: latest value first per subject, dataset, venue and asset, read again at the latest after a loss. Trades are handed on **every one**, once, in their dataset's order, never dropped for a later one. After a `Lost` naming them, or a broken stream, the SDK reads the trades recorded after the watermark it last saw (per dataset, the last trade it handed on), side by side for the subjects named, and hands them on marked `caught_up`, a late print among them, before anything heard after; a trade the stream delivers after the read had it is handed on once. On start it reads none: there is no latest trade to begin from, so a plugin wanting the day's trades reads them by range with [`list_trades`](typed-operations.md#list_trades). Each carries its dataset in `Heard.dataset`.
+
+**The order path's rows, from 0.26.0** (built, not released). A placement is
+delivered only to the connectivity plugin instance it names; no other
+instance of the role hears it. The trading instructions name no account:
+each is heard by every subscriber whatever its read scope, kept under no
+account, and caught up after a gap or a loss by a read naming none
+(`list_trading_instructions`, since the watermark last seen). The venue's
+catalogue is delivered latest per connectivity plugin and venue account
+code, a later one replacing one not yet delivered.
 
 Everything heard is within the plugin's read scope, as the [reads](typed-operations.md#list_custodial_positions) are, and a plugin whose read scope is empty hears nothing. It reads and hears for its whole scope, as itself: serve each person from it with `caller.read`, as always.
 
@@ -928,6 +1004,177 @@ From 0.23.0, contract v19, `preview`. Still typed operations only: no WebSocket 
 
 From 0.22.0 a [`Money`](typed-operations.md#money) names its cash instrument: `Money(Decimal("12.50"), "USD")` keeps its shape, and core resolves the code; a token is named by `instrument_id` alone. Every field the dictionary types `date` takes a `datetime.date` or its ISO text, and refuses text that is no date and a `datetime`. See [Money and instruments](../concepts/money-and-instruments.md) and [Dates and time](../concepts/dates-and-time.md).
 
+## The order path { #the-order-path }
+
+From 0.26.0, contract v22, built, not released. An order reaches a venue
+through the book. Each role does its part through
+[typed operations](typed-operations.md#the-order-path), one per row it may
+send, and hears the book's records as they change (see [Receive](#receive));
+the book holds every order, placement, execution and charge, and alone
+decides what an order's state allows. See
+[The order lifecycle](../concepts/the-order-lifecycle.md). Every operation
+here is `preview`.
+
+```python
+# portfolio, or the oms: propose. A unit quantity or a cash quantity, never both.
+await plugin.propose_order(
+    account_id="ACC-1", instrument_id=aapl, side="buy", quantity=Decimal("10"),
+    order_type="limit", limit_price=Money(Decimal("227.50"), "USD"),
+    time_in_force="day", idempotency_key="propose:ACC-1:pm-ticket-4471",
+    acting_for=request.caller.header,
+)
+
+# the oms: release it to be worked.
+await plugin.release_order(order_id=order_id, idempotency_key=f"release:{order_id}",
+                           acting_for=request.caller.header)
+
+# the ems: claim it, and place at a connectivity plugin linked to it, with the
+# venue account code its map holds for the account.
+await plugin.set_working_condition(order_id=order_id, condition="claimed", set=True,
+                                   acting_for=request.caller.header)
+await plugin.create_placement(
+    order_id=order_id, connectivity_instance_id="venue-1", venue_account_code="X12345",
+    quantity=Decimal("10"), idempotency_key=f"place:{order_id}:1",
+    acting_for=request.caller.header,
+)
+
+# a connectivity plugin: say what the venue said, each with its raw record.
+await plugin.report_placement(
+    placement_id=placement_id, event="acknowledged", venue_order_id="V-881",
+    raw_record=plugin.raw_record(key),
+)
+```
+
+- **Who calls what.** `compliance` checks and decides (`record_check`,
+  `decide_approval`); an `ems` works a strategy in house as child orders of a
+  released order (`propose_order(link=OrderLink(kind="split",
+  parent_order_id=...))`); a connectivity plugin reports fills, busts and
+  charges (`report_execution`, `report_charge`), records an order the venue
+  originated (`record_order`) and a locate (`record_locate`), and publishes
+  its venue's catalogue (`report_venue_catalogue`), which an `oms` and an
+  `ems` read (`read_venue_catalogue`). An `ems`'s admin page maps an account
+  to a venue account code with `map_venue_account`, acting for the admin
+  viewing it.
+- **Every command but a fact report acts for someone**: a person, through
+  `acting_for=request.caller.header`, or the role's
+  [service account](#runs_as). A fact a connectivity plugin reports names
+  nobody.
+- **A placement reaches only the connectivity plugin it names.** An `ems`
+  page offers the instances in `request.caller.connectivity_instance_ids`;
+  the sidecar checks the placement against them whatever the page draws,
+  and the book refuses and records one at any other
+  (`REFUSAL_REASON_CONNECTIVITY_NOT_ALLOWED`).
+- **A connectivity plugin states an execution's settlement date**: the
+  venue's, or one asked of core with [`compute_date`](#settlement-calendars),
+  carried with its basis (`computed_settlement_date`,
+  `settlement_date_basis`). A fill with neither is refused, naming
+  `settlement_date`.
+- **The trading instructions** reach every subscriber whatever its
+  accounts. Read those in force on start with `list_trading_instructions`
+  and hear each change with `receive(trading_instruction_changed=...)`;
+  honour a pause and a stop as your plugin's role requires (see
+  [Trading instructions](../concepts/the-order-lifecycle.md#trading-instructions)).
+- **Refusals.** One by the order's state, a claim or a link is a
+  [`CommandRefused`](#exceptions) with its code: `REFUSAL_REASON_ORDER_STATE`,
+  `_CLAIMED`, `_CHECK_BLOCKS`, `_APPROVAL_REQUIRED`, `_ALLOCATION_UNBALANCED`,
+  `_IDENTIFIER_IN_USE`, `_CONNECTIVITY_NOT_ALLOWED`, `_CONNECTIVITY_LINKED`.
+  A command naming an order or a placement by its ID whose account is
+  outside the plugin's write scope or the person's write access is
+  `NotGranted`, with no code. An order stating both or neither of
+  `quantity` and `cash_quantity` is `CallFailed`, kind `"invalid"`, naming
+  both in `.fields`.
+
+**The transition table.** The order's states, conditions and transitions
+are one table, which the SDK carries as published,
+`meridian/transitions.json`:
+
+```python
+from importlib.resources import files
+import json
+
+table = json.loads(files("meridian").joinpath("transitions.json").read_text())
+```
+
+### Algorithms { #algorithms }
+
+A version declares the algorithms its autonomous work may name, each
+identifier stable across versions and reinstalls, with a description a
+person reads on the plugin's page (1 to 1,024 characters), and the work
+names the one it runs; the book records it on each entry's service account
+actor, where a `reporting` plugin reads which algorithm decided or executed:
+
+```python
+from meridian import AlgorithmDeclaration
+from meridian.declaration import Declaration
+
+DECLARATION = Declaration(algorithms=[
+    AlgorithmDeclaration("twap-v1", "Time-weighted slices over the order's window."),
+])
+
+async with meridian.runs_as("ems", algorithm_id="twap-v1") as act:
+    await act("work_order", {"order_id": order_id}, reason="TWAP slice 3 of 12.")
+```
+
+Each identifier is declared once, with no spaces around it. One the version
+does not declare is refused by `runs_as` before anything is sent, as the
+sidecar refuses it (`CallFailed`, kind `"invalid"`, naming `algorithm_id`).
+An empty `algorithm_id` names none, as a call before 0.26.0 did; a person's
+act names none. The declaration's algorithms are uploaded with it and shown
+on the plugin's **Summary**.
+
+## Settlement calendars { #settlement-calendars }
+
+From 0.26.0, contract v22, built, not released. A plugin never works out a
+settlement or value date itself: it reads a calendar's days
+(`read_calendar`) or asks core for the date (`compute_date`), answered with
+the rule and calendar versions it was worked out on, the same answer for
+every plugin. Any role calls both, whatever its accounts. The SDK carries
+the two operations and no calendar library. See
+[Settlement calendars](../concepts/settlement-calendars.md).
+
+```python
+from meridian.plugin.v1 import operations_pb2 as ops
+
+answer = await plugin.compute_date(
+    settlement=meridian.SettlementDateInputs(instrument_id=aapl, trade_date="2026-10-09")
+)
+if answer.outcome == ops.DATE_OUTCOME_COMPUTED:
+    settles = answer.date                            # "2026-10-13": Columbus Day skipped
+    basis = answer.basis                             # the rule and each calendar, with versions
+
+await plugin.compute_date(spot=meridian.SpotDateInputs(pair=[eur, usd], trade_date="2027-03-24"))
+await plugin.compute_date(
+    tenor=meridian.TenorDateInputs(pair=[usd, jpy], tenor=meridian.Tenor(count=1, unit="month"),
+                                   trade_date=date(2026, 10, 30))
+)
+days = await plugin.read_calendar(calendar_id=cal, from_date="2026-10-01", to_date="2026-10-31")
+```
+
+`compute_date` takes exactly one question -- `settlement`, `spot`, `tenor`,
+`roll` (a date rolled by a convention on a set of calendars) or
+`business_day` (whether a date is a business day on a set of calendars) --
+and `as_of_ns`, a recorded time, for the versions in force then; 0 for the
+latest. Its answer's `outcome` is one of:
+
+| `outcome` | Means |
+|---|---|
+| `DATE_OUTCOME_COMPUTED` | `date`, with its `basis` |
+| `DATE_OUTCOME_CALENDAR_NOT_HELD` | A calendar is not held yet: core asks the platform for it; ask again later |
+| `DATE_OUTCOME_OUTSIDE_COVERAGE` | A day the question needs is outside a calendar's coverage; nothing is computed |
+| `DATE_OUTCOME_RULE_NOT_HELD` | No rule is held for the subject yet, asked of the platform as a calendar is |
+
+A malformed question is refused, `CallFailed` of kind `"invalid"`, naming
+the field. `read_calendar` answers a calendar's weekends, listed days (each
+closed weekday or weekend business day, with its name and source),
+coverage, sources and version over the range, as of a recorded time or its
+latest version; one not held is answered not found and asked of the
+platform.
+
+A value a plugin records from the date read carries the provenance
+**computed**, with the date's basis (`Provenance.date_basis`), since a date
+core worked out is not the plugin's own rule. Every role's suite holds
+`reads-a-calendar` and `asks-for-a-settlement-date`.
+
 ## Types
 
 All the dataclasses are frozen.
@@ -1170,6 +1417,8 @@ From 0.20.0, contract v15, a person holds a level on each role of a plugin, and 
 | `second_pair_of_eyes` | `frozenset[str]` | The plugin's acts whose second pair of eyes is on for this person now, by tool name: hide Save for them and offer Prepare. For showing only: the dashboard refuses a direct make whatever the page draws. Added in 0.24.0. |
 | `subject_kind` | `int`, a `SubjectKind` | Whom the claims vouch for: `SUBJECT_KIND_UNSPECIFIED`, a person, as every caller before contract v21; `SUBJECT_KIND_SERVICE_ACCOUNT`, a [service account](../concepts/service-accounts.md), set by the dashboard only for an act's route reached for a call it admitted for the role's service account (see [A service account runs the plugin's autonomous work](#runs_as)). Added in 0.25.0. |
 | `owner_subject` | `str` | A service account's owner when the call was admitted, the person answerable for it; empty for a person. Added in 0.25.0. |
+| `algorithm_id` | `str` | The algorithm a service account's call named, one of the version's declared [algorithms](#algorithms); empty for a person and where the call named none. Added in 0.26.0 (built, not released). |
+| `connectivity_instance_ids` | `frozenset[str]` | For an `ems` or a connectivity plugin, the connectivity plugin instances this user may route through for it, worked out by the dashboard from the links the `ems`'s admin made: for showing which may be chosen. It names the instances, never the person's user groups; the sidecar checks a placement against it whatever the page draws. Empty for every other plugin. Added in 0.26.0 (built, not released). |
 
 The levels are the same for every plugin, granted in the deployment's access groups. A plugin names no parts of itself, so there is nothing finer to ask than, from 0.20.0, the person's level on each of its roles, which are the deployment's, not the plugin's. The sidecar checks every command sent for a person again, whatever the plugin believes: it admits one only in a session at `write`, and from contract v15 only by their `write` on a role whose grants include the command, the account among that role's write accounts, refusing otherwise and naming the role. See [Access](../concepts/access.md#access-per-role).
 
@@ -1404,10 +1653,12 @@ else:                                            # "prepared": a person makes it
     log.info("prepared %s for the people who may make it", reply.prepared_call_id)
 ```
 
-**`meridian.runs_as(role, *, plugin=None)`** is an async context. Entered,
+**`meridian.runs_as(role, *, algorithm_id="", plugin=None)`** is an async context. Entered,
 it holds the plugin `connect` registered (or the one `plugin=` names) and
 refuses, before anything is sent, a role the plugin was not launched with
-(`ValueError`) or no registered plugin (`NotRegistered`). Inside it, **`await
+(`ValueError`), no registered plugin (`NotRegistered`), or from 0.26.0
+(built, not released) an `algorithm_id` its version does not declare
+(`ValueError`; see [Algorithms](#algorithms)). Inside it, **`await
 act(tool_name, arguments, *, reason)`** calls one act:
 
 | Argument | Meaning |
@@ -1540,13 +1791,13 @@ client.assert_no_account_data("AAPL", "125", "12,500.00")  # what the stand-in h
 | `post(path, level, form=None, *, headers=None, roles=None)` | A form posted from the plugin's page, carrying its CSRF token back unless `form` gives one of its own. `headers`, from 0.10.1, sends more, such as the `Referer` of the page it was posted from. `roles`, from 0.20.0, narrows the session as `caller` does. |
 | `request(method, path, level, *, form=None, query=None, headers=None, roles=None)` | The request as given, with no token added: for testing that one without a token, or with somebody else's, is refused. `roles` as `post`'s. |
 | `caller(level, *, roles=None, deployment_admin=None)` | The client's person, as a `Caller` in a session at `level`: a deployment admin as the client was made, unless `deployment_admin` says (from 0.10.1). From 0.20.0 the session carries an entry for each of the client's roles at `level`, or for those `roles` names; a mapping gives each its own level within the button, `{"operations": "write", "custody": "read"}` under Open. A role the client was not made with raises `ValueError`, and so does a level the button cannot carry: under Open a role is at `write` or `read`, under View at `read`, under Manage at `admin`. |
-| `call_tool(name, arguments=None, *, level=None, ..., roles=None, subject=None, subject_kind=..., owner_subject="")` | Calls a tool as the deployment's `/mcp` would; see [Offer your plugin's pages to agents](../how-to/offer-your-pages-to-agents.md#test-it-as-the-surface-calls-it). `roles`, from 0.20.0, as `caller`'s. From 0.25.0, `subject_kind=meridian.SubjectKind.SUBJECT_KIND_SERVICE_ACCOUNT` calls it as the dashboard calls an act it admitted for a role's [service account](#runs_as): `subject` its `SA-` ID (the client's person's otherwise), `owner_subject` the person answerable for it, and no delegation and no client. |
+| `call_tool(name, arguments=None, *, level=None, ..., roles=None, subject=None, subject_kind=..., owner_subject="")` | Calls a tool as the deployment's `/mcp` would; see [Offer your plugin's pages to agents](../how-to/offer-your-pages-to-agents.md#test-it-as-the-surface-calls-it). `roles`, from 0.20.0, as `caller`'s. From 0.25.0, `subject_kind=meridian.SubjectKind.SUBJECT_KIND_SERVICE_ACCOUNT` calls it as the dashboard calls an act it admitted for a role's [service account](#runs_as): `subject` its `SA-` ID (the client's person's otherwise), `owner_subject` the person answerable for it, and no delegation and no client. From 0.26.0 (built, not released), `algorithm_id` the algorithm its work named. |
 | `every_page()` | Each declared page, in order, under Manage, Open and View: a list of `Rendered`, each with `page`, `level` and `response`, 200 where the page serves the level and 403 where it does not. On a client made with roles, from 0.20.0, under each level for each role alone and for all of them together, each `Rendered` naming them in `roles`. |
 | `assert_no_account_data(*held)` | Fails, naming the page and what it showed, when under Manage a page at `admin` does not answer 200, any other page does not answer 403, or a page at `admin` shows any of `held`, as given or as a template escapes it. `held` is the account data the test put where the plugin reads it: holdings, quantities, values, balances, a statement's rows. Called with nothing to look for, it raises `ValueError`. |
 
 `meridian.testing.heartbeat(*, healthy=True, detail="", figures=())`, from 0.11.0, is the heartbeat a plugin's sidecar receives from a plugin reporting these: its figures as the wire carries them, in the plugin's order. It raises as setting `plugin.figures` does, so a test of the figures a plugin computes asserts on it, or on the refusal. See [Figures](#figures).
 
-`meridian.testing.caller_header(level, *, read=(), write=(), subject=..., display_name=..., deployment_admin=False, delegation_id="", client_name="", tool_name="", roles=())` makes the header alone, for a test that serves the pages another way. `delegation_id` and `client_name`, from 0.14.0, are a person's who came through a client rather than a browser. `roles`, from 0.20.0, are the roles the session carries an entry for, as `caller`'s, each role's accounts as positions in the claims' read accounts, as the dashboard mints them. `subject_kind` and `owner_subject`, from 0.25.0, make it a service account's, `subject` its `SA-` ID. It is unsigned: only a plugin's tests read it, never a sidecar.
+`meridian.testing.caller_header(level, *, read=(), write=(), subject=..., display_name=..., deployment_admin=False, delegation_id="", client_name="", tool_name="", roles=())` makes the header alone, for a test that serves the pages another way. `delegation_id` and `client_name`, from 0.14.0, are a person's who came through a client rather than a browser. `roles`, from 0.20.0, are the roles the session carries an entry for, as `caller`'s, each role's accounts as positions in the claims' read accounts, as the dashboard mints them. `subject_kind` and `owner_subject`, from 0.25.0, make it a service account's, `subject` its `SA-` ID. `algorithm_id` and `connectivity_instance_ids`, from 0.26.0 (built, not released), are the algorithm a service account's call named and the connectivity plugins the user may route through, for an `ems`'s or a connectivity plugin's tests. It is unsigned: only a plugin's tests read it, never a sidecar.
 
 A plugin holding several roles holds each page to them in its tests:
 
@@ -1596,10 +1847,10 @@ Every exception carries the sidecar's own words, so a log line says whether the 
 | `Refused` | `reason: str` | `connect`: the sidecar declined registration, for example because access control has not loaded, the role carries no grants, or the schema does not match. A refusal is a statement about configuration. It is not retried, and asking again changes nothing. |
 | `NoSidecar` | `address: str`, `waited_seconds: float` | `connect`: no sidecar answered at `address` within `wait` seconds. It may still be starting, or not be there at all. |
 | `NotRegistered` | | Any method, after `leave()`. |
-| `NotGranted` | `topic: str`, `reason: str`, `fields: tuple[str, ...]` | A typed operation was refused permission. `topic` holds the operation's name (for example `"RecordHolding"`), and `reason` names what was missing. `fields`, from 0.25.0, names the fields the refusal is about where the sidecar named any, such as `role` or `tool_name` from [`runs_as`](#runs_as); empty otherwise. |
-| `CallFailed` | `topic: str`, `kind: str`, `detail: str`, `fields: tuple[str, ...]` | A typed operation did not produce an answer. `topic` holds the operation's name. `kind` says which failure it was; see [Typed operations](typed-operations.md#errors). From 0.25.0 `fields` names the fields a refusal is about where the sidecar named any, and `kind` is `"unimplemented"` from [`runs_as`](#runs_as) beside a sidecar older than contract v21. |
+| `NotGranted` | `topic: str`, `reason: str`, `fields: tuple[str, ...]` | A typed operation was refused permission. `topic` holds the operation's name (for example `"RecordHolding"`), and `reason` names what was missing. `fields`, from 0.25.0, names the fields the refusal is about where the sidecar named any, such as `role` or `tool_name` from [`runs_as`](#runs_as); empty otherwise. From 0.26.0 (built, not released) also the book's refusal of a command naming an order, a placement, a change request or a locate by its ID whose account is outside the plugin's write scope or the person's write access: no code, nothing changed. |
+| `CallFailed` | `topic: str`, `kind: str`, `detail: str`, `fields: tuple[str, ...]` | A typed operation did not produce an answer. `topic` holds the operation's name. `kind` says which failure it was; see [Typed operations](typed-operations.md#errors). From 0.25.0 `fields` names the fields a refusal is about where the sidecar named any, and `kind` is `"unimplemented"` from [`runs_as`](#runs_as) beside a sidecar older than contract v21. From 0.26.0 (built, not released) the order path's and the calendars' refusals of kind `"invalid"` name their fields: both `quantity` and `cash_quantity` for an order stating both or neither, `target.user_group_id`, `algorithm_id` for an algorithm the version does not declare, `settlement_date` for a fill stating none. |
 | `NotLinked` | as `CallFailed`, with `kind="refused"` | A typed operation named an external account nobody has linked to an account, so nothing was recorded for it. A subclass of `CallFailed`, so code that caught `CallFailed` still catches it. Raised only when the refusal carries the code `REFUSAL_REASON_EXTERNAL_ACCOUNT_NOT_LINKED`. Not worth retrying: the next statement after an admin links the account records it. Added in 0.7.0; see [Typed operations](typed-operations.md#an-unlinked-external-account). |
-| `CommandRefused` | as `CallFailed`, with `kind="refused"`; `reason: int`, `reason_name: str`, `fields: tuple[str, ...]` | The book of record refused a command with a code of its own, such as `REFUSAL_REASON_OPENING_BALANCE_RECORDED`; `reason` is the code's number and `reason_name` its name. `fields`, from 0.14.0, names each field an incomplete entry left out, by its path in the call (`positions[0].settled_quantity`, `positions[1].lots[0].terms.cost`), for `REFUSAL_REASON_INCOMPLETE`, and is empty for every other refusal. A subclass of `CallFailed`. Not retried: the same command meets the same refusal. Added in 0.13.0; see [Typed operations](typed-operations.md#the-books-refusals). From 0.21.0 also the sidecar's refusal of a deletion inside the deployment's hold, `REFUSAL_REASON_WITHIN_HOLD`, from [`delete_unit()`](#delete_unit): the unit is kept, and a later pass may try again once the hold has passed. |
+| `CommandRefused` | as `CallFailed`, with `kind="refused"`; `reason: int`, `reason_name: str`, `fields: tuple[str, ...]` | The book of record refused a command with a code of its own, such as `REFUSAL_REASON_OPENING_BALANCE_RECORDED`; `reason` is the code's number and `reason_name` its name. `fields`, from 0.14.0, names each field an incomplete entry left out, by its path in the call (`positions[0].settled_quantity`, `positions[1].lots[0].terms.cost`), for `REFUSAL_REASON_INCOMPLETE`, and is empty for every other refusal. A subclass of `CallFailed`. Not retried: the same command meets the same refusal. Added in 0.13.0; see [Typed operations](typed-operations.md#the-books-refusals). From 0.21.0 also the sidecar's refusal of a deletion inside the deployment's hold, `REFUSAL_REASON_WITHIN_HOLD`, from [`delete_unit()`](#delete_unit): the unit is kept, and a later pass may try again once the hold has passed. From 0.26.0 (built, not released) the order path's codes beside `ABORTED`: `REFUSAL_REASON_ALLOCATION_UNBALANCED`, `_APPROVAL_REQUIRED`, `_CHECK_BLOCKS`, `_CLAIMED`, `_ORDER_STATE`, `_IDENTIFIER_IN_USE`, `_CONNECTIVITY_NOT_ALLOWED` and `_CONNECTIVITY_LINKED`; and an `ems`'s mapping naming an account not granted to it, `REFUSAL_REASON_ACCOUNT_NOT_LINKABLE`, beside `FAILED_PRECONDITION`. See [The order lifecycle](../concepts/the-order-lifecycle.md#refusals). |
 
 The sidecar's status is mapped onto these for typed operations:
 

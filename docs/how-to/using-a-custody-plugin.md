@@ -20,6 +20,15 @@ where this page names a setting or a page only SnapTrade has, it says so.
     granted to it, and every act names its check tool. SnapTrade 0.13.1 is
     built on contract v18.
 
+!!! note "TODO: SnapTrade's connectivity (contract v22)"
+    SnapTrade gains the `connectivity` role in its v22 version, built and
+    tested against a simulated venue only: trading enabled per connection,
+    orders converted at the edge, what the brokerage cannot do for an
+    account rejected `unsupported`, an unknown outcome resolved by asking
+    the brokerage, never by resending. Name its version and describe
+    enabling trading on a connection once built and released; until then
+    see [Route orders through a connectivity plugin](route-orders-through-a-connectivity-plugin.md).
+
 ## The first-use path
 
 | # | Step | Whose | Where |

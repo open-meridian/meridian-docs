@@ -115,6 +115,8 @@ nav:
       - Tickets and the inbox: concepts/tickets-and-the-inbox.md
       - Prepared changes: concepts/prepared-changes.md
       - Service accounts: concepts/service-accounts.md
+      - The order lifecycle: concepts/the-order-lifecycle.md
+      - Settlement calendars: concepts/settlement-calendars.md
       - Development deployments: concepts/development-deployments.md
   - How-to:
       - how-to/index.md
@@ -141,6 +143,8 @@ nav:
       - Offer your pages to agents: how-to/offer-your-pages-to-agents.md
       - Let your agent manage a plugin: how-to/let-your-agent-manage-a-plugin.md
       - Run a plugin's work as a service account: how-to/run-a-plugins-work-as-a-service-account.md
+      - Route orders through a connectivity plugin: how-to/route-orders-through-a-connectivity-plugin.md
+      - Set trading instructions: how-to/set-trading-instructions.md
       - Advising on tickets: how-to/advise-on-tickets.md
       - Working your tickets: how-to/work-your-tickets.md
       - Release a plugin version: how-to/release-a-plugin.md

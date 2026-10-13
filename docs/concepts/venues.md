@@ -73,6 +73,12 @@ new record in the venue master, never a change to the contract.
   in place of its MIC: a segment's venue where the listing is on one. The
   instrument's `exchange_mic` is deprecated from v18 and read until every
   record carries a venue ID.
+- **On the order path**, from contract v22 (built, not released): a
+  placement's destination, set by the `ems`, and an execution's place of
+  execution, reported by the connectivity plugin, each a venue ID resolved
+  at the edge; a connectivity plugin resolves and reports a missing venue
+  as a data plugin does. A trading calendar names the venues that follow
+  it (see [Settlement calendars](settlement-calendars.md)).
 
 ## Related
 

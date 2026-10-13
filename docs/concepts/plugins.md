@@ -92,6 +92,11 @@ plugin: see [Using a data plugin](../how-to/using-a-data-plugin.md),
 [an operations plugin](../how-to/using-an-operations-plugin.md) and
 [a reporting plugin](../how-to/using-a-reporting-plugin.md).
 
+From contract v22 (built, not released) `portfolio`, `oms`, `ems`,
+`connectivity` and `compliance` have the order path's operations, each
+role's duties kept apart in the records whichever plugins hold them; see
+[The order lifecycle](the-order-lifecycle.md#who-does-what).
+
 Each role's entry, with its persona, its duties, what it leaves to which other
 role and what it holds today, is on [Roles](roles.md), with the principles a
 plugin must fit and the method that maps an idea for a plugin to the least

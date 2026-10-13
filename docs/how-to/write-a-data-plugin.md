@@ -26,6 +26,15 @@ and holds it to the suite. How a person then uses it is
     chart 0.1.299 or later), whose move from 0.24.0 changes only the
     pins.
 
+!!! note "Contract v22: built, not released"
+    open-meridian 0.26.0 (contract v22) adds two cases to every role's
+    suite, the data suite's among them: `reads-a-calendar` and
+    `asks-for-a-settlement-date` (see [below](#hold-it-to-the-suite)). A
+    dataset may also name its [settlement calendar](../concepts/settlement-calendars.md)
+    (`calendar_id`), which the lake applies nothing by in v22. CLI 0.1.42,
+    being built, is to write the template on 0.26.0, its suite test mapping
+    both cases.
+
 ## Make the plugin
 
 ```sh
@@ -258,6 +267,24 @@ From open-meridian 0.24.0 (contract v20) three more:
 | `the-takers-side-stated` | a trade naming the side that took liquidity, a buy | records the aggressor as a buy |
 | `a-restarts-gap-backfilled` | the plugin starting, the lake holding a trade it recorded of a streamed subject before it stopped, and the venue's history stating two trades since | reads its last recorded trade (`list_trades` with `latest_recorded`), and records the two |
 | `reads-its-datasets-licences` | the plugin starting where a deployment admin licensed one of its declared datasets and not another | reads `list_datasets` |
+
+From open-meridian 0.26.0 (contract v22, built, not released) two more,
+which every role's suite holds:
+
+| Case | Given | The plugin |
+|---|---|---|
+| `reads-a-calendar` | a calendar's days needed over a range | reads them from core, `read_calendar`, never a calendar of its own |
+| `asks-for-a-settlement-date` | a settlement date needed for an instrument and a trade date | asks core, `compute_date(settlement=...)`, and never works it out itself |
+
+A producer for each calls the operation through the recorder, as the role
+templates' `tests/test_suite.py` show:
+
+```python
+async def asks_for_a_settlement_date(recorder: Recorder) -> None:
+    await recorder.compute_date(
+        settlement=ops.SettlementDateInputs(instrument_id="LCL-1", trade_date="2026-10-09")
+    )
+```
 
 A case your vendor never presents, such as an FX rate from an equity
 source, maps to the recording path it would take. When you replace the

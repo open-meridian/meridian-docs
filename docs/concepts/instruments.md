@@ -178,6 +178,13 @@ instrument's listing venue is a venue ID, `listing_venue_id`, in place of its
 MIC. Every [amount](money-and-instruments.md) names a cash instrument in this
 store, a currency's or a token's.
 
+From contract v22 (built, not released) it also keeps every version of the
+[settlement calendars](settlement-calendars.md) and date rules the
+deployment pulled from the platform, and works out a settlement, spot or
+tenor date from them, one way, for any plugin that asks. The
+**Instruments** page's **Calendars** tab shows what it holds, read-only;
+nothing in a deployment edits a calendar.
+
 ### Resolving an identifier
 
 Given a set of identifiers and a date, the instrument store tries them
@@ -310,6 +317,11 @@ and answer what contract v19 adds, with no new tool:
 
   An end the platform offered is accepted as the identifier with its
   `valid_until_ns`.
+
+From contract v22 (built, not released) two more tools read the
+**Calendars** tab, at the deployment admin's level:
+[`dashboard__list_calendars`](../api/core-tools.md#dashboard__list_calendars)
+and [`dashboard__read_calendar`](../api/core-tools.md#dashboard__read_calendar).
 
 ## Known limits
 

@@ -42,7 +42,14 @@ plugins on contract v21: Alpaca 0.5.0, Tradier 0.4.0, Tiingo 0.3.0, Fed
 H.10 0.3.0, Coinbase 0.4.0, Kraken 0.4.0, Kalshi 0.3.0, Polymarket 0.3.0,
 SnapTrade 0.15.0, the sample operations plugin 0.11.0 and its sweep closing
 cleared breaks as its service account, and the sample reporting plugin
-0.4.0 and its Board. The tutorials were walked on CLI 0.1.36 and SDK
+0.4.0 and its Board. Contract v22 is marked built, not released, where it
+applies: SDK 0.26.0 (the order path's slice A and settlement calendars),
+CLI 0.1.42 (being built, described from the plan and marked TODO), core's
+order path in the book (child orders, the release gate and waiting for
+compliance, connectivity plugins linked to an `ems` and its venue account
+map, trading instructions and the Trading instructions page, four tools),
+the Instruments page's Calendars tab and its two tools, and the platform's
+settlement calendars. The tutorials were walked on CLI 0.1.36 and SDK
 0.21.0. A page describes what is built, and says so where something is
 specified and not built yet.
 

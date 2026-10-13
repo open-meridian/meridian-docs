@@ -107,7 +107,7 @@ declares:
 | Modes | How its rows can arrive: `pull` (fetched when a read wants them), `push` (recorded on the source's own timetable) and `stream`. |
 | Cadence, history | How often it updates, which says when it is silent; how far back it reaches. |
 | Default licence | What the vendor's standard terms say: kept or not, derived use, display, the default fields, and whether the terms are one person's. See [Licences and entitlements](licences-and-entitlements.md). |
-| Its day | The time zone a business date is in and the minute the day ends. See [Dates and time](dates-and-time.md). |
+| Its day | The time zone a business date is in and the minute the day ends; from contract v22 (built, not released) the [settlement calendar](settlement-calendars.md) its business dates follow, by its `CAL-` ID, which the lake applies nothing by in v22. See [Dates and time](dates-and-time.md). |
 | Its venue | The venue the dataset is, by its [venue ID](venues.md); none for a consolidated view. |
 
 A catalogue is checked when the version is uploaded and again when its

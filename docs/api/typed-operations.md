@@ -29,6 +29,8 @@ From 0.24.0, contract v20, no operation is added. The role `dgm` is named `data`
 
 From 0.25.0, contract v21, no operation is added. A plugin's autonomous work calls one of its own acts as the [service account](../concepts/service-accounts.md) its role runs as, through the sidecar's `CallAsServiceAccount`, which the SDK offers as [`meridian.runs_as`](python-sdk.md#runs_as). Where the dashboard makes the act, the act's route is reached with a service account's claims and sends what it sends for a person, `acting_for` the header it received (see [Acting for a person](#acting-for-a-person)); the book records the service account and its owner as the entry's actor.
 
+From 0.26.0, contract v22 (built, not released), it also lists [the order path](#the-order-path)'s twenty-two operations, by which `portfolio`, `oms`, `ems`, `compliance` and `operations` plugins and connectivity plugins propose, release, check, claim, place, report and read orders, and an `ems` maps its accounts to venue account codes; and the [settlement calendars' reads](#settlement-calendars-reads), [`read_calendar`](#read_calendar) and [`compute_date`](#compute_date), which every role may call. `connectivity` also gains [`resolve_identifier`](#resolve_identifier), [`report_missing_instrument`](#report_missing_instrument), [`resolve_instrument`](#resolve_instrument), [`resolve_venue`](#resolve_venue), [`report_missing_venue`](#report_missing_venue) and [`list_account_attributes`](#list_account_attributes); `ems` gains `resolve_instrument`, `resolve_venue` and `list_account_attributes`. Each new operation is `preview` in v22. A command naming an order, a placement, a change request or a locate by its ID is admitted on the role's grant and held by the book to the plugin's write scope (see [The order lifecycle](../concepts/the-order-lifecycle.md#a-command-naming-a-record-by-its-id)).
+
 ## Summary
 
 | Python method | gRPC rpc | Workflow step | Kind | Role | Returns |
@@ -43,11 +45,11 @@ From 0.25.0, contract v21, no operation is added. A plugin's autonomous work cal
 | [`list_activities`](#list_activities) | `ListActivities` | W2.11 List an account's activity | query | `operations` | `ListActivitiesResult` |
 | [`re_resolve_activity`](#re_resolve_activity) | `ReResolveActivity` | W2.15 Re-resolve a recorded activity | command | `custody` | `ReResolveActivityResult` |
 | [`list_sync_statuses`](#list_sync_statuses) | `ListSyncStatuses` | W2.14 Read an account's sync status | query | `operations` | `ListSyncStatusesResult` |
-| [`resolve_identifier`](#resolve_identifier) | `ResolveIdentifier` | W3.1 Resolve an identifier set | query | `custody`, `data` from v18, `reporting` from v19 | `ResolveIdentifierResult` |
-| [`report_missing_instrument`](#report_missing_instrument) | `ReportMissingInstrument` | W3.2 Report that a resolution missed | event | `custody`, `data` from v18 | `Published` |
+| [`resolve_identifier`](#resolve_identifier) | `ResolveIdentifier` | W3.1 Resolve an identifier set | query | `custody`, `data` from v18, `reporting` from v19, `connectivity` from v22 | `ResolveIdentifierResult` |
+| [`report_missing_instrument`](#report_missing_instrument) | `ReportMissingInstrument` | W3.2 Report that a resolution missed | event | `custody`, `data` from v18, `connectivity` from v22 | `Published` |
 | [`read_accounts_for_linking`](#read_accounts_for_linking) | `ReadAccountsForLinking` | W6.4 Link a plugin's external account | query | `custody` | `ReadAccountsForLinkingResult` |
 | [`link_external_account`](#link_external_account) | `LinkExternalAccount` | W6.4 Link a plugin's external account | command | `custody` | `LinkExternalAccountResult` |
-| [`resolve_instrument`](#resolve_instrument) | `ResolveInstrument` | W3.6 Resolve an instrument for display | query | `portfolio`, `reporting`, `compliance`, `oms`, `operations`, `data` from v18 | `ResolveInstrumentResult` |
+| [`resolve_instrument`](#resolve_instrument) | `ResolveInstrument` | W3.6 Resolve an instrument for display | query | `portfolio`, `reporting`, `compliance`, `oms`, `operations`, `data` from v18, `ems` and `connectivity` from v22 | `ResolveInstrumentResult` |
 | [`record_opening_balance`](#record_opening_balance) | `RecordOpeningBalance` | W9.1 Record an account's opening balance | command | `operations` | `RecordOpeningBalanceResult` |
 | [`record_break`](#record_break) | `RecordBreak` | W9.4 Record a break | command | `operations` | `RecordBreakResult` |
 | [`record_account_figures`](#record_account_figures) | `RecordAccountFigures` | W9.5 Record the account's figures | command | `operations` | `RecordAccountFiguresResult` |
@@ -58,19 +60,43 @@ From 0.25.0, contract v21, no operation is added. A plugin's autonomous work cal
 | [`list_positions`](#list_positions) | `ListPositions` | W9.10 Read positions | query | `portfolio`, `reporting`, `compliance`, `oms`, `operations` | `ListPositionsResult` |
 | [`list_breaks`](#list_breaks) | `ListBreaks` | W9.11 Read breaks | query | `operations`, `oms`, `compliance`, `portfolio`, `reporting` | `ListBreaksResult` |
 | [`list_account_figures`](#list_account_figures) | `ListAccountFigures` | W9.12 Read the account's figures | query | `operations`, `portfolio`, `compliance`, `reporting` | `ListAccountFiguresResult` |
-| [`list_account_attributes`](#list_account_attributes) | `ListAccountAttributes` | W9.14 Read an account's attributes | query | `portfolio`, `reporting`, `compliance`, `oms`, `operations` | `ListAccountAttributesResult` |
+| [`list_account_attributes`](#list_account_attributes) | `ListAccountAttributes` | W9.14 Read an account's attributes | query | `portfolio`, `reporting`, `compliance`, `oms`, `operations`, `ems` and `connectivity` from v22 | `ListAccountAttributesResult` |
 | [`record_prices`](#record_prices) | `RecordPrices` | W10.4 Record prices and bars in batches | command | `data` | `RecordPricesResult` |
 | [`record_bars`](#record_bars) | `RecordBars` | W10.4 Record prices and bars in batches | command | `data` | `RecordBarsResult` |
 | [`record_trades`](#record_trades) | `RecordTrades` | W10.4 Record prices, bars, trades and quotes in batches | command | `data`, from v19 | `RecordTradesResult` |
 | [`record_quotes`](#record_quotes) | `RecordQuotes` | W10.4 Record prices, bars, trades and quotes in batches | command | `data`, from v19 | `RecordQuotesResult` |
 | [`decline_want`](#decline_want) | `DeclineWant` | W10.7 Want what a read could not answer | command | `data` | `DeclineWantResult` |
-| [`resolve_venue`](#resolve_venue) | `ResolveVenue` | W3.14 Resolve a venue | query | `data` | `ResolveVenueResult` |
-| [`report_missing_venue`](#report_missing_venue) | `ReportMissingVenue` | W3.15 Report a venue the deployment does not hold | event | `data` | `Published` |
+| [`resolve_venue`](#resolve_venue) | `ResolveVenue` | W3.14 Resolve a venue | query | `data`, `connectivity` and `ems` from v22 | `ResolveVenueResult` |
+| [`report_missing_venue`](#report_missing_venue) | `ReportMissingVenue` | W3.15 Report a venue the deployment does not hold | event | `data`, `connectivity` from v22 | `Published` |
 | [`list_prices`](#list_prices) | `ListPrices` | W10.6 Read prices and bars, point in time, by source | query | `reporting`, `portfolio`, `compliance`, `signal` | `ListPricesResult` |
 | [`list_bars`](#list_bars) | `ListBars` | W10.6 Read prices and bars, point in time, by source | query | `reporting`, `portfolio`, `compliance`, `signal` | `ListBarsResult` |
 | [`list_trades`](#list_trades) | `ListTrades` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `signal`, `ems`, from v19 | `ListTradesResult` |
 | [`list_quotes`](#list_quotes) | `ListQuotes` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `signal`, `ems`, from v19 | `ListQuotesResult` |
 | [`list_datasets`](#list_datasets) | `ListDatasets` | W10.9 Read the datasets | query | `reporting`, `portfolio`, `compliance`, `signal`, `ems` from v19 | `ListDatasetsResult` |
+| [`propose_order`](#propose_order) | `ProposeOrder` | W11.1 Propose an order | command | `portfolio`, `oms`, `ems`, from v22 | `ProposeOrderResult` |
+| [`record_order`](#record_order) | `RecordOrder` | W11.2 Record an order the book did not create | command | `connectivity`, `oms`, from v22 | `RecordOrderResult` |
+| [`request_order_change`](#request_order_change) | `RequestOrderChange` | W11.3 Ask for a change to an order | command | `portfolio`, `oms`, `ems`, from v22 | `RequestOrderChangeResult` |
+| [`record_check`](#record_check) | `RecordCheck` | W11.4 Record a check | command | `compliance`, from v22 | `RecordCheckResult` |
+| [`decide_approval`](#decide_approval) | `DecideApproval` | W11.5 Require, give or override approval, or reject an order | command | `compliance`, `oms`, from v22 | `DecideApprovalResult` |
+| [`release_order`](#release_order) | `ReleaseOrder` | W11.6 Release an order | command | `oms`, from v22 | `ReleaseOrderResult` |
+| [`set_working_condition`](#set_working_condition) | `SetWorkingCondition` | W11.7 Claim, hold or pause an order | command | `ems`, `oms`, from v22 | `SetWorkingConditionResult` |
+| [`create_placement`](#create_placement) | `CreatePlacement` | W11.8 Create a placement | command | `ems`, `connectivity`, from v22 | `CreatePlacementResult` |
+| [`request_placement_change`](#request_placement_change) | `RequestPlacementChange` | W11.9 Ask for a change to a placement | command | `ems`, `oms`, `connectivity`, from v22 | `RequestPlacementChangeResult` |
+| [`report_placement`](#report_placement) | `ReportPlacement` | W11.10 Report a placement's progress | command | `connectivity`, from v22 | `ReportPlacementResult` |
+| [`report_execution`](#report_execution) | `ReportExecution` | W11.11 Report an execution | command | `connectivity`, `ems`, `oms`, from v22 | `ReportExecutionResult` |
+| [`report_charge`](#report_charge) | `ReportCharge` | W11.12 Report a charge | command | `connectivity`, from v22 | `ReportChargeResult` |
+| [`acknowledge_flag`](#acknowledge_flag) | `AcknowledgeFlag` | W11.14 Acknowledge a flag | command | `oms`, `operations`, from v22 | `AcknowledgeFlagResult` |
+| [`list_trading_instructions`](#list_trading_instructions) | `ListTradingInstructions` | W11.16 Hear and read the trading instructions in force | query | `oms`, `ems`, `connectivity`, `portfolio`, `compliance`, from v22 | `ListTradingInstructionsResult` |
+| [`list_orders`](#list_orders) | `ListOrders` | W11.17 Read orders, and an order's history | query | `oms`, `ems`, `compliance`, `portfolio`, `operations`, `reporting`, `connectivity`, from v22 | `ListOrdersResult` |
+| [`read_order_history`](#read_order_history) | `ReadOrderHistory` | W11.17 Read orders, and an order's history | query | `compliance`, `reporting`, `operations`, `oms`, from v22 | `ReadOrderHistoryResult` |
+| [`record_locate`](#record_locate) | `RecordLocate` | W11.18 Record a locate and the prime's answer | command | `connectivity`, from v22 | `RecordLocateResult` |
+| [`list_locates`](#list_locates) | `ListLocates` | W11.18 Record a locate and the prime's answer | query | `compliance`, `oms`, `portfolio`, from v22 | `ListLocatesResult` |
+| [`record_locate_use`](#record_locate_use) | `RecordLocateUse` | W11.19 Reserve, give back or consume a locate | command | `compliance`, `oms`, from v22 | `RecordLocateUseResult` |
+| [`report_venue_catalogue`](#report_venue_catalogue) | `ReportVenueCatalogue` | W11.20 Publish the venue's catalogue | event | `connectivity`, from v22 | `Published` |
+| [`read_venue_catalogue`](#read_venue_catalogue) | `ReadVenueCatalogue` | W11.20 Publish the venue's catalogue | query | `ems`, `oms`, from v22 | `ReadVenueCatalogueResult` |
+| [`map_venue_account`](#map_venue_account) | `MapVenueAccount` | W11.22 Map an account to a venue account code | command | `ems`, from v22 | `MapVenueAccountResult` |
+| [`read_calendar`](#read_calendar) | `ReadCalendar` | W3.19 Read a calendar | query | every role, from v22 | `ReadCalendarResult` |
+| [`compute_date`](#compute_date) | `ComputeDate` | W3.20 Work out a date | query | every role, from v22 | `ComputeDateResult` |
 
 **Role** is the plugin role that publishes the step, or the roles that may ask the query, from the contract's matrix. A plugin can call an operation only if it holds one of them, approved when it was launched. Otherwise the call raises `NotGranted`. See [Plugins, roles and grants](../concepts/plugins.md) and [Plugin manifest](plugin-manifest.md).
 
@@ -2054,6 +2080,284 @@ async def list_datasets(self) -> ListDatasetsResult
 **Returns** `ListDatasetsResult`: `datasets`, each a [`DatasetRef`](#datasetref); `licences`, each dataset's licence enforced; and `entitlements`, the plugin's own.
 
 **A data plugin's own datasets** (contract v20). Asked by a data plugin, it answers only the datasets its own catalogue declares, each with the licence a deployment admin set on it, so its Datasets page says "Licensed" or "Not licensed yet" exactly; a dataset still on its catalogue's default answers no licence set by the deployment.
+
+## The order path { #the-order-path }
+
+From 0.26.0, contract v22, built, not released. Every operation here is
+`preview`. What each role does on the path, the states and the transition
+table are on [The order lifecycle](../concepts/the-order-lifecycle.md); the
+Python SDK's overview is [The order path](python-sdk.md#the-order-path).
+
+- **A command answers the record whole**, with the book's `entry` and its
+  `journal` reference: an order's commands answer the `order`; a
+  placement's, the `placement`; a report, whichever records it changed
+  (`placement`, `execution`, `order`, `charge`) or, where the book could
+  not place it, the `unplaced` fact; and a change, its `change_request_id`.
+  It is answered only after its entry commits.
+- **Every command but a fact report acts for someone**: pass
+  `acting_for=request.caller.header` for a person, or call it from an act
+  reached for the role's [service account](python-sdk.md#runs_as). One with
+  nobody behind it is refused `REFUSAL_REASON_ACTOR_REQUIRED`. A fact a
+  connectivity plugin reports from its venue (`record_order`,
+  `report_placement`, `report_execution`, `report_charge`, `record_locate`)
+  names nobody.
+- **Idempotency.** A command naming an `idempotency_key` is applied once for
+  it; the same key on another command is refused
+  `REFUSAL_REASON_IDEMPOTENCY_CONFLICT`. A venue fact repeated with the same
+  venue identifiers is applied once.
+- **A command naming a record by its ID** -- an order, a placement, a change
+  request or a locate -- is held by the book to the plugin's write scope and
+  the person's write access: outside them it raises `NotGranted`, with no
+  code, and changes nothing.
+- **Enums** take their lower-case names as elsewhere: `side="buy"`,
+  `order_type="limit"`, `time_in_force="day"`, `condition="claimed"`,
+  `event="acknowledged"` (see [Enums](#enums)).
+- **Refusals** by the order's state, a claim or a link are a
+  `CommandRefused` with its code; see
+  [The order lifecycle's refusals](../concepts/the-order-lifecycle.md#refusals).
+
+### `propose_order` { #propose_order }
+
+`portfolio` proposes an order; the `oms` does too; an `ems` or the `oms`
+proposes a [child order](../concepts/the-order-lifecycle.md#child-orders),
+naming its parent in `link` (`OrderLink(kind="split", parent_order_id=...)`).
+Answers the order at proposed, or for a child at released.
+
+| Parameter | Meaning |
+|---|---|
+| `account_id`, `instrument_id`, `side` | Its identity, never changed: buy, sell, sell short or sell short exempt. A short names its `locate_id` |
+| `quantity` or `cash_quantity` | Exactly one: a unit quantity, a `Decimal`, or a cash quantity, a `Money`. Both or neither is refused `invalid`, naming both. 0 is refused |
+| `order_type`, `limit_price`, `stop_price` | Its type, its limit and a stop's trigger, each a `Money` where given |
+| `time_in_force`, `expire_date`, `expire_time_ns` | Its time in force, and a good-till-date's date or a good-till-time's time |
+| `sleeve` | The part of the account it is for; empty for the unsleeved part |
+| `dealt_currency`, `legs` | On a pair, the dealt currency's cash instrument; legs, each an instrument, a side and a ratio |
+| `allocation_instruction` | The accounts and amounts or weights it is for; none for the whole in its own account. A child carries none |
+| `execution_instructions`, `lot_relief_method`, `relieve_lot_ids`, `capacity` | The `oms`'s: the standard execution instructions, how a sale relieves lots or the lots it names, and capacity |
+| `direction`, `parties`, `decided_by` | A client's order received, the parties as delivered, and who decided it where that differs from who enters it |
+| `customer_id`, `firm_designated_id`, `handling_instructions`, `received_at_ns`, `received_precision`, `quote_at_receipt`, `represents_order_ids` | Fields recorded for reporting, as the proposer knows them |
+| `axe_source`, `axe_counterparty_id` | Carried empty until the RFQ revision |
+| `link` | A child's split link to its parent |
+| `idempotency_key`, `acting_for` | As above |
+
+### `record_order` { #record_order }
+
+An order the book did not create: by a connectivity plugin, a
+venue-originated order or a drop copy's, with its `venue_account_code`
+(from which the sidecar stamps its account by the `ems`'s map), its fields
+as the venue states them, its `venue_order_id`, its `origin` and its
+`raw_record`; by the `oms`, a telephoned or outside order, for a person.
+Recorded at the state its facts imply, never through the gate. An unmapped
+code, or an incomplete instrument, keeps it as an unplaced fact.
+
+### `request_order_change` { #request_order_change }
+
+Asks for a change to an order: a cancel, an amendment of its limit, time in
+force or execution instructions, a recall, a withdrawal, or `portfolio`'s
+increase or reduction with its allocation amended in the same act
+(`change`, an `OrderChange`), with a `reason` where the change is justified.
+Answers the order, at **change requested** while any is outstanding, and the
+`change_request_id`. An `ems` changes no quantity
+(`REFUSAL_REASON_ORDER_STATE`).
+
+### `record_check` { #record_check }
+
+`compliance`'s verdict, `pass`, `warn`, `block` or `refuse`, with its `rule`
+and a `note`: on an order, naming the `order_version` it checked, or on a
+`placement_id` before its connectivity plugin sends it. A refuse ends a
+proposed order refused; the last verdict awaited clears **awaiting check**.
+
+### `decide_approval` { #decide_approval }
+
+Sets approval required on a proposed order by policy, approves it, overrides
+a block with a `reason`, or, by the `oms` asked to work it, rejects it
+(`decision`). An approval or an override needs a person
+(`REFUSAL_REASON_ACTOR_REQUIRED`), an override a reason.
+
+### `release_order` { #release_order }
+
+The `oms` releases a proposed order through the gate: allocation, block,
+approval, state, refused at the first that fails. Where the account waits
+for compliance and a covering `compliance` plugin has not answered, the
+order stays proposed, awaiting check, and nothing is refused.
+
+### `set_working_condition` { #set_working_condition }
+
+Sets or clears **claimed**, **held** or **paused** on an order
+(`condition`, `set`), with a `reason`. While an order is claimed only the
+claimant creates or changes its placements and child orders
+(`REFUSAL_REASON_CLAIMED`).
+
+### `create_placement` { #create_placement }
+
+The `ems` places part of a released order at one of the connectivity
+plugins linked to it; a connectivity plugin places a direct order's.
+
+| Parameter | Meaning |
+|---|---|
+| `order_id` | The released order |
+| `connectivity_instance_id` | The connectivity plugin it goes to: one of `request.caller.connectivity_instance_ids`. Any other is refused `REFUSAL_REASON_CONNECTIVITY_NOT_ALLOWED`, and recorded |
+| `venue_account_code` | The code the `ems`'s map holds for the order's account at that plugin |
+| `quantity`, `limit_price`, `time_in_force` | The placement's |
+| `strategy` | A `StrategyInstruction` to work at the venue: its kind (VWAP, TWAP, POV, IS), start and end, participation, urgency and limits |
+| `destination`, `route_type`, `handling_instructions` | The destination's venue ID, the route type, and handling instructions, recorded for reporting |
+| `rfq_id`, `axe_id` | Carried empty until the RFQ revision |
+| `idempotency_key`, `acting_for` | As above |
+
+Answers the placement at queued; the order is working once quantity
+commits.
+
+### `request_placement_change` { #request_placement_change }
+
+The `ems` or the `oms` asks to cancel or replace a placement (`change`, a
+`PlacementChange`), with a `reason`; tracked to its outcome. A connectivity
+plugin reports through it only a cancel it already sent at the venue under
+a stop, naming the stop's entry as its `cause`.
+
+### `report_placement` { #report_placement }
+
+A connectivity plugin reports what the venue did with a placement
+(`event`): sent, acknowledged (with its `venue_order_id`, `routed_at_ns`
+and `routed_precision`), replaced, done for day, restated (with its
+`restatement_reason`), suspended, triggered, cancelled, expired, rejected
+(with its `rejection_reason`: unsupported, venue rejected or held by
+pre-trade check, and `rejection_as_reported` only where none maps), outcome
+unknown (with its `unknown_reason`, and `status_as_reported` for a status
+that maps to nothing), or that outcome resolved; each with its
+`raw_record`.
+
+### `report_execution` { #report_execution }
+
+A connectivity plugin reports an execution of a placement; the `ems` or the
+`oms` enters a manual or done-away one, for a person.
+
+| Parameter | Meaning |
+|---|---|
+| `placement_id`, `order_id`, `account_id`, `venue_account_code` | What it fills. A connectivity plugin names the code, and the sidecar stamps the account from the `ems`'s map |
+| `venue_execution_id` | The venue's, or one derived from the fill the same way every time |
+| `kind`, `source` | Venue reported, manual, done away or inferred; primary or drop copy |
+| `quantity`, `price`, `trade_time_ns`, `trade_date` | The fill |
+| `settlement_date` | The date the venue states, kept as stated |
+| `computed_settlement_date`, `settlement_date_basis` | The date [`compute_date`](#compute_date) gave and its basis, where the venue states none or the plugin also asks. A fill with no settlement date at all is refused `invalid`, naming `settlement_date` |
+| `finality`, `fees` | Its finality and when reached; its fees, each a kind, a signed amount and its asset, a rebate negative |
+| `supersedes`, `effective_date` | For a bust or correction: the execution it supersedes, and the date it takes effect |
+| `counterparty`, `liquidity_indicator`, `venue_id` | The counterparty where known, maker or taker, and the place of execution |
+| `uti`, `uti_generated_by`, `prior_uti`, `upi`, `given_up_to`, `trade_chain_reference`, `settlement_counterparty` | Fields recorded for reporting, as the venue states them |
+| `raw_record`, `idempotency_key`, `acting_for` | As above |
+
+### `report_charge` { #report_charge }
+
+A fee with no fill on a placement (`fee`), such as a venue's cancel fee,
+with its `trade_date`, `settlement_date` and `raw_record`: it moves cash and
+counts toward no quantity.
+
+### `acknowledge_flag` { #acknowledge_flag }
+
+The `oms` or `operations` acknowledges an order's **late fact**
+(`condition`), for a person, with a `reason`. **Does not tie out** is never
+acknowledged.
+
+### `list_trading_instructions` { #list_trading_instructions }
+
+The trading instructions in force, whatever the plugin's accounts: read on
+start, and after a gap with `since`, the watermark last seen, answered
+`as_of`; paged by `page_size` and `cursor`. Its `control_sequence` is the
+instructions' sequence as of `as_of`.
+
+### `list_orders` { #list_orders }
+
+The orders in the plugin's read scope (`account_id` narrows to one), as of
+now or changed `since` a watermark, answered `as_of`: `orders`,
+`placements`, `executions` and `unplaced_facts`, each in its own list. A
+connectivity plugin reads only the placements naming it, and the orders
+behind them.
+
+### `read_order_history` { #read_order_history }
+
+One order's journal from its first entry (`account_id`, `order_id`), every
+entry with its actor, cause and times, paged. The history never changes.
+
+### `record_locate` { #record_locate }
+
+A fund's connectivity plugin records a locate it requested of its prime
+broker: the `instrument_id`, the `quantity_requested` and the
+`venue_account_code`; and later the prime's `answer` on the same record
+(`locate_record_id`): the quantity approved, the rate, the expiry and the
+prime's ID; each with its `raw_record`.
+
+### `list_locates` { #list_locates }
+
+The locates in the plugin's read scope, as of now or changed `since` a
+watermark, each with its uses and its remaining quantity.
+
+### `record_locate_use` { #record_locate_use }
+
+`compliance` or the `oms` records a use of a locate (`use`): a reservation
+for an order, its give back, or its consumption by fills. A use of an
+expired locate is refused `REFUSAL_REASON_ORDER_STATE`.
+
+### `report_venue_catalogue` { #report_venue_catalogue }
+
+A connectivity plugin publishes its venue's catalogue for one venue account
+code (`catalogue`, a `VenueCatalogue`): order types with their time-in-force
+values, the broker's strategies with their parameters (each a name, a type,
+whether it is required, its range or allowed values and its default), and
+eligibility for the instruments it states. Delivered latest per plugin and
+code; heard by the `ems` and the `oms`.
+
+### `read_venue_catalogue` { #read_venue_catalogue }
+
+An `ems` or an `oms` reads a connectivity plugin's catalogue for a venue
+account code (`connectivity_instance_id`, `venue_account_code`), on start
+and after a loss; empty for a code not published.
+
+### `map_venue_account` { #map_venue_account }
+
+An `ems`'s admin page maps a book account to the venue account code it
+trades under at one of the `ems`'s connectivity plugins
+(`connectivity_instance_id`, `venue_account_code`, `account_id`; an empty
+`account_id` removes the mapping), sent acting for the admin viewing it.
+Answers the `ems`'s mappings. An account not granted to the `ems` is
+refused `REFUSAL_REASON_ACCOUNT_NOT_LINKABLE`; a connectivity plugin not
+linked to it `REFUSAL_REASON_CONNECTIVITY_NOT_ALLOWED`; a code already
+mapped on that plugin for another account is refused.
+
+## Settlement calendars' reads { #settlement-calendars-reads }
+
+From 0.26.0, contract v22, built, not released. Every role reads both,
+whatever its accounts. See
+[Settlement calendars](../concepts/settlement-calendars.md) and, in the
+Python SDK, [Settlement calendars](python-sdk.md#settlement-calendars).
+
+### `read_calendar` { #read_calendar }
+
+A calendar's days over a range, `calendar_id`, `from_date` to `to_date`, as
+of a recorded time (`as_of_ns`) or its latest version. Answers `found`, the
+`calendar_id` and `version`, its `weekends`, the `days` listed in the range
+(each a date, closed or a weekend business day, its name and its source),
+its `coverage` and its `sources`. A calendar not held is answered not found
+and asked of the platform; a range ending before it starts is refused,
+naming `to_date`.
+
+### `compute_date` { #compute_date }
+
+Works out a date, one way, in core. Exactly one question:
+
+| Question | Inputs |
+|---|---|
+| `settlement` | `SettlementDateInputs`: an instrument and a trade date; answered by its market's rule |
+| `spot` | `SpotDateInputs`: a pair of cash instruments and a trade date, or an execution's moment (`at_ns`) through the pair's cut |
+| `tenor` | `TenorDateInputs`: a pair, a trade date and a `Tenor` (a count and a unit: day, week, month, year, overnight, tom-next, spot-next) |
+| `roll` | `RollInputs`: a date, a convention and a set of calendars |
+| `business_day` | `BusinessDayInputs`: a date and a set of calendars |
+
+and `as_of_ns`, a recorded time, 0 for the latest versions. Answers `date`
+and its `basis` (the rule and its version, each calendar and its version)
+where the `outcome` is `DATE_OUTCOME_COMPUTED`; `business_day` for that
+question; otherwise the outcome says why nothing was computed:
+`DATE_OUTCOME_CALENDAR_NOT_HELD`, `DATE_OUTCOME_OUTSIDE_COVERAGE` or
+`DATE_OUTCOME_RULE_NOT_HELD`. A malformed question is refused `invalid`,
+naming the field; a cut's zone the deployment does not hold is refused,
+naming `spot.at_ns`.
 
 ## Types { #types }
 

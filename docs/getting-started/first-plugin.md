@@ -17,7 +17,8 @@ It works on any deployment. For the faster loop where each save runs at once, se
   CLI 0.1.37 writes the same plugin on SDK 0.22.0, which
   needs a sidecar accepting contract v18, CLI 0.1.38 on SDK 0.23.0, which needs one accepting
   contract v19, CLI 0.1.39 on SDK 0.24.0, which needs one accepting contract v20, and CLI 0.1.41
-  on SDK 0.25.0, which needs one accepting contract v21.
+  on SDK 0.25.0, which needs one accepting contract v21. CLI 0.1.42, being built, is to write it on
+  SDK 0.26.0, which needs one accepting contract v22 (built, not released).
 - Docker on this machine. `meridian plugin upload` builds the plugin's image here, from its own
   `Dockerfile`.
 
