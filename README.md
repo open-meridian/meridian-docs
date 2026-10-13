@@ -48,10 +48,12 @@ CLI 0.1.42 (being built, described from the plan and marked TODO), core's
 order path in the book (child orders, the release gate and waiting for
 compliance, connectivity plugins linked to an `ems` and its venue account
 map, trading instructions and the Trading instructions page, four tools),
-the Instruments page's Calendars tab and its two tools, and the platform's
-settlement calendars. The tutorials were walked on CLI 0.1.36 and SDK
-0.21.0. A page describes what is built, and says so where something is
-specified and not built yet.
+the Instruments page's Calendars tab and its two tools, the platform's
+settlement calendars, the ten G10 currencies' among them, and the suites'
+cases a plugin whose work never uses calendars, settlement dates, locates
+or compliance waits marks not presented. The tutorials were walked on CLI
+0.1.36 and SDK 0.21.0. A page describes what is built, and says so where
+something is specified and not built yet.
 
 ## The roles page, the data dictionary and llms.txt
 

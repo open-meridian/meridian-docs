@@ -194,7 +194,18 @@ def test_every_case_of_the_custody_suite_passes() -> None:
 ```
 
 A case asserting one value of a closed list your vendor never presents may be named in
-`not_presented`, with why; every other case needs a producer. `meridian plugin check --verified`
+`not_presented`, with why; so, from open-meridian 0.26.0 (contract v22, built, not released), may
+`reads-a-calendar` and `asks-for-a-settlement-date`, about `calendars` and `settlement dates`, where
+your plugin's work never uses them:
+
+```python
+NOT_PRESENTED = {
+    "reads-a-calendar": "it reports what the custodian states, and reads no calendar",
+    "asks-for-a-settlement-date": "it reports the custodian's settlement dates as stated",
+}
+```
+
+Every other case needs a producer. `meridian plugin check --verified`
 fails a custody plugin with no such test (`role-suite`), and `--run-tests` runs it. From CLI
 0.1.37 the rule is held only under `--verified`; CLI 0.1.36 and earlier hold every
 custody plugin to it. A data plugin passes its own suite the same way: see

@@ -27,9 +27,12 @@ and holds it to the suite. How a person then uses it is
     pins.
 
 !!! note "Contract v22: built, not released"
-    open-meridian 0.26.0 (contract v22) adds two cases to every role's
-    suite, the data suite's among them: `reads-a-calendar` and
-    `asks-for-a-settlement-date` (see [below](#hold-it-to-the-suite)). A
+    open-meridian 0.26.0 (contract v22) adds the settlement calendars'
+    cases to every role's suite, the data suite's two among them:
+    `reads-a-calendar` and `asks-for-a-settlement-date` (see
+    [below](#hold-it-to-the-suite)), about calendars and settlement dates,
+    which a plugin whose work never uses them marks not presented, with
+    why ([a kind of work](#a-kind-of-work-your-plugin-never-does)). A
     dataset may also name its [settlement calendar](../concepts/settlement-calendars.md)
     (`calendar_id`), which the lake applies nothing by in v22. CLI 0.1.42,
     being built, is to write the template on 0.26.0, its suite test mapping
@@ -269,7 +272,9 @@ From open-meridian 0.24.0 (contract v20) three more:
 | `reads-its-datasets-licences` | the plugin starting where a deployment admin licensed one of its declared datasets and not another | reads `list_datasets` |
 
 From open-meridian 0.26.0 (contract v22, built, not released) two more,
-which every role's suite holds:
+about `calendars` and `settlement dates`, which every role's suite holds
+(`asks-for-a-settlement-date` every role's but `connectivity`'s and
+`operations`'):
 
 | Case | Given | The plugin |
 |---|---|---|
@@ -331,9 +336,24 @@ NOT_PRESENTED["the-takers-side-stated"] = "the vendor's stock trades never say w
 NOT_PRESENTED["the-makers-side-inverted"] = "the vendor's stock trades never say which side took liquidity"
 ```
 
-The SDK's runner refuses a name in `not_presented` that is neither a case
-with an `about` your catalogue does not declare nor a case with an
-`about_field`, so every other case stays required.
+### A kind of work your plugin never does
+
+From open-meridian 0.26.0 (contract v22, built, not released) `about` names
+a kind of work too: `reads-a-calendar` is about `calendars`, and
+`asks-for-a-settlement-date` about `settlement dates`. A plugin whose work
+never uses one names the case in `not_presented`, with why, and is verified
+on the rest. The template maps both, so keep them mapped if your plugin
+reads a calendar or asks for a date; otherwise:
+
+```python
+NOT_PRESENTED["asks-for-a-settlement-date"] = "it records closes as published and works out no settlement date"
+```
+
+The SDK's runner refuses a name in `not_presented` that is neither a
+closed-list case nor a case with an `about` or an `about_field`, so every
+other case stays required. It checks that the case carries a marker, not
+that your catalogue lacks the kind: the template derives that from its
+catalogue, as above.
 
 On 0.22.0 (contract v18) only a closed-list case could be marked so, and a
 source that never published a bar, a venue or an FX rate fell short of the

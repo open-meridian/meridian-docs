@@ -190,6 +190,14 @@ A plugin catching up by range alone fails
 `catches-up-trades-after-a-watermark`. Neither role records anything in the
 lake.
 
+From open-meridian 0.26.0 (contract v22, built, not released) both suites
+also hold `reads-a-calendar` and `asks-for-a-settlement-date`, about
+`calendars` and `settlement dates`: map each, or, where your plugin's work
+never uses them, name it in `not_presented`, with why (see
+[A case not presented](../api/python-sdk.md#a-case-not-presented)). The
+`ems` suite holds the order path's cases too, each required (see
+[The order path](../api/python-sdk.md#the-order-path)).
+
 `meridian plugin check --verified` does not hold the `signal` or `ems`
 suite: in v19 it checks the `custody` and `data` suites only. Run your role's
 suite in your own tests, as above, and in your CI.

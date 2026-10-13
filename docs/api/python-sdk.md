@@ -105,12 +105,16 @@ Built, not released. `meridian plugin migrate --to 0.26.0` moves the pins
 and rewrites nothing: contract v22 adds, and changes the shape of nothing a
 plugin calls. Then, by hand where they apply:
 
-- **A suite test** meets two cases every role's suite now holds,
-  `reads-a-calendar` and `asks-for-a-settlement-date`: map each to a call of
+- **A suite test** meets the settlement calendars' cases: every role's
+  suite now holds `reads-a-calendar`, and every role's but `connectivity`'s
+  and `operations`' `asks-for-a-settlement-date`. Map each to a call of
   `read_calendar` and `compute_date` (the role templates' `test_suite.py`
-  show both). A plugin holding `connectivity` or `oms` meets its role's
-  suite, and one holding `portfolio`, `ems`, `compliance`, `operations` or
-  `reporting` that role's order path cases.
+  show both), or, where your plugin's work never uses calendars or
+  settlement dates, name it in `not_presented`, with why: the two are about
+  `calendars` and `settlement dates` (see [A case not presented](#a-case-not-presented)).
+  A plugin holding `connectivity` or `oms` meets its role's suite, and one
+  holding `portfolio`, `ems`, `compliance`, `operations` or `reporting`
+  that role's order path cases.
 - **A settlement or value date your plugin works out itself** is asked of
   core instead, with `compute_date`, and recorded with its basis (see
   [Settlement calendars](#settlement-calendars)).
@@ -518,7 +522,7 @@ From 0.12.0. A plugin whose roles hear rows receives them with `plugin.receive`,
 | `position_changed` | `PositionChanged` | A `PositionChangedEvent`: the book's position whole in `position`, a [`BookPosition`](typed-operations.md#bookposition) with its lots, pending settlements and encumbrances, `removed` set when it was moved off a placeholder; its `previous_trade_date_quantity`; and the `entry` that changed it. Heard by `portfolio`, `reporting`, `compliance`, `oms` and `operations`. From 0.13.0. | W9.8 |
 | `break_changed` | `BreakChanged` | A `BreakChangedEvent`: the [`Break`](typed-operations.md#break) whole in `break_record`, and the `entry`. Heard by `operations`, `oms`, `compliance`, `portfolio` and `reporting`. From 0.13.0. | W9.8 |
 | `account_figures_recorded` | `AccountFiguresRecorded` | An `AccountFiguresRecordedEvent`: one agreement's [`AccountFigures`](typed-operations.md#accountfigures) in `figures`, and the `entry`. Heard by `operations`, `portfolio`, `compliance` and `reporting`. From 0.13.0. | W9.8 |
-| `account_attribute_changed` | `AccountAttributeChanged` | An `AccountAttributeChangedEvent`: the account's [`AccountAttributes`](typed-operations.md#accountattributes) in `attributes`, its standing opening balance among them, and the `entry`. Heard by `portfolio`, `reporting`, `compliance`, `oms` and `operations`. From 0.13.0. | W9.8 |
+| `account_attribute_changed` | `AccountAttributeChanged` | An `AccountAttributeChangedEvent`: the account's [`AccountAttributes`](typed-operations.md#accountattributes) in `attributes`, its standing opening balance among them, and the `entry`. Heard by `portfolio`, `reporting`, `compliance`, `oms` and `operations`, and from 0.26.0 by an `ems` and by a connectivity plugin for the accounts its `ems` mapped on it, which may use whether their releases wait for compliance. From 0.13.0. | W9.8 |
 | `activity_recorded` | `ActivityRecorded` | An [`ActivityRecordedEvent`](typed-operations.md#activityrecordedevent): an activity on the account as the custodian stated it, recorded once. The same message [`list_activities`](typed-operations.md#list_activities) reads, so a break waiting on its cause can be compared again. From 0.19.0, `preview`. | W2.12 |
 | `sync_status_recorded` | `SyncStatusRecorded` | A [`SyncStatusRecordedEvent`](typed-operations.md#syncstatusrecordedevent): a sync status the street kept, so "needs sign-in" is told apart from merely old. The same message [`list_sync_statuses`](typed-operations.md#list_sync_statuses) reads. From 0.19.0, `preview`. | W2.13 |
 | `activity_re_resolved` | `ActivityReResolved` | An [`ActivityReResolvedEvent`](typed-operations.md#activityreresolvedevent): an activity recorded before its instrument resolved, re-resolved, its re-resolution kept beside it. Caught up from the `re_resolutions` of [`list_activities`](typed-operations.md#list_activities). From 0.20.0, `preview`. | W2.16 |
@@ -974,9 +978,11 @@ async def a_want_recorded_against(recorder):
     await recorder.receive(observations_wanted=MyData(recorder).on_want)
 ```
 
-The cases are listed in [Write a data plugin against its suite](../how-to/write-a-data-plugin.md#hold-it-to-the-suite): thirteen in 0.22.0, twenty-one in 0.23.0, twenty-four from 0.24.0, when the suite is named `data`, `dgm` before. A plugin holding `data` is verified for it only by passing every case it presents, which [`meridian plugin check --verified --run-tests`](cli.md#plugin-check) holds it to. The reading roles, `reporting`, `portfolio`, `compliance` and `signal`, and from 0.23.0 `ems`, have suites of their own, run the same way; `meridian plugin check --verified` holds only the `custody` and `data` suites, so a reading role's suite is run by the plugin's own tests alone.
+The cases are listed in [Write a data plugin against its suite](../how-to/write-a-data-plugin.md#hold-it-to-the-suite): thirteen in 0.22.0, twenty-one in 0.23.0, twenty-four from 0.24.0, when the suite is named `data`, `dgm` before. A plugin holding `data` is verified for it only by passing every case it presents, which [`meridian plugin check --verified --run-tests`](cli.md#plugin-check) holds it to. The reading roles, `reporting`, `portfolio`, `compliance` and `signal`, and from 0.23.0 `ems`, have suites of their own, run the same way, and from 0.26.0 so do `connectivity`, `oms`, `confirmation`, `servicing` and `settlement`; `meridian plugin check --verified` holds only the `custody` and `data` suites, so a reading role's suite is run by the plugin's own tests alone.
 
-**A case not presented.** A case asserting one value of a closed list (`Case.closed_list`) that the plugin's source never presents may be named in `not_presented`, with why. From 0.23.0, so may a case about one kind of data (`Case.about`, in the contract's words: closes, bars, trades, quotes, prices on a venue, a currency's rate against another currency, a crypto asset's price, a security's price) that the plugin declares it never publishes. Every other case is required, and a case not presented without a reason fails:
+#### A case not presented { #a-case-not-presented }
+
+A case asserting one value of a closed list (`Case.closed_list`) that the plugin's source never presents may be named in `not_presented`, with why. From 0.23.0, so may a case about one kind of data (`Case.about`, in the contract's words: closes, bars, trades, quotes, prices on a venue, a currency's rate against another currency, a crypto asset's price, a security's price) that the plugin declares it never publishes. Every other case is required, and a case not presented without a reason fails:
 
 ```python
 report = run("data", PRODUCERS, not_presented={
@@ -985,6 +991,16 @@ report = run("data", PRODUCERS, not_presented={
 ```
 
 From 0.24.0 so may a case about one field (`Case.about_field`, a dictionary entry such as `meridian.v1.Trade.aggressor`) that the plugin's source never states, though it publishes the kind: see [A field your source never states](../how-to/write-a-data-plugin.md#a-field-your-source-never-states).
+
+From 0.26.0 (contract v22, built, not released) `Case.about` names a kind of work as well as a kind of data, in any role's suite: every role's `reads-a-calendar` is about `calendars`, `asks-for-a-settlement-date` (every role's but `connectivity`'s and `operations`') about `settlement dates`, `connectivity`'s `records-a-locate` about `locates`, and its `reads-whether-releases-wait-for-compliance` and `hears-an-accounts-attributes-change` about `compliance waits`. A plugin whose work never uses one names the case in `not_presented`, with why, and is verified on the rest:
+
+```python
+report = run("custody", PRODUCERS, not_presented={
+    "reads-a-calendar": "this plugin reports what its custodian states; it reads no calendar",
+})
+```
+
+`connectivity`'s `resolves-an-executions-venue` and `reports-a-venue-not-held` carry `Case.about_field`, `meridian.v1.ReportExecutionRequest.venue_id`: a plugin whose venue never states a fill's place of execution names both. The runner refuses, as a failure, a name in `not_presented` that is neither a closed-list case nor one with an `about` or an `about_field`.
 
 ### A restart's gap { #a-restarts-gap }
 
@@ -1083,6 +1099,17 @@ await plugin.report_placement(
   `NotGranted`, with no code. An order stating both or neither of
   `quantity` and `cash_quantity` is `CallFailed`, kind `"invalid"`, naming
   both in `.fields`.
+- **The suites.** `connectivity` and `oms` each have a
+  [suite](#the-data-suite), and `portfolio`'s, `ems`'s, `compliance`'s,
+  `operations`' and `reporting`'s hold the order path's cases. Every
+  `connectivity` case is required but six: `records-a-locate` (about
+  `locates`), `reads-whether-releases-wait-for-compliance` and
+  `hears-an-accounts-attributes-change` (`compliance waits`) and
+  `reads-a-calendar` (`calendars`), which a plugin whose work never uses
+  them names in `not_presented`, with why; and `resolves-an-executions-venue`
+  and `reports-a-venue-not-held` (`about_field`), which one whose venue never
+  states a fill's place of execution names. See
+  [A case not presented](#a-case-not-presented).
 
 **The transition table.** The order's states, conditions and transitions
 are one table, which the SDK carries as published,
@@ -1173,7 +1200,13 @@ platform.
 A value a plugin records from the date read carries the provenance
 **computed**, with the date's basis (`Provenance.date_basis`), since a date
 core worked out is not the plugin's own rule. Every role's suite holds
-`reads-a-calendar` and `asks-for-a-settlement-date`.
+`reads-a-calendar`, about `calendars`, and every role's but
+`connectivity`'s and `operations`' `asks-for-a-settlement-date`, about
+`settlement dates`: a plugin whose work never uses them names them in
+`not_presented`, with why (see [A case not presented](#a-case-not-presented)).
+`connectivity`'s `reports-a-fill-with-its-settlement-date` and
+`operations`' `re-checks-a-pending-value-date` ask `compute_date` too, and
+carry no `about`: they stay required.
 
 ## Types
 

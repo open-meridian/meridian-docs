@@ -123,7 +123,11 @@ from. **The US securities settlement calendar's coverage ends on 1 February
 2027**, the last date its sources' published schedules reach; a date after
 it is answered **outside coverage**. It is never extended by inference from
 the trading calendar's closures: Good Friday 2027 is not known to the
-settlement calendar until the next schedules are read. The platform's
+settlement calendar until the next schedules are read. Likewise the
+coverage of the Canadian and Australian dollars', the krona's and the
+krone's calendars ends on 31 December 2026, their sources having published
+nothing later yet (see
+[Where calendars come from](#where-calendars-come-from)). The platform's
 curation reads the next schedules when they are published, and a calendar
 whose coverage ends within a year is flagged to its staff.
 
@@ -151,24 +155,39 @@ it holds when the platform cannot be reached. **Nothing in a deployment
 edits a calendar**: a disagreement goes to the platform, and a venue's or a
 counterparty's own date is kept as stated beside the computed one.
 
-The first calendars the platform holds, each backfilled from 1 January
-2016 and saying so, every day citing its source and when it was read:
+The calendars the platform holds: the ten G10 currencies' settlement
+days, the NYSE markets' trading days and the US securities settlement
+calendar. Every day cites the copy of its source it was read from and when;
+a past year a source no longer shows is read from the Internet Archive's
+copy of it as published. Each calendar's coverage runs only as far as its
+source does without a gap:
 
-| Calendar | Its sources |
-|---|---|
-| The US dollar's settlement days | The Federal Reserve's holidays |
-| The NYSE markets' trading days | The NYSE's holiday page, and the exchange's announcements of unscheduled closures |
-| The US securities settlement calendar | The Federal Reserve's holidays, with each day the markets and their clearing close while the Reserve Banks open (Good Friday, and a Friday closed for a Saturday holiday), from FINRA's published settlement schedules and DTCC's notices |
-| The euro's settlement days | The ECB's TARGET closing days |
-| The pound's settlement days | England and Wales's bank holidays, from GOV.UK |
+| Calendar | Its sources | Coverage |
+|---|---|---|
+| The US dollar's settlement days | The Federal Reserve's holidays | 2016 to 2030 |
+| The NYSE markets' trading days | The NYSE's holiday page, and the exchange's announcements of unscheduled closures | 2016 to 2028 |
+| The US securities settlement calendar | The Federal Reserve's holidays, with each day the markets and their clearing close while the Reserve Banks open (Good Friday, and a Friday closed for a Saturday holiday), from FINRA's published settlement schedules and DTCC's notices | 2016 to 1 February 2027 |
+| The euro's settlement days | The ECB's TARGET closing days | 2016 to 2028 |
+| The pound's settlement days | England and Wales's bank holidays, from GOV.UK | 2016 to 2028 |
+| The yen's settlement days | The Bank of Japan's holiday schedule: the days its offices close | 2016 to 2027 |
+| The Swiss franc's settlement days | SIX's schedule of SIC clearing days: the bank holidays on which the Swiss National Bank's payment system makes no value day | 2020 to 2027: the schedules for 2017 to 2019 are not archived |
+| The Canadian dollar's settlement days | The Bank of Canada's holiday schedule, the days it marks national; the provincial days it also lists are not listed | 2016 to 2026: the schedule shows upcoming holidays only |
+| The Australian dollar's settlement days | The Reserve Bank of Australia's public and bank holidays observed in New South Wales, where the Bank and its settlement system are | 2016 to 2026: 2027's are not published yet |
+| The New Zealand dollar's settlement days | The Reserve Bank of New Zealand's NZClear closure dates; Wellington's and Auckland's anniversary days are not among them | 2024 to 2027: earlier dates are not archived |
+| The Swedish krona's settlement days | The Swedish Bankers' Association's bank holidays, to which the Riksbank refers for the days banks and its payment system close | 2019 to 2026: the 2018 list is not archived |
+| The Norwegian krone's settlement days | Norges Bank's settlement days: the public holidays its settlement system closes | 2016 to 2026: 2027's are not published yet |
 
-and one rule, the US equities and funds settlement-date rule above.
+Coverage given in years runs from 1 January of the first to 31 December of
+the last. A day's name is its source's, in the language the source gave it;
+where the Bank of Japan's schedules give dates alone, from 2019, a day is
+named "Holiday observed by the Bank of Japan". The platform also holds one
+rule, the US equities and funds settlement-date rule above.
 
 !!! note "TODO: the first spot-date rules"
     No spot-date rule is held yet, so a spot or tenor date is answered
     "rule not held" until the platform records the first pairs, with the
-    spot FX connectivity plugin planned after v22. Name them, and the other
-    G10 currencies' calendars, when the platform holds them.
+    spot FX connectivity plugin planned after v22. Name them when the
+    platform holds them.
 
 ## The Calendars tab
 
@@ -204,8 +223,11 @@ a calendar's days with `read_calendar` or asks for a date with
 worked out on (see
 [Settlement calendars in the Python SDK](../api/python-sdk.md#settlement-calendars)).
 The SDK carries the two operations and no calendar library. From contract
-v22 every role's suite holds two cases, `reads-a-calendar` and
-`asks-for-a-settlement-date`, which a plugin's suite test maps.
+v22 every role's suite holds `reads-a-calendar`, and every role's but
+`connectivity`'s and `operations`' `asks-for-a-settlement-date`, which a
+plugin's suite test maps; a plugin whose work never uses calendars or
+settlement dates marks them not presented, with why (see
+[A case not presented](../api/python-sdk.md#a-case-not-presented)).
 
 **An execution's settlement date.** A connectivity plugin reports the date
 its venue states, kept as stated. Where the venue states none, or where the
