@@ -151,15 +151,22 @@ At install, pass them to `meridian up` in a values file:
 meridian up --id DEP-… -f backup.yaml
 ```
 
-On a running deployment, apply them with Helm, as an upgrade to the version it already runs,
-keeping its own values (see [Upgrade a deployment](upgrade-a-deployment.md#plain-helm)):
+On a running deployment, from CLI 0.1.42, give them to `meridian upgrade-deployment`, which merges
+them over the deployment's own values, shows each path they set, never a value, and asks first; at
+the version it already runs, that is an upgrade at that version:
+
+```bash
+meridian upgrade-deployment -f backup.yaml
+```
+
+With CLI 0.1.41 or earlier, or from your own pipeline, apply them with Helm, as an upgrade to the
+version it already runs, keeping its own values (see
+[Upgrade a deployment](upgrade-a-deployment.md#plain-helm)):
 
 ```bash
 helm upgrade meridian oci://ghcr.io/open-meridian/charts/meridian-runtime \
   --version <the version it runs> --namespace meridian --reset-then-reuse-values -f backup.yaml
 ```
-
-`meridian upgrade-deployment` does not take a values file.
 
 ## Back up now
 
@@ -203,10 +210,15 @@ release or namespace; `--timeout` (default `10m`) is how long it waits. See
     conductor is left without its database, and first run keeps waiting with its rights. Run
     `meridian upgrade` first. `meridian --version` says which you have.
 
+!!! note "CLI 0.1.42"
+    From CLI 0.1.42 restore checks everything before it changes anything, shows what it will do
+    and asks `Restore it here?`, refuses a namespace a deployment kept anything in, never installs
+    a chart older than the backup's, and loads a dump of a database you run itself. CLI 0.1.41 and
+    earlier did not ask, so check `kubectl config current-context` first with those.
+
 You need the backup file, the identity it was sealed to, and a cluster to restore into, with
-`kubectl` pointing at it. Restore goes only into a namespace that holds no release of that name and
-none of the backup's Secrets, so it never restores over a deployment. It does not ask before it
-starts: check `kubectl config current-context` first.
+`kubectl` pointing at it. Restore goes only into a namespace holding no deployment, so it never
+restores over one.
 
 ```bash
 meridian restore meridian-20261012T143005Z.meridian-backup --identity meridian-backup-identity.txt
@@ -222,21 +234,28 @@ It says each step on stderr as it goes:
    SHA-256 list, and reads the manifest. A file sealed to another identity, or a member that is not
    what was written, is refused.
 2. **Check where.** It names the cluster and namespace, and refuses, changing nothing, if the
-   namespace holds the release or any of the backup's Secrets. It makes the namespace if there is
-   none.
-3. **Put the keys back.** It makes every Secret the backup holds, with the database's URL left empty
+   namespace holds the release or anything a deployment keeps or would take up: the backup's
+   Secrets and ConfigMaps, the key's Secret, the claims the database the chart brings and its
+   registry would take, or a backup volume a deleted namespace left. One refusal lists them all.
+   It reads the chart at the version the backup was taken on, or `--chart-version`, and refuses
+   one older than the backup's; a newer one is said, the restore then being an upgrade.
+3. **Ask.** It shows the backup, the cluster and namespace, the chart and version, what it will
+   make and what it will do with the database, and asks `Restore it here?`. `--yes` answers for a
+   script; with no terminal and no `--yes`, nothing is changed. Then it makes the namespace if
+   there is none.
+4. **Put the keys back.** It makes every Secret the backup holds, with the database's URL left empty
    so that nothing starts against the database yet. Where the deployment made its own key, the key
    goes into a Secret, `<release>-meridian-runtime-key`; where you gave it one
    (`key.existingSecret`), your own Secret is put back instead.
-4. **Install.** It runs `helm install` with the values you chose, those that differ from the chart's
+5. **Install.** It runs `helm install` with the values you chose, those that differ from the chart's
    own defaults, so a default the chart has changed since still applies.
-5. **Restore the database.** It starts the database the deployment brings, makes the database and
+6. **Restore the database.** It starts the database the deployment brings, makes the database and
    its two roles with the backed-up passwords, refuses a database that already holds tables, and
    loads the dump.
-6. **Check it.** It counts every table's rows and compares them with the counts the backup took. If
+7. **Check it.** It counts every table's rows and compares them with the counts the backup took. If
    any differs it stops, names each table, and keeps the URL withheld: nothing runs against a
    database that does not hold what was backed up.
-7. **Start.** Only then does it give the components the database's URL. The migration runs, the
+8. **Start.** Only then does it give the components the database's URL. The migration runs, the
    conductor and the dashboard restart with the URL, first run gives up its rights, and it waits for
    every component of the release to be ready.
 
@@ -256,10 +275,20 @@ Then it reports what was restored on stdout:
 
 ```text
 Restored meridian into meridian from meridian-20261012T143005Z.meridian-backup.
-  The database meridian: <n> tables, <n> rows, every count as backed up.
+  The database meridian: <n> tables, <n> rows, every count as backed up:
+    config: <n> tables, <n> rows
+    book: <n> tables, <n> rows
+    street: <n> tables, <n> rows
+    lake: <n> tables, <n> rows
+    instrument: <n> tables, <n> rows
+    dashboard: <n> tables, <n> rows
   <n> Secrets and the deployment's key, as they were: secret settings open with the settings key they were sealed with, and every sidecar trusts the dashboard's key.
-  Launched plugins, whose images were in the deployment's registry and are not in a backup: <instance>, …. Upload each again with `meridian plugin upload`; an edge plugin's own storage starts empty, and it gathers again what its vendor still serves.
+  Launched plugins whose images are not in the deployment's registry, which a backup does not hold: <instance> (<image>), …. Upload each again with `meridian plugin upload` from its directory; an edge plugin's own storage starts empty, and it gathers again what its vendor still serves.
 ```
+
+From CLI 0.1.42 the counts are given by store, and it reads each launched plugin's pod for at most
+two minutes and names only those whose image could not be pulled; CLI 0.1.41 and earlier name
+every launched plugin.
 
 ### After a restore
 
@@ -275,7 +304,7 @@ again. Empty the namespace, or restore into another with `-n`.
 ### Restoring on the same cluster
 
 After a namespace is deleted, the volume made from `backup.path` is left behind, `Released`.
-Delete it before you restore. The directory and the backups in it are
+Delete it before you restore; from CLI 0.1.42 restore refuses while it is there, naming the command. The directory and the backups in it are
 kept:
 
 ```bash
@@ -290,9 +319,16 @@ When the database is one you run, and the backup does not include it, restore pu
 it was, and the deployment reaches that database again. Its records are the ones the database
 holds, so restore it from your provider's own backups first if it was lost.
 
-A backup taken with `backup.database: true` holds a dump of that database, which restore does not
-load yet. It installs the release, stops with the URL withheld, and says to restore the database
-with your provider's tools and then fill the database's Secret.
+A backup taken with `backup.database: true` holds a dump of that database. From CLI 0.1.42 restore
+loads it itself, into that database, which must be empty: it needs `backup.image`, the URL to load
+with, and your right to add a container to a pod and exec into it, all checked before it changes
+anything. The plan names the database by its host and name, never its credentials; stop anything
+else running against it first. Restore adds a container of `backup.image` beside the conductor,
+which reaches the database by the cluster's own path and is gone when the conductor restarts, loads
+the dump in one transaction as the migrating role, and counts every table against the backup's
+before the components are given the URL. CLI 0.1.41 and earlier do not load it: they install the
+release, stop with the URL withheld, and say to restore the database with your provider's tools and
+then fill the database's Secret.
 
 ## Related
 

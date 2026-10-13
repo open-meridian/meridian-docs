@@ -277,7 +277,7 @@ anything to read or write. See
 The same layering runs through the deployment: the deployment admin
 licenses a dataset and entitles plugins to it, and sets the ceiling on what
 agents may do with each act; a plugin's admin chooses within each. From
-contract v22 (built, not released) the deployment admin makes a
+contract v22 the deployment admin makes a
 connectivity plugin available and grants an `ems` the accounts it may map;
 the `ems`'s admin links an available connectivity plugin to their `ems`,
 chooses who may route through it and maps the accounts (see

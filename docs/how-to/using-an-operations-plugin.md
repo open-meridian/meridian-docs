@@ -27,6 +27,22 @@ something only it has, it says so.
     [service account](../concepts/service-accounts.md) (see
     [Close cleared breaks automatically](#close-cleared-breaks-automatically)).
 
+!!! note "Contract v22"
+    The sample operations plugin 0.12.0, released 2026-10-13, is built on
+    open-meridian 0.26.0 (contract v22) and runs on chart 0.1.301 or
+    later. It reads the [order path](../concepts/the-order-lifecycle.md):
+    a fill traded after a statement's date is taken back out when the book
+    is compared with that statement, so a traded position is not a break,
+    and a fill the book records compares its account's latest statement
+    again. A **Flags** tab under Open and View (`read_flags`) lists, in the
+    accounts you may read, each order carrying a late fact and each venue's
+    fact the book holds on no order, with why; a late fact is acknowledged
+    with a reason (`acknowledge_flag`, under Open). Each run asks core
+    whether every pending fill's value date is a business day on its
+    [settlement calendars](../concepts/settlement-calendars.md), and where
+    it is not, offers that as a break's first candidate cause, linked to
+    the check; the book never moves the date. It passes every case of the operations suite.
+
 ## The first-use path
 
 | # | Step | Whose | Where |

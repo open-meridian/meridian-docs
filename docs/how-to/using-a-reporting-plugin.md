@@ -21,6 +21,18 @@ is one, the sample reporting plugin (plugin-sample-reporting): see
     [Your own Board](watch-the-board.md#your-own-board)). The sample
     reporting plugin 0.2.0 is built on contract v19.
 
+!!! note "Contract v22"
+    The sample reporting plugin 0.5.0, released 2026-10-13, is built on
+    open-meridian 0.26.0 (contract v22) and runs on chart 0.1.301 or
+    later. An **Orders** tab under Open and View (`read_orders`) lists the
+    orders in the accounts you may read, newest first, one line each:
+    account, instrument, side, ordered, filled, state, and who decided and
+    who executed it. An order opens to its history (`read_order_history`),
+    each step with who took it and when. It records nothing. Its suite's
+    two calendar cases are not presented, with why: it values at a business
+    date's prices as the lake holds them, and never reads a settlement
+    calendar or asks for a settlement date.
+
 ## The first-use path
 
 | # | Step | Whose | Where |

@@ -9,19 +9,17 @@ nothing, or it reports a fact from the venue, which the book never refuses
 for the state it arrives in. An order's status is derived from its journal,
 one entry at a time, and stored nowhere as a fact.
 
-!!! note "Contract v22: built, not released"
-    The order path's slice A is built in core for contract v22, with
-    open-meridian 0.26.0 (see [The order path](../api/python-sdk.md#the-order-path)).
-    Its operations are `preview`: they may change in a later contract
-    version, with a migration. Core proves the path end to end against a
-    simulated venue only, with stand-in plugins for each role; no broker,
-    brokerage, paper account or trading API is reached by those tests.
-
-!!! note "TODO: the release of contract v22"
-    Name the chart that serves contract v22 and its date once released, and
-    the first connectivity plugin a deployment can launch: SnapTrade gains
-    `connectivity` in its v22 version (name the version), tested against a
-    simulated venue only.
+!!! note "Contract v22"
+    The order path's slice A is in core for contract v22, released
+    2026-10-13 in chart 0.1.301, with open-meridian 0.26.0 (see
+    [The order path](../api/python-sdk.md#the-order-path)). Its operations
+    are `preview`: they may change in a later contract version, with a
+    migration. Core proves the path end to end against a simulated venue
+    only, with stand-in plugins for each role; no broker, brokerage, paper
+    account or trading API is reached by those tests. The first
+    connectivity plugin a deployment can launch is SnapTrade 0.16.0,
+    released 2026-10-13, tested against a simulated brokerage only (see
+    [Trading through SnapTrade](../how-to/using-a-custody-plugin.md#trading-through-snaptrade)).
 
 ## Who does what
 

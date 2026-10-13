@@ -13,7 +13,7 @@ their own place:
 |---|---|---|---|
 | 1 | **Make the connectivity plugin available** | a deployment admin | the connectivity plugin's **Access** tab, **Its ems** |
 | 2 | **Grant the `ems` the accounts it may map** | a deployment admin | the `ems`'s **Accounts** tab |
-| 3 | **Link it to the `ems`, and choose who may route through it** | an admin of the `ems` | the connectivity plugin's **Access** tab, **Its ems** |
+| 3 | **Link it to the `ems`, and choose who may route through it** | an admin of the `ems` | the `ems`'s **Access** tab, **Its connectivity plugins** |
 | 4 | **Map each account to its venue account code** | an admin of the `ems` | the `ems`'s own page |
 | 5 | **Give the desk access** to the roles they work | a deployment admin | Settings, as for any plugin |
 
@@ -22,16 +22,19 @@ refusal recorded, and the connectivity plugin reaches no account and hears
 nothing. See [The order lifecycle](../concepts/the-order-lifecycle.md#placements-and-the-connectivity-plugins-an-ems-may-use)
 for why it is set up this way.
 
-!!! note "Contract v22: built, not released"
-    The link, the map and the checks are built in core for contract v22.
-    Core proves them against a simulated venue only.
+!!! note "Contract v22"
+    The link, the map and the checks are in core for contract v22, released
+    2026-10-13 in chart 0.1.301. Core proves them against a simulated
+    venue only.
 
-!!! note "TODO: the first connectivity plugin"
-    Name the first connectivity plugin a deployment can launch, and its
-    version, once released: SnapTrade gains `connectivity` in its v22
-    version, enabling trading per connection, tested against a simulated
-    venue only. Add how to enable trading on a SnapTrade connection here,
-    or on [Using a custody plugin](using-a-custody-plugin.md).
+The first connectivity plugin a deployment can launch is SnapTrade 0.16.0,
+released 2026-10-13, which holds `connectivity` beside `custody`. It is
+tested against a simulated brokerage only. Its connections are read-only
+until an admin of its `connectivity` role enables trading on each, with
+**Enable trading** on its **Connections** page (the `enable_trading` tool):
+see [Trading through SnapTrade](using-a-custody-plugin.md#trading-through-snaptrade).
+Until then every order placed through it on that connection is rejected
+`unsupported`.
 
 ## Before you start
 
@@ -67,24 +70,27 @@ no accounts of its own.
 
 ## 3. Link it, and choose who may route
 
-1. On the connectivity plugin's **Access** tab, choose **Edit link**. The
-   dialog is headed **Link** and the plugin's name **to an ems**.
-2. Under **The ems**, choose one of the `ems` instances you administer.
-   **None (unlink)** unlinks it.
+An admin of the `ems` links it from the `ems`'s own admin view, and needs no
+admin on the connectivity plugin:
+
+1. Open the `ems`'s admin view (Settings, **Plugins**, the `ems`), then its
+   **Access** tab. Its part **Its connectivity plugins** lists each one
+   linked to it, with **Edit**, and each a deployment admin made available
+   that is linked to none, with **Link**.
+2. Choose **Link** on the connectivity plugin's row. The dialog is headed
+   **Link** the plugin's name **to** the `ems`.
 3. Under **Who may route through it**, choose the people, service accounts
    and user groups who may place through it. The picker is searchable.
 4. Say **Why**, and choose **Save**.
 
-**Edit link** is shown to an admin of an `ems`, where the connectivity
-plugin is available or already linked to an `ems` they administer. A
-connectivity plugin already linked to another `ems` is refused
-(`REFUSAL_REASON_CONNECTIVITY_LINKED`): its `ems`'s admin unlinks it first.
-
-!!! note "TODO: who opens the connectivity plugin's Access tab"
-    Core shows a plugin's admin view to its own admins and to deployment
-    admins. Confirm how an admin of the `ems` who holds no admin on the
-    connectivity plugin reaches **Edit link**, or say they need `admin` on
-    the connectivity plugin's role too.
+**Edit** on a linked plugin's row changes who may route, or, with **None
+(unlink)** under **The ems**, unlinks it. A plugin's admin view opens only
+for its own admins and deployment admins, so someone who also administers
+the connectivity plugin may do the same from its **Access** tab, **Its
+ems**, with **Edit link**, shown where the plugin is available or already
+linked to an `ems` they administer. A connectivity plugin already linked to
+another `ems` is refused (`REFUSAL_REASON_CONNECTIVITY_LINKED`): its
+`ems`'s admin unlinks it first.
 
 **Who may route is access**, so it is set at the page only: no tool sets
 it. A placement for anyone not chosen is refused
@@ -113,10 +119,11 @@ How the page looks is the `ems` plugin's. A plugin holding both `custody`
 and `connectivity` may offer its custody links as suggestions; they are
 never the map itself.
 
-The `ems`'s **Access** tab shows, read-only, the connectivity plugins
-linked to it (**Available**, **Users**) and its **Venue account map**, one
-line per mapping, searchable: the connectivity plugin, the venue account
-code and the account.
+The `ems`'s **Access** tab shows the connectivity plugins linked to it
+(**Available**, **Users**), with **Link** and **Edit** for its admins
+only, and, read-only, its **Venue account map**, one line per mapping,
+searchable: the connectivity plugin, the venue account code and the
+account.
 
 ## 5. Give the desk access
 

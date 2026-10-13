@@ -20,14 +20,14 @@ where this page names a setting or a page only SnapTrade has, it says so.
     granted to it, and every act names its check tool. SnapTrade 0.13.1 is
     built on contract v18.
 
-!!! note "TODO: SnapTrade's connectivity (contract v22)"
-    SnapTrade gains the `connectivity` role in its v22 version, built and
-    tested against a simulated venue only: trading enabled per connection,
-    orders converted at the edge, what the brokerage cannot do for an
-    account rejected `unsupported`, an unknown outcome resolved by asking
-    the brokerage, never by resending. Name its version and describe
-    enabling trading on a connection once built and released; until then
-    see [Route orders through a connectivity plugin](route-orders-through-a-connectivity-plugin.md).
+!!! note "Contract v22"
+    SnapTrade 0.16.0, released 2026-10-13, is built on open-meridian 0.26.0
+    (contract v22) and runs on chart 0.1.301 or later. It holds the
+    `connectivity` role beside `custody`: an `ems` places orders at a
+    SnapTrade brokerage through it once trading is enabled on the
+    connection (see [Trading through SnapTrade](#trading-through-snaptrade)).
+    It is tested against a simulated brokerage only. SnapTrade 0.15.0 is
+    built on contract v21.
 
 ## The first-use path
 
@@ -103,6 +103,39 @@ Under **Open** and **View**, the page you return to daily first:
 **Connections** (how many, a warning when any needs attention), **Accounts
 reached** and **Last read** (an error, with the reason, when the last read
 failed): SnapTrade's three, now every custody plugin's.
+
+## Trading through SnapTrade
+
+From SnapTrade 0.16.0 the plugin is also a
+[connectivity plugin](route-orders-through-a-connectivity-plugin.md): an
+`ems` linked to it places the orders it works at the brokerage behind a
+connection, and SnapTrade reports back what the brokerage did. Its pages
+other than **Connections** stay custody's.
+
+**A connection is read-only until trading is enabled on it.** Connecting
+through the Connection Portal opens it read-only, as before. To trade on
+it, an admin of the plugin's `connectivity` role chooses **Enable trading**
+on the connection's row on **Connections** (the `enable_trading` tool,
+checked by `check_enable_trading`). It opens SnapTrade's Connection Portal
+to reconnect that brokerage with trading access, keeping its account links;
+the connection then shows as trading. With **Sample data** on it takes
+effect at once, against a simulated brokerage. An order on a read-only
+connection is rejected `unsupported`, nothing sent, as is anything the
+brokerage does not offer for the account: an order type or time in force
+its catalogue does not list, a short sale, or any strategy.
+
+The venue account code an `ems` maps for an account is the external
+account ID SnapTrade reports for custody, shown on **Account links**. An
+outcome SnapTrade never answered is resolved by asking SnapTrade for the
+account's orders, never by sending again. Fills are worked out from the
+filled quantity SnapTrade states between two reads.
+
+Each exchange with SnapTrade's trading API is kept as a raw record of a
+third kind, `trading`, for 2,555 days (seven years) by default, then
+archived, kept or deleted as the plugin's admin sets on its **Settings**
+(`trading_window_days`, `trading_past_window`): a default, not a claim
+about any rule. See
+[Keep older records in the archive](keep-older-records-in-the-archive.md).
 
 ## For an agent
 

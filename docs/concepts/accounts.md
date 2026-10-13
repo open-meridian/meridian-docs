@@ -17,13 +17,14 @@ explains both, and how accounts bound what a plugin may read and write.
     [In the book](#in-the-book)), in place of the dashboard's Books tab.
     Released 2026-10-12 in chart 0.1.298.
 
-!!! note "Contract v22: built, not released"
+!!! note "Contract v22"
     From contract v22 an account's attributes in the book also say whether
     its releases wait for compliance (see [In the book](#in-the-book)); a
     deployment admin grants an `ems` the accounts it may map to venue
     account codes; and a connectivity plugin reaches the accounts its `ems`
     mapped on it (see
     [Accounts a plugin may link to](#accounts-a-plugin-may-link-to)).
+    Released 2026-10-13 in chart 0.1.301.
 
 ## The firm's accounts
 
@@ -55,7 +56,7 @@ sections, each saved on its own:
 - **Account**: its name, custodian, type, owner and note, as above.
 - **In the book**: its base currency (an ISO 4217 code) and its lot relief
   (first in, first out; last in, first out; highest cost; lowest cost;
-  average cost), and from contract v22 (built, not released) whether its
+  average cost), and from contract v22 whether its
   **Releases** wait for compliance (**Wait for compliance** or **Do not
   wait**, shown in the row's **Compliance** column as **Waits** or **Does
   not wait**), each change saved to the book with a **Reason**, its own
@@ -166,11 +167,10 @@ accounts, chooses which of those each one is.
   links.
 - **A connectivity plugin needs no grant.** It links no external accounts:
   it reaches accounts only through the `ems` it serves, which names the
-  venue's account. From contract v22 (built, not released) its read and
+  venue's account. From contract v22 its read and
   write scope is the accounts its `ems` mapped venue account codes to on
   it, while it is available and linked, and nothing otherwise.
-- **An `ems` is granted the accounts it may map**, from contract v22 (built,
-  not released): on its **Accounts** tab, as a linking plugin is, nothing
+- **An `ems` is granted the accounts it may map**, from contract v22: on its **Accounts** tab, as a linking plugin is, nothing
   by default. Its admins map only those to venue account codes; a mapping
   naming another account is refused `REFUSAL_REASON_ACCOUNT_NOT_LINKABLE`.
   See [Route orders through a connectivity plugin](../how-to/route-orders-through-a-connectivity-plugin.md).

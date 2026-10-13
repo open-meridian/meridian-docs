@@ -39,11 +39,11 @@ so each [dataset](the-lake.md#datasets) declares its day:
 |---|---|---|
 | `day_time_zone` | The IANA zone a business date is in. Empty for a dataset that is not daily. | `America/New_York` for a US close and FX's 17:00 roll; `Etc/UTC` for a crypto venue's daily candle. |
 | `day_end_minute` | The minutes after local midnight the day ends, 0 to 1,439; 0 ends it at midnight. | 960 for a US equity close at 16:00 New York; 1,020 for FX at 17:00 New York; 0 for a candle ending at UTC midnight. |
-| `calendar_id` | From contract v22 (built, not released): the [settlement calendar](settlement-calendars.md) its business dates follow, by its `CAL-` ID; empty names none. Anything else is refused at registration, naming the field. | The NYSE markets' trading calendar for a US equity close. |
+| `calendar_id` | From contract v22: the [settlement calendar](settlement-calendars.md) its business dates follow, by its `CAL-` ID; empty names none. Anything else is refused at registration, naming the field. | The NYSE markets' trading calendar for a US equity close. |
 
 So the day says which session counts as the date, and when its value is
 final. It carries no holiday calendar: a business date with no session has
-no close. From contract v22 (built, not released) a dataset may name its
+no close. From contract v22 a dataset may name its
 calendar beside its day, and in v22 the lake applies nothing by it: a daily
 value dated on a day that calendar says is closed is recorded as reported,
 and flagging it comes with a later revision of the lake. See

@@ -31,7 +31,8 @@ Allow 30 minutes.
   (contract v18), and the tutorial runs on it unchanged; CLI 0.1.38 builds on SDK 0.23.0 (contract
   v19), whose move from 0.22.0 changes only the pins; CLI 0.1.39 builds on SDK 0.24.0 (contract
   v20), whose move from 0.23.0 rewrites only the renamed roles, `custody` not among them; CLI
-  0.1.41 builds on SDK 0.25.0 (contract v21), whose move from 0.24.0 changes only the pins.
+  0.1.41 builds on SDK 0.25.0 (contract v21), whose move from 0.24.0 changes only the pins; CLI
+  0.1.42 builds on SDK 0.26.0 (contract v22), whose move from 0.25.0 changes only the pins.
 - To have done [Change your plugin's page, live](change-the-page-live.md), or be comfortable with
   `meridian plugin dev`.
 

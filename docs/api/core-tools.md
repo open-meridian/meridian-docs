@@ -11,7 +11,7 @@ and launching and stopping it. From contract v18, five more mirror the
 **Data sources** page: the lake's datasets, their licences and
 entitlements, and the source priority. From contract v20, seven more work [prepared changes](../concepts/prepared-changes.md)
 and one reads the accounts a plugin may link to. From contract v21, one reads the [service accounts](#service-accounts). From
-contract v22 (built, not released), four set and list the
+contract v22, four set and list the
 [trading instructions and account attributes](#trading-instructions-and-account-attributes),
 and two read the Instruments page's [Calendars tab](#the-calendars-tab). This
 page is the reference for those thirty-three. An agent calls them as the person who
@@ -61,7 +61,7 @@ act.
     [Service accounts](../concepts/service-accounts.md). Released
     2026-10-12 in chart 0.1.299.
 
-!!! note "Contract v22: built, not released"
+!!! note "Contract v22"
     [`dashboard__set_trading_instruction`](#dashboard__set_trading_instruction),
     [`dashboard__list_trading_instructions`](#dashboard__list_trading_instructions),
     [`dashboard__set_account_attribute`](#dashboard__set_account_attribute)
@@ -77,10 +77,8 @@ act.
     available, linking it to an `ems` and choosing who may route through it
     are access, set at the page only. See
     [The order lifecycle](../concepts/the-order-lifecycle.md) and
-    [Settlement calendars](../concepts/settlement-calendars.md).
-
-!!! note "TODO: the chart serving contract v22"
-    Name the chart release here once it is published.
+    [Settlement calendars](../concepts/settlement-calendars.md). Released
+    2026-10-13 in chart 0.1.301.
 
 ## What every one of them does
 
@@ -320,7 +318,7 @@ caps; each access group's stricter level) and whether it needs a
 `service_account_id` its autonomous work runs as, its `name` and `state`
 (`active`, `disabled`, `removed`), the `level` chosen, and the level the
 account is `granted` on the role now; all but `role` empty where it runs as
-none. From contract v22 (built, not released) also `connectivity`: for a
+none. From contract v22 also `connectivity`: for a
 plugin holding `connectivity`, its `connectivity_link` (the
 `connectivity_instance_id`, whether it is `available`, the
 `ems_instance_id` it is linked to, empty for none, and its `users`, each a
@@ -669,7 +667,7 @@ The call's record names its gate as `deployment admin` or `owner`.
 
 ## Trading instructions and account attributes
 
-From contract v22, built, not released. The **Trading instructions** page
+From contract v22. The **Trading instructions** page
 (`/admin/trading-instructions`) and the Accounts tab's book part. See
 [The order lifecycle](../concepts/the-order-lifecycle.md#trading-instructions)
 and, at the page,
@@ -758,7 +756,7 @@ and the `entry_id`.
 
 ## The Calendars tab
 
-From contract v22, built, not released. The Instruments page's
+From contract v22. The Instruments page's
 **Calendars** tab, at the deployment admin's level, read only: nothing sets
 a calendar in a deployment. See
 [Settlement calendars](../concepts/settlement-calendars.md).
@@ -824,7 +822,7 @@ prepared change is its own record in the dashboard. From contract v21
 each change to a service account, and to what a role
 runs as, is its own record in the dashboard, made at the page; a call a
 service account made is recorded on its own page, **Its calls**, not in
-anyone's Connected clients. From contract v22 (built, not released) a
+anyone's Connected clients. From contract v22 a
 trading instruction or an account attribute set through a tool is an entry
 in the book, as one set at the page is, with the person, the delegation,
 the client and the note, kept as the entry's reason; and each change to a connectivity plugin's

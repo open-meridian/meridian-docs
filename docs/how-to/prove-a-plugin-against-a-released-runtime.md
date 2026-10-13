@@ -178,16 +178,18 @@ Each prints what it found and exits 0, or exits non-zero saying why. Every wait 
 | `priority DATA_TYPE [--kind KIND] DATASET ... [note=TEXT] [--against N]` | From contract v18: sets the priority a default read takes for `meridian.v1.Price`, one kind of it (`close`, `last`, `nav`, `settlement`), or `meridian.v1.Bar`: the datasets first to last, replaced whole, against the priority as the page shows it. |
 | `service-account create NAME --owner PERSON [--setting prepare_only\|act] [--purpose TEXT]`, `set SA [--setting ...] [--name NAME] [--owner PERSON]`, `disable\|enable\|remove SA`, `grant SA --role ROLE --level read\|write`, `runs-as (SA \| none) --role ROLE [--level write\|read]`, `list` | From a runtime serving contract v21: a [service account](../concepts/service-accounts.md), as a deployment admin makes it on Settings' Service accounts tab: created with a name, an owner (one of the run's people, or `harness`) and a setting, prepare only unless `--setting act`, its `SA-` ID printed; changed; disabled (by its owner too), re-enabled or removed. `grant` grants it a level on one of the plugin's roles, on All accounts, by its ID in a user group's logins; `runs-as` chooses, on the plugin's Access tab, what the role's autonomous work runs as, or none; `list` prints each account's ID, name, setting and state. With `--expect-refused TEXT`, fails unless the change is refused saying `TEXT`. |
 
-From a runtime serving contract v22 (built, not released) the runner also takes
-`connectivity available [--withdraw]` and `connectivity link --ems EMS [--user person:SUBJECT ...]`,
-which make the plugin available, or withdraw it, as a deployment admin does, and link it to an
-`ems` with who may route through it, as the `ems`'s admin does (see
+From a runtime serving contract v22 the runner also takes
+`connectivity available [--withdraw] [--note TEXT]` and `connectivity link --ems EMS
+[--user person:SUBJECT ...] [--note TEXT]`, which make the plugin available, or withdraw it, as a
+deployment admin does, and link it to an `ems` with who may route through it, people by subject,
+service accounts as `account:SA-...` and user groups as `group:...`, as the `ems`'s admin does (see
 [Route orders through a connectivity plugin](route-orders-through-a-connectivity-plugin.md));
 `instruction active|pause|stop (--all | --account ID | --plugin ID | --person SUBJECT |
---service-account SA) [--within PLUGIN] reason=TEXT [--expect-refused TEXT]`, which sets a trading
-instruction at the Trading instructions page; and `attribute ACCOUNT waits=true|false
-reason=TEXT`, whether the account's releases wait for compliance (see
-[Set trading instructions](set-trading-instructions.md)).
+--service-account SA) [--within PLUGIN] note=TEXT [--expect-refused TEXT]`, which sets a trading
+instruction at the Trading instructions page, as a deployment admin on any target or a plugin's
+admin within their plugin, and prints what the page then lists for it; and `attribute ACCOUNT
+waits=true|false note=TEXT [--expect-refused TEXT]`, whether the account's releases wait for
+compliance (see [Set trading instructions](set-trading-instructions.md)).
 
 From contract v22 the harness's stand-in for the platform also holds the seed
 [settlement calendars](../concepts/settlement-calendars.md) and the US equities rule, the XNYS and
@@ -196,9 +198,10 @@ venue. The runner's `instrument` command takes `--ask-platform`, asking the plat
 record from its page as a deployment admin's button does, so a `compute_date` for that equity
 gives its settlement date in a harness run (T+1) rather than "rule not held".
 
-!!! note "TODO: the harness for contract v22"
-    Name the runtime and harness commit serving contract v22 once
-    published, and check these commands against its `README.md`.
+Core 8774368's runtime and harness serve contract v22, released 2026-10-13 in chart
+0.1.301: `ghcr.io/open-meridian/meridian-runtime:8774368` and
+`ghcr.io/open-meridian/meridian-harness:8774368`, pinned by digest as in
+[step 1](#1-pin-a-runtime-image-and-its-harness). The commands above are its `README.md`'s.
 
 **The admin holds Manage alone until granted.** As a deployment's first administrator does, the
 harness's admin opens every plugin under Manage and reads or acts on no account's data through one.
@@ -281,7 +284,7 @@ unplaced|<account, empty for none>|<fact kind>|<reason>|<instance>|<placed>
 instruction|<partition>|<value>|<setter level>
 ```
 
-- From contract v22 (built, not released) the [order path](../concepts/the-order-lifecycle.md)'s
+- From contract v22 the [order path](../concepts/the-order-lifecycle.md)'s
   records print too, the last five kinds; `<side>`, `<state>`, `<reason>`, `<value>` and `<setter
   level>` are their enums' numbers. A book holding no orders prints none of them.
 

@@ -13,9 +13,10 @@ Both are recorded in the [book of record](../concepts/the-book-of-record.md),
 each change its own entry with who made it and why. See
 [The order lifecycle](../concepts/the-order-lifecycle.md) for what each does.
 
-!!! note "Contract v22: built, not released"
+!!! note "Contract v22"
     The **Trading instructions** page, the Accounts tab's **Compliance**
-    column and their four tools are built in core for contract v22.
+    column and their four tools are in core for contract v22, released
+    2026-10-13 in chart 0.1.301.
 
 ## What an instruction does, and does not
 

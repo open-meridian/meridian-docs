@@ -9,17 +9,15 @@ calendars** and **date rules** the platform keeps and the deployment pulls,
 so every plugin, and every deployment, gets the same answer from the same
 records.
 
-!!! note "Contract v22: built, not released"
-    Settlement calendars are built for contract v22: the platform's records
-    and curation, the deployment's copy in its instrument store, the date
-    read and the calendar read (`compute_date`, `read_calendar` in
-    open-meridian 0.26.0), the **Calendars** tab on the **Instruments** page
-    and its two tools. Their operations are `preview` until the first spot
-    FX connectivity plugin has run on them.
-
-!!! note "TODO: the release of contract v22"
-    Name the chart that serves contract v22, and the date the platform
-    serving calendars was deployed, once released.
+!!! note "Contract v22"
+    Settlement calendars are in contract v22, released 2026-10-13: the
+    platform's records and curation, the deployment's copy in its
+    instrument store, the date read and the calendar read (`compute_date`,
+    `read_calendar` in open-meridian 0.26.0), the **Calendars** tab on the
+    **Instruments** page and its two tools, in chart 0.1.301. The
+    platform serves the ten G10 currencies' settlement calendars and the US
+    calendars below from the same release. Their operations are `preview`
+    until the first spot FX connectivity plugin has run on them.
 
 ## A calendar
 
@@ -185,8 +183,8 @@ rule, the US equities and funds settlement-date rule above.
 
 !!! note "TODO: the first spot-date rules"
     No spot-date rule is held yet, so a spot or tenor date is answered
-    "rule not held" until the platform records the first pairs, with the
-    spot FX connectivity plugin planned after v22. Name them when the
+    "rule not held" until the platform records the first pairs. They come
+    with the spot FX connectivity plugin, OANDA's. Name them when the
     platform holds them.
 
 ## The Calendars tab

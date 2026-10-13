@@ -69,6 +69,7 @@ EVERY_PLUGIN_SECTIONS = {
     "FiledTickets": "filed_tickets",
     "RecordMove": "the-archive",
     "ReadPreparedCall": "prepared",
+    "CallAsServiceAccount": "runs_as",
     "SetOwnSettings": "own_settings",
 }
 
@@ -97,7 +98,7 @@ GUIDES = [
      "launching and stopping -- each at its page's role and level, a note on every change, "
      "never a secret's value and never a change to who holds access; and the Data sources page's "
      "five, its datasets' licences, entitlements and source priority, at the deployment admin's level; "
-     "from contract v20 (built, not released) the prepared changes' seven and the accounts a plugin may link to"),
+     "from contract v20 the prepared changes' seven and the accounts a plugin may link to"),
     ("concepts/the-lake.md", "The lake",
      "prices and bars by dataset from data plugins: versions, reads by business date and as of a "
      "recorded time, the source priority, wants, kept or served (contract v18)"),
@@ -107,7 +108,7 @@ GUIDES = [
     ("concepts/prepared-changes.md", "Prepared changes",
      "an agent or a person prepares a change and a person makes it; what agents may do with each act "
      "(may make, prepare only, may not), set by the deployment admin and a plugin's admin; the second "
-     "pair of eyes; the Inbox; lapse (contract v20, built, not released)"),
+     "pair of eyes; the Inbox; lapse (contract v20)"),
     ("how-to/license-and-entitle-a-dataset.md", "License and entitle a dataset",
      "the Data sources page: a dataset's licence, the plugins entitled to it, and the source priority"),
 ]

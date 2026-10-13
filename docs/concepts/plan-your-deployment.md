@@ -59,10 +59,10 @@ and nothing in it is specific to one broker, region or market:
   street, each difference a break a person resolves.
 - **[Instruments](instruments.md)**: one identity for every instrument.
 - **[The order lifecycle](the-order-lifecycle.md)**: from contract v22,
-  built and not yet released, every order, placement and execution, its
+  every order, placement and execution, its
   state decided by the book, and fills moving the book's positions.
 - **[Settlement calendars](settlement-calendars.md)**: from contract v22,
-  built and not yet released, a settlement or value date worked out one way
+  a settlement or value date worked out one way
   from the platform's calendars, with its basis.
 - **[Access](access.md)**: who signs in, and what each person may reach.
 - **Every change its own record**: who changed what, to what, and when, never
@@ -94,9 +94,9 @@ the firm's own admins:
 | **Region** | Where the deployment and its storage run | Yours: the deployment runs where you install it. Showing the storage's region on Settings is planned, not scheduled |
 | **Egress** | The address the deployment calls out from, and which outside hosts each plugin calls | Your cluster's network today. A plugin declaring its hosts, and the admin approving them, is planned, not scheduled |
 | **Service accounts** | A named account, with an owner, that a plugin's scheduled work runs as | Exists, from contract v21: see [Service accounts](service-accounts.md) |
-| **Trading instructions** | Active, pause or stop on an account, every account, a plugin, a person or a service account, which each plugin on the order path honours | From contract v22, built, not released: see [Set trading instructions](../how-to/set-trading-instructions.md) |
-| **Releases wait for compliance** | Per account, whether an order is released only once every `compliance` plugin covering the account has answered; on by default | From contract v22, built, not released: see [Set trading instructions](../how-to/set-trading-instructions.md#whether-an-accounts-releases-wait-for-compliance) |
-| **Routing** | Which connectivity plugins each `ems` may place at, who may route through each, and each account's venue account code | From contract v22, built, not released: see [Route orders through a connectivity plugin](../how-to/route-orders-through-a-connectivity-plugin.md) |
+| **Trading instructions** | Active, pause or stop on an account, every account, a plugin, a person or a service account, which each plugin on the order path honours | From contract v22: see [Set trading instructions](../how-to/set-trading-instructions.md) |
+| **Releases wait for compliance** | Per account, whether an order is released only once every `compliance` plugin covering the account has answered; on by default | From contract v22: see [Set trading instructions](../how-to/set-trading-instructions.md#whether-an-accounts-releases-wait-for-compliance) |
+| **Routing** | Which connectivity plugins each `ems` may place at, who may route through each, and each account's venue account code | From contract v22: see [Route orders through a connectivity plugin](../how-to/route-orders-through-a-connectivity-plugin.md) |
 
 ## How to read a plan
 
@@ -146,8 +146,8 @@ The releases, in their order:
    Released 2026-10-12 with contract v21: see
    [Service accounts](service-accounts.md).
 8. **The order path**: orders, their state decided by the book, sent to
-   venues and filled, with settlement calendars. Built for contract v22
-   with open-meridian 0.26.0, not yet released: see
+   venues and filled, with settlement calendars. Released 2026-10-13 with
+   contract v22 and open-meridian 0.26.0: see
    [The order lifecycle](the-order-lifecycle.md) and
    [Settlement calendars](settlement-calendars.md).
 
@@ -172,7 +172,7 @@ value. No trading yet.
 | A mutual fund's daily NAV | [`data`](roles.md#data) | Tiingo | Local | Exists: see [Using a data plugin](../how-to/using-a-data-plugin.md#tiingo-mutual-funds-daily-navs) |
 | The book valued, by account and in total | [`reporting`](roles.md#reporting) | The sample reporting plugin | Local | Exists: see [Value the book](../how-to/value-the-book.md) |
 | A plan-only fund valued at the custodian's own mark | [`data`](roles.md#data) | SnapTrade | Local | Planned, not scheduled |
-| Trading from the deployment | [`connectivity`](roles.md#connectivity) | SnapTrade | Local | Planned, in the order path: the path is built for contract v22, not released |
+| Trading from the deployment | [`connectivity`](roles.md#connectivity) | SnapTrade | Local | Exists, from contract v22: SnapTrade 0.16.0, trading enabled per connection, tested against a simulated brokerage only; see [Trading through SnapTrade](../how-to/using-a-custody-plugin.md#trading-through-snaptrade) |
 
 **Configuration.** The person is their own deployment admin and the only
 person with access. SnapTrade's key is a secret setting on its form. Accounts
@@ -189,7 +189,7 @@ planned.
 
 A fund with accounts at several brokers and a custodian, which values its
 book daily, holds itself to concentration and restricted-list limits,
-reports to its investors, and trades once the order path is built.
+reports to its investors, and trades through the order path.
 
 | Need | Role | Plugin | Registry | Status |
 |---|---|---|---|---|
@@ -202,13 +202,13 @@ reports to its investors, and trades once the order path is built.
 | Exchange rates | [`data`](roles.md#data) | The Federal Reserve's H.10 rates | Local | Exists: see [Using a data plugin](../how-to/using-a-data-plugin.md#the-federal-reserves-h10) |
 | The book valued daily, consolidated and by account | [`reporting`](roles.md#reporting) | The sample reporting plugin, or yours | Local | Exists: see [Value the book](../how-to/value-the-book.md) |
 | Post-trade concentration checks against the book | [`compliance`](roles.md#compliance) | Yours | Local | Build your own: it reads positions and account figures today |
-| Restricted lists and standing limits in a common form | [`compliance`](roles.md#compliance) | Yours | Local | Planned, with the order path |
-| A verdict on each order before it goes out | [`compliance`](roles.md#compliance) | Yours | Local | Planned, in the order path: the contract carries it from v22, built, not released |
+| Restricted lists and standing limits in a common form | [`compliance`](roles.md#compliance) | Yours | Local | Planned, with risk and compliance |
+| A verdict on each order before it goes out | [`compliance`](roles.md#compliance) | Yours | Local | Build your own: the contract carries it from v22; see [The order lifecycle](the-order-lifecycle.md) |
 | Investor reports, kept as sent | [`reporting`](roles.md#reporting) | Yours | Local | Build your own: it reads positions and the lake's prices today |
 | An agent drafting an adjustment that a person makes | any | Any | — | Exists, from contract v20: [Prepared changes](prepared-changes.md) |
 | A nightly job running as a named account | any | Any | — | Exists, from contract v21: [Service accounts](service-accounts.md) |
-| Orders decided, worked and sent | [`portfolio`](roles.md#portfolio), [`oms`](roles.md#oms), [`ems`](roles.md#ems) | Yours | Local | Planned, in the order path: the contract carries it from v22, built, not released |
-| Orders placed at a broker | [`connectivity`](roles.md#connectivity) | SnapTrade; Alpaca and Tradier | Local; planned | Planned: SnapTrade in the order path (built for contract v22, not released), Alpaca and Tradier after it |
+| Orders decided, worked and sent | [`portfolio`](roles.md#portfolio), [`oms`](roles.md#oms), [`ems`](roles.md#ems) | Yours | Local | Build your own: the contract carries it from v22; see [The order lifecycle](the-order-lifecycle.md) |
+| Orders placed at a broker | [`connectivity`](roles.md#connectivity) | SnapTrade; Alpaca and Tradier | Local; planned | SnapTrade exists, from contract v22 (0.16.0, tested against a simulated brokerage only: see [Route orders through a connectivity plugin](../how-to/route-orders-through-a-connectivity-plugin.md)); Alpaca and Tradier planned, after it |
 
 **Configuration.** Accounts carry an owner label per fund or sleeve, and
 account groups follow them: operations staff hold `write` on the accounts
@@ -246,8 +246,8 @@ deployment records and checks, and the firm answers to MAS.
 | Statements, confirmations and tax forms a client can list | core, the file in the plugin's storage | The carrying broker's plugin | Planned | Planned, not scheduled |
 | Clients reaching their own accounts through the firm's app | [`portfolio`](roles.md#portfolio) and [`reporting`](roles.md#reporting) | Yours, acting as a service account | Local | Build your own, after service accounts |
 | The Travel Rule's information on each crypto transfer, and proof a client owns a self-hosted address | [`custody`](roles.md#custody) | Yours | Local | Spec to bring: an on-chain transfer's details are not in the contract yet |
-| Orders for US equities and crypto | [`oms`](roles.md#oms), [`connectivity`](roles.md#connectivity) | The carrying broker's and the exchange's | Planned | Planned: the contract in the order path (built for contract v22, not released), these plugins after it |
-| Returns to MAS, kept as sent | [`reporting`](roles.md#reporting) | Yours | Local | Build your own; returns built from trades wait for the order path |
+| Orders for US equities and crypto | [`oms`](roles.md#oms), [`connectivity`](roles.md#connectivity) | The carrying broker's and the exchange's | Planned | Planned: the contract carries the order path from v22; these plugins after it |
+| Returns to MAS, kept as sent | [`reporting`](roles.md#reporting) | Yours | Local | Build your own: from contract v22 a `reporting` plugin reads the orders and executions too |
 
 **Configuration.** A hold of five years on every edge plugin's raw records,
 for MAS's record-keeping rules, set once the archive lands; the book already

@@ -735,7 +735,7 @@
         "expect": {
           "shape": "list of expectation",
           "required": true,
-          "says": "what the plugin sends, each matched by one message it sends on that row"
+          "says": "what the plugin sends, each matched by one message it sends on that row, or the rows it sends nothing on (sends false); never empty, since an empty one any plugin passes"
         },
         "closed_list": {
           "shape": "text",
@@ -745,12 +745,12 @@
         "about": {
           "shape": "text",
           "required": false,
-          "says": "for a case about one kind of data -- closes, bars, trades, quotes, prices on a venue -- that kind, in the contract's words (contract v19); a plugin that declares it never publishes that kind marks the case not presented, with why, which is no exemption from the rest"
+          "says": "for a case about one kind of data -- closes, bars, trades, quotes, prices on a venue -- that kind, in the contract's words (contract v19), or from contract v22 one kind of work -- calendars, settlement dates, locates, compliance waits; a plugin that declares it never publishes that kind, or whose work never uses it, marks the case not presented, with why, which is no exemption from the rest"
         },
         "about_field": {
           "shape": "text",
           "required": false,
-          "says": "for a case about one field a source may never state -- a trade's aggressor, its conditions -- that field, by its dictionary entry (contract v20); a plugin that declares its source never states it marks the case not presented, with why, which is no exemption from the rest"
+          "says": "for a case about one field a source may never state -- a trade's aggressor, its conditions, from contract v22 a fill's place of execution -- that field, by its dictionary entry (contract v20); a plugin that declares its source never states it marks the case not presented, with why, which is no exemption from the rest"
         },
         "since": {
           "shape": "version",
@@ -770,7 +770,7 @@
         "fields": {
           "shape": "any",
           "required": false,
-          "says": "each field by its path in the row's message and the value expected, written as fixtures write values: an enum by its name, a Decimal as a decimal string; a list of partial messages each matched by one element; `<set>` for any value present, `<unset>` for none"
+          "says": "each field by its path in the row's message and the value expected, written as fixtures write values: an enum by its name, a Decimal as a decimal string; a list of partial messages each matched by one element; `<set>` for any value present, `<unset>` for none, `<same>` for one value present and the same on every message the plugin sends on the row for the case, at least two sent (contract v22)"
         },
         "sends": {
           "shape": "boolean",

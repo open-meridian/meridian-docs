@@ -26,8 +26,9 @@ and holds it to the suite. How a person then uses it is
     chart 0.1.299 or later), whose move from 0.24.0 changes only the
     pins.
 
-!!! note "Contract v22: built, not released"
-    open-meridian 0.26.0 (contract v22) adds the settlement calendars'
+!!! note "Contract v22"
+    open-meridian 0.26.0 (contract v22), released 2026-10-13 for a runtime
+    serving contract v22 (chart 0.1.301 or later), adds the settlement calendars'
     cases to every role's suite, the data suite's two among them:
     `reads-a-calendar` and `asks-for-a-settlement-date` (see
     [below](#hold-it-to-the-suite)), about calendars and settlement dates,
@@ -35,8 +36,8 @@ and holds it to the suite. How a person then uses it is
     why ([a kind of work](#a-kind-of-work-your-plugin-never-does)). A
     dataset may also name its [settlement calendar](../concepts/settlement-calendars.md)
     (`calendar_id`), which the lake applies nothing by in v22. CLI 0.1.42,
-    being built, is to write the template on 0.26.0, its suite test mapping
-    both cases.
+    released 2026-10-13, writes the template on 0.26.0, its suite test
+    mapping both cases; the move from 0.25.0 changes only the pins.
 
 ## Make the plugin
 
@@ -45,7 +46,7 @@ meridian plugin new my-prices --role data
 cd my-prices
 ```
 
-It writes a whole plugin holding `data`, pinned to `open-meridian==0.24.0` (0.25.0 from CLI 0.1.41),
+It writes a whole plugin holding `data`, pinned to `open-meridian==0.24.0` (0.25.0 from CLI 0.1.41, 0.26.0 from CLI 0.1.42),
 that puts a stand-in vendor's daily closes and bars into the lake:
 
 | File | What it is |
@@ -271,7 +272,7 @@ From open-meridian 0.24.0 (contract v20) three more:
 | `a-restarts-gap-backfilled` | the plugin starting, the lake holding a trade it recorded of a streamed subject before it stopped, and the venue's history stating two trades since | reads its last recorded trade (`list_trades` with `latest_recorded`), and records the two |
 | `reads-its-datasets-licences` | the plugin starting where a deployment admin licensed one of its declared datasets and not another | reads `list_datasets` |
 
-From open-meridian 0.26.0 (contract v22, built, not released) two more,
+From open-meridian 0.26.0 (contract v22) two more,
 about `calendars` and `settlement dates`, which every role's suite holds
 (`asks-for-a-settlement-date` every role's but `connectivity`'s and
 `operations`'):
@@ -338,7 +339,7 @@ NOT_PRESENTED["the-makers-side-inverted"] = "the vendor's stock trades never say
 
 ### A kind of work your plugin never does
 
-From open-meridian 0.26.0 (contract v22, built, not released) `about` names
+From open-meridian 0.26.0 (contract v22) `about` names
 a kind of work too: `reads-a-calendar` is about `calendars`, and
 `asks-for-a-settlement-date` about `settlement dates`. A plugin whose work
 never uses one names the case in `not_presented`, with why, and is verified

@@ -31,29 +31,24 @@ developer guide. They are written from the code of
 [meridian-python](https://github.com/open-meridian/meridian-python),
 [meridian-schema](https://github.com/open-meridian/meridian-schema) and
 [meridian-ui](https://github.com/open-meridian/meridian-ui); when those
-change, the pages change with them. Today they describe CLI 0.1.41 and its
-rule `runs-as-checked`, SDK 0.25.0 (contract v21), core's service accounts
-(the Service accounts tab, Runs as on a plugin's Access tab, the owner's
-pages and notices, `dashboard__list_service_accounts`; chart 0.1.299),
-core's prepared changes, account grants and Setting up (chart 0.1.298),
-backup and restore, the role renames (`data`, `connectivity`,
-`confirmation`), the four "Using a ... plugin" pages, kit 0.12.0, and the
-plugins on contract v21: Alpaca 0.5.0, Tradier 0.4.0, Tiingo 0.3.0, Fed
-H.10 0.3.0, Coinbase 0.4.0, Kraken 0.4.0, Kalshi 0.3.0, Polymarket 0.3.0,
-SnapTrade 0.15.0, the sample operations plugin 0.11.0 and its sweep closing
-cleared breaks as its service account, and the sample reporting plugin
-0.4.0 and its Board. Contract v22 is marked built, not released, where it
-applies: SDK 0.26.0 (the order path's slice A and settlement calendars),
-CLI 0.1.42 (being built, described from the plan and marked TODO), core's
-order path in the book (child orders, the release gate and waiting for
-compliance, connectivity plugins linked to an `ems` and its venue account
-map, trading instructions and the Trading instructions page, four tools),
-the Instruments page's Calendars tab and its two tools, the platform's
-settlement calendars, the ten G10 currencies' among them, and the suites'
-cases a plugin whose work never uses calendars, settlement dates, locates
-or compliance waits marks not presented. The tutorials were walked on CLI
-0.1.36 and SDK 0.21.0. A page describes what is built, and says so where
-something is specified and not built yet.
+change, the pages change with them. Today they describe CLI 0.1.42, SDK
+0.26.0 (contract v22), core's order path in the book (child orders, the
+release gate and waiting for compliance, connectivity plugins linked to an
+`ems` and its venue account map, trading instructions and the Trading
+instructions page, four tools; chart 0.1.301), the Instruments page's
+Calendars tab and its two tools, the platform's settlement calendars, the
+ten G10 currencies' and the US calendars, the suites' cases a plugin whose
+work never uses calendars, settlement dates, locates or compliance waits
+marks not presented, core's service accounts (chart 0.1.299), core's
+prepared changes, account grants and Setting up (chart 0.1.298), backup and
+restore, the role renames (`data`, `connectivity`, `confirmation`), the four
+"Using a ... plugin" pages, kit 0.12.0, and the plugins on contract v22:
+Alpaca 0.6.0, Tradier 0.5.0, Tiingo 0.4.0, Fed H.10 0.4.0, Coinbase 0.5.0,
+Kraken 0.5.0, Kalshi 0.4.0, Polymarket 0.4.0, SnapTrade 0.16.0 and its
+`connectivity` beside `custody`, the sample operations plugin 0.12.0 and
+its Flags tab, and the sample reporting plugin 0.5.0 and its Orders tab.
+The tutorials were walked on CLI 0.1.36 and SDK 0.21.0. A page describes
+what is built, and says so where something is specified and not built yet.
 
 ## The roles page, the data dictionary and llms.txt
 

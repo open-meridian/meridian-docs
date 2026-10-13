@@ -22,15 +22,15 @@ person makes it.
     contract v21, with open-meridian 0.25.0 and CLI 0.1.41, released
     2026-10-12 in chart 0.1.299.
 
-!!! note "Contract v22: built, not released"
+!!! note "Contract v22"
     On the [order path](the-order-lifecycle.md) an automated strategy's
     orders and an `ems`'s own placements are made as its role's service
     account, through the plugin's own acts. Its call names the algorithm
     its work runs, one the plugin's version declares (`algorithm_id`),
     which the book records on the entry's service account actor. A service
-    account may be among those a connectivity plugin is made available to,
-    and a [trading instruction](the-order-lifecycle.md#trading-instructions)
-    may target it, as a person.
+    account may be among those who may route through a connectivity
+    plugin, and a [trading instruction](the-order-lifecycle.md#trading-instructions)
+    may target it, as a person. Released 2026-10-13 in chart 0.1.301.
 
 Work a plugin does with no person behind it runs as a service account,
 never on a person's delegation: a delegation does not outlive its person.

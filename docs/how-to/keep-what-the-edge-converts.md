@@ -194,7 +194,7 @@ def test_every_case_of_the_custody_suite_passes() -> None:
 ```
 
 A case asserting one value of a closed list your vendor never presents may be named in
-`not_presented`, with why; so, from open-meridian 0.26.0 (contract v22, built, not released), may
+`not_presented`, with why; so, from open-meridian 0.26.0 (contract v22), may
 `reads-a-calendar` and `asks-for-a-settlement-date`, about `calendars` and `settlement dates`, where
 your plugin's work never uses them:
 

@@ -29,7 +29,7 @@ From 0.24.0, contract v20, no operation is added. The role `dgm` is named `data`
 
 From 0.25.0, contract v21, no operation is added. A plugin's autonomous work calls one of its own acts as the [service account](../concepts/service-accounts.md) its role runs as, through the sidecar's `CallAsServiceAccount`, which the SDK offers as [`meridian.runs_as`](python-sdk.md#runs_as). Where the dashboard makes the act, the act's route is reached with a service account's claims and sends what it sends for a person, `acting_for` the header it received (see [Acting for a person](#acting-for-a-person)); the book records the service account and its owner as the entry's actor.
 
-From 0.26.0, contract v22 (built, not released), it also lists [the order path](#the-order-path)'s twenty-two operations, by which `portfolio`, `oms`, `ems`, `compliance` and `operations` plugins and connectivity plugins propose, release, check, claim, place, report and read orders, and an `ems` maps its accounts to venue account codes; and the [settlement calendars' reads](#settlement-calendars-reads), [`read_calendar`](#read_calendar) and [`compute_date`](#compute_date), which every role may call. `connectivity` also gains [`resolve_identifier`](#resolve_identifier), [`report_missing_instrument`](#report_missing_instrument), [`resolve_instrument`](#resolve_instrument), [`resolve_venue`](#resolve_venue), [`report_missing_venue`](#report_missing_venue) and [`list_account_attributes`](#list_account_attributes); `ems` gains `resolve_instrument`, `resolve_venue` and `list_account_attributes`. Each new operation is `preview` in v22. A command naming an order, a placement, a change request or a locate by its ID is admitted on the role's grant and held by the book to the plugin's write scope (see [The order lifecycle](../concepts/the-order-lifecycle.md#a-command-naming-a-record-by-its-id)).
+From 0.26.0, contract v22, it also lists [the order path](#the-order-path)'s twenty-two operations, by which `portfolio`, `oms`, `ems`, `compliance` and `operations` plugins and connectivity plugins propose, release, check, claim, place, report and read orders, and an `ems` maps its accounts to venue account codes; and the [settlement calendars' reads](#settlement-calendars-reads), [`read_calendar`](#read_calendar) and [`compute_date`](#compute_date), which every role may call. `connectivity` also gains [`resolve_identifier`](#resolve_identifier), [`report_missing_instrument`](#report_missing_instrument), [`resolve_instrument`](#resolve_instrument), [`resolve_venue`](#resolve_venue), [`report_missing_venue`](#report_missing_venue) and [`list_account_attributes`](#list_account_attributes); `ems` gains `resolve_instrument`, `resolve_venue` and `list_account_attributes`. Each new operation is `preview` in v22. A command naming an order, a placement, a change request or a locate by its ID is admitted on the role's grant and held by the book to the plugin's write scope (see [The order lifecycle](../concepts/the-order-lifecycle.md#a-command-naming-a-record-by-its-id)).
 
 ## Summary
 
@@ -2083,7 +2083,7 @@ async def list_datasets(self) -> ListDatasetsResult
 
 ## The order path { #the-order-path }
 
-From 0.26.0, contract v22, built, not released. Every operation here is
+From 0.26.0, contract v22. Every operation here is
 `preview`. What each role does on the path, the states and the transition
 table are on [The order lifecycle](../concepts/the-order-lifecycle.md); the
 Python SDK's overview is [The order path](python-sdk.md#the-order-path).
@@ -2345,7 +2345,7 @@ mapped on that plugin for another account is refused.
 
 ## Settlement calendars' reads { #settlement-calendars-reads }
 
-From 0.26.0, contract v22, built, not released. Every role reads both,
+From 0.26.0, contract v22. Every role reads both,
 whatever its accounts. See
 [Settlement calendars](../concepts/settlement-calendars.md) and, in the
 Python SDK, [Settlement calendars](python-sdk.md#settlement-calendars).

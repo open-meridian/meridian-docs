@@ -13,7 +13,7 @@ The rule is short. **The street is what custodians say. The book is verified
 against it, and never overwritten by it.** No statement is ever applied to the
 book.
 
-!!! note "Contract v22: built, not released"
+!!! note "Contract v22"
     From contract v22 the book also holds the order path: every order,
     placement, execution, charge, unplaced fact, locate and trading
     instruction, an order's state derived from its journal, and reported
@@ -22,7 +22,8 @@ book.
     pending lines carry a **sleeve**, empty for an account's unsleeved part;
     each account's attributes say whether its releases wait for compliance;
     and a break may name a value date that is not a business day (see
-    [Settlement calendars](settlement-calendars.md)).
+    [Settlement calendars](settlement-calendars.md)). Released 2026-10-13
+    in chart 0.1.301.
 
 ## The edge, the street and the book
 
@@ -62,7 +63,7 @@ value a source did not state is unset, never zero.
 | **Break** | A difference between the book and the street, open, resolved or closed. See [Breaks](#breaks). |
 | **Figures** | The account's figures for a business date, one set per margin agreement, as the street recorded them, with the collateral held under it and the custodian's own value and margin requirement for each position, labelled as the custodian's. A series, never a figure the book computed. |
 | **Attributes** | The account's base currency, its default method of relieving lots when a sale names none, and its standing opening balance; from contract v22, whether its releases wait for compliance. |
-| **Orders and executions** | From contract v22 (built, not released): each order, its placements, executions and charges, the facts the book could not place, the locates, and the trading instructions. See [The order lifecycle](the-order-lifecycle.md). |
+| **Orders and executions** | From contract v22: each order, its placements, executions and charges, the facts the book could not place, the locates, and the trading instructions. See [The order lifecycle](the-order-lifecycle.md). |
 
 The book records; it does not police. It computes no margin, no projection, no
 scenario and no return, and converts nothing with the base currency. Plugins
@@ -215,7 +216,7 @@ is derived from those dates, never stored.
 The plugin's matching offers **candidate causes**: an unbooked trade,
 settlement timing, a cost or price difference, a corporate action, a fail, a
 custodian error, or unknown, and from contract v14 income the custodian
-reinvested, and from contract v22 (built, not released) a value date that
+reinvested, and from contract v22 a value date that
 is not a business day, linked to the date read's check (the date, the
 calendars and their versions, and why the day is closed), each with the
 item found to cause it. From v14 that item may be
@@ -263,8 +264,8 @@ street; see [Accounts](accounts.md#how-accounts-bound-a-plugin).
 | Breaks | `operations` | `operations`, `oms`, `compliance`, `portfolio`, `reporting` |
 | Figures | `operations` | `operations`, `portfolio`, `compliance`, `reporting` |
 | Attributes | the dashboard, for a deployment admin; the standing opening balance by the book, when `operations` records one | `portfolio`, `reporting`, `compliance`, `oms`, `operations`, and the dashboard; from contract v22 `ems` and `connectivity` too |
-| Orders, placements, executions | from contract v22 (built, not released): `portfolio`, `oms` and `ems` propose; the `oms` releases; the `ems` places; connectivity plugins report the venue's facts | `oms`, `ems`, `compliance`, `portfolio`, `operations`, `reporting`; a placement's connectivity plugin alone of its role |
-| Trading instructions | from contract v22 (built, not released): the dashboard, for a deployment admin or a plugin's admin | `oms`, `ems`, `connectivity`, `portfolio`, `compliance`, whatever their accounts |
+| Orders, placements, executions | from contract v22: `portfolio`, `oms` and `ems` propose; the `oms` releases; the `ems` places; connectivity plugins report the venue's facts | `oms`, `ems`, `compliance`, `portfolio`, `operations`, `reporting`; a placement's connectivity plugin alone of its role |
+| Trading instructions | from contract v22: the dashboard, for a deployment admin or a plugin's admin | `oms`, `ems`, `connectivity`, `portfolio`, `compliance`, whatever their accounts |
 
 A position is delivered whole, its lots and pending settlements included, so
 a plugin that hears it needs no second read.
@@ -281,7 +282,7 @@ columns from the book:
 |---|---|
 | **Base currency** | The account's base currency in the book |
 | **Lot relief** | The method a sale relieves lots by when it names none: first in, first out; last in, first out; highest cost; lowest cost; or average cost |
-| **Compliance** | From contract v22 (built, not released): **Waits** where the account's releases wait for every covering `compliance` plugin's verdict, as a new account's do, or **Does not wait**; set under **In the book** as **Releases** |
+| **Compliance** | From contract v22: **Waits** where the account's releases wait for every covering `compliance` plugin's verdict, as a new account's do, or **Does not wait**; set under **In the book** as **Releases** |
 
 An account's **Edit** has a section of its own, **In the book**, beside
 **Account**. Beside its title it says since when the account is in the book,
