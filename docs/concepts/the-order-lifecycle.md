@@ -29,14 +29,16 @@ The duties are kept apart by role, whichever plugins hold them. In one
 plugin holding several roles they stay apart in the records, and
 [access per role](access.md#access-per-role) refuses a person the role they
 do not hold: a person with `write` on a plugin's `portfolio` role and not on
-its `oms` role cannot release an order through it.
+its `oms` role cannot release an order through it. **`portfolio` and the
+`oms` own orders, the `ems` owns placements, and the connectivity plugin
+owns fills.**
 
 | Role or component | Does | Never |
 |---|---|---|
 | [`portfolio`](roles.md#portfolio) | Proposes orders, with their allocation instruction, sleeve and the fields its decision owns; amends and withdraws its own proposals; increases or reduces an order's quantity | Releases or places |
 | [`oms`](roles.md#oms) | Releases or rejects proposed orders; sets time in force, execution instructions, the lot-relief method and capacity; claims, holds and pauses; records a telephoned or outside order; enters manual and done-away fills; aligns an order that does not tie out, with a reason; acknowledges late facts | Changes an order's instrument, account or side |
 | [`ems`](roles.md#ems) | Claims, holds and pauses; proposes [child orders](#child-orders) under a released order; creates placements, each at one of the connectivity plugins linked to it, with the venue account code it mapped the account to; asks for their changes; enters manual fills | Changes an ordered quantity |
-| [`connectivity`](roles.md#connectivity) | The venue: sends the placements naming its instance, in the venue's vocabulary; reports acknowledgements, rejections, restatements, fills, busts, finality, charges and unknown outcomes in the contract's meanings, each with the raw record it keeps in its own storage; records venue-originated orders and locates; publishes its venue's catalogue | Links accounts of its own: it reaches accounts only through its one `ems` |
+| [`connectivity`](roles.md#connectivity) | The venue: sends the placements naming its instance, in the venue's vocabulary; reports acknowledgements, rejections, restatements, fills, busts, finality, charges and unknown outcomes in the contract's meanings, each with the raw record it keeps in its own storage; records locates; publishes its venue's catalogue | Records an order or creates a placement; links accounts of its own: it reaches accounts only through its one `ems` |
 | [`compliance`](roles.md#compliance) | Records checks and verdicts on an order version or a placement; requires approval by its policy; overrides a block for a person its policy allows; checks a short order's locate | Sets an order's state |
 | [`operations`](roles.md#operations) | Hears executions and unplaced facts; acknowledges late facts; reconciles the book with the street, a traded position no longer a break | Moves a date in the book |
 | [`reporting`](roles.md#reporting) | Reads orders, executions, their history and the fields recorded for reporting, and publishes outward | Anything on the order path |
@@ -115,9 +117,9 @@ accepted, recorded and flagged, a fill after a cancel took effect setting
 | 3 | proposed | A verdict of warn or block, then a person's override of a block, with a reason | `compliance` | released |
 | 4 | proposed | A verdict of refuse, or a rejection by the `oms` asked to work it | `compliance`, `oms` | refused |
 | 5 | released | A recall, with nothing committed or filled | `oms` | proposed |
-| 6 | released | A placement or a child order commits quantity | `ems`, `connectivity` | working |
+| 6 | released | A placement or a child order commits quantity | `ems` | working |
 | 7 | working | Every placement ends unfilled | the book | released |
-| 8 | released, working | Placements created and ended; over-commitment shown, never refused | `ems`, `connectivity` | unchanged |
+| 8 | released, working | Placements created and ended; over-commitment shown, never refused | `ems` | unchanged |
 | 9 | working | A pause or resume of working, for a person | `ems`, `oms` | unchanged |
 | 10 | released, working | Fills: partly filled or filled, derived from the quantities | the book | working, filled |
 | 11 | working | Fills while a cancel is pending; change requested stays | `connectivity` | working, filled |
@@ -132,7 +134,7 @@ accepted, recorded and flagged, a fill after a cancel took effect setting
 | 20 | working | A placement done for day, then restated; its quantity stays committed | `connectivity` | unchanged |
 | 21 | released, working | An immediate-or-cancel or fill-or-kill placement unfilled: the order cancelled if its own time in force is one of these, back to idle otherwise | `connectivity` | cancelled, released, working |
 | 22 | released, working | A venue-initiated cancel, replace, quantity cut, cancel at close or restatement; past the order's intent, late fact and does not tie out | `connectivity` | unchanged |
-| 23a | none | An order the book did not create: telephoned, placed outside, venue-originated, a drop copy's, recorded and never through the gate | `connectivity`, `oms` | released, working, filled |
+| 23a | none | An order the book did not create: telephoned or placed outside, recorded by the `oms` for a user and never through the gate | `oms` | released, working, filled |
 | 23b | none | A client's order received at a broker, proposed into the client's account | `portfolio` | proposed |
 | 24 | working | A placement held at the venue, then triggered | `connectivity` | unchanged |
 | 25 | any | A duplicate identifier or a possible resend: a repeat answered as the first, a key reused for another command refused, a resent fact recognised | any | unchanged |
@@ -301,9 +303,7 @@ links and the user groups the person is in, and puts only those instances
 in the claims the plugin receives (`Caller.connectivity_instance_ids`). The
 plugin learns which connectivity plugins the user may choose, **never the
 user's groups**. The `ems`'s sidecar checks each placement against that set,
-whatever the page drew, and the book refuses on its verdict. A connectivity
-plugin's own direct order is checked the same way, itself being the
-connectivity plugin named.
+whatever the page drew, and the book refuses on its verdict.
 
 **Unlinking or withdrawing** leaves the placements already made as they
 are; a new placement through it is refused. A connectivity plugin linked to
@@ -319,6 +319,17 @@ it states (fractionable, shortable, borrow status, an options level). The
 connectivity plugin constructs the venue's own message, so an `ems` never
 meets a venue's wire format. What is not listed is rejected `unsupported` if
 sent, by the venue's plugin, never refused by core.
+
+### Cancelling or replacing a placement
+
+The `ems` or the `oms` asks to cancel or replace a placement, the change
+naming its kind and, for a replace, the new quantity, limit and time in
+force. **The placement carries its own change requests**
+(`change_requests`), each with that change and its outcome (pending,
+applied or rejected), so its connectivity plugin, hearing the placement,
+tells a cancel from a replace by the kind and reads a replace's new terms
+from it, never from a condition's reason. Several may be outstanding at
+once. An order's own change requests stay on the order.
 
 ## What the venue reports
 
@@ -347,9 +358,15 @@ raw record it was converted from, kept in the plugin's own storage (see
   edited.
 - **A charge** with no fill, a venue's cancel fee, moving cash and counting
   toward no quantity.
-- **An order the book did not create:** a venue-originated order or a drop
-  copy's, with the venue account code it names, recorded at the state its
-  facts imply.
+
+**It reports on the `ems`'s placements, and on nothing of its own.** A
+connectivity plugin records no order and creates no placement: its
+`RecordOrder` or `CreatePlacement` is refused by its sidecar,
+`PERMISSION_DENIED`, as any operation its role does not hold. A telephoned
+or outside order is the `oms`'s to record, for a person or its service account (row 23a). **A
+venue-originated fill is not supported in v22**: a fill the venue reports on
+no placement the `ems` made, such as a liquidation, has no path into the
+book. Its handling is planned for a later release.
 
 **The settlement date is the venue's, or worked out in core.** The date the
 venue states is kept as stated. Where it states none, or where the plugin
@@ -361,12 +378,11 @@ one. A fill with no settlement date is refused, naming `settlement_date`:
 the book never guesses one.
 
 **A fact the book cannot place is kept, never dropped.** A well-formed fact
-naming no order or placement the book holds, a venue account code the
-`ems` mapped to no account, an instrument whose record is incomplete, or an
-account outside the connectivity plugin's scope, is kept as an **unplaced
-fact** with its reason, heard by `operations`, and placed by its own entry
-when a later record claims it. The connectivity plugin's admin view counts
-the facts kept with no account, **Unplaced facts**, beside its own figures.
+naming no placement the book holds, or a venue account code the `ems`
+mapped to no account, is kept as an **unplaced fact** with its reason,
+heard by `operations`, and placed by its own entry when a later record
+claims it. The connectivity plugin's admin view counts the facts kept with
+no account, **Unplaced facts**, beside its own figures.
 
 ## Fills move the book's positions
 
@@ -499,9 +515,9 @@ whole history from its first entry.
 | `REFUSAL_REASON_IDENTIFIER_IN_USE` | An identifier already used for another record |
 | `REFUSAL_REASON_ACTOR_REQUIRED` | A command other than a fact report with no person or service account behind it; an approval or override with no person |
 | `REFUSAL_REASON_REASON_REQUIRED` | A justified act, an override or an instruction, with no reason |
-| `REFUSAL_REASON_INCOMPLETE` | A proposal missing a required field, each named |
+| `REFUSAL_REASON_INCOMPLETE` | A proposal missing a required field, each named; an order recorded naming an instrument whose record is incomplete |
 | `INVALID_ARGUMENT`, naming fields | Both or neither of `quantity` and `cash_quantity`; a child naming another instrument or side; a fill with no `settlement_date`; an instruction on `target.user_group_id`; an algorithm the version does not declare (`algorithm_id`) |
-| `PERMISSION_DENIED`, no code | A command naming a record whose account is outside the plugin's write scope or the person's write access |
+| `PERMISSION_DENIED`, no code | A command naming a record whose account is outside the plugin's write scope or the person's write access; a connectivity plugin's `RecordOrder` or `CreatePlacement`, refused by its sidecar |
 
 In the Python SDK a coded refusal is a `CommandRefused` carrying its code,
 an `INVALID_ARGUMENT` a `CallFailed` of kind `"invalid"` naming the fields,
@@ -516,6 +532,10 @@ and a `PERMISSION_DENIED` a `NotGranted` (see
 - **RFQs and axes**: their references are carried empty on the order and
   the placement until the RFQ revision (slice C); an order of 0 quantity, a
   pass, is refused until then.
+- **Venue-originated fills**: a fill the venue reports on no placement the
+  `ems` made is not supported; its handling is planned for a later
+  release. A connectivity plugin reports fills on the `ems`'s placements
+  only.
 - **Other named links** between orders -- blocks, allocations, street
   orders, two-way quotes, alternatives, baskets -- wait for their slices.
   The split link is the one in v22.

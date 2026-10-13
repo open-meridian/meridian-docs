@@ -112,7 +112,7 @@ guessed:
 | Computed | The date, with its basis |
 | Calendar not held | The deployment does not hold a calendar the question needs yet. The store reports it, the conductor asks the platform, and asking again once it is pulled answers |
 | Outside coverage | A day the question needs is outside a calendar's coverage |
-| Rule not held | No rule is held for the subject, reported and pulled as a calendar is |
+| Rule not held | No rule is held for the subject, reported and pulled as a calendar is. An instrument whose market is not known -- no listing venue's country, or no asset class -- is answered so too, and reported by what is known of it |
 
 A malformed question is refused, naming the field.
 

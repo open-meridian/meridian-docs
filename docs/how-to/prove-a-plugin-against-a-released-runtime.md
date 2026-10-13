@@ -189,6 +189,13 @@ instruction at the Trading instructions page; and `attribute ACCOUNT waits=true|
 reason=TEXT`, whether the account's releases wait for compliance (see
 [Set trading instructions](set-trading-instructions.md)).
 
+From contract v22 the harness's stand-in for the platform also holds the seed
+[settlement calendars](../concepts/settlement-calendars.md) and the US equities rule, the XNYS and
+XNAS venue records, and one test equity, Apple Inc., with XNAS, where it lists, as its listing
+venue. The runner's `instrument` command takes `--ask-platform`, asking the platform about a
+record from its page as a deployment admin's button does, so a `compute_date` for that equity
+gives its settlement date in a harness run (T+1) rather than "rule not held".
+
 !!! note "TODO: the harness for contract v22"
     Name the runtime and harness commit serving contract v22 once
     published, and check these commands against its `README.md`.

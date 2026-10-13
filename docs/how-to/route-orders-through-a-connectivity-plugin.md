@@ -2,7 +2,9 @@
 
 From contract v22 an `ems` places orders at a venue through a **connectivity
 plugin**, a plugin holding the `connectivity` role, which sends what it is
-given in the venue's vocabulary and reports back what the venue did. Each
+given in the venue's vocabulary and reports back what the venue did.
+`portfolio` and the `oms` own orders, the `ems` owns placements, and the
+connectivity plugin owns the fills it reports on them. Each
 connectivity plugin is linked to **one** `ems`, usually a desk, and reaches
 only the accounts that `ems` mapped on it. Three people set it up, each in
 their own place:
@@ -96,9 +98,10 @@ On the `ems`'s own page, under Manage at `admin`, map each book account to
 the **venue account code** it trades under at each of the `ems`'s
 connectivity plugins. The `ems` plugin sends each mapping as acting for you,
 and the deployment keeps the map, each change its own record. The `ems`
-then sets the venue account code on each placement from it, and a
-venue-originated order or a drop copy naming a code finds its account by
-it.
+then sets the venue account code on each placement from it, and a fill,
+charge or locate the connectivity plugin reports naming a code finds its
+account by it. One naming a code not mapped is kept as an unplaced fact,
+counted on the connectivity plugin's admin view.
 
 - An account not granted to the `ems` is refused
   (`REFUSAL_REASON_ACCOUNT_NOT_LINKABLE`).
@@ -127,6 +130,28 @@ at; it grants no access of its own.
 Decide too whether each account's releases **wait for compliance**, true for
 every account by default, and whether any trading instruction is in force:
 see [Set trading instructions](set-trading-instructions.md).
+
+## What the connectivity plugin does once linked
+
+- **It works the `ems`'s placements.** It hears each placement naming its
+  instance, sends it to the venue, and reports what the venue did: the
+  acknowledgement, a rejection, each fill, bust and charge, each with the
+  raw record it keeps. It hears the trading instructions too, and on a stop
+  cancels at the venue at once.
+- **It hears a cancel or a replace on the placement.** The placement
+  carries its own change requests (`change_requests`), each with its kind,
+  cancel or replace, a replace's new quantity, limit and time in force, and
+  its outcome. The plugin acts on the kind, never on a condition's reason.
+- **It records no order and creates no placement.** Those are the `oms`'s
+  and the `ems`'s: a connectivity plugin's `RecordOrder` or
+  `CreatePlacement` is refused by its sidecar (`PERMISSION_DENIED`). A
+  telephoned or outside order is recorded by the `oms`, for a person.
+- **A venue-originated fill is not supported in v22.** A fill the venue
+  reports on no placement the `ems` made -- a liquidation, say, or an order
+  placed at the venue outside the deployment -- has no path into the book
+  in contract v22. Its handling is planned for a later release. Until then,
+  where a custody plugin reports the account, the change shows on its next
+  statement and reconciliation shows it as a break.
 
 ## Through an agent
 

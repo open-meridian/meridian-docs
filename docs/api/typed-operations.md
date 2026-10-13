@@ -74,13 +74,13 @@ From 0.26.0, contract v22 (built, not released), it also lists [the order path](
 | [`list_quotes`](#list_quotes) | `ListQuotes` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `signal`, `ems`, from v19 | `ListQuotesResult` |
 | [`list_datasets`](#list_datasets) | `ListDatasets` | W10.9 Read the datasets | query | `reporting`, `portfolio`, `compliance`, `signal`, `ems` from v19 | `ListDatasetsResult` |
 | [`propose_order`](#propose_order) | `ProposeOrder` | W11.1 Propose an order | command | `portfolio`, `oms`, `ems`, from v22 | `ProposeOrderResult` |
-| [`record_order`](#record_order) | `RecordOrder` | W11.2 Record an order the book did not create | command | `connectivity`, `oms`, from v22 | `RecordOrderResult` |
+| [`record_order`](#record_order) | `RecordOrder` | W11.2 Record an order the book did not create | command | `oms`, from v22 | `RecordOrderResult` |
 | [`request_order_change`](#request_order_change) | `RequestOrderChange` | W11.3 Ask for a change to an order | command | `portfolio`, `oms`, `ems`, from v22 | `RequestOrderChangeResult` |
 | [`record_check`](#record_check) | `RecordCheck` | W11.4 Record a check | command | `compliance`, from v22 | `RecordCheckResult` |
 | [`decide_approval`](#decide_approval) | `DecideApproval` | W11.5 Require, give or override approval, or reject an order | command | `compliance`, `oms`, from v22 | `DecideApprovalResult` |
 | [`release_order`](#release_order) | `ReleaseOrder` | W11.6 Release an order | command | `oms`, from v22 | `ReleaseOrderResult` |
 | [`set_working_condition`](#set_working_condition) | `SetWorkingCondition` | W11.7 Claim, hold or pause an order | command | `ems`, `oms`, from v22 | `SetWorkingConditionResult` |
-| [`create_placement`](#create_placement) | `CreatePlacement` | W11.8 Create a placement | command | `ems`, `connectivity`, from v22 | `CreatePlacementResult` |
+| [`create_placement`](#create_placement) | `CreatePlacement` | W11.8 Create a placement | command | `ems`, from v22 | `CreatePlacementResult` |
 | [`request_placement_change`](#request_placement_change) | `RequestPlacementChange` | W11.9 Ask for a change to a placement | command | `ems`, `oms`, `connectivity`, from v22 | `RequestPlacementChangeResult` |
 | [`report_placement`](#report_placement) | `ReportPlacement` | W11.10 Report a placement's progress | command | `connectivity`, from v22 | `ReportPlacementResult` |
 | [`report_execution`](#report_execution) | `ReportExecution` | W11.11 Report an execution | command | `connectivity`, `ems`, `oms`, from v22 | `ReportExecutionResult` |
@@ -2098,9 +2098,15 @@ Python SDK's overview is [The order path](python-sdk.md#the-order-path).
   `acting_for=request.caller.header` for a person, or call it from an act
   reached for the role's [service account](python-sdk.md#runs_as). One with
   nobody behind it is refused `REFUSAL_REASON_ACTOR_REQUIRED`. A fact a
-  connectivity plugin reports from its venue (`record_order`,
-  `report_placement`, `report_execution`, `report_charge`, `record_locate`)
-  names nobody.
+  connectivity plugin reports from its venue (`report_placement`,
+  `report_execution`, `report_charge`, `record_locate`) names nobody.
+- **Orders are `portfolio`'s and the `oms`'s, placements the `ems`'s, fills
+  the connectivity plugin's.** A connectivity plugin's `record_order` or
+  `create_placement` is refused by its sidecar, `NotGranted`
+  (`PERMISSION_DENIED`), as any operation its role does not hold. A
+  venue-originated fill, one the venue reports on no placement the `ems`
+  made, is not supported in contract v22; its handling is planned for a
+  later release.
 - **Idempotency.** A command naming an `idempotency_key` is applied once for
   it; the same key on another command is refused
   `REFUSAL_REASON_IDEMPOTENCY_CONFLICT`. A venue fact repeated with the same
@@ -2141,13 +2147,23 @@ Answers the order at proposed, or for a child at released.
 
 ### `record_order` { #record_order }
 
-An order the book did not create: by a connectivity plugin, a
-venue-originated order or a drop copy's, with its `venue_account_code`
-(from which the sidecar stamps its account by the `ems`'s map), its fields
-as the venue states them, its `venue_order_id`, its `origin` and its
-`raw_record`; by the `oms`, a telephoned or outside order, for a person.
-Recorded at the state its facts imply, never through the gate. An unmapped
-code, or an incomplete instrument, keeps it as an unplaced fact.
+The `oms` records an order the book did not create, a telephoned or outside
+order, for a person or its role's service account: never through the gate,
+recorded at the state its facts imply. A connectivity plugin records no order (`NotGranted`).
+
+| Parameter | Meaning |
+|---|---|
+| `account_id` | The account it is in, within the `oms`'s write scope and the person's write access |
+| `instrument_id`, `side`, `sleeve` | What it trades, its side and the part of the account it is for |
+| `quantity`, `order_type`, `limit_price`, `time_in_force` | As the person recording it states them |
+| `venue_order_id` | The venue's or broker's order ID, kept as an external reference, never a key |
+| `origin` | `telephoned`: a telephoned or outside order |
+| `idempotency_key`, `acting_for` | As above. One sent for no one is refused `REFUSAL_REASON_ACTOR_REQUIRED` |
+
+An instrument whose record is incomplete is refused
+`REFUSAL_REASON_INCOMPLETE`, and a venue order ID already recorded
+`REFUSAL_REASON_IDENTIFIER_IN_USE`. Its executions follow as done-away
+entries naming it ([`report_execution`](#report_execution)).
 
 ### `request_order_change` { #request_order_change }
 
@@ -2190,7 +2206,7 @@ claimant creates or changes its placements and child orders
 ### `create_placement` { #create_placement }
 
 The `ems` places part of a released order at one of the connectivity
-plugins linked to it; a connectivity plugin places a direct order's.
+plugins linked to it; no other role creates a placement.
 
 | Parameter | Meaning |
 |---|---|
@@ -2209,9 +2225,15 @@ commits.
 ### `request_placement_change` { #request_placement_change }
 
 The `ems` or the `oms` asks to cancel or replace a placement (`change`, a
-`PlacementChange`), with a `reason`; tracked to its outcome. A connectivity
-plugin reports through it only a cancel it already sent at the venue under
-a stop, naming the stop's entry as its `cause`.
+`PlacementChange`: its `kind`, cancel or replace, and a replace's new
+`quantity`, `limit_price` and `time_in_force`), with a `reason`; tracked to
+its outcome. The placement carries its own change requests
+(`change_requests`), each with its `PlacementChange` and its outcome
+(pending, applied or rejected), so its connectivity plugin, hearing it,
+tells a cancel from a replace by the kind, never by a condition's reason;
+several may be outstanding. A connectivity plugin reports through it only a
+cancel it already sent at the venue under a stop, naming the stop's entry
+as its `cause`.
 
 ### `report_placement` { #report_placement }
 

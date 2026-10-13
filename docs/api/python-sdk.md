@@ -37,9 +37,13 @@ A plugin pins the SDK exactly, `open-meridian==0.25.0`, in its `pyproject.toml`.
     the algorithms its autonomous work may name
     (`Declaration(algorithms=[AlgorithmDeclaration(...)])`), and
     [`runs_as(role, algorithm_id=...)`](#runs_as) names one; a
-    [`Caller`](#caller) carries `algorithm_id` and, for an `ems` or a
-    connectivity plugin, the connectivity plugins the user may route
-    through (`connectivity_instance_ids`). The order path's and the
+    [`Caller`](#caller) carries `algorithm_id` and, for an `ems`, the
+    connectivity plugins the user may route through
+    (`connectivity_instance_ids`). A placement carries its own change
+    requests (`change_requests`). A connectivity plugin reports fills on
+    the `ems`'s placements and records no order and creates no placement; a
+    venue-originated fill is not supported in contract v22, its handling
+    planned for a later release. The order path's and the
     calendars' operations are `preview`. Nothing a plugin calls changed
     shape: `meridian plugin migrate` moves the pins (see
     [0.25.0 to 0.26.0](#0250-to-0260)). It needs a runtime serving contract
@@ -533,7 +537,7 @@ From 0.12.0. A plugin whose roles hear rows receives them with `plugin.receive`,
 | `trades_recorded` | `TradesRecorded` | A `TradesRecordedEvent`: one [`Trade`](typed-operations.md#trade) the lake recorded, in `trade`, for a subject named in `subjects=`. Heard by `signal` and `ems`, every one, never conflated. Caught up by [`list_trades`](typed-operations.md#list_trades) after the watermark last seen. From 0.23.0, `preview`. | W10.5 |
 | `quotes_recorded` | `QuotesRecorded` | A `QuotesRecordedEvent`: one [`Quote`](typed-operations.md#quote), in `quote`, latest value first per subject, dataset, venue and asset. Heard by `signal` and `ems`. Caught up by [`list_quotes`](typed-operations.md#list_quotes). From 0.23.0, `preview`. | W10.5 |
 | `order_updated` | `OrderUpdated` | An `OrderUpdatedEvent`: the order whole, with what changed. Heard by `oms`, `ems`, `compliance`, `portfolio`, `operations` and `reporting` within their read scopes. Caught up by [`list_orders`](typed-operations.md#list_orders). From 0.26.0 (built, not released), `preview`. | W11.13 |
-| `placement_updated` | `PlacementUpdated` | A `PlacementUpdatedEvent`: the placement whole. Heard by the `ems`, `oms` and `compliance` within scope, and by the connectivity plugin it names alone of its role. From 0.26.0 (built, not released), `preview`. | W11.13 |
+| `placement_updated` | `PlacementUpdated` | A `PlacementUpdatedEvent`: the placement whole, with its own change requests (`placement.change_requests`). Heard by the `ems`, `oms` and `compliance` within scope, and by the connectivity plugin it names alone of its role. From 0.26.0 (built, not released), `preview`. | W11.13 |
 | `execution_recorded` | `ExecutionRecorded` | An `ExecutionRecordedEvent`: an execution, never edited; a bust or correction is another, naming the one it supersedes. Heard by the order's hearers. From 0.26.0 (built, not released), `preview`. | W11.13 |
 | `unplaced_fact_recorded` | `UnplacedFactRecorded` | An `UnplacedFactRecordedEvent`: a venue's fact the book could not place, with its reason. Heard by `operations`. From 0.26.0 (built, not released), `preview`. | W11.13 |
 | `trading_instruction_changed` | `TradingInstructionChanged` | A `TradingInstructionChangedEvent`: an instruction set, whatever the plugin's accounts. Heard by `oms`, `ems`, `connectivity`, `portfolio` and `compliance`; caught up by [`list_trading_instructions`](typed-operations.md#list_trading_instructions), a read naming no account. From 0.26.0 (built, not released), `preview`. | W11.16 |
@@ -992,7 +996,7 @@ report = run("data", PRODUCERS, not_presented={
 
 From 0.24.0 so may a case about one field (`Case.about_field`, a dictionary entry such as `meridian.v1.Trade.aggressor`) that the plugin's source never states, though it publishes the kind: see [A field your source never states](../how-to/write-a-data-plugin.md#a-field-your-source-never-states).
 
-From 0.26.0 (contract v22, built, not released) `Case.about` names a kind of work as well as a kind of data, in any role's suite: every role's `reads-a-calendar` is about `calendars`, `asks-for-a-settlement-date` (every role's but `connectivity`'s and `operations`') about `settlement dates`, `connectivity`'s `records-a-locate` about `locates`, and its `reads-whether-releases-wait-for-compliance` and `hears-an-accounts-attributes-change` about `compliance waits`. A plugin whose work never uses one names the case in `not_presented`, with why, and is verified on the rest:
+From 0.26.0 (contract v22, built, not released) `Case.about` names a kind of work as well as a kind of data, in any role's suite: every role's `reads-a-calendar` is about `calendars`, `asks-for-a-settlement-date` (every role's but `connectivity`'s and `operations`') about `settlement dates`, `connectivity`'s `records-a-locate` and `resolves-a-venue-symbol-by-the-facts-date` about `locates`, and its `reads-whether-releases-wait-for-compliance` and `hears-an-accounts-attributes-change` about `compliance waits`. A plugin whose work never uses one names the case in `not_presented`, with why, and is verified on the rest:
 
 ```python
 report = run("custody", PRODUCERS, not_presented={
@@ -1054,7 +1058,8 @@ await plugin.create_placement(
     acting_for=request.caller.header,
 )
 
-# a connectivity plugin: say what the venue said, each with its raw record.
+# a connectivity plugin: say what the venue said of the ems's placement, each
+# with its raw record.
 await plugin.report_placement(
     placement_id=placement_id, event="acknowledged", venue_order_id="V-881",
     raw_record=plugin.raw_record(key),
@@ -1064,22 +1069,37 @@ await plugin.report_placement(
 - **Who calls what.** `compliance` checks and decides (`record_check`,
   `decide_approval`); an `ems` works a strategy in house as child orders of a
   released order (`propose_order(link=OrderLink(kind="split",
-  parent_order_id=...))`); a connectivity plugin reports fills, busts and
-  charges (`report_execution`, `report_charge`), records an order the venue
-  originated (`record_order`) and a locate (`record_locate`), and publishes
-  its venue's catalogue (`report_venue_catalogue`), which an `oms` and an
-  `ems` read (`read_venue_catalogue`). An `ems`'s admin page maps an account
-  to a venue account code with `map_venue_account`, acting for the admin
-  viewing it.
+  parent_order_id=...))`); the `oms` records a telephoned or outside order
+  for a person (`record_order`, `origin="telephoned"`); a connectivity
+  plugin reports fills, busts and charges on the `ems`'s placements
+  (`report_execution`, `report_charge`), records a locate (`record_locate`),
+  and publishes its venue's catalogue (`report_venue_catalogue`), which an
+  `oms` and an `ems` read (`read_venue_catalogue`). An `ems`'s admin page
+  maps an account to a venue account code with `map_venue_account`, acting
+  for the admin viewing it.
+- **Orders are `portfolio`'s and the `oms`'s, placements the `ems`'s, fills
+  the connectivity plugin's.** A connectivity plugin records no order and
+  creates no placement: its `record_order` or `create_placement` is
+  `NotGranted`, refused by its sidecar. A venue-originated fill, one the
+  venue reports on no placement the `ems` made, is not supported in contract
+  v22; its handling is planned for a later release.
 - **Every command but a fact report acts for someone**: a person, through
   `acting_for=request.caller.header`, or the role's
   [service account](#runs_as). A fact a connectivity plugin reports names
-  nobody.
+  nobody. `record_order` is a command: the `oms`'s, for a person or its
+  service account.
 - **A placement reaches only the connectivity plugin it names.** An `ems`
   page offers the instances in `request.caller.connectivity_instance_ids`;
   the sidecar checks the placement against them whatever the page draws,
   and the book refuses and records one at any other
   (`REFUSAL_REASON_CONNECTIVITY_NOT_ALLOWED`).
+- **A placement carries its own change requests.** When the `ems` or the
+  `oms` asks to cancel or replace a placement (`request_placement_change`),
+  the placement its connectivity plugin hears holds each request in
+  `change_requests`, with its `PlacementChange` and its outcome. Tell a
+  cancel from a replace by the change's `kind`, and read a replace's new
+  quantity, limit and time in force from it, never from a condition's
+  reason (see [A placement's change requests](#a-placements-change-requests)).
 - **A connectivity plugin states an execution's settlement date**: the
   venue's, or one asked of core with [`compute_date`](#settlement-calendars),
   carried with its basis (`computed_settlement_date`,
@@ -1102,8 +1122,10 @@ await plugin.report_placement(
 - **The suites.** `connectivity` and `oms` each have a
   [suite](#the-data-suite), and `portfolio`'s, `ems`'s, `compliance`'s,
   `operations`' and `reporting`'s hold the order path's cases. Every
-  `connectivity` case is required but six: `records-a-locate` (about
-  `locates`), `reads-whether-releases-wait-for-compliance` and
+  `connectivity` case is required but seven: `records-a-locate` and
+  `resolves-a-venue-symbol-by-the-facts-date` (about `locates`; the second
+  resolves the symbol on a prime's answer to a locate),
+  `reads-whether-releases-wait-for-compliance` and
   `hears-an-accounts-attributes-change` (`compliance waits`) and
   `reads-a-calendar` (`calendars`), which a plugin whose work never uses
   them names in `not_presented`, with why; and `resolves-an-executions-venue`
@@ -1120,6 +1142,28 @@ from importlib.resources import files
 import json
 
 table = json.loads(files("meridian").joinpath("transitions.json").read_text())
+```
+
+### A placement's change requests { #a-placements-change-requests }
+
+A connectivity plugin hearing its placement reads each cancel or replace
+asked of it from the placement itself, each tracked to its outcome
+(pending, applied or rejected); the order's own change requests stay on the
+order:
+
+```python
+from meridian.plugin.v1 import operations_pb2 as ops
+
+async def on_placement(heard: meridian.Heard[ops.PlacementUpdatedEvent]) -> None:
+    placement = heard.message.placement
+    for request in placement.change_requests:
+        if request.outcome != ops.CHANGE_REQUEST_OUTCOME_PENDING:
+            continue
+        change = request.placement_change
+        if change.kind == ops.PLACEMENT_CHANGE_KIND_CANCEL:
+            ...  # cancel placement.venue_order_id at the venue
+        elif change.kind == ops.PLACEMENT_CHANGE_KIND_REPLACE:
+            limit = meridian.as_money(change.limit_price)  # and the rest
 ```
 
 ### Algorithms { #algorithms }
@@ -1451,7 +1495,7 @@ From 0.20.0, contract v15, a person holds a level on each role of a plugin, and 
 | `subject_kind` | `int`, a `SubjectKind` | Whom the claims vouch for: `SUBJECT_KIND_UNSPECIFIED`, a person, as every caller before contract v21; `SUBJECT_KIND_SERVICE_ACCOUNT`, a [service account](../concepts/service-accounts.md), set by the dashboard only for an act's route reached for a call it admitted for the role's service account (see [A service account runs the plugin's autonomous work](#runs_as)). Added in 0.25.0. |
 | `owner_subject` | `str` | A service account's owner when the call was admitted, the person answerable for it; empty for a person. Added in 0.25.0. |
 | `algorithm_id` | `str` | The algorithm a service account's call named, one of the version's declared [algorithms](#algorithms); empty for a person and where the call named none. Added in 0.26.0 (built, not released). |
-| `connectivity_instance_ids` | `frozenset[str]` | For an `ems` or a connectivity plugin, the connectivity plugin instances this user may route through for it, worked out by the dashboard from the links the `ems`'s admin made: for showing which may be chosen. It names the instances, never the person's user groups; the sidecar checks a placement against it whatever the page draws. Empty for every other plugin. Added in 0.26.0 (built, not released). |
+| `connectivity_instance_ids` | `frozenset[str]` | For an `ems`, the connectivity plugin instances this user may route through for it, worked out by the dashboard from the links the `ems`'s admin made: for showing which may be chosen. It names the instances, never the person's user groups; the sidecar checks a placement against it whatever the page draws. Empty for every other plugin. Added in 0.26.0 (built, not released). |
 
 The levels are the same for every plugin, granted in the deployment's access groups. A plugin names no parts of itself, so there is nothing finer to ask than, from 0.20.0, the person's level on each of its roles, which are the deployment's, not the plugin's. The sidecar checks every command sent for a person again, whatever the plugin believes: it admits one only in a session at `write`, and from contract v15 only by their `write` on a role whose grants include the command, the account among that role's write accounts, refusing otherwise and naming the role. See [Access](../concepts/access.md#access-per-role).
 
@@ -1830,7 +1874,7 @@ client.assert_no_account_data("AAPL", "125", "12,500.00")  # what the stand-in h
 
 `meridian.testing.heartbeat(*, healthy=True, detail="", figures=())`, from 0.11.0, is the heartbeat a plugin's sidecar receives from a plugin reporting these: its figures as the wire carries them, in the plugin's order. It raises as setting `plugin.figures` does, so a test of the figures a plugin computes asserts on it, or on the refusal. See [Figures](#figures).
 
-`meridian.testing.caller_header(level, *, read=(), write=(), subject=..., display_name=..., deployment_admin=False, delegation_id="", client_name="", tool_name="", roles=())` makes the header alone, for a test that serves the pages another way. `delegation_id` and `client_name`, from 0.14.0, are a person's who came through a client rather than a browser. `roles`, from 0.20.0, are the roles the session carries an entry for, as `caller`'s, each role's accounts as positions in the claims' read accounts, as the dashboard mints them. `subject_kind` and `owner_subject`, from 0.25.0, make it a service account's, `subject` its `SA-` ID. `algorithm_id` and `connectivity_instance_ids`, from 0.26.0 (built, not released), are the algorithm a service account's call named and the connectivity plugins the user may route through, for an `ems`'s or a connectivity plugin's tests. It is unsigned: only a plugin's tests read it, never a sidecar.
+`meridian.testing.caller_header(level, *, read=(), write=(), subject=..., display_name=..., deployment_admin=False, delegation_id="", client_name="", tool_name="", roles=())` makes the header alone, for a test that serves the pages another way. `delegation_id` and `client_name`, from 0.14.0, are a person's who came through a client rather than a browser. `roles`, from 0.20.0, are the roles the session carries an entry for, as `caller`'s, each role's accounts as positions in the claims' read accounts, as the dashboard mints them. `subject_kind` and `owner_subject`, from 0.25.0, make it a service account's, `subject` its `SA-` ID. `algorithm_id` and `connectivity_instance_ids`, from 0.26.0 (built, not released), are the algorithm a service account's call named and the connectivity plugins the user may route through, for an `ems`'s tests. It is unsigned: only a plugin's tests read it, never a sidecar.
 
 A plugin holding several roles holds each page to them in its tests:
 
