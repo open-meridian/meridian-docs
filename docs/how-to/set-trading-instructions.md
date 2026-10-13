@@ -102,9 +102,10 @@ Each attribute you change is its own entry in the account's journal (see
 
 ## Through an agent
 
-Four of core's tools mirror these, each an act at the setter's level, which
-can be prepared, and at **May not** for agents until the deployment admin
-loosens it (see [What agents may do](../concepts/prepared-changes.md#what-agents-may-do)):
+Four of core's tools mirror these. The two that set take a `note`, kept as
+the book entry's reason, and the two that list answer `outcome:
+"unchanged"`. Each act is at the setter's level, can be prepared, and is at
+**May not** for agents until the deployment admin loosens it (see [What agents may do](../concepts/prepared-changes.md#what-agents-may-do)):
 
 - [`dashboard__list_trading_instructions`](../api/core-tools.md#dashboard__list_trading_instructions)
   and [`dashboard__set_trading_instruction`](../api/core-tools.md#dashboard__set_trading_instruction);

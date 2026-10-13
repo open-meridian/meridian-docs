@@ -97,7 +97,8 @@ act.
   `note` saying why, required, up to 2,000 characters, and keeps it with the
   change. The pages ask for none. From contract v22 the two acts on the book,
   `dashboard__set_trading_instruction` and `dashboard__set_account_attribute`,
-  take a `reason` instead, as the book's entries and their pages do.
+  keep their `note` as the book entry's reason, where the page asks for a
+  **Why** or a **Reason**.
 - **Each change its own record**, as the same change made at the page,
   naming the person, the delegation and the client (see
   [Where a change is recorded](#where-a-change-is-recorded)).
@@ -677,9 +678,9 @@ and, at the page,
 The two acts are core acts at the setter's level: each can be prepared
 ([`dashboard__prepare_call`](#dashboard__prepare_call)), and each is at
 **May not** for agents until the deployment admin loosens it. Each takes a
-`reason`, 1 to 2,000 characters, kept with the book's entry. A list answers
-`outcome: "read"`; a reason another person or agent wrote is screened as
-others' words. The book refuses and cancels nothing for an instruction:
+`note`, as every act does, kept as the book entry's reason. A list answers
+`outcome: "unchanged"`; a reason another person or agent wrote is screened
+as others' words. The book refuses and cancels nothing for an instruction:
 each plugin honours it.
 
 ### `dashboard__list_trading_instructions`
@@ -694,7 +695,8 @@ admin.
 fields, only those set: `all_accounts`, `account_id`, `instance_id`,
 `subject`, `service_account_id`), `target_said` (the target in words, as
 the page shows it), `value` (`active`, `pause` or `stop`), `setter_level`
-(`deployment_admin` or `plugin_admin`), `reason`, `set_by`, the
+(`deployment_admin` or `plugin_admin`), `reason` (the note it was set
+with, kept as the entry's reason), `set_by`, the
 `entry_id` that set it and its `last_change` (`partition` and `sequence`);
 and `control_sequence`, the sequence of the trading instructions as of the
 read.
@@ -709,18 +711,18 @@ The page's **Set an instruction** dialog.
 |---|---|
 | `target` | What it is on, the contract's fields, one target: `{"all_accounts": true}` (a deployment admin's); `{"instance_id": "…"}`, a plugin; or `account_id`, `subject` (a person, by their deployment-local subject) or `service_account_id`, each beside the plugin's `instance_id` where it is within one. A plugin's admin always names their plugin. A user group is not a target in v22, and `target.user_group_id` is refused |
 | `value` | `active`, `pause` or `stop` |
-| `reason` | Why, kept with the instruction |
+| `note` | Why, kept as the instruction's reason |
 
 The level is stamped from the caller's access, never an argument: a
 deployment admin's, or a plugin admin's for a plugin they administer. A
 target outside the caller's reach is refused `not_permitted`, naming
 `target`.
 
-**Answer:** `instruction`, as the list answers each.
+**Answer:** `outcome: "made"` and `instruction`, as the list answers each.
 
 ```json
 {"target": {"instance_id": "desk-1"}, "value": "pause",
- "reason": "Pausing the desk's new orders while the venue is degraded."}
+ "note": "Pausing the desk's new orders while the venue is degraded."}
 ```
 
 ### `dashboard__list_account_attributes`
@@ -741,16 +743,17 @@ balance stands for, empty for none.
 An account's **Edit**, **In the book**: one attribute at a time, each its own
 entry.
 
-**Input:** `account_id`, `reason`, and exactly one of `base_currency_code`
+**Input:** `account_id`, `note` (kept as the entry's reason), and exactly one of `base_currency_code`
 (three capital letters), `lot_relief_default` (as above) or
 `waits_for_compliance` (`false` lets a release pass the gate without a
 compliance verdict).
 
-**Answer:** the account's `attributes` as they stand, and the `entry_id`.
+**Answer:** `outcome: "made"`, the account's `attributes` as they stand,
+and the `entry_id`.
 
 ```json
 {"account_id": "ACC-01JA2Q3R4S5T6V7W8X9Y0Z1A2B", "waits_for_compliance": false,
- "reason": "No compliance plugin covers this account; releases are reviewed by the desk."}
+ "note": "No compliance plugin covers this account; releases are reviewed by the desk."}
 ```
 
 ## The Calendars tab
@@ -824,7 +827,7 @@ service account made is recorded on its own page, **Its calls**, not in
 anyone's Connected clients. From contract v22 (built, not released) a
 trading instruction or an account attribute set through a tool is an entry
 in the book, as one set at the page is, with the person, the delegation,
-the client and the reason; and each change to a connectivity plugin's
+the client and the note, kept as the entry's reason; and each change to a connectivity plugin's
 availability, link or users, made at the page, is its own record in the
 deployment's configuration.
 
