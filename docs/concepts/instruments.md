@@ -15,6 +15,19 @@ an instrument it does not know.
     `reporting` plugin's resolve is read-only; and wherever a table names an
     instrument, it is chosen with a search-as-you-type picker. Released 2026-10-12 in chart 0.1.298.
 
+!!! warning "Notice: contract v24 changes three stable reads"
+    Contract v24, the one-ID revision, changes
+    [`ResolveIdentifier`](../api/typed-operations.md#resolve_identifier),
+    [`ResolveInstrument`](../api/typed-operations.md#resolve_instrument) and
+    [`ReportMissingInstrument`](../api/typed-operations.md#report_missing_instrument). Every
+    instrument comes to be keyed by its platform `INS-` ID: a deployment's
+    provisional records stay `LCL-`, resolved to their `INS-` record, and a
+    resolved `LCL-` ID is accepted forever. The `open_meridian` identifier
+    stops being added to records. Plugins treat IDs as opaque and need no
+    change; a plugin that reads the `open_meridian` identifier should stop
+    relying on it. A stable row changes only after a version whose notice
+    says it will, and contract v23 is that version.
+
 ## Identity is the answer; a ticker is an attribute
 
 Each instrument has one canonical identifier, `INS-` followed by a unique

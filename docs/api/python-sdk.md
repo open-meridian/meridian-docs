@@ -48,6 +48,19 @@ A plugin pins the SDK exactly, `open-meridian==0.26.0`, in its `pyproject.toml`.
     [0.26.0 to 0.27.0](#0260-to-0270)). It needs a runtime serving
     contract v23.
 
+!!! warning "Notice: contract v24 changes three stable reads"
+    Contract v24, the one-ID revision, changes
+    [`ResolveIdentifier`](typed-operations.md#resolve_identifier),
+    [`ResolveInstrument`](typed-operations.md#resolve_instrument) and
+    [`ReportMissingInstrument`](typed-operations.md#report_missing_instrument). Every
+    instrument comes to be keyed by its platform `INS-` ID: a deployment's
+    provisional records stay `LCL-`, resolved to their `INS-` record, and a
+    resolved `LCL-` ID is accepted forever. The `open_meridian` identifier
+    stops being added to records. Plugins treat IDs as opaque and need no
+    change; a plugin that reads the `open_meridian` identifier should stop
+    relying on it. A stable row changes only after a version whose notice
+    says it will, and contract v23 is that version.
+
 !!! note "TODO: 0.27.0 on PyPI"
     Name the release date, the chart serving contract v23
     (`0.1.CHART23`), and the CLI release whose `plugin new` pins 0.27.0

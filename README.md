@@ -59,6 +59,14 @@ outcome), the "Answer a venue-originated fill" how-to, and the plugins built
 with it: Kalshi 0.5.0, Polymarket 0.5.0 and the new Polymarket US 0.1.0
 recording outcomes, and Alpaca and Tradier gaining `connectivity`, then
 `custody`. The chart serving it is `0.1.CHART23` until published.
+**Notice for contract v24**, the one-ID revision: three stable reads,
+`ResolveIdentifier`, `ResolveInstrument` and `ReportMissingInstrument`,
+change. Every instrument comes to be keyed by its platform `INS-` ID; a
+deployment's provisional records stay `LCL-`, resolved to their `INS-`
+record, and a resolved `LCL-` ID is accepted forever. The `open_meridian`
+identifier stops being added to records. Plugins treat IDs as opaque and
+need no change; one that reads the `open_meridian` identifier should stop
+relying on it.
 The tutorials were walked on CLI 0.1.36 and SDK 0.21.0. A page describes
 what is built, and says so where something is specified and not built yet.
 
