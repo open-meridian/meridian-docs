@@ -10,7 +10,8 @@ They pass one data suite between them. Each contract they price is a
 [binary event contract](../concepts/instruments.md#binary-event-contracts)
 in the deployment's instrument store. From contract v23 each also records
 its contracts' [outcomes](#outcomes), and a third, **Polymarket US**, from
-plugin-polymarket-us, joins them.
+[plugin-polymarket-us](https://github.com/open-meridian/plugin-polymarket-us),
+joins them.
 
 !!! note "Contract v23"
     plugin-kalshi 0.5.0 and plugin-polymarket 0.5.0 (Polymarket's
@@ -18,9 +19,6 @@ plugin-polymarket-us, joins them.
     plugin-polymarket-us 0.1.0 is a new data plugin for Polymarket US,
     each released 2026-10-14, built on open-meridian 0.27.0 (contract v23),
     and running on chart 0.1.303 or later.
-
-!!! note "TODO: the repository link for plugin-polymarket-us"
-    Link plugin-polymarket-us's repository once it is public.
 
 !!! note "Contract v20"
     plugin-kalshi 0.2.0 and plugin-polymarket 0.2.0, released 2026-10-12,

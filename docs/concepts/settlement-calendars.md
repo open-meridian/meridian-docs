@@ -204,12 +204,22 @@ where the Bank of Japan's schedules give dates alone, from 2019, a day is
 named "Holiday observed by the Bank of Japan". The platform also holds one
 rule, the US equities and funds settlement-date rule above.
 
-!!! note "TODO: the first spot-date rules"
-    No spot-date rule is held yet, so a spot or tenor date is answered
-    "rule not held" until the platform records the first pairs. They come
-    with the spot FX connectivity plugin, OANDA's: name them, and their
-    counting mode, when the platform holds them. Core's harness serves a
-    EUR/USD rule of its own for its tests.
+The platform holds nine spot-date rules, one for each US dollar pair, each
+written in market order:
+
+| Pair | Spot |
+|---|---|
+| EUR/USD, GBP/USD, AUD/USD, NZD/USD | T+2 |
+| USD/CHF, USD/JPY, USD/NOK, USD/SEK | T+2 |
+| USD/CAD | T+1 |
+
+Each counts its lag on the other currency's settlement days only, and puts
+spot on a day both currencies settle, the market's convention: a US holiday
+between the trade and spot does not push spot, and spot is never a US
+holiday. EUR/USD traded on Friday 9 October 2026, the Friday before Columbus
+Day, is spot on Tuesday the 13th. The day's cut is 17:00 New York time, and
+tenors are modified following, with the end-of-month rule. A pair the
+platform holds no rule for is answered "rule not held".
 
 ## The Calendars tab
 
