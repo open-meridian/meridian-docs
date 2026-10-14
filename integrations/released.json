@@ -64,15 +64,6 @@
       "sdk": "0.27.0",
       "contract": 23
     },
-    "plugin-truefx": {
-      "commit": "2d98f79c03a3d050becca042bf782893b669ddb3",
-      "version": "0.1.0",
-      "roles": [
-        "data"
-      ],
-      "sdk": "0.26.0",
-      "contract": 22
-    },
     "plugin-alpaca": {
       "commit": "089c03eb8d56fec4e72b4b9cf36c11699f904e1a",
       "version": "0.8.0",

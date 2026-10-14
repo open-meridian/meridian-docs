@@ -35,7 +35,7 @@
   roles: [data]
   assets: [fund]
   environments: [live, sample-data]
-  status: preview
+  status: released
   version: "0.4.0"
   contract: 22
   guide: how-to/using-a-data-plugin.md#tiingo-mutual-funds-daily-navs
@@ -47,7 +47,7 @@
   roles: [data]
   assets: [fx]
   environments: [live, sample-data]
-  status: preview
+  status: released
   version: "0.4.0"
   contract: 22
   guide: how-to/using-a-data-plugin.md#the-federal-reserves-h10
@@ -59,7 +59,7 @@
   roles: [data]
   assets: [crypto]
   environments: [live, sample-data]
-  status: preview
+  status: released
   version: "0.5.0"
   contract: 22
   guide: how-to/using-a-data-plugin.md#coinbase-and-kraken
@@ -71,7 +71,7 @@
   roles: [data]
   assets: [crypto]
   environments: [live, sample-data]
-  status: preview
+  status: released
   version: "0.5.0"
   contract: 22
   guide: how-to/using-a-data-plugin.md#coinbase-and-kraken
@@ -83,7 +83,7 @@
   roles: [data]
   assets: [event-contract]
   environments: [live, sample-data]
-  status: preview
+  status: released
   version: "0.5.0"
   contract: 23
   guide: how-to/add-a-prediction-market-plugin.md
@@ -96,7 +96,7 @@
   roles: [data]
   assets: [event-contract]
   environments: [live, sample-data]
-  status: preview
+  status: released
   version: "0.5.0"
   contract: 23
   guide: how-to/add-a-prediction-market-plugin.md
@@ -109,22 +109,10 @@
   roles: [data]
   assets: [event-contract]
   environments: [live, sample-data]
-  status: preview
+  status: released
   version: "0.1.0"
   contract: 23
   guide: how-to/add-a-prediction-market-plugin.md#polymarket-us
-
-# Data: FX rates, each pair two currencies' cash instruments (README).
-# Settings: an optional username, sample_data. README: "Not released,
-# uploaded or launched anywhere."
-- service: TrueFX
-  plugin: plugin-truefx
-  roles: [data]
-  assets: [fx]
-  environments: [live, sample-data]
-  status: preview
-  version: "0.1.0"
-  contract: 22
 
 # All three roles on US equities and ETFs (ETFs are funds), the account's
 # positions and cash (README; Alpaca does not serve crypto or options here).
@@ -135,7 +123,7 @@
   roles: [data, custody, connectivity]
   assets: [equity, fund, cash]
   environments: [sandbox, live, sample-data]
-  status: preview
+  status: released
   version: "0.8.0"
   contract: 23
   guide: how-to/using-a-data-plugin.md#alpaca-and-tradier
@@ -149,7 +137,7 @@
   roles: [data, custody, connectivity]
   assets: [equity, fund, cash]
   environments: [sandbox, live, sample-data]
-  status: preview
+  status: released
   version: "0.7.0"
   contract: 23
   guide: how-to/using-a-data-plugin.md#alpaca-and-tradier
@@ -164,7 +152,7 @@
   roles: [custody, connectivity]
   assets: [equity, fund, debt, derivative, crypto, cash]
   environments: [live, sample-data]
-  status: preview
+  status: released
   version: "0.17.0"
   contract: 23
   guide: how-to/using-a-custody-plugin.md
@@ -178,6 +166,6 @@
   roles: [custody, connectivity]
   assets: [fx, cash]
   environments: [sandbox, live, sample-data]
-  status: preview
+  status: released
   version: "0.2.0"
   contract: 23
