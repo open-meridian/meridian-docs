@@ -12,7 +12,7 @@ pip install open-meridian
 |---|---|
 | PyPI name | `open-meridian` |
 | Import name | `meridian` |
-| Version | 0.26.0 |
+| Version | 0.26.0; 0.27.0 built, not released |
 | Python | 3.11 or newer |
 | Dependencies | `grpcio>=1.68,<2`, `protobuf>=5.28,<7`, `jinja2>=3.1,<4` (from 0.10.0, for [pages](#pages)) |
 | Licence | Apache-2.0 |
@@ -20,7 +20,38 @@ pip install open-meridian
 !!! warning "Not `meridian-sdk`"
     The PyPI package `meridian-sdk` belongs to an unrelated company. Don't install it.
 
-A plugin pins the SDK exactly, `open-meridian==0.26.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.26.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls; from 0.12.0 to 0.13.0, from 0.13.0 to 0.14.0, from 0.19.0 to 0.20.0, from 0.20.0 to 0.21.0, from 0.21.0 to 0.22.0 and from 0.22.0 to 0.23.0, only the pins move, from 0.23.0 to 0.24.0 it rewrites the renamed roles (see [0.23.0 to 0.24.0](#0230-to-0240)), from 0.24.0 to 0.25.0 only the pins move (see [0.24.0 to 0.25.0](#0240-to-0250)), and from 0.25.0 to 0.26.0 only the pins move (see [0.25.0 to 0.26.0](#0250-to-0260)). `meridian plugin new` writes a plugin pinned to 0.19.0 from CLI 0.1.34, to 0.20.0 from CLI 0.1.35, to 0.21.0 from CLI 0.1.36, to 0.22.0 from CLI 0.1.37, to 0.23.0 from CLI 0.1.38, to 0.24.0 from CLI 0.1.39, to 0.25.0 from CLI 0.1.41, and to 0.26.0 from CLI 0.1.42.
+A plugin pins the SDK exactly, `open-meridian==0.26.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.26.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls; from 0.12.0 to 0.13.0, from 0.13.0 to 0.14.0, from 0.19.0 to 0.20.0, from 0.20.0 to 0.21.0, from 0.21.0 to 0.22.0 and from 0.22.0 to 0.23.0, only the pins move, from 0.23.0 to 0.24.0 it rewrites the renamed roles (see [0.23.0 to 0.24.0](#0230-to-0240)), from 0.24.0 to 0.25.0 only the pins move (see [0.24.0 to 0.25.0](#0240-to-0250)), from 0.25.0 to 0.26.0 only the pins move (see [0.25.0 to 0.26.0](#0250-to-0260)), and from 0.26.0 to 0.27.0 (built, not released) only the pins move (see [0.26.0 to 0.27.0](#0260-to-0270)). `meridian plugin new` writes a plugin pinned to 0.19.0 from CLI 0.1.34, to 0.20.0 from CLI 0.1.35, to 0.21.0 from CLI 0.1.36, to 0.22.0 from CLI 0.1.37, to 0.23.0 from CLI 0.1.38, to 0.24.0 from CLI 0.1.39, to 0.25.0 from CLI 0.1.41, and to 0.26.0 from CLI 0.1.42.
+
+!!! note "0.27.0: contract v23, built, not released"
+    open-meridian 0.27.0 declares contract v23, built and not yet on PyPI.
+    A connectivity plugin reports a
+    [venue-originated fill](#venue-originated-fills) on no placement
+    (`report_execution`'s `instrument_id`, `side`, `venue_order_id` and
+    `venue_client_order_id`), which waits unmatched (`Execution.state`);
+    the `ems` accepts it (`accept_execution`, to an `order_id` or a
+    `new_order`) or answers it DK (`dont_know_execution`, with a reason);
+    a connectivity plugin hears the executions it reported, and its
+    catalogue says which acknowledgement its venue takes
+    (`VenueCatalogue.execution_acknowledgement`); `list_orders` takes
+    `execution_state`. A connectivity plugin reports a venue's
+    [value-date roll](#a-value-date-roll) (`report_value_date_roll`), a fee
+    may be financing or commission, and an FX order names its
+    `quote_currency`. A data plugin records an event contract's
+    [outcomes](#outcomes) (`record_outcomes`, `Outcome`), which prices'
+    readers and `operations` hear and read (`list_outcomes`); a daily value
+    on a closed day carries `ObservationMeta.closed_day`. A plugin whose
+    source states no currency declares
+    [`meridian.account_currency()`](#typed-settings). The suites gain v23's
+    cases, their [`about` markers](#a-case-not-presented) and `any_of`.
+    Every operation it adds is `preview`. Nothing a plugin calls changed
+    shape: `meridian plugin migrate` moves the pins (see
+    [0.26.0 to 0.27.0](#0260-to-0270)). It needs a runtime serving
+    contract v23.
+
+!!! note "TODO: 0.27.0 on PyPI"
+    Name the release date, the chart serving contract v23
+    (`0.1.CHART23`), and the CLI release whose `plugin new` pins 0.27.0
+    once released: CLI 0.1.43 as built still pins 0.26.0.
 
 !!! note "0.26.0: contract v22"
     open-meridian 0.26.0 declares contract v22:
@@ -99,6 +130,36 @@ A plugin pins the SDK exactly, `open-meridian==0.26.0`, in its `pyproject.toml`.
     readers, a `Money` naming its instrument and real dates. It needs a
     runtime serving contract v18 (chart 0.1.292 or later), which refuses
     nothing a plugin on 0.21.0 sends. See [Plugin manifest](plugin-manifest.md).
+
+### 0.26.0 to 0.27.0 { #0260-to-0270 }
+
+Built, not released. `meridian plugin migrate --to 0.27.0` moves the pins
+and rewrites nothing: contract v23 adds, and changes the shape of nothing a
+plugin calls. Then, by hand where they apply:
+
+- **A suite test** meets v23's cases. `connectivity`'s four
+  (`reports-a-fill-on-no-placement`,
+  `reports-a-later-fill-on-the-accepted-placement`,
+  `re-reports-a-charge-on-the-accepted-placement`, about `venue-originated
+  fills`, and `reports-a-value-date-roll`, about `value-date rolls`), the
+  data suite's three outcome cases (about `outcomes` and `disputed
+  outcomes`), and each reader's `hears-and-reads-an-outcome` (about
+  `outcomes`) may be named in `not_presented`, with why, where the plugin's
+  source or work never has them; `ems`'s four and `operations`' and
+  `compliance`'s new cases are required. Cases that were required may now
+  be marked too: custody's plan-code, sweep-fund, split and
+  currency-not-stated cases, and connectivity's `reports-a-bust` and
+  `reports-a-charge`. See [A case not presented](#a-case-not-presented).
+- **A test that skips or expects a suite test to fail** fails CLI 0.1.43's
+  `role-suite`: run the suite, mark what is not presented, and
+  `assert report.passed, report.failures` in the next statement (see
+  [`meridian plugin check`](cli.md#plugin-check)).
+- **A client of `dashboard__list_datasets` or
+  `dashboard__list_source_priorities`** accepts `outcome: "unchanged"`, which
+  they answer from contract v23, as well as `read`.
+- **A custody plugin whose source states no currency** declares
+  `meridian.account_currency()` and gives the currency it supplies with its
+  provenance (see [Typed settings](#typed-settings)).
 
 ### 0.25.0 to 0.26.0 { #0250-to-0260 }
 
@@ -244,11 +305,12 @@ A plugin that serves pages declares them with [`meridian.Pages`](#pages) and pas
 | `AlgorithmDeclaration` | frozen dataclass | [Algorithms](#algorithms): one algorithm a version declares, from 0.26.0 |
 | `OrderLink`, `OrderChange`, `PlacementChange`, `AllocationInstruction`, `AllocationLine`, `Leg`, `Party`, `ReceiptQuote`, `StrategyInstruction`, `Finality`, `Fee`, `LocateAnswer`, `LocateUse`, `VenueCatalogue`, `VenueOrderType`, `VenueStrategy`, `StrategyParameter`, `VenueEligibility`, `Actor` | frozen dataclasses and a generated protobuf message | [The order path](#the-order-path), from 0.26.0 |
 | `DateBasis`, `DateCheck`, `DateRuleRef`, `SettlementDateInputs`, `SpotDateInputs`, `TenorDateInputs`, `Tenor`, `RollInputs`, `BusinessDayInputs` | frozen dataclasses and generated protobuf messages | [Settlement calendars](#settlement-calendars), from 0.26.0 |
-| `settings`, `setting`, `environment`, `sample_data` | decorator, functions | [Typed settings](#typed-settings), from 0.24.0 |
+| `Outcome`, `OutcomeDetermination`, `OutcomeStage` | frozen dataclass, generated protobuf enums | [Outcomes](#outcomes), from 0.27.0 (built, not released) |
+| `settings`, `setting`, `environment`, `sample_data` | decorator, functions | [Typed settings](#typed-settings), from 0.24.0; `account_currency` from 0.27.0 (built, not released) |
 | `CallerMiddleware` | ASGI middleware | [`CallerMiddleware`](#callermiddleware) |
 | `MeridianError`, `Refused`, `NoSidecar`, `NotRegistered`, `NotGranted`, `CallFailed`, `NotLinked`, `CommandRefused` | exceptions | [Exceptions](#exceptions); `CommandRefused` from 0.13.0, its `fields` from 0.14.0 |
 | `DEFAULT_ADDRESS` | `str` | `"127.0.0.1:9191"`, where a sidecar listens |
-| `SCHEMA_VERSION` | `str` | the contract version sent at registration: `"v22"` from 0.26.0, `"v21"` in 0.25.0, `"v20"` in 0.24.0, `"v19"` in 0.23.0, `"v18"` in 0.22.0 (no SDK declares v17, a revision of core's alone), `"v16"` in 0.21.0, `"v15"` in 0.20.0, `"v14"` in 0.19.0, `"v13"` in 0.18.0, `"v12"` in 0.17.0, `"v11"` in 0.16.0, `"v10"` in 0.15.0, `"v9"` in 0.14.0, `"v8"` in 0.13.0, `"v7"` in 0.12.0, `"v6"` in 0.11.0, `"v5"` in 0.10.0 and 0.10.1, `"v4"` in 0.9.0, `"v3"` in 0.8.0, `"v2"` before |
+| `SCHEMA_VERSION` | `str` | the contract version sent at registration: `"v23"` from 0.27.0 (built, not released), `"v22"` in 0.26.0, `"v21"` in 0.25.0, `"v20"` in 0.24.0, `"v19"` in 0.23.0, `"v18"` in 0.22.0 (no SDK declares v17, a revision of core's alone), `"v16"` in 0.21.0, `"v15"` in 0.20.0, `"v14"` in 0.19.0, `"v13"` in 0.18.0, `"v12"` in 0.17.0, `"v11"` in 0.16.0, `"v10"` in 0.15.0, `"v9"` in 0.14.0, `"v8"` in 0.13.0, `"v7"` in 0.12.0, `"v6"` in 0.11.0, `"v5"` in 0.10.0 and 0.10.1, `"v4"` in 0.9.0, `"v3"` in 0.8.0, `"v2"` before |
 
 The module `meridian.testing` holds [`PageClient`](#testing) and [`heartbeat`](#testing), for a plugin's own tests.
 
@@ -535,10 +597,11 @@ From 0.12.0. A plugin whose roles hear rows receives them with `plugin.receive`,
 | `quotes_recorded` | `QuotesRecorded` | A `QuotesRecordedEvent`: one [`Quote`](typed-operations.md#quote), in `quote`, latest value first per subject, dataset, venue and asset. Heard by `signal` and `ems`. Caught up by [`list_quotes`](typed-operations.md#list_quotes). From 0.23.0, `preview`. | W10.5 |
 | `order_updated` | `OrderUpdated` | An `OrderUpdatedEvent`: the order whole, with what changed. Heard by `oms`, `ems`, `compliance`, `portfolio`, `operations` and `reporting` within their read scopes. Caught up by [`list_orders`](typed-operations.md#list_orders). From 0.26.0, `preview`. | W11.13 |
 | `placement_updated` | `PlacementUpdated` | A `PlacementUpdatedEvent`: the placement whole, with its own change requests (`placement.change_requests`). Heard by the `ems`, `oms` and `compliance` within scope, and by the connectivity plugin it names alone of its role. From 0.26.0, `preview`. | W11.13 |
-| `execution_recorded` | `ExecutionRecorded` | An `ExecutionRecordedEvent`: an execution, never edited; a bust or correction is another, naming the one it supersedes. Heard by the order's hearers. From 0.26.0, `preview`. | W11.13 |
+| `execution_recorded` | `ExecutionRecorded` | An `ExecutionRecordedEvent`: an execution, never edited; a bust or correction is another, naming the one it supersedes. Heard by the order's hearers; from 0.27.0 by the connectivity plugin that reported it too, and an unmatched one by the `ems` linked to it. From 0.26.0, `preview`. | W11.13 |
 | `unplaced_fact_recorded` | `UnplacedFactRecorded` | An `UnplacedFactRecordedEvent`: a venue's fact the book could not place, with its reason. Heard by `operations`. From 0.26.0, `preview`. | W11.13 |
 | `trading_instruction_changed` | `TradingInstructionChanged` | A `TradingInstructionChangedEvent`: an instruction set, whatever the plugin's accounts. Heard by `oms`, `ems`, `connectivity`, `portfolio` and `compliance`; caught up by [`list_trading_instructions`](typed-operations.md#list_trading_instructions), a read naming no account. From 0.26.0, `preview`. | W11.16 |
 | `locate_updated` | `LocateUpdated` | A `LocateUpdatedEvent`: a locate and its uses. Heard by `compliance`, the `oms` and `portfolio`; caught up by [`list_locates`](typed-operations.md#list_locates). From 0.26.0, `preview`. | W11.18 |
+| `outcomes_recorded` | `OutcomesRecorded` | An `OutcomesRecordedEvent`: one [`Outcome`](#outcomes), in `outcome`, every version, never conflated, for a subject named in `subjects=`. Heard by `reporting`, `portfolio`, `compliance`, `signal` and `operations`; caught up by [`list_outcomes`](typed-operations.md#list_outcomes) after the watermark last seen. From 0.27.0 (built, not released), `preview`. | W10.5 |
 | `report_venue_catalogue` | `ReportVenueCatalogue` | A `VenueCatalogueEvent`: a connectivity plugin's venue catalogue for one venue account code, latest per plugin and code. Heard by the `ems` and the `oms`; read again with [`read_venue_catalogue`](typed-operations.md#read_venue_catalogue) on start and after a loss. From 0.26.0, `preview`. | W11.20 |
 
 ```python
@@ -567,6 +630,8 @@ async def receive(
     trading_instruction_changed: Callable[[Heard[TradingInstructionChangedEvent]], Awaitable[None]] | None = None,
     locate_updated: Callable[[Heard[LocateUpdatedEvent]], Awaitable[None]] | None = None,
     report_venue_catalogue: Callable[[Heard[VenueCatalogueEvent]], Awaitable[None]] | None = None,
+    # from 0.27.0:
+    outcomes_recorded: Callable[[Heard[OutcomesRecordedEvent]], Awaitable[None]] | None = None,
     seed: bool = True,
     subjects: Sequence[str] = (),
 ) -> None
@@ -979,7 +1044,7 @@ async def a_want_recorded_against(recorder):
     await recorder.receive(observations_wanted=MyData(recorder).on_want)
 ```
 
-The cases are listed in [Write a data plugin against its suite](../how-to/write-a-data-plugin.md#hold-it-to-the-suite): thirteen in 0.22.0, twenty-one in 0.23.0, twenty-four from 0.24.0, when the suite is named `data`, `dgm` before. A plugin holding `data` is verified for it only by passing every case it presents, which [`meridian plugin check --verified --run-tests`](cli.md#plugin-check) holds it to. The reading roles, `reporting`, `portfolio`, `compliance` and `signal`, and from 0.23.0 `ems`, have suites of their own, run the same way, and from 0.26.0 so do `connectivity`, `oms`, `confirmation`, `servicing` and `settlement`; `meridian plugin check --verified` holds only the `custody` and `data` suites, so a reading role's suite is run by the plugin's own tests alone.
+The cases are listed in [Write a data plugin against its suite](../how-to/write-a-data-plugin.md#hold-it-to-the-suite): thirteen in 0.22.0, twenty-one in 0.23.0, twenty-four from 0.24.0, when the suite is named `data`, `dgm` before, twenty-six in 0.26.0 and twenty-nine in 0.27.0. A plugin holding `data` is verified for it only by passing every case it presents, which [`meridian plugin check --verified --run-tests`](cli.md#plugin-check) holds it to. The reading roles, `reporting`, `portfolio`, `compliance` and `signal`, and from 0.23.0 `ems`, have suites of their own, run the same way, and from 0.26.0 so do `connectivity`, `oms`, `confirmation`, `servicing` and `settlement`; `meridian plugin check --verified` holds only the `custody` and `data` suites, so a reading role's suite is run by the plugin's own tests alone.
 
 #### A case not presented { #a-case-not-presented }
 
@@ -1003,6 +1068,36 @@ report = run("custody", PRODUCERS, not_presented={
 
 `connectivity`'s `resolves-an-executions-venue` and `reports-a-venue-not-held` carry `Case.about_field`, `meridian.v1.ReportExecutionRequest.venue_id`: a plugin whose venue never states a fill's place of execution names both. The runner refuses, as a failure, a name in `not_presented` that is neither a closed-list case nor one with an `about` or an `about_field`.
 
+From 0.27.0 (contract v23, built, not released) more cases carry `about`, each a thing the plugin's source never states or its work never does:
+
+| `about` | Cases |
+|---|---|
+| `plan fund codes` | custody's `activity-plan-code-not-linked`, `activity-plan-code-linked-by-a-person`, `activity-re-resolved-when-a-plan-code-is-linked-later` |
+| `sweep funds` | custody's `cash-net-of-a-fund-counted-in-cash`, `fund-larger-than-cash` |
+| `splits` | custody's `activity-moves-no-cash` |
+| `currencies not stated` | custody's `currency-not-stated`, for a custodian that always states the currency |
+| `charges without a fill` | connectivity's `reports-a-charge` |
+| `busts` | connectivity's `reports-a-bust` |
+| `venue-originated fills` | connectivity's `reports-a-fill-on-no-placement`, `reports-a-later-fill-on-the-accepted-placement`, `re-reports-a-charge-on-the-accepted-placement` |
+| `value-date rolls` | connectivity's `reports-a-value-date-roll`, for a venue that settles its trades |
+| `outcomes` | the data suite's `records-an-outcome` and `records-a-partial-payout`; `hears-and-reads-an-outcome` in `reporting`'s, `portfolio`'s, `compliance`'s, `signal`'s and `operations`' suites |
+| `disputed outcomes` | the data suite's `restates-a-disputed-outcome`, for a source that states no dispute |
+
+```python
+report = run("connectivity", PRODUCERS, not_presented={
+    "reports-a-value-date-roll": "an equity broker: its trades settle, and nothing rolls",
+    "reports-a-charge": "commission-free: the broker states no fee without a fill",
+})
+```
+
+**`any_of`.** From 0.27.0 an expectation may name its fields `any_of`, in place of `fields` (`Expectation.any_of`), where the contract answers a case in more than one way: a message on the row passes when it matches one of the ways in full. Connectivity's `reports-a-fill-with-its-settlement-date` asks the date read with a security's settlement inputs or a pair's spot inputs, from its trade date or the fill's moment; custody's `currency-not-stated` takes a currency derived by a named rule or supplied by a person (`PROVENANCE_KIND_SUPPLIED`); and the data suite's `records-an-outcome` an outcome at `OUTCOME_STAGE_DETERMINED` or `OUTCOME_STAGE_FINAL`. A plugin sends whichever its market needs, named in full:
+
+```python
+async def fills_with_its_settlement_date(recorder):
+    await recorder.compute_date(spot=SpotDateInputs(pair=[eur, usd], at_ns=fill_ns))
+    ...
+```
+
 ### A restart's gap { #a-restarts-gap }
 
 From 0.24.0, contract v20. A data plugin that records trades reads, on start, the last trade its own instance recorded of each subject it streams, `list_trades(subjects=..., latest_recorded=True)`, and records what the venue's history states since. `meridian.roles.data.backfill_restart(plugin, subjects, history)` does it, in batches of 500, `history` answering the trades after a given one (the lake's row, its subject, dataset, venue and time in its `meta`), and answers how many it sent. A trade recorded again is answered unchanged by its row key. The data suite's `a-restarts-gap-backfilled` holds it.
@@ -1016,6 +1111,38 @@ From 0.23.0, contract v19, `preview`. Still typed operations only: no WebSocket 
 **A data plugin records them** from a dataset declaring `data_types=["meridian.v1.Trade", "meridian.v1.Quote"]` (or one of them) and `modes=["stream"]`, with [`record_trades`](typed-operations.md#record_trades) and [`record_quotes`](typed-operations.md#record_quotes), 1 to 500 a call. Each is keyed by UTC instants and names no business date. A trade carries its [`TradeAttributes`](typed-operations.md#tradeattributes), converted at the edge from its source's condition codes, a code with no conversion kept in `meta.unconverted`; and its `aggressor` where its source says which side took liquidity (a source naming the resting order's side records the other). A withdrawn trade is the next version under its row key, `cancelled=True`. A quote's empty side is left unset. Keep a standing want of a streamed dataset current from the stream.
 
 **`signal` and `ems` read them**, with [`list_trades`](typed-operations.md#list_trades) (over a range within a day, or `after_watermark=`) and [`list_quotes`](typed-operations.md#list_quotes) (at the latest, per asset, or over a range), and hear them with `receive(trades_recorded=..., quotes_recorded=..., subjects=[...])`; see [Receive](#receive). `reporting` reads neither. See [Read trades and quotes in a `signal` or `ems` plugin](../how-to/read-trades-and-quotes.md).
+
+### Outcomes { #outcomes }
+
+From 0.27.0, contract v23, built, not released, `preview`. A data plugin
+records an [event contract's outcome](../concepts/the-lake.md#an-event-contracts-outcome)
+from a dataset declaring `data_types=["meridian.v1.Outcome"]`, with
+[`record_outcomes`](typed-operations.md#record_outcomes), 1 to 500 a call,
+one row key per contract, each change of stage the next version under it:
+
+```python
+await plugin.record_outcomes(outcomes=[meridian.Outcome(
+    meta=meridian.ObservationMeta(row_key=f"{ticker}:outcome", subjects=[subject], ...),
+    determination="pays_part", stage="final",
+    settlement_value=meridian.Money(Decimal("0.4500"), "USD"),
+    settled_at_ns=settled,
+    determination_as_reported=edge.as_reported("kalshi:result", "scalar"),
+)])
+```
+
+`reporting`, `portfolio`, `compliance`, `signal` and `operations` read them
+with [`list_outcomes`](typed-operations.md#list_outcomes) by subject, the
+version in force or `as_of_ns=` a recorded time, or `after_watermark=` the
+last seen, and hear every version with `receive(outcomes_recorded=...,
+subjects=[...])`, caught up from the watermark after a loss as trades are.
+The data suite's `records-an-outcome`, `restates-a-disputed-outcome` and
+`records-a-partial-payout` hold it.
+
+**A daily value on a closed day.** From 0.27.0 a price or bar read back
+carries `ObservationMeta.closed_day`, a `DateCheck`, where the lake found
+it dated on a closed day of its dataset's calendar, and a listed dataset
+its `closed_day_count` and `outside_coverage_count`. The lake sets them;
+a data plugin sends neither.
 
 ### Money and dates
 
@@ -1077,9 +1204,9 @@ await plugin.report_placement(
 - **Orders are `portfolio`'s and the `oms`'s, placements the `ems`'s, fills
   the connectivity plugin's.** A connectivity plugin records no order and
   creates no placement: its `record_order` or `create_placement` is
-  `NotGranted`, refused by its sidecar. A venue-originated fill, one the
-  venue reports on no placement the `ems` made, is not supported in contract
-  v22; its handling is planned for a later release.
+  `NotGranted`, refused by its sidecar. From 0.27.0 it reports a fill the
+  venue originated on no placement, which the `ems` answers: see
+  [Venue-originated fills](#venue-originated-fills).
 - **Every command but a fact report acts for someone**: a person, through
   `acting_for=request.caller.header`, or the role's
   [service account](#runs_as). A fact a connectivity plugin reports names
@@ -1110,7 +1237,9 @@ await plugin.report_placement(
 - **Refusals.** One by the order's state, a claim or a link is a
   [`CommandRefused`](#exceptions) with its code: `REFUSAL_REASON_ORDER_STATE`,
   `_CLAIMED`, `_CHECK_BLOCKS`, `_APPROVAL_REQUIRED`, `_ALLOCATION_UNBALANCED`,
-  `_IDENTIFIER_IN_USE`, `_CONNECTIVITY_NOT_ALLOWED`, `_CONNECTIVITY_LINKED`.
+  `_IDENTIFIER_IN_USE`, `_CONNECTIVITY_NOT_ALLOWED`, `_CONNECTIVITY_LINKED`,
+  and from 0.27.0 `_QUANTITY_EXCEEDS_ORDER`, `_EXECUTION_STATE` and
+  `_EXECUTIONS_DIFFER`.
   A command naming an order or a placement by its ID whose account is
   outside the plugin's write scope or the person's write access is
   `NotGranted`, with no code. An order stating both or neither of
@@ -1127,7 +1256,11 @@ await plugin.report_placement(
   `reads-a-calendar` (`calendars`), which a plugin whose work never uses
   them names in `not_presented`, with why; and `resolves-an-executions-venue`
   and `reports-a-venue-not-held` (`about_field`), which one whose venue never
-  states a fill's place of execution names. See
+  states a fill's place of execution names. From 0.27.0, six more may be:
+  `reports-a-bust` (`busts`), `reports-a-charge` (`charges without a
+  fill`), v23's three venue-originated fill cases and
+  `reports-a-value-date-roll`; and the `ems` suite holds the accept's and
+  the DK's four cases, required. See
   [A case not presented](#a-case-not-presented).
 
 **The transition table.** The order's states, conditions and transitions
@@ -1140,6 +1273,72 @@ import json
 
 table = json.loads(files("meridian").joinpath("transitions.json").read_text())
 ```
+
+- **An FX order** names its pair's quote currency from 0.27.0,
+  `propose_order(quote_currency=usd)`, the second currency as the pair is
+  quoted, by its cash instrument's ID; a quote currency naming the order's
+  own instrument, or a limit or stop priced in another currency, is
+  `CallFailed`, kind `"invalid"`, naming the field. A fee's `kind` may be
+  `financing` or `commission` from 0.27.0.
+
+### Venue-originated fills { #venue-originated-fills }
+
+From 0.27.0, contract v23, built, not released. A connectivity plugin
+reports a fill the venue originated on no placement with
+`report_execution`, naming its `instrument_id`, `side`, `venue_order_id`
+and, where sent, `venue_client_order_id`; the book holds it unmatched
+(`Execution.state`, `EXECUTION_STATE_UNMATCHED`). The `ems` lists them,
+`list_orders(execution_state="unmatched")`, and answers each, for a person
+or as its service account:
+
+```python
+from meridian.plugin.v1 import operations_pb2 as ops
+
+await plugin.accept_execution(execution_ids=[e1, e2], order_id=order_id,
+                              note="Placed in the broker's app.", acting_for=request.caller.header)
+await plugin.accept_execution(execution_ids=[e3], new_order=ops.NewOrderFromExecutions(sleeve="core"),
+                              note="The broker's liquidation.", acting_for=request.caller.header)
+await plugin.dont_know_execution(execution_ids=[e4], reason="no_matching_order",
+                                 acting_for=request.caller.header)
+```
+
+`accept_execution` takes one of `order_id` and `new_order` (the oneof
+`matched_order`; both is refused naming it), answers the executions, the
+order, the placement created at filled and the journal reference;
+`dont_know_execution` takes a `DkReason` and `text`, required with
+`other`, and answers the executions. The connectivity plugin hears each
+answer (`receive(execution_recorded=...)`, the executions it reported) and
+tells its venue as its catalogue says
+(`VenueCatalogue(execution_acknowledgement="bn" | "dont_know_trade" |
+"none")`). See
+[Answer a venue-originated fill](../how-to/answer-a-venue-originated-fill.md)
+and [The order lifecycle](../concepts/the-order-lifecycle.md#venue-originated-fills).
+
+### A value-date roll { #a-value-date-roll }
+
+From 0.27.0, contract v23, built, not released. A connectivity plugin whose
+venue rolls spot FX positions reports each roll, the new value date asked
+of core for the roll's moment, after the financing charges it made:
+
+```python
+answer = await plugin.compute_date(spot=meridian.SpotDateInputs(pair=[eur, usd], at_ns=rolled_ns))
+rule = answer.basis.rule
+basis = meridian.DateBasis(
+    rule=meridian.DateRuleRef(kind="spot", subject=rule.subject, version=rule.version),
+    calendars=list(answer.basis.calendars),
+)
+await plugin.report_value_date_roll(
+    venue_account_code="X12345", pair=[eur, usd],
+    from_value_date="2026-10-14", to_value_date=answer.date, value_date_basis=basis,
+    rolled_at_ns=rolled_ns, charge_ids=[financing_charge_id],
+    raw_record=plugin.raw_record(key), idempotency_key=f"roll:X12345:{rolled_ns}",
+)
+```
+
+Each financing charge is reported first with `report_charge`, its fee's
+kind `financing`. A fill booked after its trade was rolled gets a catch-up
+roll from the value date it was recorded with. See
+[A venue's value-date roll](../concepts/the-order-lifecycle.md#a-venues-value-date-roll).
 
 ### A placement's change requests { #a-placements-change-requests }
 
@@ -1247,7 +1446,15 @@ core worked out is not the plugin's own rule. Every role's suite holds
 `not_presented`, with why (see [A case not presented](#a-case-not-presented)).
 `connectivity`'s `reports-a-fill-with-its-settlement-date` and
 `operations`' `re-checks-a-pending-value-date` ask `compute_date` too, and
-carry no `about`: they stay required.
+carry no `about`: they stay required. From 0.27.0 the first passes on
+whichever inputs the fill's market needs, a security's settlement inputs or
+a pair's spot inputs from its trade date or the fill's moment (`any_of`).
+
+**A pair named by a deployment's `LCL-` IDs finds no platform spot rule**
+until the one-ID revision: name a pair by the platform's `INS-` IDs of its
+currencies' cash instruments meanwhile. A spot-date rule's counting mode,
+from contract v23, is the platform's, applied in core; a plugin asks as
+before (see [Settlement calendars](../concepts/settlement-calendars.md#the-rules)).
 
 ## Types
 
@@ -1839,6 +2046,7 @@ async for current in plugin.settings(Settings):
 - **`meridian.setting(label, ...)`** takes `Setting`'s fields by keyword, and `at_least` and `at_most` to bound an integer.
 - **`meridian.environment()`**: the setting `environment`, a required choice labelled "Environment", **Live** (`live`, the default) or **Sandbox** (`sandbox`), declared first, for a vendor with more than one environment; a credential differing by it is gated with `applies_when=("environment", "sandbox")`.
 - **`meridian.sample_data()`**: the setting `sample_data`, "Sample data", off, a developer setting, last; the one convention for a plugin answering from made-up data on a development deployment, in place of each plugin's own `synthetic`.
+- **`meridian.account_currency()`**, from 0.27.0 (built, not released): the setting `account_currency`, a table labelled "Account currency", each row a linked account, or none for every linked account without a row of its own, and its currency, an ISO 4217 code. A plugin whose source states no currency for an account's securities declares it, and `meridian.edge.supplied_currency(rows, external_account_id, field)` answers the account's code with its provenance, supplied by the person who set the row (`PROVENANCE_KIND_SUPPLIED`), or `None` while no row covers it; until then the plugin reports nothing that needs the currency, never a guess.
 - The class is a frozen dataclass of the values, with `declared()`, `label(name)` and `.missing`; `plugin.settings(Settings)` delivers an instance at each change, `plugin.first_settings(Settings)` the first.
 
 Every page's template loader also holds the kit's macros, `meridian/kit.html` (`facts` among them).

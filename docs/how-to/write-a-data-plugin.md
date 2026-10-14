@@ -282,6 +282,21 @@ about `calendars` and `settlement dates`, which every role's suite holds
 | `reads-a-calendar` | a calendar's days needed over a range | reads them from core, `read_calendar`, never a calendar of its own |
 | `asks-for-a-settlement-date` | a settlement date needed for an instrument and a trade date | asks core, `compute_date(settlement=...)`, and never works it out itself |
 
+From open-meridian 0.27.0 (contract v23, built, not released) three more,
+about an event contract's [outcome](../concepts/the-lake.md#an-event-contracts-outcome):
+
+| Case | Given | The plugin |
+|---|---|---|
+| `records-an-outcome` | the source determines an event contract to pay its full payout, stating its stage, its word and its settlement value | records the outcome, `pays`, at `determined` or `final` (either passes, `any_of`), its settlement value and the venue's word, with its row key and raw record and no business date |
+| `restates-a-disputed-outcome` | the determination disputed after it was recorded | records `disputed` under the same row key, the next version |
+| `records-a-partial-payout` | a scalar result or a 50-50 resolution | records `pays_part` with its settlement value |
+
+The first and third are about `outcomes`, the second about `disputed
+outcomes`, so a source that states no dispute marks it not presented, with
+why, as a source with no event contracts marks all three. The data
+template derives them from its catalogue, as below: declare a dataset of
+`meridian.v1.Outcome` and they are required.
+
 A producer for each calls the operation through the recorder, as the role
 templates' `tests/test_suite.py` show:
 
@@ -302,7 +317,8 @@ forming day recorded as a new row, fails it.
 
 Each case about one kind of data says which in its `about` (closes, bars,
 trades, quotes, prices on a venue, a currency's rate against another
-currency, a crypto asset's price, a security's price). From open-meridian
+currency, a crypto asset's price, a security's price, and from 0.27.0
+outcomes and disputed outcomes). From open-meridian
 0.23.0 (contract v19) a plugin that declares it never publishes that kind
 names the case in `not_presented`, with why, and is verified on the rest;
 a case with no `about` is every data plugin's, and stays required, as
@@ -355,6 +371,11 @@ closed-list case nor a case with an `about` or an `about_field`, so every
 other case stays required. It checks that the case carries a marker, not
 that your catalogue lacks the kind: the template derives that from its
 catalogue, as above.
+
+From CLI 0.1.43 (built, not released) the suite's test may not skip or
+expect a failure, and asserts `report.passed` in the statement after the
+run, as above: mark what your source never presents instead (see
+[`plugin check`](../api/cli.md#plugin-check)).
 
 On 0.22.0 (contract v18) only a closed-list case could be marked so, and a
 source that never published a bar, a venue or an FX rate fell short of the

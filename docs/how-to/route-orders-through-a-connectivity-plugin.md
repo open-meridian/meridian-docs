@@ -36,6 +36,16 @@ see [Trading through SnapTrade](using-a-custody-plugin.md#trading-through-snaptr
 Until then every order placed through it on that connection is rejected
 `unsupported`.
 
+!!! note "Contract v23, built, not released"
+    Alpaca and Tradier gain `connectivity` beside `data`, placing at
+    Alpaca's Trading API and at Tradier, each tested against a simulated
+    brokerage only, trading enabled per account by an admin of the
+    `connectivity` role; their `custody` follows in the next version,
+    which reports fills of orders placed in the broker's own app as
+    [venue-originated fills](answer-a-venue-originated-fill.md). TODO:
+    confirm the versions (Alpaca 0.7.0 and 0.8.0, Tradier 0.6.0 and
+    0.7.0, as built) and their release dates.
+
 ## Before you start
 
 - **Both plugins are launched**: the connectivity plugin and the `ems`
@@ -153,12 +163,17 @@ see [Set trading instructions](set-trading-instructions.md).
   and the `ems`'s: a connectivity plugin's `RecordOrder` or
   `CreatePlacement` is refused by its sidecar (`PERMISSION_DENIED`). A
   telephoned or outside order is recorded by the `oms`, for a person.
-- **A venue-originated fill is not supported in v22.** A fill the venue
-  reports on no placement the `ems` made -- a liquidation, say, or an order
-  placed at the venue outside the deployment -- has no path into the book
-  in contract v22. Its handling is planned for a later release. Until then,
-  where a custody plugin reports the account, the change shows on its next
-  statement and reconciliation shows it as a break.
+- **It reports a venue-originated fill** from contract v23. A fill the
+  venue reports on no placement the `ems` made -- a liquidation, say, or an
+  order placed in the broker's own app -- is reported on no placement and
+  waits in the book, unmatched, for the linked `ems` to accept it to an
+  order or answer it DK, and its account is stamped by the same venue
+  account map: see
+  [Answer a venue-originated fill](answer-a-venue-originated-fill.md). In
+  contract v22 it had no path into the book.
+- **It reports a venue's value-date roll** from contract v23, where its
+  venue rolls spot FX positions (see
+  [A venue's value-date roll](../concepts/the-order-lifecycle.md#a-venues-value-date-roll)).
 
 ## Through an agent
 
@@ -181,5 +196,6 @@ for, the actor and the reason.
 
 - [The order lifecycle](../concepts/the-order-lifecycle.md): what the
   connectivity plugin, the `ems` and the book each do.
+- [Answer a venue-originated fill](answer-a-venue-originated-fill.md).
 - [Accounts](../concepts/accounts.md#accounts-a-plugin-may-link-to): grants.
 - [Core's tools](../api/core-tools.md#dashboard__read_plugin_access).

@@ -8,7 +8,21 @@ no account: **Kalshi**, from
 [plugin-polymarket](https://github.com/open-meridian/plugin-polymarket).
 They pass one data suite between them. Each contract they price is a
 [binary event contract](../concepts/instruments.md#binary-event-contracts)
-in the deployment's instrument store.
+in the deployment's instrument store. From contract v23 each also records
+its contracts' [outcomes](#outcomes), and a third, **Polymarket US**, from
+plugin-polymarket-us, joins them.
+
+!!! note "Contract v23, built, not released"
+    plugin-kalshi 0.5.0 and plugin-polymarket 0.5.0 (Polymarket's
+    international venue) record their contracts' outcomes, and
+    plugin-polymarket-us 0.1.0 is a new data plugin for Polymarket US,
+    each built on open-meridian 0.27.0 (contract v23) and to be released
+    with it. They need a runtime serving contract v23.
+
+!!! note "TODO: the prediction-market plugins on contract v23"
+    Confirm each version and name its release date and the chart it runs
+    on (`0.1.CHART23`) once released; and the repository link for
+    plugin-polymarket-us once it is public.
 
 !!! note "Contract v20"
     plugin-kalshi 0.2.0 and plugin-polymarket 0.2.0, released 2026-10-12,
@@ -74,16 +88,57 @@ from the venue's text, never through a float.
   already past: both venues' public reads answer now), or the source
   silent.
 
+## Outcomes
+
+From contract v23 each plugin serves a second dataset, `<instance>:outcomes`,
+pushed and kept by default: once its venue resolves a contract it serves, it
+records the [outcome](../concepts/the-lake.md#an-event-contracts-outcome)
+unasked, one row key per contract, each change a new version, and stops
+reading once the final stage is recorded.
+
+| Plugin | Its stages | Its determination and settlement value | Kept as reported |
+|---|---|---|---|
+| Kalshi | `determined` is determined, `disputed` disputed, `amended` determined again as a new version, `finalized` final, with when it paid out | From Kalshi's settlement value against the payout: pays, pays nothing, or pays part (a scalar) | Kalshi's `result`: yes, no or scalar |
+| Polymarket | Final only: its public reads state a resolution once made, never a proposal's or a dispute's answer | Each token's own stated price, in Polymarket's USDC: 1 pays, 0 pays nothing, 0.5 pays part (50-50); a NO token of a market resolved YES pays nothing | The token's stated price |
+| Polymarket US | Final only, once a market's final settlement is published | The market's settlement price in US dollars: 1 pays, 0 pays nothing, between pays part | The settlement price |
+
+None states when a contract was determined, so each outcome is valid from
+when the answer first stating it arrived; Polymarket's and Polymarket US's
+pay-out time stays 0. The data suite's `records-an-outcome` and
+`records-a-partial-payout` pass on each; Polymarket and Polymarket US mark
+`restates-a-disputed-outcome` not presented, with why, since neither states
+a dispute. A reading plugin entitled to the `outcomes` dataset hears and
+reads them; the payout itself is not in the book in v23.
+
+## Polymarket US
+
+From contract v23, built, not released: **plugin-polymarket-us** 0.1.0, a
+data plugin for Polymarket US, apart from the international Polymarket,
+which plugin-polymarket keeps serving. It reads Polymarket US's keyless
+public gateway, polled at most five calls a second, with no key and no
+account, and never trades.
+
+- **One market, one instrument**: each market is one binary event contract,
+  its YES side, paying one US dollar; its NO side is the same instrument
+  held short. The venue is resolved by its MIC, `QCEX`.
+- **Prices and quotes** (`<instance>:live`, kept two days by default): the
+  book's best bid and offer with their sizes, and its last trade.
+- **Outcomes** (`<instance>:outcomes`), as above. No daily bars: the
+  venue's price history is display prices, not trades.
+
+Launch it as the others, from `plugin-polymarket-us`, named
+`polymarket-us`.
+
 ## The terms
 
-Neither plugin's default licence says anything about Kalshi's or
-Polymarket's terms. What a deployment may keep, show, or use in a
+No plugin's default licence says anything about Kalshi's, Polymarket's or
+Polymarket US's terms. What a deployment may keep, show, or use in a
 demonstration is for its deployment admin and its users to settle with each
 venue; this is not legal advice. The deployment admin records the licence
 they settled on the Data sources page, which replaces the default, and a
 licence records only what was entered. Neither the plugins nor these docs
-say a deployment meets either venue's terms, and neither venue is
-affiliated with or endorses Open Meridian.
+say a deployment meets any venue's terms, and no venue is affiliated with or
+endorses Open Meridian.
 
 ## Upload and launch the plugin
 
@@ -117,7 +172,9 @@ every other case.
 1. On **Settings**, **Data sources**, set the `live` dataset's licence, and
    entitle the plugins that read it: a `reporting` plugin such as the
    sample reporting plugin's Board reads its prices; only a `signal` or
-   `ems` plugin reads its quotes. See
+   `ems` plugin reads its quotes. From contract v23 license and entitle
+   its `outcomes` dataset too, for the `reporting`, `portfolio`,
+   `compliance`, `signal` or `operations` plugins that read outcomes. See
    [License and entitle a dataset](license-and-entitle-a-dataset.md).
 2. On **Instruments**, complete each contract's record. Where a record
    lacks the venue's code, its class or its type, the plugin reports the

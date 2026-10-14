@@ -25,6 +25,16 @@ book.
     [Settlement calendars](settlement-calendars.md)). Released 2026-10-13
     in chart 0.1.301.
 
+!!! note "Contract v23, built, not released"
+    From contract v23 a fill the venue originated waits in the book
+    unmatched, moving no position until the `ems` accepts it, and then as of
+    its trade date (entries `execution-accepted` and
+    `execution-dont-know`); and a venue's daily roll of a spot FX position
+    moves its pending lines to the next value date by an entry of its own,
+    `value-date-rolled`, the trade-date position unchanged. See
+    [Venue-originated fills](the-order-lifecycle.md#venue-originated-fills)
+    and [A venue's value-date roll](the-order-lifecycle.md#a-venues-value-date-roll).
+
 ## The edge, the street and the book
 
 What is held is recorded in three places, by three owners, and no one of them

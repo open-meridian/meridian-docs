@@ -47,6 +47,18 @@ Alpaca 0.6.0, Tradier 0.5.0, Tiingo 0.4.0, Fed H.10 0.4.0, Coinbase 0.5.0,
 Kraken 0.5.0, Kalshi 0.4.0, Polymarket 0.4.0, SnapTrade 0.16.0 and its
 `connectivity` beside `custody`, the sample operations plugin 0.12.0 and
 its Flags tab, and the sample reporting plugin 0.5.0 and its Orders tab.
+Contract v23 is marked built, not released, where it applies: SDK 0.27.0
+(venue-originated fills, accepted or answered DK by the `ems`, the FIX
+acknowledgements a venue takes, a venue's value-date roll, financing and
+commission fees, an FX order's quote currency, an event contract's outcomes
+in the lake, the closed-day flag and the Data sources page's two counts and
+`unchanged` reads, a spot-date rule's counting mode, the Calendars tab's
+subject and search, `account_currency`, and the suites' v23 cases, `about`
+markers and `any_of`), CLI 0.1.43 (`role-suite` holding a suite test to its
+outcome), the "Answer a venue-originated fill" how-to, and the plugins built
+with it: Kalshi 0.5.0, Polymarket 0.5.0 and the new Polymarket US 0.1.0
+recording outcomes, and Alpaca and Tradier gaining `connectivity`, then
+`custody`. The chart serving it is `0.1.CHART23` until published.
 The tutorials were walked on CLI 0.1.36 and SDK 0.21.0. A page describes
 what is built, and says so where something is specified and not built yet.
 

@@ -144,6 +144,7 @@ nav:
       - Let your agent manage a plugin: how-to/let-your-agent-manage-a-plugin.md
       - Run a plugin's work as a service account: how-to/run-a-plugins-work-as-a-service-account.md
       - Route orders through a connectivity plugin: how-to/route-orders-through-a-connectivity-plugin.md
+      - Answer a venue-originated fill: how-to/answer-a-venue-originated-fill.md
       - Set trading instructions: how-to/set-trading-instructions.md
       - Advising on tickets: how-to/advise-on-tickets.md
       - Working your tickets: how-to/work-your-tickets.md

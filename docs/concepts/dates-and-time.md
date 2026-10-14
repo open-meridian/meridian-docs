@@ -44,10 +44,11 @@ so each [dataset](the-lake.md#datasets) declares its day:
 So the day says which session counts as the date, and when its value is
 final. It carries no holiday calendar: a business date with no session has
 no close. From contract v22 a dataset may name its
-calendar beside its day, and in v22 the lake applies nothing by it: a daily
-value dated on a day that calendar says is closed is recorded as reported,
-and flagging it comes with a later revision of the lake. See
-[Settlement calendars](settlement-calendars.md).
+calendar beside its day, and in v22 the lake applies nothing by it. From
+contract v23 a daily value dated on a day that calendar says is closed is
+still recorded as reported, and flagged with why the day is closed (see
+[A daily value on a closed day](the-lake.md#a-daily-value-on-a-closed-day)
+and [Settlement calendars](settlement-calendars.md)).
 
 A day still forming is recorded and restated as it fills: its row's valid
 time ends after the moment it is read, under one row key, until its close

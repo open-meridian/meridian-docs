@@ -155,6 +155,20 @@ cash, margin nor retirement is reported with `account_kind` unset and
 `account_kind_as_reported=edge.as_reported("myvendor:account-type", "INDIVIDUAL")`;
 `venue_account_type` is deprecated.
 
+**A currency your source never states.** Core requires a security's
+currency, and the plugin gives it, always saying how: as the source states
+it, derived by a named rule (`edge.derived`), or supplied by a person. From
+open-meridian 0.27.0 (contract v23, built, not released) a plugin whose
+source states none declares the common setting
+`meridian.account_currency()`, **Account currency**: a linked account's
+currency, with a plugin-wide default, which its admin sets.
+`edge.supplied_currency(rows, external_account_id, field)` answers the
+account's code with its provenance, supplied by the person who set the row
+(`PROVENANCE_KIND_SUPPLIED`), and nothing while no row covers the account:
+the plugin then reports nothing that needs the currency, never a guess.
+The custody suite's `currency-not-stated` passes on either way, derived
+with its rule or supplied with its person (`any_of`).
+
 ## Count each asset once
 
 The street counts each asset once. A custodian that counts a money market fund both as a holding
@@ -205,7 +219,18 @@ NOT_PRESENTED = {
 }
 ```
 
-Every other case needs a producer. `meridian plugin check --verified`
+From open-meridian 0.27.0 (contract v23, built, not released) so may the
+cases about things a custodian may never state, each marked `about`: the
+three activity plan-code cases (`plan fund codes`),
+`cash-net-of-a-fund-counted-in-cash` and `fund-larger-than-cash` (`sweep
+funds`), `activity-moves-no-cash` (`splits`), and `currency-not-stated`
+(`currencies not stated`), for a custodian that always states the
+currency. A broker with no plan fund codes and no cash sweep marks those,
+with why.
+
+Every other case needs a producer. From CLI 0.1.43 the test running the
+suite may not skip or expect a failure, and asserts `report.passed` in the
+next statement. `meridian plugin check --verified`
 fails a custody plugin with no such test (`role-suite`), and `--run-tests` runs it. From CLI
 0.1.37 the rule is held only under `--verified`; CLI 0.1.36 and earlier hold every
 custody plugin to it. A data plugin passes its own suite the same way: see

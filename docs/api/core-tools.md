@@ -438,8 +438,12 @@ and, at the page, [License and entitle a dataset](../how-to/license-and-entitle-
 
 A tool's answer is what the page shows the same person, read from the same
 rows. **None reads a price**: prices are the reading roles', on their
-plugins' pages. A read answers `outcome: "read"`. A licence records what was
-entered; no answer says the deployment meets a vendor's terms.
+plugins' pages. A read answers `outcome: "unchanged"` from contract v23, as
+core's other reads do; before v23, `dashboard__list_datasets` and
+`dashboard__list_source_priorities` answered `outcome: "read"`, so a client
+written against them accepts either (built, not released: name the chart,
+`0.1.CHART23`, TODO). A licence records what was entered; no answer says the
+deployment meets a vendor's terms.
 
 ### `dashboard__list_datasets`
 
@@ -458,6 +462,8 @@ The page's **Datasets** and **Entitlements** tabs.
 | `entitlements` | Each instance entitled now: `instance`, `allowed`, `fields` (none for every field), who set it, when, the delegation and client, and its `note`. |
 | `unconverted_count` | How many of its values its plugin left unconverted. |
 | `miss_count` | How many identifiers and venues its plugin reported missing. |
+| `closed_day_count` | From contract v23: how many of its daily rows are dated on a closed day of its calendar, the page's **Closed days**. See [A daily value on a closed day](../concepts/the-lake.md#a-daily-value-on-a-closed-day). |
+| `outside_coverage_count` | From contract v23: how many are dated outside its calendar's coverage, counted apart, shown beside the closed days ("(2 outside)"). |
 | `one_person_warning` | Where its terms are one person's and more than one person holds `read` or `write` on a plugin entitled to it, the warning naming them; otherwise `null`. |
 
 ### `dashboard__set_dataset_licence`
@@ -767,15 +773,24 @@ The calendars and date rules the deployment holds, one line each at its
 latest version.
 
 **Input:** `cursor`, the `next_cursor` of the page before; `page_size`, 1
-to 200.
+to 200. From contract v23, as the instrument store's list takes them:
+`kind`, one calendar kind, none for every kind; and `query`, text matched,
+ignoring case, on the name and the subject's codes.
 
 **Answer:** `calendars`, each with its `calendar_id` (`CAL-…`), `name`,
 `kind` (`CALENDAR_KIND_CURRENCY`, `CALENDAR_KIND_TRADING` or
 `CALENDAR_KIND_SECURITIES_SETTLEMENT`), `version`, `coverage_to_date` and
-`refreshed_at_ns`; `rules`, each with its `kind`
+`refreshed_at_ns`, and from contract v23 its subject as platform IDs:
+`instrument_id` (a currency's cash instrument), `venue_ids`, or
+`settlement_system` (its name and country); `rules`, each with its `kind`
 (`DATE_RULE_KIND_SETTLEMENT` or `DATE_RULE_KIND_SPOT`), `subject` (such as
 `US/equity`), `version` and `refreshed_at_ns`; and `next_cursor`, empty on
 the last page.
+
+!!! note "TODO: `kind`, `query` and the subject, as built"
+    Core v23 as built answers this tool as v22 did: the instrument store's
+    list carries the subject and takes `kind` and `query`, and the tool
+    does not pass them yet. Confirm against the release.
 
 ### `dashboard__read_calendar`
 

@@ -129,6 +129,30 @@ breaks, and in the plugin's log:
 
 None of them fails the reconciliation.
 
+## Unmatched fills and outcomes
+
+From contract v23 (built, not released), what an operations plugin may
+offer as a break's cause gains two sources:
+
+- **An unmatched fill.** A fill the venue originated waits in the book,
+  unmatched, until the `ems` accepts it, so the custodian's change shows as
+  a break meanwhile. An operations plugin flags unmatched fills
+  (`list_orders(execution_state="unmatched")`) and names the one matching a
+  break (account, instrument, quantity, trade date: its own logic) as its
+  candidate cause, `BREAK_CAUSE_CATEGORY_UNBOOKED_TRADE` with the fill's
+  journal entry. After an accept the break clears on the next statement;
+  after a DK it stays for a person. A fee on a DK'd fill stays unplaced,
+  for you. See [Answer a venue-originated fill](answer-a-venue-originated-fill.md).
+- **An event contract's outcome.** A custodian's payout of a resolved
+  contract is not in the book in v23, so it shows as a break, which the
+  plugin may explain with `BREAK_CAUSE_CATEGORY_CORPORATE_ACTION` and the
+  outcome's row key as its event reference, reading the lake's outcomes
+  (`list_outcomes`), the one thing an operations plugin reads from the lake.
+
+The operations suite's `names-an-unmatched-fill-as-a-breaks-cause` and
+`hears-and-reads-an-outcome` hold them. The sample operations plugin 0.12.0
+does neither.
+
 ## Its figures
 
 **Open breaks**, **Overdue breaks**, **Awaiting an opening balance**,

@@ -72,6 +72,8 @@ From 0.26.0, contract v22, it also lists [the order path](#the-order-path)'s twe
 | [`list_bars`](#list_bars) | `ListBars` | W10.6 Read prices and bars, point in time, by source | query | `reporting`, `portfolio`, `compliance`, `signal` | `ListBarsResult` |
 | [`list_trades`](#list_trades) | `ListTrades` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `signal`, `ems`, from v19 | `ListTradesResult` |
 | [`list_quotes`](#list_quotes) | `ListQuotes` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `signal`, `ems`, from v19 | `ListQuotesResult` |
+| [`record_outcomes`](#record_outcomes) | `RecordOutcomes` | W10.4 Record prices, bars, trades and quotes in batches | command | `data`, from v23 | `RecordOutcomesResult` |
+| [`list_outcomes`](#list_outcomes) | `ListOutcomes` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `reporting`, `portfolio`, `compliance`, `signal`, `operations`, from v23 | `ListOutcomesResult` |
 | [`list_datasets`](#list_datasets) | `ListDatasets` | W10.9 Read the datasets | query | `reporting`, `portfolio`, `compliance`, `signal`, `ems` from v19 | `ListDatasetsResult` |
 | [`propose_order`](#propose_order) | `ProposeOrder` | W11.1 Propose an order | command | `portfolio`, `oms`, `ems`, from v22 | `ProposeOrderResult` |
 | [`record_order`](#record_order) | `RecordOrder` | W11.2 Record an order the book did not create | command | `oms`, from v22 | `RecordOrderResult` |
@@ -95,6 +97,9 @@ From 0.26.0, contract v22, it also lists [the order path](#the-order-path)'s twe
 | [`report_venue_catalogue`](#report_venue_catalogue) | `ReportVenueCatalogue` | W11.20 Publish the venue's catalogue | event | `connectivity`, from v22 | `Published` |
 | [`read_venue_catalogue`](#read_venue_catalogue) | `ReadVenueCatalogue` | W11.20 Publish the venue's catalogue | query | `ems`, `oms`, from v22 | `ReadVenueCatalogueResult` |
 | [`map_venue_account`](#map_venue_account) | `MapVenueAccount` | W11.22 Map an account to a venue account code | command | `ems`, from v22 | `MapVenueAccountResult` |
+| [`accept_execution`](#accept_execution) | `AcceptExecution` | W11.23 Accept an unmatched execution to an order | command | `ems`, from v23 | `AcceptExecutionResult` |
+| [`dont_know_execution`](#dont_know_execution) | `DontKnowExecution` | W11.24 Answer an unmatched execution DK | command | `ems`, from v23 | `DontKnowExecutionResult` |
+| [`report_value_date_roll`](#report_value_date_roll) | `ReportValueDateRoll` | W11.25 Report a value-date roll | command | `connectivity`, from v23 | `ReportValueDateRollResult` |
 | [`read_calendar`](#read_calendar) | `ReadCalendar` | W3.19 Read a calendar | query | every role, from v22 | `ReadCalendarResult` |
 | [`compute_date`](#compute_date) | `ComputeDate` | W3.20 Work out a date | query | every role, from v22 | `ComputeDateResult` |
 
@@ -2061,6 +2066,60 @@ Its parameters are `list_trades`'s, with `at_ns` (the latest in force at this va
 latest = await plugin.list_quotes(subjects=held)      # BTC in USD and in USDC on one venue: both
 ```
 
+## An event contract's outcomes { #outcomes }
+
+From 0.27.0, contract v23, built, not released, `preview`. A data plugin
+records an event contract's outcome, and prices' readers and `operations`
+read it. See
+[An event contract's outcome](../concepts/the-lake.md#an-event-contracts-outcome).
+
+### `record_outcomes` { #record_outcomes }
+
+Records 1 to 500
+event contracts' [outcomes](#outcome-type), each under its contract's row key,
+whole or refused naming the row and field.
+
+```python
+async def record_outcomes(self, *, outcomes: Sequence[Outcome] = ()) -> RecordOutcomesResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc RecordOutcomes(RecordOutcomesParams) returns (RecordOutcomesResult)` |
+| Workflow step | W10.4, Record prices, bars, trades and quotes in batches |
+| Kind | command, on `platform.lake.command.record-outcomes` |
+| Role | `data` |
+| Served by | the lake |
+
+**Returns** `RecordOutcomesResult`: `recorded`, `restated` and `unchanged`,
+and the `watermark`. Each is delivered whole, every version, on
+`platform.lake.{dataset}.event.outcomes-recorded`.
+
+### `list_outcomes` { #list_outcomes }
+
+Reads outcomes for
+1 to 500 subjects, the event contracts' instruments: the version in force,
+as of a recorded time, or those recorded after a watermark.
+
+```python
+async def list_outcomes(
+    self, *, subjects: Sequence[SubjectRef] = (), after_watermark: Watermark | None = None,
+    as_of_ns: int = 0,
+) -> ListOutcomesResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc ListOutcomes(ListOutcomesParams) returns (ListOutcomesResult)` |
+| Workflow step | W10.6, Read prices, bars, trades and quotes, point in time, by source |
+| Kind | query, on `platform.lake.query.list-outcomes` |
+| Role | `reporting`, `portfolio`, `compliance`, `signal`, `operations` |
+| Served by | the lake |
+
+An outcome has no business date, so none is asked. **Returns**
+`ListOutcomesResult`: `outcomes`, each an [`Outcome`](#outcome-type), and the
+`watermark`.
+
 ## `list_datasets` { #list_datasets }
 
 From 0.22.0, contract v18, `preview`. Reads the datasets the plugin may read, each with its instance, vendor, aggregator and catalogue entry, the licence of each, and the plugin's own entitlements. The SDK reads it once to join each heard row's dataset (`Heard.dataset`).
@@ -2078,6 +2137,9 @@ async def list_datasets(self) -> ListDatasetsResult
 | Served by | the lake |
 
 **Returns** `ListDatasetsResult`: `datasets`, each a [`DatasetRef`](#datasetref); `licences`, each dataset's licence enforced; and `entitlements`, the plugin's own.
+
+Each `DatasetRef` carries, from contract v23, `closed_day_count` and
+`outside_coverage_count`.
 
 **A data plugin's own datasets** (contract v20). Asked by a data plugin, it answers only the datasets its own catalogue declares, each with the licence a deployment admin set on it, so its Datasets page says "Licensed" or "Not licensed yet" exactly; a dataset still on its catalogue's default answers no licence set by the deployment.
 
@@ -2103,10 +2165,12 @@ Python SDK's overview is [The order path](python-sdk.md#the-order-path).
 - **Orders are `portfolio`'s and the `oms`'s, placements the `ems`'s, fills
   the connectivity plugin's.** A connectivity plugin's `record_order` or
   `create_placement` is refused by its sidecar, `NotGranted`
-  (`PERMISSION_DENIED`), as any operation its role does not hold. A
-  venue-originated fill, one the venue reports on no placement the `ems`
-  made, is not supported in contract v22; its handling is planned for a
-  later release.
+  (`PERMISSION_DENIED`), as any operation its role does not hold. From
+  contract v23 it reports a fill the venue originated on no placement
+  ([`report_execution`](#report_execution) naming no placement), which the
+  `ems` accepts ([`accept_execution`](#accept_execution)) or answers DK
+  ([`dont_know_execution`](#dont_know_execution)). Built, not released, in
+  open-meridian 0.27.0.
 - **Idempotency.** A command naming an `idempotency_key` is applied once for
   it; the same key on another command is refused
   `REFUSAL_REASON_IDEMPOTENCY_CONFLICT`. A venue fact repeated with the same
@@ -2137,6 +2201,7 @@ Answers the order at proposed, or for a child at released.
 | `time_in_force`, `expire_date`, `expire_time_ns` | Its time in force, and a good-till-date's date or a good-till-time's time |
 | `sleeve` | The part of the account it is for; empty for the unsleeved part |
 | `dealt_currency`, `legs` | On a pair, the dealt currency's cash instrument; legs, each an instrument, a side and a ratio |
+| `quote_currency` | From contract v23, on a pair: the quote currency's cash instrument, the pair's second currency as quoted. One naming the order's own instrument is refused `invalid` naming it; a limit or stop in another currency, naming `limit_price` or `stop_price` |
 | `allocation_instruction` | The accounts and amounts or weights it is for; none for the whole in its own account. A child carries none |
 | `execution_instructions`, `lot_relief_method`, `relieve_lot_ids`, `capacity` | The `oms`'s: the standard execution instructions, how a sale relieves lots or the lots it names, and capacity |
 | `direction`, `parties`, `decided_by` | A client's order received, the parties as delivered, and who decided it where that differs from who enters it |
@@ -2264,13 +2329,19 @@ A connectivity plugin reports an execution of a placement; the `ems` or the
 | `supersedes`, `effective_date` | For a bust or correction: the execution it supersedes, and the date it takes effect |
 | `counterparty`, `liquidity_indicator`, `venue_id` | The counterparty where known, maker or taker, and the place of execution |
 | `uti`, `uti_generated_by`, `prior_uti`, `upi`, `given_up_to`, `trade_chain_reference`, `settlement_counterparty` | Fields recorded for reporting, as the venue states them |
+| `instrument_id`, `side`, `venue_order_id`, `venue_client_order_id` | From contract v23, a fill on no placement the venue originated: its instrument, side and the venue's order ID, each required on such a fill and refused `invalid` naming it without, and the venue's client order ID where sent. Recorded unmatched |
 | `raw_record`, `idempotency_key`, `acting_for` | As above |
+
+A fee's `kind` is `exchange`, `cancel`, `network`, and from contract v23
+`financing` or `commission`.
 
 ### `report_charge` { #report_charge }
 
-A fee with no fill on a placement (`fee`), such as a venue's cancel fee,
-with its `trade_date`, `settlement_date` and `raw_record`: it moves cash and
-counts toward no quantity.
+A fee with no fill on a placement (`fee`), such as a venue's cancel fee, or
+from contract v23 a rolling position's financing at a roll, with its
+`trade_date`, `settlement_date` and `raw_record`: it moves cash and counts
+toward no quantity. One naming no placement the book holds, or none, is
+kept unplaced (`UNPLACED_REASON_UNKNOWN_PLACEMENT`).
 
 ### `acknowledge_flag` { #acknowledge_flag }
 
@@ -2291,7 +2362,9 @@ The orders in the plugin's read scope (`account_id` narrows to one), as of
 now or changed `since` a watermark, answered `as_of`: `orders`,
 `placements`, `executions` and `unplaced_facts`, each in its own list. A
 connectivity plugin reads only the placements naming it, and the orders
-behind them.
+behind them. From contract v23 `execution_state` (`unmatched`, `matched`,
+`dont_know`) answers only the executions in that state; `unmatched` leaves
+out a fill superseded by a bust or a correction, and the bust.
 
 ### `read_order_history` { #read_order_history }
 
@@ -2323,8 +2396,10 @@ A connectivity plugin publishes its venue's catalogue for one venue account
 code (`catalogue`, a `VenueCatalogue`): order types with their time-in-force
 values, the broker's strategies with their parameters (each a name, a type,
 whether it is required, its range or allowed values and its default), and
-eligibility for the instruments it states. Delivered latest per plugin and
-code; heard by the `ems` and the `oms`.
+eligibility for the instruments it states; and from contract v23
+`execution_acknowledgement`, what its venue takes of an accept or a DK
+(`none`, `bn` or `dont_know_trade`; unset reads as `none`). Delivered latest
+per plugin and code; heard by the `ems` and the `oms`.
 
 ### `read_venue_catalogue` { #read_venue_catalogue }
 
@@ -2342,6 +2417,60 @@ Answers the `ems`'s mappings. An account not granted to the `ems` is
 refused `REFUSAL_REASON_ACCOUNT_NOT_LINKABLE`; a connectivity plugin not
 linked to it `REFUSAL_REASON_CONNECTIVITY_NOT_ALLOWED`; a code already
 mapped on that plugin for another account is refused.
+
+### `accept_execution` { #accept_execution }
+
+From 0.27.0, contract v23, built, not released. The `ems` accepts 1 to 500
+unmatched executions of one account, instrument, side, connectivity plugin
+and trade date to an order, for a person or its service account. See
+[Venue-originated fills](../concepts/the-order-lifecycle.md#venue-originated-fills).
+
+| Parameter | Meaning |
+|---|---|
+| `execution_ids` | The unmatched executions, each once; one named twice is refused `invalid`, naming `execution_ids[i]` |
+| `order_id` or `new_order` | The oneof `matched_order`: an existing order the `ems` may place against, or a `NewOrderFromExecutions` (its `sleeve` and `note`) made from the fills, recorded filled with origin `ORDER_ORIGIN_ACCEPTED_EXECUTION` |
+| `note` | Why, kept on the accept's entry |
+| `acting_for` | As above |
+
+**Returns** `AcceptExecutionResult`: the `executions` at matched, the
+`order`, the `placement` created at filled, and the `journal` reference.
+Refused `REFUSAL_REASON_EXECUTION_STATE`, `_EXECUTIONS_DIFFER`,
+`_QUANTITY_EXCEEDS_ORDER`, `_ORDER_STATE`, `_CLAIMED` or `_ACTOR_REQUIRED`.
+
+### `dont_know_execution` { #dont_know_execution }
+
+From 0.27.0, contract v23, built, not released. The `ems` answers 1 to 500
+unmatched executions DK (`execution_ids`), with a `reason`, a `DkReason`
+(`unknown_instrument`, `wrong_side`, `quantity_exceeds_order`,
+`no_matching_order`, `price_exceeds_limit`, `calculation_difference`,
+`other`), and `text`, required with `other` (refused `invalid` naming
+`text`). **Returns** `DontKnowExecutionResult`: the `executions` at DK, each
+keeping `dk_reason` and `dk_text`, and the `journal` reference. Refused
+`REFUSAL_REASON_EXECUTION_STATE` or `_ACTOR_REQUIRED`.
+
+### `report_value_date_roll` { #report_value_date_roll }
+
+From 0.27.0, contract v23, built, not released. A connectivity plugin
+reports its venue's roll of an account's spot position in a pair to the
+next value date. See
+[A venue's value-date roll](../concepts/the-order-lifecycle.md#a-venues-value-date-roll).
+
+| Parameter | Meaning |
+|---|---|
+| `venue_account_code` | The code; the sidecar stamps the account from the `ems`'s map |
+| `pair` | The pair's two cash instruments, as the date read's spot inputs name them; refused `invalid` naming `pair` unless both are cash instruments |
+| `from_value_date` | The value date the pending lines leave |
+| `to_value_date`, `value_date_basis` | The date [`compute_date`](#compute_date) gave for the roll's moment, and its basis (a `meridian.DateBasis`) |
+| `rolled_at_ns` | The roll's moment |
+| `charge_ids` | The `CHG-` IDs of the financing charges reported first |
+| `raw_record`, `idempotency_key` | As above |
+
+**Returns** the book's fact reply, `ReportValueDateRollResult`: its `entry`
+(kind `value-date-rolled`) and `journal`, or the `unplaced` fact, its kind
+`value-date-roll`, where the code is unmapped
+(`UNPLACED_REASON_UNMAPPED_VENUE_ACCOUNT`) or nothing is pending on the
+from date (`UNPLACED_REASON_NOTHING_PENDING`). A missing date or basis, or
+a new date not after the old, is refused `invalid`, naming the field.
 
 ## Settlement calendars' reads { #settlement-calendars-reads }
 
@@ -3064,6 +3193,7 @@ From 0.22.0. The envelope every lake row carries as its first field, `meridian.O
 | `source_times` | sequence of `SourceTime` | by the plugin | The source's own times, each a `kind` (`event`, `consolidated`, `reported`, `vendor_received`, `published`) once, and `at_ns`. |
 | `raw` | `RawRecordRef` | by the plugin | The raw record it was converted from, `plugin.raw_record(key)`. |
 | `unconverted` | sequence of `AsReported` | by the plugin | A value that failed conversion, as reported, such as a venue's code the deployment does not hold. |
+| `closed_day` | `DateCheck` or `None` | by the lake | From contract v23: on a daily row dated on a closed day of its dataset's calendar, the date, each calendar with its version, why (a weekend, a named holiday, or outside coverage) and the holiday's name. Unset otherwise. |
 | `sent_at_ns` | `int` | stamped | The envelope's publication time. |
 | `recorded_at_ns`, `version`, `sequence`, `previous_sequence` | `int` | by the lake | When it was recorded, its version under the row key from 1, its sequence in the dataset, and the previous sequence of the same subject. |
 
@@ -3117,7 +3247,20 @@ From 0.22.0. In a string, spelled as its name without `UNANSWERED_REASON_`, in l
 
 ### `DatasetRef` { #datasetref }
 
-From 0.22.0. A dataset as a lake answer names it, once: `dataset`, `instance`, `vendor`, `aggregator`, and its catalogue entry as declared, `declaration` ([`DatasetDeclaration`](../boundaries/sidecar.md#meridian.v1.DatasetDeclaration)); and `unconverted_count` and `miss_count`, the values its plugin left unconverted and the identifiers and venues it reported missing.
+From 0.22.0. A dataset as a lake answer names it, once: `dataset`, `instance`, `vendor`, `aggregator`, and its catalogue entry as declared, `declaration` ([`DatasetDeclaration`](../boundaries/sidecar.md#meridian.v1.DatasetDeclaration)); and `unconverted_count` and `miss_count`, the values its plugin left unconverted and the identifiers and venues it reported missing; from contract v23 `closed_day_count` and `outside_coverage_count`, its daily rows flagged on a closed day of its calendar, and those outside the calendar's coverage, counted apart.
+
+### `Outcome` { #outcome-type }
+
+From 0.27.0, contract v23, built, not released. An event contract's outcome, `meridian.Outcome(...)`, a frozen dataclass, keyword only. See [An event contract's outcome](../concepts/the-lake.md#an-event-contracts-outcome).
+
+| Field | Meaning |
+|---|---|
+| `meta` | Its [`ObservationMeta`](#observationmeta): one row key per contract, the contract's instrument its subject, valid from the determination, no business date |
+| `determination` | `OutcomeDetermination`: `pays`, `pays_nothing` or `pays_part` |
+| `stage` | `OutcomeStage`: `proposed`, `determined`, `disputed` or `final`; a change is the next version |
+| `settlement_value` | A `Money` per contract in the payout's asset, always set |
+| `settled_at_ns` | When the venue paid out; 0 until then |
+| `determination_as_reported` | The venue's own word, an `AsReported` |
 
 ### `VenueRecord` { #venuerecord }
 
