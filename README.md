@@ -97,3 +97,24 @@ python tools/boundaries_page.py refresh --rev <full commit or branch> --contract
 It takes `boundaries/` from meridian-schema at that revision (`--repo` names a
 local clone instead of GitHub), checks its digests, and writes
 `vendored.json`. Commit the copy; the pages follow it at the next build.
+
+## The Integrations page
+
+`how-to/integrations.md` lists the released plugins, one row each, with
+filters. Its table is written at every build by an MkDocs hook,
+`tools/integrations_page.py`, from `integrations/integrations.yaml`, the rows
+kept by hand. The build fails when a row lacks a field or holds a value
+outside its list, when a status is other than `preview` or `released`, or
+when a row's roles, version or contract are not its plugin's release as
+`integrations/released.json` records it: a snapshot of each plugin's main
+`pyproject.toml`, its `[project]` version, `[tool.meridian]` roles and SDK
+pin, with the contract that SDK release declares. The build reads nothing
+from the network. When a plugin is released, refresh the snapshot, then
+update its row:
+
+```sh
+python tools/integrations_page.py refresh
+```
+
+It reads each row's repository at `main`, and `meridian-python` at the tag of
+each SDK release pinned, and says which rows now differ.

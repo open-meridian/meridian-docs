@@ -1,0 +1,171 @@
+# The Integrations page's rows (docs/how-to/integrations.md), kept by hand:
+# one per released plugin, public under github.com/open-meridian, with a
+# release on its main. Nothing planned or unreleased.
+#
+# tools/integrations_page.py checks every row at each build: its fields and
+# their allowed values, and its roles, version and contract against
+# released.json, the snapshot of each plugin's main pyproject.toml that
+#
+#     python tools/integrations_page.py refresh
+#
+# writes. A row that drifts from its plugin's release fails the build.
+#
+# Fields:
+#   service       the service the plugin works with, as the page names it
+#   plugin        its repository under github.com/open-meridian
+#   roles         data, custody, connectivity, confirmation, operations, reporting
+#   assets        equity, fund, debt, derivative, crypto, event-contract, fx, cash:
+#                 what the plugin's README and catalogue state it covers; a
+#                 class they leave unclear is left out
+#   environments  sandbox, live, sample-data, as the plugin's settings offer them:
+#                 sandbox and live from an environment setting, live alone where
+#                 the plugin calls only the service itself, sample-data from the
+#                 SDK's developer setting `sample_data`
+#   status        preview or released, the contract's stability words
+#   version       [project] version on main
+#   contract      the contract the pinned SDK declares (meridian.SCHEMA_VERSION)
+#   guide         optional: the plugin's how-to page in these docs, a path under
+#                 docs/ with an optional #anchor; without it, the page links the
+#                 repository's README
+
+# Data: mutual funds' daily NAVs (README, "What it records": "Only mutual
+# funds"). Settings: an API token, sample_data. README: "not released yet".
+- service: Tiingo
+  plugin: plugin-tiingo
+  roles: [data]
+  assets: [fund]
+  environments: [live, sample-data]
+  status: released
+  version: "0.4.0"
+  contract: 22
+  guide: how-to/using-a-data-plugin.md#tiingo-mutual-funds-daily-navs
+
+# Data: the H.10 release's FX rates against the US dollar (README). No key;
+# sample_data. README: "not released yet".
+- service: Federal Reserve Board (H.10)
+  plugin: plugin-fed-h10
+  roles: [data]
+  assets: [fx]
+  environments: [live, sample-data]
+  status: released
+  version: "0.4.0"
+  contract: 22
+  guide: how-to/using-a-data-plugin.md#the-federal-reserves-h10
+
+# Data: Coinbase Exchange's public crypto market data (README). No key;
+# sample_data. README: "Not released, uploaded or launched anywhere."
+- service: Coinbase Exchange
+  plugin: plugin-coinbase
+  roles: [data]
+  assets: [crypto]
+  environments: [live, sample-data]
+  status: released
+  version: "0.5.0"
+  contract: 22
+  guide: how-to/using-a-data-plugin.md#coinbase-and-kraken
+
+# Data: Kraken's public crypto market data (README). No key; sample_data.
+# README: "Not released, uploaded or launched anywhere."
+- service: Kraken
+  plugin: plugin-kraken
+  roles: [data]
+  assets: [crypto]
+  environments: [live, sample-data]
+  status: released
+  version: "0.5.0"
+  contract: 22
+  guide: how-to/using-a-data-plugin.md#coinbase-and-kraken
+
+# Data: binary event contracts' prices, quotes and outcomes (README). No key;
+# sample_data. README: "Not released, uploaded or launched anywhere."
+- service: Kalshi
+  plugin: plugin-kalshi
+  roles: [data]
+  assets: [event-contract]
+  environments: [live, sample-data]
+  status: released
+  version: "0.5.0"
+  contract: 23
+  guide: how-to/add-a-prediction-market-plugin.md
+
+# Data: the international Polymarket's outcome tokens, each a binary event
+# contract (README). No key; sample_data. README: "Not released, uploaded or
+# launched anywhere."
+- service: Polymarket (international)
+  plugin: plugin-polymarket
+  roles: [data]
+  assets: [event-contract]
+  environments: [live, sample-data]
+  status: released
+  version: "0.5.0"
+  contract: 23
+  guide: how-to/add-a-prediction-market-plugin.md
+
+# Data: Polymarket US's event contracts, each a binary event contract
+# (README). No key; sample_data. README: "Not released, uploaded or launched
+# anywhere."
+- service: Polymarket US
+  plugin: plugin-polymarket-us
+  roles: [data]
+  assets: [event-contract]
+  environments: [live, sample-data]
+  status: released
+  version: "0.1.0"
+  contract: 23
+  guide: how-to/add-a-prediction-market-plugin.md#polymarket-us
+
+# All three roles on US equities and ETFs (ETFs are funds), the account's
+# positions and cash (README; Alpaca does not serve crypto or options here).
+# Settings: environment (live, sandbox: Alpaca's paper trading API),
+# sample_data. README: "Not released."; CHANGELOG: "0.8.0 (unreleased)".
+- service: Alpaca
+  plugin: plugin-alpaca
+  roles: [data, custody, connectivity]
+  assets: [equity, fund, cash]
+  environments: [sandbox, live, sample-data]
+  status: released
+  version: "0.8.0"
+  contract: 23
+  guide: how-to/using-a-data-plugin.md#alpaca-and-tradier
+
+# All three roles on US equities and ETFs, each account's positions and cash
+# (README; options and mutual funds not served). Settings: environment
+# (live, sandbox: Tradier's developer sandbox), sample_data. README: "Not
+# released."; CHANGELOG: "0.7.0 (unreleased)".
+- service: Tradier
+  plugin: plugin-tradier
+  roles: [data, custody, connectivity]
+  assets: [equity, fund, cash]
+  environments: [sandbox, live, sample-data]
+  status: released
+  version: "0.7.0"
+  contract: 23
+  guide: how-to/using-a-data-plugin.md#alpaca-and-tradier
+
+# Custody and connectivity through SnapTrade's brokerages: positions and cash
+# in each currency, each SnapTrade kind mapped to its class (README, the
+# instrument.kind row: stock, adr equity; etf, mutualfund, cef fund; bond
+# debt; option, future, cfd derivative; crypto; cash). No environment
+# setting; sample_data. README: "0.17.0, not released".
+- service: SnapTrade
+  plugin: plugin-snaptrade
+  roles: [custody, connectivity]
+  assets: [equity, fund, debt, derivative, crypto, cash]
+  environments: [live, sample-data]
+  status: released
+  version: "0.17.0"
+  contract: 23
+  guide: how-to/using-a-custody-plugin.md
+
+# Spot FX: connectivity and custody, each open trade shown as two cash legs
+# and the balance in the account's currency (README). Settings: environment
+# (practice, OANDA's practice host: sandbox here; live), sample_data.
+# CHANGELOG: 0.2.0 on SDK 0.27.0 and contract v23.
+- service: OANDA
+  plugin: plugin-oanda
+  roles: [custody, connectivity]
+  assets: [fx, cash]
+  environments: [sandbox, live, sample-data]
+  status: released
+  version: "0.2.0"
+  contract: 23
