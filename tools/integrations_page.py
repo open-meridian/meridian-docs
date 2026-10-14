@@ -3,17 +3,18 @@ plugin's release.
 
 integrations/integrations.yaml holds the page's rows by hand, one per released
 plugin: the service it works with, its repository, roles, asset classes,
-environments, status, version, contract and guide. integrations/released.json
+environments, status, version, contract and guide (status only ever
+`released`: the page lists released plugins alone, and shows no status). integrations/released.json
 is a snapshot of each of those plugins' main pyproject.toml -- its [project]
 version, its [tool.meridian] roles and its pin of the SDK, with the contract
 that SDK release declares -- and the commit each was read at.
 
 As an MkDocs hook (mkdocs.yml, `hooks:`), at every build it
 
-- checks every row: its fields, their allowed values, its status preview or
-  released and nothing else, and its roles, version and contract against the
+- checks every row: its fields, their allowed values, its status `released`
+  and nothing else, so an unreleased plugin is never listed, and its roles, version and contract against the
   snapshot, so a row that drifts from its plugin's release fails the build;
-  then proves, by a self-test, that the check fails on another status and on
+  then proves, by a self-test, that the check fails on any other status and on
   a drifted version;
 - writes the table and its filters into how-to/integrations.md where the page
   says `<!-- integrations -->`, each row's guide linking its how-to page in
@@ -71,8 +72,9 @@ ASSETS = {
     "cash": "Cash",
 }
 ENVIRONMENTS = {"sandbox": "Sandbox", "live": "Live", "sample-data": "Sample data"}
-# The contract's stability words, and only those two.
-STATUSES = {"preview": "preview", "released": "released"}
+# The page lists released plugins only (the product owner, 2026-10-14), so a
+# row's status must be `released` and the page shows no status column.
+STATUSES = {"released": "released"}
 
 # The page's filter groups: the query key, its legend, its values, the row
 # field it reads, and whether a value no row has is left out.
@@ -80,7 +82,6 @@ GROUPS = (
     ("role", "Role", ROLES, "roles", True),
     ("asset", "Asset class", ASSETS, "assets", False),
     ("environment", "Environment", ENVIRONMENTS, "environments", True),
-    ("status", "Status", STATUSES, "status", False),
 )
 
 LISTS = {"roles": ROLES, "assets": ASSETS, "environments": ENVIRONMENTS}
@@ -148,7 +149,7 @@ def check_rows(rows: list, released: dict) -> list[str]:
             if len(set(values)) != len(values):
                 errors.append(f"{where}: {key} names a value twice")
         if "status" in row and row["status"] not in STATUSES:
-            errors.append(f"{where}: status {row['status']!r} is not preview or released")
+            errors.append(f"{where}: status {row['status']!r} is not released: the page lists released plugins only")
         version = row.get("version")
         if "version" in row and not (isinstance(version, str) and VERSION.match(version)):
             errors.append(f"{where}: version {version!r} is not a quoted MAJOR.MINOR.PATCH")
@@ -182,13 +183,13 @@ def check_rows(rows: list, released: dict) -> list[str]:
 
 
 def self_test(rows: list, released: dict) -> list[str]:
-    """That the check fails where it must: on a status that is not one of the
-    two words, and on a version that is not the release's."""
+    """That the check fails where it must: on a status other than released,
+    and on a version that is not the release's."""
     failures = []
     bad_status = copy.deepcopy(rows)
-    bad_status[0]["status"] = "beta"
+    bad_status[0]["status"] = "preview"
     if not any("status" in e for e in check_rows(bad_status, released)):
-        failures.append("a status of 'beta' passed")
+        failures.append("a status of 'preview' passed")
     drifted = copy.deepcopy(rows)
     drifted[0]["version"] = "999.0.0"
     if not any("version" in e for e in check_rows(drifted, released)):
@@ -236,22 +237,21 @@ def guide_link(row: dict, page_file, files) -> str:
 
 
 def table(rows: list, page_file, files) -> str:
-    head = ("Works with", "Plugin", "Roles", "Asset classes", "Environments", "Status",
-            "Version", "Guide")
+    head = ("Works with", "Plugin", "Roles", "Asset classes", "Environments", "Version",
+            "Guide")
     body = []
     for row in sorted(rows, key=lambda r: r["service"].casefold()):
         roles = [r for r in ROLES if r in row["roles"]]
         assets = [a for a in ASSETS if a in row["assets"]]
         environments = [e for e in ENVIRONMENTS if e in row["environments"]]
         data = (f' data-role="{_e(" ".join(roles))}" data-asset="{_e(" ".join(assets))}"'
-                f' data-environment="{_e(" ".join(environments))}" data-status="{_e(row["status"])}"')
+                f' data-environment="{_e(" ".join(environments))}"')
         cells = (
             _e(row["service"]),
             f'<a class="om-nowrap" href="{_e(repository(row["plugin"]))}">{_e(row["plugin"])}</a>',
             " ".join(f"<code>{_e(r)}</code>" for r in roles),
             _e(", ".join(ASSETS[a] for a in assets)) or "&mdash;",
             _e(", ".join(ENVIRONMENTS[e] for e in environments)),
-            f'<span class="om-status om-status--{_e(row["status"])}">{_e(row["status"])}</span>',
             f'<span class="om-nowrap">{_e(row["version"])}</span> '
             f'<span class="om-nowrap">on v{_e(row["contract"])}</span>',
             guide_link(row, page_file, files),

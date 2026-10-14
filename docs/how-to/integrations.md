@@ -6,7 +6,7 @@ hide:
 # Integrations
 
 The plugins released for Open Meridian, and the service each one works with.
-Filter them by role, asset class, environment or status: the page's address
+Filter them by role, asset class or environment: the page's address
 keeps your choice, so a link such as
 [`?asset=fx&role=connectivity`](?asset=fx&role=connectivity){ .om-nowrap } opens on the FX
 plugins that place orders.
@@ -25,8 +25,7 @@ by any service listed here.
 
 <!-- integrations -->
 
-**Status** uses the contract's stability words: a `preview` plugin may
-still change in a later version. **Sample data** is a developer's setting,
+Only released plugins are listed. **Sample data** is a developer's setting,
 offered on a development deployment. **Version** is the plugin's release and
 the contract it is built on.
 
