@@ -169,7 +169,7 @@ refused, naming the field.
   offers the class, the type and the venue's title for a record that lacks
   them.
 
-From contract v23 (built, not released) what a contract paid once its
+From contract v23 what a contract paid once its
 venue resolved it is not on its record: it is an observation, recorded in
 the lake as the contract's
 [outcome](the-lake.md#an-event-contracts-outcome), with its own

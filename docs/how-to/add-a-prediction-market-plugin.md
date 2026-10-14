@@ -12,17 +12,15 @@ in the deployment's instrument store. From contract v23 each also records
 its contracts' [outcomes](#outcomes), and a third, **Polymarket US**, from
 plugin-polymarket-us, joins them.
 
-!!! note "Contract v23, built, not released"
+!!! note "Contract v23"
     plugin-kalshi 0.5.0 and plugin-polymarket 0.5.0 (Polymarket's
     international venue) record their contracts' outcomes, and
     plugin-polymarket-us 0.1.0 is a new data plugin for Polymarket US,
-    each built on open-meridian 0.27.0 (contract v23) and to be released
-    with it. They need a runtime serving contract v23.
+    each released 2026-10-14, built on open-meridian 0.27.0 (contract v23),
+    and running on chart 0.1.303 or later.
 
-!!! note "TODO: the prediction-market plugins on contract v23"
-    Confirm each version and name its release date and the chart it runs
-    on (`0.1.CHART23`) once released; and the repository link for
-    plugin-polymarket-us once it is public.
+!!! note "TODO: the repository link for plugin-polymarket-us"
+    Link plugin-polymarket-us's repository once it is public.
 
 !!! note "Contract v20"
     plugin-kalshi 0.2.0 and plugin-polymarket 0.2.0, released 2026-10-12,
@@ -112,7 +110,7 @@ reads them; the payout itself is not in the book in v23.
 
 ## Polymarket US
 
-From contract v23, built, not released: **plugin-polymarket-us** 0.1.0, a
+From contract v23: **plugin-polymarket-us** 0.1.0, a
 data plugin for Polymarket US, apart from the international Polymarket,
 which plugin-polymarket keeps serving. It reads Polymarket US's keyless
 public gateway, polled at most five calls a second, with no key and no

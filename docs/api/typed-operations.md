@@ -2068,7 +2068,7 @@ latest = await plugin.list_quotes(subjects=held)      # BTC in USD and in USDC o
 
 ## An event contract's outcomes { #outcomes }
 
-From 0.27.0, contract v23, built, not released, `preview`. A data plugin
+From 0.27.0, contract v23, `preview`. A data plugin
 records an event contract's outcome, and prices' readers and `operations`
 read it. See
 [An event contract's outcome](../concepts/the-lake.md#an-event-contracts-outcome).
@@ -2169,8 +2169,8 @@ Python SDK's overview is [The order path](python-sdk.md#the-order-path).
   contract v23 it reports a fill the venue originated on no placement
   ([`report_execution`](#report_execution) naming no placement), which the
   `ems` accepts ([`accept_execution`](#accept_execution)) or answers DK
-  ([`dont_know_execution`](#dont_know_execution)). Built, not released, in
-  open-meridian 0.27.0.
+  ([`dont_know_execution`](#dont_know_execution)), in open-meridian
+  0.27.0.
 - **Idempotency.** A command naming an `idempotency_key` is applied once for
   it; the same key on another command is refused
   `REFUSAL_REASON_IDEMPOTENCY_CONFLICT`. A venue fact repeated with the same
@@ -2420,7 +2420,7 @@ mapped on that plugin for another account is refused.
 
 ### `accept_execution` { #accept_execution }
 
-From 0.27.0, contract v23, built, not released. The `ems` accepts 1 to 500
+From 0.27.0, contract v23. The `ems` accepts 1 to 500
 unmatched executions of one account, instrument, side, connectivity plugin
 and trade date to an order, for a person or its service account. See
 [Venue-originated fills](../concepts/the-order-lifecycle.md#venue-originated-fills).
@@ -2439,7 +2439,7 @@ Refused `REFUSAL_REASON_EXECUTION_STATE`, `_EXECUTIONS_DIFFER`,
 
 ### `dont_know_execution` { #dont_know_execution }
 
-From 0.27.0, contract v23, built, not released. The `ems` answers 1 to 500
+From 0.27.0, contract v23. The `ems` answers 1 to 500
 unmatched executions DK (`execution_ids`), with a `reason`, a `DkReason`
 (`unknown_instrument`, `wrong_side`, `quantity_exceeds_order`,
 `no_matching_order`, `price_exceeds_limit`, `calculation_difference`,
@@ -2450,7 +2450,7 @@ keeping `dk_reason` and `dk_text`, and the `journal` reference. Refused
 
 ### `report_value_date_roll` { #report_value_date_roll }
 
-From 0.27.0, contract v23, built, not released. A connectivity plugin
+From 0.27.0, contract v23. A connectivity plugin
 reports its venue's roll of an account's spot position in a pair to the
 next value date. See
 [A venue's value-date roll](../concepts/the-order-lifecycle.md#a-venues-value-date-roll).
@@ -3251,7 +3251,7 @@ From 0.22.0. A dataset as a lake answer names it, once: `dataset`, `instance`, `
 
 ### `Outcome` { #outcome-type }
 
-From 0.27.0, contract v23, built, not released. An event contract's outcome, `meridian.Outcome(...)`, a frozen dataclass, keyword only. See [An event contract's outcome](../concepts/the-lake.md#an-event-contracts-outcome).
+From 0.27.0, contract v23. An event contract's outcome, `meridian.Outcome(...)`, a frozen dataclass, keyword only. See [An event contract's outcome](../concepts/the-lake.md#an-event-contracts-outcome).
 
 | Field | Meaning |
 |---|---|

@@ -25,7 +25,7 @@ book.
     [Settlement calendars](settlement-calendars.md)). Released 2026-10-13
     in chart 0.1.301.
 
-!!! note "Contract v23, built, not released"
+!!! note "Contract v23"
     From contract v23 a fill the venue originated waits in the book
     unmatched, moving no position until the `ems` accepts it, and then as of
     its trade date (entries `execution-accepted` and
@@ -34,6 +34,7 @@ book.
     `value-date-rolled`, the trade-date position unchanged. See
     [Venue-originated fills](the-order-lifecycle.md#venue-originated-fills)
     and [A venue's value-date roll](the-order-lifecycle.md#a-venues-value-date-roll).
+    Released 2026-10-14 in chart 0.1.303.
 
 ## The edge, the street and the book
 

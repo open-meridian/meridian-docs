@@ -131,7 +131,7 @@ None of them fails the reconciliation.
 
 ## Unmatched fills and outcomes
 
-From contract v23 (built, not released), what an operations plugin may
+From contract v23, what an operations plugin may
 offer as a break's cause gains two sources:
 
 - **An unmatched fill.** A fill the venue originated waits in the book,

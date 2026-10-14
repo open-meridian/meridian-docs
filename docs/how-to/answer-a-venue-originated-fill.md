@@ -9,17 +9,17 @@ order, or answer it **DK** (don't know). This page is for that trader, and
 for whoever writes the `ems` or connectivity plugin. What the book does is
 on [The order lifecycle](../concepts/the-order-lifecycle.md#venue-originated-fills).
 
-!!! note "Contract v23, built, not released"
-    The accept and the DK are in core and open-meridian 0.27.0, built and
-    not yet released. Core proves them with a stand-in `ems` page (its
-    **Unmatched fills**) against a simulated venue that takes FIX's
-    acknowledgements; no broker is reached. Their operations are `preview`.
-
-!!! note "TODO: the release of contract v23"
-    Name the chart serving contract v23 (`0.1.CHART23`), the first `ems`
-    plugin offering these acts, and the connectivity plugins that report
-    venue-originated fills (Alpaca's and Tradier's, built with v23), with
-    their versions, once released.
+!!! note "Contract v23"
+    The accept and the DK are in core and open-meridian 0.27.0, released
+    2026-10-14 in chart 0.1.303. Core proves them with a stand-in `ems`
+    page (its **Unmatched fills**) against a simulated venue that takes
+    FIX's acknowledgements; no broker is reached. Their operations are
+    `preview`. No `ems` plugin offering these acts is released yet: an
+    `ems` is yours to build. The connectivity plugins that report
+    venue-originated fills are Alpaca 0.8.0, Tradier 0.7.0 and SnapTrade
+    0.17.0, released 2026-10-14, each tested against a simulated brokerage
+    only; none of their brokers takes an acknowledgement, so a DK tells
+    the broker nothing.
 
 ## Where they show
 

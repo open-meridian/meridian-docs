@@ -46,7 +46,7 @@ meridian plugin new my-prices --role data
 cd my-prices
 ```
 
-It writes a whole plugin holding `data`, pinned to `open-meridian==0.24.0` (0.25.0 from CLI 0.1.41, 0.26.0 from CLI 0.1.42),
+It writes a whole plugin holding `data`, pinned to `open-meridian==0.24.0` (0.25.0 from CLI 0.1.41, 0.26.0 from CLI 0.1.42, 0.27.0 from CLI 0.1.43),
 that puts a stand-in vendor's daily closes and bars into the lake:
 
 | File | What it is |
@@ -282,7 +282,7 @@ about `calendars` and `settlement dates`, which every role's suite holds
 | `reads-a-calendar` | a calendar's days needed over a range | reads them from core, `read_calendar`, never a calendar of its own |
 | `asks-for-a-settlement-date` | a settlement date needed for an instrument and a trade date | asks core, `compute_date(settlement=...)`, and never works it out itself |
 
-From open-meridian 0.27.0 (contract v23, built, not released) three more,
+From open-meridian 0.27.0 (contract v23) three more,
 about an event contract's [outcome](../concepts/the-lake.md#an-event-contracts-outcome):
 
 | Case | Given | The plugin |
@@ -372,7 +372,7 @@ other case stays required. It checks that the case carries a marker, not
 that your catalogue lacks the kind: the template derives that from its
 catalogue, as above.
 
-From CLI 0.1.43 (built, not released) the suite's test may not skip or
+From CLI 0.1.43 the suite's test may not skip or
 expect a failure, and asserts `report.passed` in the statement after the
 run, as above: mark what your source never presents instead (see
 [`plugin check`](../api/cli.md#plugin-check)).

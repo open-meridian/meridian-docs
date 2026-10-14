@@ -30,7 +30,7 @@ In the dashboard, open **Settings**, then **Data sources**, beside
 
 | Tab | One row per |
 |---|---|
-| **Datasets** | dataset a launched data plugin's catalogue declares: its ID (`alpaca-1:daily`), its vendor (and aggregator), what it serves, the licence enforced, how many plugins are entitled to it, how many of its values were left unconverted, and how many identifiers and venues its plugin reported missing; from contract v23 (built, not released) **Closed days**, how many of its daily rows are dated on a closed day of its calendar, those outside the calendar's coverage beside them ("(2 outside)"): see [A daily value on a closed day](../concepts/the-lake.md#a-daily-value-on-a-closed-day) |
+| **Datasets** | dataset a launched data plugin's catalogue declares: its ID (`alpaca-1:daily`), its vendor (and aggregator), what it serves, the licence enforced, how many plugins are entitled to it, how many of its values were left unconverted, and how many identifiers and venues its plugin reported missing; from contract v23 **Closed days**, how many of its daily rows are dated on a closed day of its calendar, those outside the calendar's coverage beside them ("(2 outside)"): see [A daily value on a closed day](../concepts/the-lake.md#a-daily-value-on-a-closed-day) |
 | **Entitlements** | plugin entitled to a dataset, with the fields it may read, who set it and when |
 | **Priority** | data type and price kind, with the datasets a default read takes first to last |
 

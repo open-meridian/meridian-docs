@@ -441,9 +441,8 @@ rows. **None reads a price**: prices are the reading roles', on their
 plugins' pages. A read answers `outcome: "unchanged"` from contract v23, as
 core's other reads do; before v23, `dashboard__list_datasets` and
 `dashboard__list_source_priorities` answered `outcome: "read"`, so a client
-written against them accepts either (built, not released: name the chart,
-`0.1.CHART23`, TODO). A licence records what was entered; no answer says the
-deployment meets a vendor's terms.
+written against them accepts either (chart 0.1.303). A licence records
+what was entered; no answer says the deployment meets a vendor's terms.
 
 ### `dashboard__list_datasets`
 
@@ -786,11 +785,6 @@ ignoring case, on the name and the subject's codes.
 (`DATE_RULE_KIND_SETTLEMENT` or `DATE_RULE_KIND_SPOT`), `subject` (such as
 `US/equity`), `version` and `refreshed_at_ns`; and `next_cursor`, empty on
 the last page.
-
-!!! note "TODO: `kind`, `query` and the subject, as built"
-    Core v23 as built answers this tool as v22 did: the instrument store's
-    list carries the subject and takes `kind` and `query`, and the tool
-    does not pass them yet. Confirm against the release.
 
 ### `dashboard__read_calendar`
 

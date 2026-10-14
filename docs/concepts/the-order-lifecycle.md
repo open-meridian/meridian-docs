@@ -21,21 +21,20 @@ one entry at a time, and stored nowhere as a fact.
     released 2026-10-13, tested against a simulated brokerage only (see
     [Trading through SnapTrade](../how-to/using-a-custody-plugin.md#trading-through-snaptrade)).
 
-!!! note "Contract v23, built, not released"
-    Contract v23 adds, in core and open-meridian 0.27.0, built and not yet
-    released: [venue-originated fills](#venue-originated-fills), a fill the
+!!! note "Contract v23"
+    Contract v23 adds, in core and open-meridian 0.27.0, released
+    2026-10-14 in chart 0.1.303:
+    [venue-originated fills](#venue-originated-fills), a fill the
     venue reports on no placement, which waits in the book until the `ems`
     accepts it or answers it DK; a venue's
     [value-date roll](#a-venues-value-date-roll) of a spot FX position, and
     the fee kinds financing and commission; and an FX order's
     [quote currency](#proposing-an-order). Every operation it adds is
     `preview`. Core proves them against a simulated venue, which takes the
-    FIX acknowledgements, and stand-in plugins only.
-
-!!! note "TODO: the release of contract v23"
-    Name the chart serving contract v23 (`0.1.CHART23`) and its release
-    date once published, and the first connectivity plugins reporting
-    venue-originated fills, with their versions.
+    FIX acknowledgements, and stand-in plugins only. The first
+    connectivity plugins reporting venue-originated fills are Alpaca 0.8.0,
+    Tradier 0.7.0 and SnapTrade 0.17.0, released 2026-10-14, each tested
+    against a simulated brokerage only.
 
 ## Who does what
 

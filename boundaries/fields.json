@@ -95,7 +95,7 @@
         },
         {
           "message": "meridian.v1.VenueCatalogue",
-          "intent": "a venue's offering per venue account code, latest per code, each change its own record: order types, strategies and eligibility (contract v22, W11.20)"
+          "intent": "a venue's offering per venue account code, latest per code, each change its own record: order types, strategies and eligibility (contract v22, W11.20), and from v23 the execution acknowledgement the venue takes"
         }
       ]
     },
@@ -197,6 +197,10 @@
           "intent": "the best bid and offer on a venue or consolidated, in force until the next (contract v19)"
         },
         {
+          "message": "meridian.v1.Outcome",
+          "intent": "an event contract's outcome as its venue determined it, at one stage, each stage a new version under the contract's one row key (contract v23)"
+        },
+        {
           "message": "meridian.v1.DatasetEntitlement",
           "intent": "a plugin instance's entitlement to a dataset, every field or some, as a deployment admin set it"
         },
@@ -273,12 +277,14 @@
     "venue": "meridian.v1.VenueRecord"
   },
   "operations": {
+    "AcceptExecution": "meridian.v1.AcceptExecutionRequest",
     "AcknowledgeFlag": "meridian.v1.AcknowledgeFlagRequest",
     "CloseBreaksAsCleared": "meridian.v1.CloseBreaksAsClearedRequest",
     "ComputeDate": "meridian.v1.ComputeDateRequest",
     "CreatePlacement": "meridian.v1.CreatePlacementRequest",
     "DecideApproval": "meridian.v1.DecideApprovalRequest",
     "DeclineWant": "meridian.v1.DeclineWantRequest",
+    "DontKnowExecution": "meridian.v1.DontKnowExecutionRequest",
     "HandleBreak": "meridian.v1.HandleBreakRequest",
     "LinkExternalAccount": "meridian.v1.LinkExternalAccountRequest",
     "ListAccountAttributes": "meridian.v1.ListAccountAttributesRequest",
@@ -290,6 +296,7 @@
     "ListDatasets": "meridian.v1.ListDatasetsRequest",
     "ListLocates": "meridian.v1.ListLocatesRequest",
     "ListOrders": "meridian.v1.ListOrdersRequest",
+    "ListOutcomes": "meridian.v1.ListOutcomesRequest",
     "ListPositions": "meridian.v1.ListPositionsRequest",
     "ListPrices": "meridian.v1.ListPricesRequest",
     "ListQuotes": "meridian.v1.ListQuotesRequest",
@@ -316,6 +323,7 @@
     "RecordLocateUse": "meridian.v1.RecordLocateUseRequest",
     "RecordOpeningBalance": "meridian.v1.RecordOpeningBalanceRequest",
     "RecordOrder": "meridian.v1.RecordOrderRequest",
+    "RecordOutcomes": "meridian.v1.RecordOutcomesRequest",
     "RecordPrices": "meridian.v1.RecordPricesRequest",
     "RecordQuotes": "meridian.v1.RecordQuotesRequest",
     "RecordTrades": "meridian.v1.RecordTradesRequest",
@@ -327,6 +335,7 @@
     "ReportMissingVenue": "meridian.v1.MissingVenueDetectedEvent",
     "ReportPlacement": "meridian.v1.ReportPlacementRequest",
     "ReportSyncStatus": "meridian.v1.SyncStatusEvent",
+    "ReportValueDateRoll": "meridian.v1.ReportValueDateRollRequest",
     "ReportVenueCatalogue": "meridian.v1.VenueCatalogueEvent",
     "RequestOrderChange": "meridian.v1.RequestOrderChangeRequest",
     "RequestPlacementChange": "meridian.v1.RequestPlacementChangeRequest",
@@ -5543,6 +5552,19 @@
       "store": "bor"
     },
     {
+      "name": "meridian.v1.Order.quote_currency",
+      "type": "identifier instrument",
+      "empty": "empty unless the order is in a currency's cash instrument traded against another currency",
+      "intent": "names an FX order's other currency, so a market order names its pair (W11.1)",
+      "meaning": "the pair's quote currency, currency2 as the pair is quoted (USD for EUR/USD, JPY for USD/JPY), by its cash instrument's ID: with the order's instrument, the base currency's, it names the pair, as FpML's quotedCurrencyPair and FIX's Symbol (CCY1/CCY2) do; a limit or stop is in it. One naming the order's own instrument is refused INVALID_ARGUMENT naming it, and a limit or stop in another currency INVALID_ARGUMENT naming limit_price or stop_price (approved 2026-10-13); a change's limit in another currency is refused INVALID_ARGUMENT naming change.limit_price (W11.3, approved 2026-10-13)",
+      "not_meaning": "a third settlement currency, which FIX's SettlCurrency (120) names for a non-deliverable forward; or the currency the quantity is in, which dealt_currency names; or an ISO 4217 code",
+      "filled": "as-reported",
+      "filled_by": "portfolio",
+      "since": "v23",
+      "stability": "preview",
+      "store": "bor"
+    },
+    {
       "name": "meridian.v1.Order.legs",
       "type": "repeated message Leg",
       "empty": "empty for a single-instrument order",
@@ -5985,6 +6007,11 @@
         {
           "value": "ORDER_ORIGIN_TELEPHONED",
           "meaning": "a telephoned or outside order, recorded by the oms for a person"
+        },
+        {
+          "value": "ORDER_ORIGIN_ACCEPTED_EXECUTION",
+          "meaning": "an order made from venue-originated fills the ems accepted, entered after the trade, filled, never gated (W11.23)",
+          "since": "v23"
         }
       ],
       "empty": "unspecified on an order the book created",
@@ -5994,6 +6021,25 @@
       "filled": "as-reported",
       "filled_by": "oms",
       "since": "v22",
+      "changes": [
+        {
+          "version": "v23",
+          "kind": "widened",
+          "what": "an order made at an accept of venue-originated fills (W11.23); ORDER_ORIGIN_VENUE's name and number stay reserved",
+          "was": {
+            "allowed": [
+              {
+                "value": "ORDER_ORIGIN_UNSPECIFIED",
+                "meaning": "an order the book created: proposed (W11.1)"
+              },
+              {
+                "value": "ORDER_ORIGIN_TELEPHONED",
+                "meaning": "a telephoned or outside order, recorded by the oms for a person"
+              }
+            ]
+          }
+        }
+      ],
       "stability": "preview",
       "store": "bor"
     },
@@ -7380,11 +7426,18 @@
       "type": "Money",
       "empty": "unset unless the limit is amended",
       "intent": "carries the new limit",
-      "meaning": "the limit asked for",
+      "meaning": "the limit asked for; from v23, on an order naming a quote currency, in that currency, else refused INVALID_ARGUMENT naming change.limit_price (W11.3)",
       "not_meaning": "a placement's limit",
       "filled": "as-reported",
       "filled_by": "oms",
       "since": "v22",
+      "changes": [
+        {
+          "version": "v23",
+          "kind": "clarified",
+          "what": "an FX order's amended limit is in its quote currency: one priced in any other is refused INVALID_ARGUMENT naming change.limit_price (the product owner, 2026-10-13)"
+        }
+      ],
       "stability": "preview",
       "store": "bor"
     },
@@ -8227,26 +8280,40 @@
     {
       "name": "meridian.v1.Execution.order_id",
       "type": "text",
-      "empty": "never empty",
+      "empty": "never empty on a matched execution; from v23 empty on an unmatched or a DK'd one, until an accept names it",
       "intent": "names the order the execution is of",
       "meaning": "its `ORD-` ID; a child's execution is recorded once, on the child, and counts toward its parent's (Q6)",
       "not_meaning": "a venue's order ID",
       "filled": "decided",
       "filled_by": "bor",
       "since": "v22",
+      "changes": [
+        {
+          "version": "v23",
+          "kind": "clarified",
+          "what": "empty on an execution reported on no placement, until accepted (W11.11, W11.23)"
+        }
+      ],
       "stability": "preview",
       "store": "bor"
     },
     {
       "name": "meridian.v1.Execution.placement_id",
       "type": "text",
-      "empty": "empty on a done-away execution, which names its order",
+      "empty": "empty on a done-away execution, which names its order; from v23 on an unmatched or a DK'd one, until an accept creates its placement",
       "intent": "names the placement filled",
       "meaning": "its `PLC-` ID",
       "not_meaning": "a venue's order ID",
       "filled": "decided",
       "filled_by": "bor",
       "since": "v22",
+      "changes": [
+        {
+          "version": "v23",
+          "kind": "clarified",
+          "what": "empty on an execution reported on no placement, until an accept creates the placement at filled (W11.23)"
+        }
+      ],
       "stability": "preview",
       "store": "bor"
     },
@@ -8747,6 +8814,123 @@
       "store": "bor"
     },
     {
+      "name": "meridian.v1.Execution.state",
+      "type": "enum ExecutionState",
+      "allowed": [
+        {
+          "value": "EXECUTION_STATE_UNSPECIFIED",
+          "meaning": "not said; never answered"
+        },
+        {
+          "value": "EXECUTION_STATE_UNMATCHED",
+          "meaning": "a fill on no placement, its account from the ems's map, waiting for the ems to accept it or answer it DK; it moves no position (W11.11); busted, it stays unmatched, superseded by the bust, with nothing to answer"
+        },
+        {
+          "value": "EXECUTION_STATE_MATCHED",
+          "meaning": "a fill on a placement: every v22 fill, and an unmatched one once accepted (W11.23)"
+        },
+        {
+          "value": "EXECUTION_STATE_DONT_KNOW",
+          "meaning": "answered DK by the ems: recorded and closed, never moving a position (W11.24)"
+        }
+      ],
+      "empty": "never unspecified",
+      "intent": "says where an execution stands between the venue and the ems (decisions/035 as amended at v23)",
+      "meaning": "derived from the journal as an order's status is, never stored, so v22's fills need no backfill; its transitions are matrix/transitions.tsv's e-rows",
+      "not_meaning": "finality, which says how far the street has taken the trade",
+      "filled": "derived",
+      "filled_by": "bor",
+      "since": "v23",
+      "stability": "preview",
+      "store": "bor"
+    },
+    {
+      "name": "meridian.v1.Execution.venue_order_id",
+      "type": "text",
+      "empty": "empty where the venue states none; never empty on an execution reported on no placement",
+      "intent": "carries the venue's order ID the execution was a fill of (FIX OrderID, 37)",
+      "meaning": "as the venue states it: an external reference, the name the placement already uses, which the connectivity plugin needs to answer its venue",
+      "not_meaning": "the book's order ID, or the venue's execution ID",
+      "filled": "as-reported",
+      "filled_by": "connectivity",
+      "since": "v23",
+      "stability": "preview",
+      "store": "bor"
+    },
+    {
+      "name": "meridian.v1.Execution.venue_client_order_id",
+      "type": "text",
+      "empty": "empty where the venue sent none, and on a fill on a placement, whose client order ID the placement derives",
+      "intent": "carries the client order ID the venue sent on a fill on no placement (FIX ClOrdID, 11)",
+      "meaning": "copied from ReportExecutionRequest.venue_client_order_id as the venue sent it, so the connectivity plugin can send it back on BN and Q, as FIX requires when the execution carried it (W11.23, W11.24; approved 2026-10-13)",
+      "not_meaning": "a placement's ID, or the client order identifier the platform sends",
+      "filled": "as-reported",
+      "filled_by": "connectivity",
+      "since": "v23",
+      "stability": "preview",
+      "store": "bor"
+    },
+    {
+      "name": "meridian.v1.Execution.dk_reason",
+      "type": "enum DkReason",
+      "allowed": [
+        {
+          "value": "DK_REASON_UNSPECIFIED",
+          "meaning": "not answered DK"
+        },
+        {
+          "value": "DK_REASON_UNKNOWN_INSTRUMENT",
+          "meaning": "the desk does not know the instrument (FIX DKReason A)"
+        },
+        {
+          "value": "DK_REASON_WRONG_SIDE",
+          "meaning": "the side is not the desk's (FIX DKReason B)"
+        },
+        {
+          "value": "DK_REASON_QUANTITY_EXCEEDS_ORDER",
+          "meaning": "the quantity exceeds what the desk ordered (FIX DKReason C)"
+        },
+        {
+          "value": "DK_REASON_NO_MATCHING_ORDER",
+          "meaning": "the desk has no order it matches (FIX DKReason D)"
+        },
+        {
+          "value": "DK_REASON_PRICE_EXCEEDS_LIMIT",
+          "meaning": "the price is past the desk's limit (FIX DKReason E)"
+        },
+        {
+          "value": "DK_REASON_CALCULATION_DIFFERENCE",
+          "meaning": "the desk's calculation differs (FIX DKReason F)"
+        },
+        {
+          "value": "DK_REASON_OTHER",
+          "meaning": "another reason, which dk_text says (FIX DKReason Z)"
+        }
+      ],
+      "empty": "unspecified unless the execution was answered DK",
+      "intent": "says why the ems answered the execution DK (W11.24)",
+      "meaning": "the reason chosen from the closed list mirroring FIX's DKReason (127)",
+      "not_meaning": "a venue's rejection, or a refusal",
+      "filled": "decided",
+      "filled_by": "bor",
+      "since": "v23",
+      "stability": "preview",
+      "store": "bor"
+    },
+    {
+      "name": "meridian.v1.Execution.dk_text",
+      "type": "text",
+      "empty": "empty unless answered DK with a text; never empty with DK_REASON_OTHER",
+      "intent": "carries the DK's words (W11.24)",
+      "meaning": "the text the ems sent, as FIX's Text (58) carries it",
+      "not_meaning": "a note on the order",
+      "filled": "decided",
+      "filled_by": "bor",
+      "since": "v23",
+      "stability": "preview",
+      "store": "bor"
+    },
+    {
       "name": "meridian.v1.Finality.level",
       "type": "enum FinalityLevel",
       "allowed": [
@@ -8818,15 +9002,52 @@
         {
           "value": "FEE_KIND_NETWORK",
           "meaning": "gas, on an on-chain venue"
+        },
+        {
+          "value": "FEE_KIND_FINANCING",
+          "meaning": "a rolling position's financing: the cost or credit of carrying it to the next value date, charged at each roll (W11.12)",
+          "since": "v23"
+        },
+        {
+          "value": "FEE_KIND_COMMISSION",
+          "meaning": "the broker's commission on a fill, as FIX keeps it apart in Commission (12) and CommType (13)",
+          "since": "v23"
         }
       ],
       "empty": "unspecified where not said",
       "intent": "says the fee's kind (requirement 26)",
-      "meaning": "exchange, cancel or network; grown by revision",
+      "meaning": "exchange, cancel, network, financing or commission; grown by revision",
       "not_meaning": "who charged it",
       "filled": "as-reported",
       "filled_by": "connectivity",
       "since": "v22",
+      "changes": [
+        {
+          "version": "v23",
+          "kind": "widened",
+          "what": "financing, a rolling spot position's charge at each roll, and commission, which FIX keeps apart from MiscFeeType (139)'s other fees (the product owner, 2026-10-13, the OANDA batch's item 2)",
+          "was": {
+            "allowed": [
+              {
+                "value": "FEE_KIND_UNSPECIFIED",
+                "meaning": "not said"
+              },
+              {
+                "value": "FEE_KIND_EXCHANGE",
+                "meaning": "an exchange's fee"
+              },
+              {
+                "value": "FEE_KIND_CANCEL",
+                "meaning": "a venue's cancel fee"
+              },
+              {
+                "value": "FEE_KIND_NETWORK",
+                "meaning": "gas, on an on-chain venue"
+              }
+            ]
+          }
+        }
+      ],
       "stability": "preview",
       "store": "bor"
     },
@@ -9002,6 +9223,11 @@
         {
           "value": "locate",
           "meaning": "a locate and its answer (W11.18)"
+        },
+        {
+          "value": "value-date-roll",
+          "meaning": "a venue's value-date roll (W11.25): on a code no ems mapped, or meeting no pending line to move",
+          "since": "v23"
         }
       ],
       "empty": "never empty",
@@ -9011,6 +9237,33 @@
       "filled": "decided",
       "filled_by": "bor",
       "since": "v22",
+      "changes": [
+        {
+          "version": "v23",
+          "kind": "widened",
+          "what": "a value-date roll the book cannot apply is kept unplaced, never refused or dropped (the product owner, 2026-10-13, the roll's open cases from v23's core build)",
+          "was": {
+            "allowed": [
+              {
+                "value": "execution",
+                "meaning": "a reported execution (W11.11)"
+              },
+              {
+                "value": "placement",
+                "meaning": "a placement's progress (W11.10)"
+              },
+              {
+                "value": "charge",
+                "meaning": "a charge (W11.12)"
+              },
+              {
+                "value": "locate",
+                "meaning": "a locate and its answer (W11.18)"
+              }
+            ]
+          }
+        }
+      ],
       "stability": "preview",
       "store": "bor"
     },
@@ -9024,20 +9277,48 @@
         },
         {
           "value": "UNPLACED_REASON_UNKNOWN_PLACEMENT",
-          "meaning": "it names a placement the book does not hold"
+          "meaning": "it names a placement the book does not hold, or, from v23, a charge names none (W11.12)"
         },
         {
           "value": "UNPLACED_REASON_UNMAPPED_VENUE_ACCOUNT",
           "meaning": "its venue account code maps to no account on the sending connectivity plugin (W11.22)"
+        },
+        {
+          "value": "UNPLACED_REASON_NOTHING_PENDING",
+          "meaning": "a value-date roll meets no pending line on its from date that the sending connectivity plugin's fills or rolls on the code put there (W11.25): kept in the account, so operations sees the venue's position and the book's differ",
+          "since": "v23"
         }
       ],
       "empty": "never unspecified",
       "intent": "says why the fact was kept unplaced (requirement 13)",
-      "meaning": "an unknown placement, or an unmapped venue account",
+      "meaning": "an unknown placement, an unmapped venue account, or a roll with nothing pending to move",
       "not_meaning": "a refusal: a venue's fact is never refused for its state",
       "filled": "decided",
       "filled_by": "bor",
       "since": "v22",
+      "changes": [
+        {
+          "version": "v23",
+          "kind": "widened",
+          "what": "a charge on no placement is kept as UNPLACED_REASON_UNKNOWN_PLACEMENT, its meaning widened to or none (the order-path plan's v23 ruling 17); an execution on no placement whose account is mapped is an unmatched execution instead; and a value-date roll meeting no pending line is kept as UNPLACED_REASON_NOTHING_PENDING (the product owner, 2026-10-13)",
+          "was": {
+            "allowed": [
+              {
+                "value": "UNPLACED_REASON_UNSPECIFIED",
+                "meaning": "not said"
+              },
+              {
+                "value": "UNPLACED_REASON_UNKNOWN_PLACEMENT",
+                "meaning": "it names a placement the book does not hold"
+              },
+              {
+                "value": "UNPLACED_REASON_UNMAPPED_VENUE_ACCOUNT",
+                "meaning": "its venue account code maps to no account on the sending connectivity plugin (W11.22)"
+              }
+            ]
+          }
+        }
+      ],
       "stability": "preview",
       "store": "bor"
     },
@@ -9116,6 +9397,19 @@
       "filled": "as-reported",
       "filled_by": "connectivity",
       "since": "v22",
+      "stability": "preview",
+      "store": "bor"
+    },
+    {
+      "name": "meridian.v1.UnplacedFact.value_date_roll",
+      "type": "message ReportValueDateRollRequest",
+      "empty": "unset unless fact_kind is value-date-roll",
+      "intent": "carries the value-date roll as it arrived (W11.25)",
+      "meaning": "the fact whole: a roll on a code no ems mapped, or one meeting no pending line to move; nothing places it later, the venue's next roll its own fact",
+      "not_meaning": "a roll the book applied, which is an entry of kind value-date-rolled",
+      "filled": "as-reported",
+      "filled_by": "connectivity",
+      "since": "v23",
       "stability": "preview",
       "store": "bor"
     },
@@ -9839,6 +10133,19 @@
       "store": "bor"
     },
     {
+      "name": "meridian.v1.ProposeOrderRequest.quote_currency",
+      "type": "identifier instrument",
+      "empty": "empty unless the order is in a currency's cash instrument traded against another currency",
+      "intent": "names the pair's quote currency on an FX order (W11.1)",
+      "meaning": "the pair's quote currency, currency2 as the pair is quoted (USD for EUR/USD, JPY for USD/JPY), by its cash instrument's ID: with the order's instrument, the base currency's, it names the pair, as FpML's quotedCurrencyPair and FIX's Symbol (CCY1/CCY2) do; a limit or stop is in it. One naming the order's own instrument is refused INVALID_ARGUMENT naming it, and a limit or stop in another currency INVALID_ARGUMENT naming limit_price or stop_price (approved 2026-10-13)",
+      "not_meaning": "a third settlement currency, which FIX's SettlCurrency (120) names for a non-deliverable forward; or the currency the quantity is in, which dealt_currency names; or an ISO 4217 code",
+      "filled": "as-reported",
+      "filled_by": "portfolio",
+      "since": "v23",
+      "stability": "preview",
+      "store": "bor"
+    },
+    {
       "name": "meridian.v1.ProposeOrderRequest.legs",
       "type": "repeated message Leg",
       "empty": "empty for a single-instrument order",
@@ -10524,6 +10831,11 @@
         {
           "value": "ORDER_ORIGIN_TELEPHONED",
           "meaning": "a telephoned or outside order, recorded by the oms for a person"
+        },
+        {
+          "value": "ORDER_ORIGIN_ACCEPTED_EXECUTION",
+          "meaning": "the book's own, on an order it makes at an accept (W11.23): a recorded order is telephoned whatever it names",
+          "since": "v23"
         }
       ],
       "empty": "unspecified read as telephoned: a recorded order is a telephoned or outside one",
@@ -11566,13 +11878,20 @@
     {
       "name": "meridian.v1.ReportExecutionRequest.placement_id",
       "type": "text",
-      "empty": "empty on a done-away execution, which names its order",
+      "empty": "empty on a done-away execution, which names its order; from v23 on a venue-originated fill, which names its instrument, side and venue order ID instead",
       "intent": "names the placement the message is on",
       "meaning": "the placement's `PLC-` ID, as the book minted it (W11.8); one the book does not hold keeps the fact unplaced",
       "not_meaning": "the client order identifier the venue sees, which the plugin may derive from it; or the venue's order ID",
       "filled": "as-reported",
       "filled_by": "connectivity",
       "since": "v22",
+      "changes": [
+        {
+          "version": "v23",
+          "kind": "clarified",
+          "what": "empty on a fill on no order and no placement, recorded as an unmatched execution (W11.11)"
+        }
+      ],
       "stability": "preview",
       "store": "bor"
     },
@@ -12044,6 +12363,101 @@
       "store": "bor"
     },
     {
+      "name": "meridian.v1.ReportExecutionRequest.instrument_id",
+      "type": "identifier instrument",
+      "empty": "empty on a fill on a placement, which takes the placement's; never empty on one naming no placement",
+      "intent": "names what a fill on no placement traded (W11.11)",
+      "meaning": "the deployment's `INS-` ID, the connectivity plugin having resolved the venue's symbol at the edge (W3.1)",
+      "not_meaning": "a venue's symbol",
+      "filled": "as-reported",
+      "filled_by": "connectivity",
+      "required": [
+        {
+          "row": "ReportExecution",
+          "since": "v23",
+          "unless": "the fill names a placement"
+        }
+      ],
+      "since": "v23",
+      "stability": "preview",
+      "store": "bor"
+    },
+    {
+      "name": "meridian.v1.ReportExecutionRequest.side",
+      "type": "enum Side",
+      "allowed": [
+        {
+          "value": "SIDE_UNSPECIFIED",
+          "meaning": "not said: a fill on a placement takes the placement's"
+        },
+        {
+          "value": "SIDE_BUY",
+          "meaning": "a buy"
+        },
+        {
+          "value": "SIDE_SELL",
+          "meaning": "a sale"
+        },
+        {
+          "value": "SIDE_SELL_SHORT",
+          "meaning": "a short sale, as the venue marked it"
+        },
+        {
+          "value": "SIDE_SELL_SHORT_EXEMPT",
+          "meaning": "a short sale marked exempt, as the venue marked it"
+        }
+      ],
+      "empty": "unspecified on a fill on a placement; never on one naming no placement",
+      "intent": "says a fill on no placement's side (W11.11)",
+      "meaning": "as the venue marked it, kept on the execution; any sell matches an order's sell at an accept (W11.23)",
+      "not_meaning": "a holding's side",
+      "filled": "as-reported",
+      "filled_by": "connectivity",
+      "required": [
+        {
+          "row": "ReportExecution",
+          "since": "v23",
+          "unless": "the fill names a placement"
+        }
+      ],
+      "since": "v23",
+      "stability": "preview",
+      "store": "bor"
+    },
+    {
+      "name": "meridian.v1.ReportExecutionRequest.venue_order_id",
+      "type": "text",
+      "empty": "empty where the venue states none on a fill on a placement; never empty on one naming no placement",
+      "intent": "carries the venue's order ID the fill was of (FIX OrderID, 37)",
+      "meaning": "as the venue states it, kept on the execution, so the plugin can answer its venue (W11.23, W11.24)",
+      "not_meaning": "the book's order ID, or the venue's execution ID",
+      "filled": "as-reported",
+      "filled_by": "connectivity",
+      "required": [
+        {
+          "row": "ReportExecution",
+          "since": "v23",
+          "unless": "the fill names a placement"
+        }
+      ],
+      "since": "v23",
+      "stability": "preview",
+      "store": "bor"
+    },
+    {
+      "name": "meridian.v1.ReportExecutionRequest.venue_client_order_id",
+      "type": "text",
+      "empty": "empty where the venue sent none",
+      "intent": "carries the client order ID the venue sent on a fill on no placement (FIX ClOrdID, 11)",
+      "meaning": "as the venue sent it, which FIX requires back on BN and Q",
+      "not_meaning": "a placement's ID, or the client order identifier the platform sends",
+      "filled": "as-reported",
+      "filled_by": "connectivity",
+      "since": "v23",
+      "stability": "preview",
+      "store": "bor"
+    },
+    {
       "name": "meridian.v1.ReportChargeRequest.placement_id",
       "type": "text",
       "empty": "never empty",
@@ -12105,6 +12519,433 @@
       "filled": "as-reported",
       "filled_by": "connectivity",
       "since": "v22",
+      "stability": "preview",
+      "store": "bor"
+    },
+    {
+      "name": "meridian.v1.ReportValueDateRollRequest.venue_account_code",
+      "type": "text",
+      "empty": "never empty",
+      "intent": "carries the venue account code whose spot position rolled (W11.25)",
+      "meaning": "as the venue states it, from which the sidecar stamps the account, as on an execution",
+      "not_meaning": "an account ID",
+      "filled": "as-reported",
+      "filled_by": "connectivity",
+      "since": "v23",
+      "required": [
+        {
+          "row": "ReportValueDateRoll",
+          "since": "v23"
+        }
+      ],
+      "stability": "preview",
+      "store": "bor"
+    },
+    {
+      "name": "meridian.v1.ReportValueDateRollRequest.account_id",
+      "type": "identifier account",
+      "empty": "empty, never refused, where the venue account code maps to no account: kept unplaced",
+      "intent": "names the account whose pending lines roll",
+      "meaning": "stamped by the sidecar from the ems's map (`venue-account-map`), as ReportExecutionRequest's is",
+      "not_meaning": "anything a connectivity plugin chooses",
+      "filled": "stamped",
+      "filled_by": "sidecar",
+      "since": "v23",
+      "stability": "preview",
+      "store": "bor"
+    },
+    {
+      "name": "meridian.v1.ReportValueDateRollRequest.pair",
+      "type": "repeated identifier instrument",
+      "bounds": {
+        "count": [
+          2,
+          2
+        ]
+      },
+      "empty": "never empty",
+      "intent": "names the currency pair whose spot position rolled",
+      "meaning": "its two cash instruments' `INS-` IDs, in either order, as the date read's spot inputs name a pair; two of the same, or one whose record is not a cash instrument, is refused INVALID_ARGUMENT naming pair",
+      "not_meaning": "ISO 4217 codes, or a pair record, which there is none of",
+      "filled": "as-reported",
+      "filled_by": "connectivity",
+      "since": "v23",
+      "required": [
+        {
+          "row": "ReportValueDateRoll",
+          "since": "v23"
+        }
+      ],
+      "stability": "preview",
+      "store": "bor"
+    },
+    {
+      "name": "meridian.v1.ReportValueDateRollRequest.from_value_date",
+      "type": "date",
+      "empty": "never empty",
+      "intent": "says the value date the pending lines leave",
+      "meaning": "the value date the position was pending to before the roll, as the book holds it from the fill or the last roll reported; on a catch-up roll, the value date a fill booked after the venue rolled its trade was recorded with (W11.25)",
+      "not_meaning": "the trade date",
+      "filled": "as-reported",
+      "filled_by": "connectivity",
+      "since": "v23",
+      "required": [
+        {
+          "row": "ReportValueDateRoll",
+          "since": "v23"
+        }
+      ],
+      "stability": "preview",
+      "store": "bor"
+    },
+    {
+      "name": "meridian.v1.ReportValueDateRollRequest.to_value_date",
+      "type": "date",
+      "empty": "never empty",
+      "intent": "says the value date the pending lines move to (W11.25)",
+      "meaning": "the date read's answer (W3.20): the pair's spot from the roll's moment, taken through the pair's cut, so the next value date, or on a catch-up roll the current one; never one the plugin works out",
+      "not_meaning": "a date the venue states, or the settlement of a closed trade",
+      "filled": "derived",
+      "filled_by": "connectivity",
+      "since": "v23",
+      "required": [
+        {
+          "row": "ReportValueDateRoll",
+          "since": "v23"
+        }
+      ],
+      "stability": "preview",
+      "store": "bor"
+    },
+    {
+      "name": "meridian.v1.ReportValueDateRollRequest.value_date_basis",
+      "type": "message DateBasis",
+      "empty": "never unset",
+      "intent": "says what the new value date was worked out on",
+      "meaning": "the spot-date rule and each calendar, with their versions, as the date read answered them",
+      "not_meaning": "the venue's basis",
+      "filled": "derived",
+      "filled_by": "connectivity",
+      "since": "v23",
+      "required": [
+        {
+          "row": "ReportValueDateRoll",
+          "since": "v23"
+        }
+      ],
+      "stability": "preview",
+      "store": "bor"
+    },
+    {
+      "name": "meridian.v1.ReportValueDateRollRequest.rolled_at_ns",
+      "type": "moment",
+      "unit": "nanoseconds since the epoch",
+      "empty": "never 0",
+      "intent": "says when the venue rolled the position",
+      "meaning": "the venue's daily roll, as it reports it: at its cut, 17:00 New York for spot FX; on a catch-up roll, the venue's latest roll",
+      "not_meaning": "when the book recorded it",
+      "filled": "as-reported",
+      "filled_by": "connectivity",
+      "since": "v23",
+      "required": [
+        {
+          "row": "ReportValueDateRoll",
+          "since": "v23"
+        }
+      ],
+      "stability": "preview",
+      "store": "bor"
+    },
+    {
+      "name": "meridian.v1.ReportValueDateRollRequest.charge_ids",
+      "type": "repeated text",
+      "empty": "empty where the venue charged nothing at the roll, or the charge waits unplaced",
+      "intent": "links the roll to its financing (W11.12)",
+      "meaning": "the `CHG-` IDs of the financing charges (FEE_KIND_FINANCING) the venue made at this roll, each reported first and answered with its charge",
+      "not_meaning": "a fee carried on the roll, which moves no cash itself",
+      "filled": "as-reported",
+      "filled_by": "connectivity",
+      "since": "v23",
+      "stability": "preview",
+      "store": "bor"
+    },
+    {
+      "name": "meridian.v1.ReportValueDateRollRequest.raw_record",
+      "type": "message RawRecordRef",
+      "empty": "never unset",
+      "intent": "references the raw record the roll was converted from",
+      "meaning": "the record in the connectivity plugin's own storage (decisions/028), by its instance and key; no venue text crosses the bus otherwise",
+      "not_meaning": "the record itself, which never leaves the plugin's storage",
+      "filled": "as-reported",
+      "filled_by": "connectivity",
+      "since": "v23",
+      "required": [
+        {
+          "row": "ReportValueDateRoll",
+          "since": "v23"
+        }
+      ],
+      "stability": "preview",
+      "store": "bor"
+    },
+    {
+      "name": "meridian.v1.ReportValueDateRollRequest.idempotency_key",
+      "type": "text",
+      "empty": "empty is none: the fact is applied once by its message identifier alone",
+      "intent": "lets the report be retried after a lost reply and applied once",
+      "meaning": "the plugin's own key for the report; a second with the same key and other content is refused REFUSAL_REASON_IDEMPOTENCY_CONFLICT",
+      "not_meaning": "the envelope's message identifier",
+      "filled": "as-reported",
+      "filled_by": "connectivity",
+      "since": "v23",
+      "stability": "preview",
+      "store": "bor"
+    },
+    {
+      "name": "meridian.v1.AcceptExecutionRequest.execution_ids",
+      "type": "repeated text",
+      "bounds": {
+        "count": [
+          1,
+          500
+        ]
+      },
+      "empty": "never empty",
+      "intent": "names the unmatched executions accepted (W11.23)",
+      "meaning": "their `EXE-` IDs, of one account, instrument, side, connectivity plugin and trade date: a liquidation can arrive in many prints; fills differing in any is refused REFUSAL_REASON_EXECUTIONS_DIFFER, and an ID named twice INVALID_ARGUMENT naming `execution_ids[i]`, the second",
+      "not_meaning": "the venue's execution IDs",
+      "filled": "as-reported",
+      "filled_by": "ems",
+      "since": "v23",
+      "stability": "preview",
+      "store": "bor"
+    },
+    {
+      "name": "meridian.v1.AcceptExecutionRequest.order_id",
+      "type": "text",
+      "empty": "empty when new_order, the other arm of the oneof matched_order, is set",
+      "intent": "names the existing order the executions are accepted to",
+      "meaning": "its `ORD-` ID: released, working or filled, one the accepting ems may place against, never ended, and claimed by the accepting user or by no one (REFUSAL_REASON_CLAIMED); an accept whose quantity, added to what the order has filled already, is past its ordered quantity is refused REFUSAL_REASON_QUANTITY_EXCEEDS_ORDER",
+      "not_meaning": "a venue's order ID",
+      "filled": "as-reported",
+      "filled_by": "ems",
+      "since": "v23",
+      "stability": "preview",
+      "store": "bor"
+    },
+    {
+      "name": "meridian.v1.AcceptExecutionRequest.new_order",
+      "type": "message NewOrderFromExecutions",
+      "empty": "unset when order_id, the other arm of the oneof matched_order, is set",
+      "intent": "asks for a new order made from the executions",
+      "meaning": "the order the fills make: their account, instrument, side, trade date and venue order ID, ordered the accepted quantity, market and day by default, filled, never gated, ORDER_ORIGIN_ACCEPTED_EXECUTION (W11.23)",
+      "not_meaning": "a proposal through the gate",
+      "filled": "as-reported",
+      "filled_by": "ems",
+      "since": "v23",
+      "stability": "preview",
+      "store": "bor"
+    },
+    {
+      "name": "meridian.v1.AcceptExecutionRequest.note",
+      "type": "text",
+      "empty": "empty is no note",
+      "intent": "says why the executions were accepted",
+      "meaning": "the trader's note, kept on the accept's entry",
+      "not_meaning": "the new order's note",
+      "filled": "as-reported",
+      "filled_by": "ems",
+      "since": "v23",
+      "stability": "preview",
+      "store": "bor"
+    },
+    {
+      "name": "meridian.v1.NewOrderFromExecutions.sleeve",
+      "type": "text",
+      "empty": "empty for the account's unsleeved part",
+      "intent": "names the sleeve the new order is in",
+      "meaning": "the sleeve within the account, which the fills and the lines they move carry (requirement 59)",
+      "not_meaning": "an account",
+      "filled": "as-reported",
+      "filled_by": "ems",
+      "since": "v23",
+      "stability": "preview",
+      "store": "bor"
+    },
+    {
+      "name": "meridian.v1.NewOrderFromExecutions.note",
+      "type": "text",
+      "empty": "empty is no note",
+      "intent": "carries the new order's note",
+      "meaning": "kept on the accept's journal entry, beside the order it made, which says it was entered after the trade, by whom and when; the order has no note of its own",
+      "not_meaning": "the accept's note",
+      "filled": "as-reported",
+      "filled_by": "ems",
+      "since": "v23",
+      "stability": "preview",
+      "store": "bor"
+    },
+    {
+      "name": "meridian.v1.DontKnowExecutionRequest.execution_ids",
+      "type": "repeated text",
+      "bounds": {
+        "count": [
+          1,
+          500
+        ]
+      },
+      "empty": "never empty",
+      "intent": "names the unmatched executions answered DK (W11.24)",
+      "meaning": "their `EXE-` IDs",
+      "not_meaning": "the venue's execution IDs",
+      "filled": "as-reported",
+      "filled_by": "ems",
+      "since": "v23",
+      "stability": "preview",
+      "store": "bor"
+    },
+    {
+      "name": "meridian.v1.DontKnowExecutionRequest.reason",
+      "type": "enum DkReason",
+      "allowed": [
+        {
+          "value": "DK_REASON_UNSPECIFIED",
+          "meaning": "not said; refused"
+        },
+        {
+          "value": "DK_REASON_UNKNOWN_INSTRUMENT",
+          "meaning": "the desk does not know the instrument"
+        },
+        {
+          "value": "DK_REASON_WRONG_SIDE",
+          "meaning": "the side is not the desk's"
+        },
+        {
+          "value": "DK_REASON_QUANTITY_EXCEEDS_ORDER",
+          "meaning": "the quantity exceeds what the desk ordered"
+        },
+        {
+          "value": "DK_REASON_NO_MATCHING_ORDER",
+          "meaning": "the desk has no order it matches"
+        },
+        {
+          "value": "DK_REASON_PRICE_EXCEEDS_LIMIT",
+          "meaning": "the price is past the desk's limit"
+        },
+        {
+          "value": "DK_REASON_CALCULATION_DIFFERENCE",
+          "meaning": "the desk's calculation differs"
+        },
+        {
+          "value": "DK_REASON_OTHER",
+          "meaning": "another reason, which text says"
+        }
+      ],
+      "empty": "never unspecified",
+      "intent": "says why the ems does not know the executions",
+      "meaning": "a reason from the closed list mirroring FIX's DKReason (127), kept as Execution.dk_reason",
+      "not_meaning": "a venue's rejection reason",
+      "filled": "as-reported",
+      "filled_by": "ems",
+      "since": "v23",
+      "stability": "preview",
+      "store": "bor"
+    },
+    {
+      "name": "meridian.v1.DontKnowExecutionRequest.text",
+      "type": "text",
+      "empty": "empty is no text; never empty with DK_REASON_OTHER, refused INVALID_ARGUMENT naming it",
+      "intent": "carries the DK's words",
+      "meaning": "kept as Execution.dk_text, as FIX requires Text (58) when DKReason is Other",
+      "not_meaning": "a note on the order",
+      "filled": "as-reported",
+      "filled_by": "ems",
+      "required": [
+        {
+          "row": "DontKnowExecution",
+          "since": "v23",
+          "unless": "the reason is other than DK_REASON_OTHER"
+        }
+      ],
+      "since": "v23",
+      "stability": "preview",
+      "store": "bor"
+    },
+    {
+      "name": "meridian.v1.AcceptExecutionReply.executions",
+      "type": "repeated message Execution",
+      "empty": "never empty",
+      "intent": "answers the executions accepted, as they now stand (W11.23)",
+      "meaning": "each whole, at EXECUTION_STATE_MATCHED, naming the order and the placement the accept linked it to",
+      "not_meaning": "a delta",
+      "filled": "decided",
+      "filled_by": "bor",
+      "since": "v23",
+      "stability": "preview",
+      "store": "bor"
+    },
+    {
+      "name": "meridian.v1.AcceptExecutionReply.order",
+      "type": "message Order",
+      "empty": "never unset",
+      "intent": "answers the order the executions were accepted to",
+      "meaning": "the whole order after the entry commits: the existing order, or the new one at filled with ORDER_ORIGIN_ACCEPTED_EXECUTION",
+      "not_meaning": "a delta",
+      "filled": "decided",
+      "filled_by": "bor",
+      "since": "v23",
+      "stability": "preview",
+      "store": "bor"
+    },
+    {
+      "name": "meridian.v1.AcceptExecutionReply.placement",
+      "type": "message Placement",
+      "empty": "never unset",
+      "intent": "answers the placement the accept created at filled",
+      "meaning": "the whole placement: the accepting ems's, the reporting connectivity plugin's, routed_at_ns 0, the platform never having routed it",
+      "not_meaning": "a placement the ems sent",
+      "filled": "decided",
+      "filled_by": "bor",
+      "since": "v23",
+      "stability": "preview",
+      "store": "bor"
+    },
+    {
+      "name": "meridian.v1.AcceptExecutionReply.journal",
+      "type": "message JournalRef",
+      "empty": "never unset",
+      "intent": "says where the change sits in the account's journal",
+      "meaning": "the partition and sequence the entry committed at; the answer is sent only after it commits (W11's invariants)",
+      "not_meaning": "a time",
+      "filled": "decided",
+      "filled_by": "bor",
+      "since": "v23",
+      "stability": "preview",
+      "store": "bor"
+    },
+    {
+      "name": "meridian.v1.DontKnowExecutionReply.executions",
+      "type": "repeated message Execution",
+      "empty": "never empty",
+      "intent": "answers the executions answered DK, as they now stand (W11.24)",
+      "meaning": "each whole, at EXECUTION_STATE_DONT_KNOW, with its dk_reason and dk_text",
+      "not_meaning": "a delta",
+      "filled": "decided",
+      "filled_by": "bor",
+      "since": "v23",
+      "stability": "preview",
+      "store": "bor"
+    },
+    {
+      "name": "meridian.v1.DontKnowExecutionReply.journal",
+      "type": "message JournalRef",
+      "empty": "never unset",
+      "intent": "says where the change sits in the account's journal",
+      "meaning": "the partition and sequence the entry committed at; the answer is sent only after it commits (W11's invariants)",
+      "not_meaning": "a time",
+      "filled": "decided",
+      "filled_by": "bor",
+      "since": "v23",
       "stability": "preview",
       "store": "bor"
     },
@@ -13079,6 +13920,37 @@
       "filled": "as-reported",
       "filled_by": "reporting",
       "since": "v22",
+      "stability": "preview",
+      "store": "bor"
+    },
+    {
+      "name": "meridian.v1.ListOrdersRequest.execution_state",
+      "type": "enum ExecutionState",
+      "allowed": [
+        {
+          "value": "EXECUTION_STATE_UNSPECIFIED",
+          "meaning": "no filter"
+        },
+        {
+          "value": "EXECUTION_STATE_UNMATCHED",
+          "meaning": "only the unmatched executions still waiting for an answer, and the orders behind none: one a later execution supersedes, and a bust, are left out, so a busted unmatched fill is not listed and a corrected one is listed as its correction (W11.17)"
+        },
+        {
+          "value": "EXECUTION_STATE_MATCHED",
+          "meaning": "only matched executions"
+        },
+        {
+          "value": "EXECUTION_STATE_DONT_KNOW",
+          "meaning": "only those answered DK"
+        }
+      ],
+      "empty": "unspecified reads every record in scope",
+      "intent": "filters the listing by an execution's state (W11.17)",
+      "meaning": "the executions in that state, so the ems's and operations' counts need not read every fill",
+      "not_meaning": "an order's state",
+      "filled": "as-reported",
+      "filled_by": "reporting",
+      "since": "v23",
       "stability": "preview",
       "store": "bor"
     },
@@ -14829,6 +15701,37 @@
       "filled": "as-reported",
       "filled_by": "connectivity",
       "since": "v22",
+      "stability": "preview",
+      "store": "conductor"
+    },
+    {
+      "name": "meridian.v1.VenueCatalogue.execution_acknowledgement",
+      "type": "enum ExecutionAcknowledgement",
+      "allowed": [
+        {
+          "value": "EXECUTION_ACKNOWLEDGEMENT_UNSPECIFIED",
+          "meaning": "not said, as a v22 catalogue is: read as EXECUTION_ACKNOWLEDGEMENT_NONE, the venue not told"
+        },
+        {
+          "value": "EXECUTION_ACKNOWLEDGEMENT_NONE",
+          "meaning": "the venue takes neither message: nothing is sent at an accept or a DK, and the ems's page says the venue is not told before a DK"
+        },
+        {
+          "value": "EXECUTION_ACKNOWLEDGEMENT_BN",
+          "meaning": "the venue takes FIX's ExecutionAcknowledgement (35=BN): ExecAckStatus Accepted at an accept, Don't know / Rejected with DKReason at a DK"
+        },
+        {
+          "value": "EXECUTION_ACKNOWLEDGEMENT_DONT_KNOW_TRADE",
+          "meaning": "the venue takes FIX's DontKnowTrade (35=Q) at a DK, and nothing is sent at an accept, Q having no accept"
+        }
+      ],
+      "empty": "unspecified where the plugin says nothing, read as none: the venue is not told",
+      "intent": "says what the connectivity plugin sends its venue when the ems accepts a venue-originated fill or answers it DK (W11.20, W11.23, W11.24)",
+      "meaning": "the venue's rules of engagement for the session behind the code, declared beside its order types, where the ems already reads them",
+      "not_meaning": "a record of an acknowledgement sent, which is never kept: FIX answers BN with nothing",
+      "filled": "as-reported",
+      "filled_by": "connectivity",
+      "since": "v23",
       "stability": "preview",
       "store": "conductor"
     },
@@ -17694,12 +18597,19 @@
       "name": "meridian.v1.ResolveIdentifierRequest.stated_currency",
       "type": "text",
       "empty": "empty is not stated",
-      "intent": "offers the currency the plugin's source states of the security",
-      "meaning": "an ISO 4217 code, kept as an offer",
+      "intent": "offers the security's currency: the one the plugin's source states, or, where it states none, one derived by a named rule or supplied by a person, with its provenance",
+      "meaning": "an ISO 4217 code, kept as an offer; with no entry in provenance it is the source's, from the record the security came from",
       "not_meaning": "a match constraint, which currency is",
       "filled": "as-reported",
       "filled_by": "custody",
       "since": "v10",
+      "changes": [
+        {
+          "version": "v23",
+          "kind": "clarified",
+          "what": "a currency the source did not state, derived by a named rule or supplied by a person (the linked account's currency its admin set), is sent here with its entry in ResolveIdentifierRequest.provenance (W3.1, approved 2026-10-13)"
+        }
+      ],
       "stability": "stable",
       "store": "instrument"
     },
@@ -17741,6 +18651,25 @@
       "filled": "as-reported",
       "filled_by": "custody",
       "since": "v11",
+      "stability": "stable",
+      "store": "instrument"
+    },
+    {
+      "name": "meridian.v1.ResolveIdentifierRequest.provenance",
+      "type": "repeated message Provenance",
+      "bounds": {
+        "count": [
+          0,
+          32
+        ]
+      },
+      "empty": "empty where every value stated is the source's, from the record the security came from",
+      "intent": "says where the security's currency came from, where the plugin closed it rather than read it",
+      "meaning": "one per closed value, by its path, each `{field: stated_currency, kind, person or rule}`: supplied by a named person on the plugin's page (the linked account's currency its admin set), derived by a named rule, or reported from another of the source's records; the store keeps it with the offer (W3.1)",
+      "not_meaning": "a value presented as the source's statement, or one that narrows a symbol match: a supplied or derived currency never narrows one",
+      "filled": "as-reported",
+      "filled_by": "custody",
+      "since": "v23",
       "stability": "stable",
       "store": "instrument"
     },
@@ -19227,6 +20156,33 @@
       "store": "instrument"
     },
     {
+      "name": "meridian.v1.SpotDateRule.counting_mode",
+      "type": "enum SpotCountingMode",
+      "allowed": [
+        {
+          "value": "SPOT_COUNTING_MODE_UNSPECIFIED",
+          "meaning": "joint, v22's way"
+        },
+        {
+          "value": "SPOT_COUNTING_MODE_JOINT",
+          "meaning": "a day counts only if it is a business day on every counting calendar"
+        },
+        {
+          "value": "SPOT_COUNTING_MODE_EACH_CURRENCY",
+          "meaning": "each currency's spot on its own calendar, the later of the two, then rolled to a day good on both: the convention for a cross"
+        }
+      ],
+      "empty": "unspecified means joint, so every rule held keeps its dates",
+      "intent": "says how a pair's spot lag counts its calendars (W1.22, W3.20)",
+      "meaning": "the rule's counting mode (contract v23), which core's spot computation honours and the curation tools' rule input carries",
+      "not_meaning": "which calendars the spot date itself must be good in, which spot_calendars says",
+      "filled": "entered",
+      "filled_by": "platform",
+      "since": "v23",
+      "stability": "preview",
+      "store": "instrument"
+    },
+    {
       "name": "meridian.v1.ObservationMeta.row_key",
       "type": "text",
       "bounds": {
@@ -19537,6 +20493,19 @@
       "store": "lake"
     },
     {
+      "name": "meridian.v1.ObservationMeta.closed_day",
+      "type": "message DateCheck",
+      "empty": "unset unless the row's business date is a closed day of its dataset's calendar, or outside its coverage; unset too where the calendar is not held",
+      "intent": "flags a daily value dated on a closed day of its dataset's calendar (W10.4)",
+      "meaning": "v22's DateCheck: the date, each calendar with its version, the reason (weekend, holiday, outside coverage) and the holiday's name; decided by the lake, as recorded_at_ns is; a later calendar version's re-check is journalled beside the row, never a new version, and a point-in-time read shows the flag as known then",
+      "not_meaning": "a refusal: the value is recorded as reported; nor a flag on a trade, a quote, an intraday row or an outcome, which name no business date",
+      "filled": "decided",
+      "filled_by": "lake",
+      "since": "v23",
+      "stability": "preview",
+      "store": "lake"
+    },
+    {
       "name": "meridian.v1.SubjectRef.entity_id",
       "type": "identifier entity",
       "bounds": {
@@ -19779,6 +20748,34 @@
       "filled": "derived",
       "filled_by": "lake",
       "since": "v18",
+      "stability": "preview",
+      "store": "lake"
+    },
+    {
+      "name": "meridian.v1.DatasetRef.closed_day_count",
+      "type": "integer",
+      "unit": "rows",
+      "empty": "0 where no kept row of it is flagged on a closed day, and in a read's answer and an entitlements change",
+      "intent": "counts a dataset's rows dated on a closed day of its calendar, for the Data sources page (W10.9)",
+      "meaning": "the rows the lake keeps of the dataset flagged ObservationMeta.closed_day for a weekend or a holiday",
+      "not_meaning": "the rows dated outside the calendar's coverage, counted apart",
+      "filled": "derived",
+      "filled_by": "lake",
+      "since": "v23",
+      "stability": "preview",
+      "store": "lake"
+    },
+    {
+      "name": "meridian.v1.DatasetRef.outside_coverage_count",
+      "type": "integer",
+      "unit": "rows",
+      "empty": "0 where no kept row of it is dated outside its calendar's coverage, and in a read's answer and an entitlements change",
+      "intent": "counts a dataset's rows dated outside its calendar's coverage, apart, so a coverage lapse reads as a curation matter (W10.9)",
+      "meaning": "the rows flagged DATE_CHECK_REASON_OUTSIDE_COVERAGE",
+      "not_meaning": "a vendor's error",
+      "filled": "derived",
+      "filled_by": "lake",
+      "since": "v23",
       "stability": "preview",
       "store": "lake"
     },
@@ -22509,6 +23506,234 @@
       "store": "lake"
     },
     {
+      "name": "meridian.v1.Outcome.meta",
+      "type": "message ObservationMeta",
+      "empty": "never unset",
+      "intent": "carries the outcome's envelope",
+      "meaning": "its row key, one per contract; its subject the contract's instrument; its valid time the determination's, an event SourceTime; no business date",
+      "not_meaning": "a daily value",
+      "filled": "as-reported",
+      "filled_by": "data",
+      "since": "v23",
+      "stability": "preview",
+      "store": "lake"
+    },
+    {
+      "name": "meridian.v1.Outcome.determination",
+      "type": "enum OutcomeDetermination",
+      "allowed": [
+        {
+          "value": "OUTCOME_DETERMINATION_UNSPECIFIED",
+          "meaning": "not said; refused"
+        },
+        {
+          "value": "OUTCOME_DETERMINATION_PAYS",
+          "meaning": "the instrument pays its full payout"
+        },
+        {
+          "value": "OUTCOME_DETERMINATION_PAYS_NOTHING",
+          "meaning": "the instrument pays nothing"
+        },
+        {
+          "value": "OUTCOME_DETERMINATION_PAYS_PART",
+          "meaning": "the instrument pays part of its payout: a scalar result, or a resolution at half"
+        }
+      ],
+      "empty": "never unspecified",
+      "intent": "says what the instrument pays, as its venue determined it (the lake plan's vL1c, item 1)",
+      "meaning": "the instrument's own determination, so a token whose outcome is a name, not yes, reads plainly",
+      "not_meaning": "the venue's word, kept as reported; or void, which no venue reports",
+      "filled": "as-reported",
+      "filled_by": "data",
+      "since": "v23",
+      "stability": "preview",
+      "store": "lake"
+    },
+    {
+      "name": "meridian.v1.Outcome.stage",
+      "type": "enum OutcomeStage",
+      "allowed": [
+        {
+          "value": "OUTCOME_STAGE_UNSPECIFIED",
+          "meaning": "not said; refused"
+        },
+        {
+          "value": "OUTCOME_STAGE_PROPOSED",
+          "meaning": "proposed and open to challenge"
+        },
+        {
+          "value": "OUTCOME_STAGE_DETERMINED",
+          "meaning": "determined by the venue; an amended determination is a new version here"
+        },
+        {
+          "value": "OUTCOME_STAGE_DISPUTED",
+          "meaning": "disputed, the determination challenged"
+        },
+        {
+          "value": "OUTCOME_STAGE_FINAL",
+          "meaning": "final"
+        }
+      ],
+      "empty": "never unspecified",
+      "intent": "says the venue's stage of the determination (item 2)",
+      "meaning": "each change a new version under the contract's one row key, the lake's restatement pattern",
+      "not_meaning": "whether holders were paid, which settled_at_ns says",
+      "filled": "as-reported",
+      "filled_by": "data",
+      "since": "v23",
+      "stability": "preview",
+      "store": "lake"
+    },
+    {
+      "name": "meridian.v1.Outcome.settlement_value",
+      "type": "Money",
+      "required": [
+        {
+          "row": "RecordOutcomes",
+          "since": "v23"
+        }
+      ],
+      "empty": "never unset",
+      "intent": "says what one contract settles at (item 1)",
+      "meaning": "Money per contract in the payout asset, always set: the full payout, nothing, or the part",
+      "not_meaning": "a probability, or a price",
+      "filled": "as-reported",
+      "filled_by": "data",
+      "since": "v23",
+      "stability": "preview",
+      "store": "lake"
+    },
+    {
+      "name": "meridian.v1.Outcome.settled_at_ns",
+      "type": "moment",
+      "empty": "0 until the venue has paid out",
+      "intent": "says when the venue paid out (item 3)",
+      "meaning": "the payout's time, as the venue states it",
+      "not_meaning": "the determination's time, which the envelope's valid time is",
+      "filled": "as-reported",
+      "filled_by": "data",
+      "since": "v23",
+      "stability": "preview",
+      "store": "lake"
+    },
+    {
+      "name": "meridian.v1.Outcome.determination_as_reported",
+      "type": "message AsReported",
+      "empty": "never unset",
+      "intent": "keeps the venue's own word for the determination (item 1)",
+      "meaning": "as the venue reported it: yes, no, scalar, a name, Unknown/50-50",
+      "not_meaning": "the determination, which says what the instrument pays",
+      "filled": "as-reported",
+      "filled_by": "data",
+      "since": "v23",
+      "stability": "preview",
+      "store": "lake"
+    },
+    {
+      "name": "meridian.v1.RecordOutcomesRequest.outcomes",
+      "type": "repeated message Outcome",
+      "bounds": {
+        "count": [
+          1,
+          500
+        ]
+      },
+      "empty": "never empty",
+      "intent": "carries a batch of outcomes (W10.4)",
+      "meaning": "1 to 500 outcomes, recorded whole or refused naming the item and field; each stage of a contract's determination a new version under its one row key",
+      "not_meaning": "the payout to holders, which is servicing's",
+      "filled": "as-reported",
+      "filled_by": "data",
+      "since": "v23",
+      "stability": "preview",
+      "store": "lake"
+    },
+    {
+      "name": "meridian.v1.OutcomesRecordedEvent.outcome",
+      "type": "message Outcome",
+      "empty": "never unset",
+      "intent": "delivers an outcome the lake recorded (W10.5)",
+      "meaning": "the row as recorded, with its version and sequence; every version is delivered, never conflated",
+      "not_meaning": "a promise of delivery: a reader too slow for them meets a loss marker and reads the outcomes after the watermark it last saw",
+      "filled": "decided",
+      "filled_by": "lake",
+      "since": "v23",
+      "stability": "preview",
+      "store": "lake"
+    },
+    {
+      "name": "meridian.v1.ListOutcomesRequest.subjects",
+      "type": "repeated message SubjectRef",
+      "bounds": {
+        "count": [
+          1,
+          500
+        ]
+      },
+      "empty": "never empty",
+      "intent": "names the event contracts' instruments a read is about (W10.6)",
+      "meaning": "1 to 500 entities",
+      "not_meaning": "vendor identifiers",
+      "filled": "as-reported",
+      "filled_by": "reporting",
+      "since": "v23",
+      "stability": "preview",
+      "store": "lake"
+    },
+    {
+      "name": "meridian.v1.ListOutcomesRequest.after_watermark",
+      "type": "message Watermark",
+      "empty": "unset: the version in force, or as of as_of_ns",
+      "intent": "catches a reader up on the outcomes it lost (W10.6)",
+      "meaning": "the watermark the reader last saw: answered the versions each dataset partition it names recorded after its sequence there, for the subjects asked, whatever their valid time",
+      "not_meaning": "a time: a partition it does not name is not read",
+      "filled": "as-reported",
+      "filled_by": "reporting",
+      "since": "v23",
+      "stability": "preview",
+      "store": "lake"
+    },
+    {
+      "name": "meridian.v1.ListOutcomesRequest.as_of_ns",
+      "type": "moment",
+      "unit": "nanoseconds since the epoch",
+      "empty": "0: what the lake knows now",
+      "intent": "reads what the lake knew at a recorded time (W10.6)",
+      "meaning": "the recorded-time cut-off: nothing recorded after it answers, so a read before a restatement answers the version in force then",
+      "not_meaning": "a valid time",
+      "filled": "as-reported",
+      "filled_by": "reporting",
+      "since": "v23",
+      "stability": "preview",
+      "store": "lake"
+    },
+    {
+      "name": "meridian.v1.ListOutcomesReply.outcomes",
+      "type": "repeated message Outcome",
+      "empty": "none answered",
+      "intent": "carries the outcomes read (W10.6)",
+      "meaning": "the version in force of each, or as of a recorded time before a restatement, or those recorded after a watermark; each naming its dataset",
+      "not_meaning": "a daily value: no business date is asked or answered",
+      "filled": "decided",
+      "filled_by": "lake",
+      "since": "v23",
+      "stability": "preview",
+      "store": "lake"
+    },
+    {
+      "name": "meridian.v1.ListOutcomesReply.watermark",
+      "type": "message Watermark",
+      "empty": "never unset",
+      "intent": "says where the read was answered",
+      "meaning": "the sequence per dataset partition the read was answered at, which a later catch-up names",
+      "not_meaning": "a time",
+      "filled": "decided",
+      "filled_by": "lake",
+      "since": "v23",
+      "stability": "preview",
+      "store": "lake"
+    },
+    {
       "name": "meridian.v1.Decimal.high",
       "type": "integer",
       "unit": "none: the upper 64 bits of the value's integer",
@@ -22640,6 +23865,10 @@
         {
           "row": "ReportCharge",
           "since": "v22"
+        },
+        {
+          "row": "RecordOutcomes",
+          "since": "v23"
         }
       ],
       "empty": "never unset in an amount that is set: the amount is the Money",
@@ -26719,7 +27948,7 @@
         },
         {
           "value": "REFUSAL_REASON_CLAIMED",
-          "meaning": "beside ABORTED: a placement, a claim or a change by other than the claimant of a claimed order (W11.3, W11.7 to W11.9); a cancel by anyone who may write the account is admitted past a claim, and so is a connectivity plugin's report of a cancel it sent under a stop",
+          "meaning": "beside ABORTED: a placement, a claim or a change by other than the claimant of a claimed order (W11.3, W11.7 to W11.9), and from v23 an accept onto it (W11.23); a cancel by anyone who may write the account is admitted past a claim, and so is a connectivity plugin's report of a cancel it sent under a stop",
           "since": "v22"
         },
         {
@@ -26741,6 +27970,21 @@
           "value": "REFUSAL_REASON_CONNECTIVITY_LINKED",
           "meaning": "beside ABORTED: a link of a connectivity plugin already linked to another ems (W11.21): each is linked to exactly one",
           "since": "v22"
+        },
+        {
+          "value": "REFUSAL_REASON_QUANTITY_EXCEEDS_ORDER",
+          "meaning": "beside ABORTED: an accept of venue-originated fills whose quantity, added to what the order has filled already, is past its ordered quantity (W11.23): the trader accepts to a new order instead, or portfolio upsizes first; nothing changed",
+          "since": "v23"
+        },
+        {
+          "value": "REFUSAL_REASON_EXECUTION_STATE",
+          "meaning": "beside ABORTED: an accept or a DK of an execution not unmatched -- answered already -- or of one a bust or a correction supersedes, by the transition table's e3 to e6 (W11.23, W11.24); nothing changed",
+          "since": "v23"
+        },
+        {
+          "value": "REFUSAL_REASON_EXECUTIONS_DIFFER",
+          "meaning": "beside ABORTED: an accept of fills of more than one account, instrument, side, connectivity plugin or trade date, or of a fill whose side is the order's opposite (W11.23); nothing changed",
+          "since": "v23"
         }
       ],
       "empty": "unspecified where the status says all there is",
@@ -26760,6 +28004,11 @@
           "version": "v22",
           "kind": "clarified",
           "what": "REFUSAL_REASON_ACCOUNT_NOT_LINKABLE: also an ems's venue account mapping naming an account not granted its instance (W11.22)"
+        },
+        {
+          "version": "v23",
+          "kind": "clarified",
+          "what": "REFUSAL_REASON_CLAIMED: also an accept of venue-originated fills onto an order another claims (W11.23; approved 2026-10-13)"
         }
       ],
       "stability": "stable",
@@ -27179,6 +28428,19 @@
       "store": "sidecar"
     },
     {
+      "name": "meridian.plugin.v1.Delivery.outcomes_recorded",
+      "type": "message OutcomesRecordedEvent",
+      "empty": "unset unless the delivery is an outcome the lake recorded",
+      "intent": "delivers an event contract's outcome the lake recorded (W10.5; contract v23)",
+      "meaning": "an outcome the lake recorded, every version, never dropped for a later one; after a loss marker the plugin reads the outcomes after the watermark it last saw",
+      "not_meaning": "a record with a journal: a lake row carries its sequence in its own envelope",
+      "filled": "decided",
+      "filled_by": "lake",
+      "since": "v23",
+      "stability": "preview",
+      "store": "sidecar"
+    },
+    {
       "name": "meridian.plugin.v1.Delivery.observations_wanted",
       "type": "message ObservationsWantedEvent",
       "empty": "unset unless the delivery is a want of the plugin's dataset",
@@ -27344,6 +28606,19 @@
       "filled": "as-reported",
       "filled_by": "plugin",
       "since": "v19",
+      "stability": "preview",
+      "store": "sidecar"
+    },
+    {
+      "name": "meridian.plugin.v1.RecordOutcomesParams.acting_for",
+      "type": "message CallerAssertion",
+      "empty": "unset, the plugin acts as itself",
+      "intent": "names the person RecordOutcomes is sent for",
+      "meaning": "the assertion the plugin was handed for them, the same bytes, never altered; a data plugin records as itself",
+      "not_meaning": "the plugin's own identity, which the sidecar knows",
+      "filled": "as-reported",
+      "filled_by": "plugin",
+      "since": "v23",
       "stability": "preview",
       "store": "sidecar"
     },
@@ -27861,6 +29136,57 @@
       "filled": "as-reported",
       "filled_by": "plugin",
       "since": "v22",
+      "stability": "preview",
+      "store": "sidecar"
+    },
+    {
+      "name": "meridian.plugin.v1.AcceptExecutionParams.acting_for",
+      "type": "message CallerAssertion",
+      "required": [
+        {
+          "row": "AcceptExecution",
+          "since": "v23"
+        }
+      ],
+      "empty": "never unset: an accept needs a user, a person or the ems's service account, and the book refuses it sent for no one (REFUSAL_REASON_ACTOR_REQUIRED)",
+      "intent": "names the person AcceptExecution is sent for",
+      "meaning": "the assertion the plugin was handed for them, the same bytes, never altered; the sidecar admits it only in a session at write, when the executions it names are in their write access, and stamps them on it (W4.9)",
+      "not_meaning": "the plugin's own identity, which the sidecar knows",
+      "filled": "as-reported",
+      "filled_by": "plugin",
+      "since": "v23",
+      "stability": "preview",
+      "store": "sidecar"
+    },
+    {
+      "name": "meridian.plugin.v1.DontKnowExecutionParams.acting_for",
+      "type": "message CallerAssertion",
+      "required": [
+        {
+          "row": "DontKnowExecution",
+          "since": "v23"
+        }
+      ],
+      "empty": "never unset: a DK needs a user, a person or the ems's service account, and the book refuses it sent for no one (REFUSAL_REASON_ACTOR_REQUIRED)",
+      "intent": "names the person DontKnowExecution is sent for",
+      "meaning": "the assertion the plugin was handed for them, the same bytes, never altered; the sidecar admits it only in a session at write, when the executions it names are in their write access, and stamps them on it (W4.9)",
+      "not_meaning": "the plugin's own identity, which the sidecar knows",
+      "filled": "as-reported",
+      "filled_by": "plugin",
+      "since": "v23",
+      "stability": "preview",
+      "store": "sidecar"
+    },
+    {
+      "name": "meridian.plugin.v1.ReportValueDateRollParams.acting_for",
+      "type": "message CallerAssertion",
+      "empty": "unset, the plugin reports a venue's fact as itself, which a fact report may be (W11's invariants)",
+      "intent": "names the person ReportValueDateRoll is sent for",
+      "meaning": "the assertion the plugin was handed for them, the same bytes, never altered; set, a person's entry where the role makes one, admitted only in a session at write when the person may write the account, and stamped on it (W4.9)",
+      "not_meaning": "the plugin's own identity, which the sidecar knows",
+      "filled": "as-reported",
+      "filled_by": "plugin",
+      "since": "v23",
       "stability": "preview",
       "store": "sidecar"
     },

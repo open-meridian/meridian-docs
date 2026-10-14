@@ -198,20 +198,22 @@ venue. The runner's `instrument` command takes `--ask-platform`, asking the plat
 record from its page as a deployment admin's button does, so a `compute_date` for that equity
 gives its settlement date in a harness run (T+1) rather than "rule not held".
 
-Core 8774368's runtime and harness serve contract v22, released 2026-10-13 in chart
-0.1.301: `ghcr.io/open-meridian/meridian-runtime:8774368` and
-`ghcr.io/open-meridian/meridian-harness:8774368`, pinned by digest as in
-[step 1](#1-pin-a-runtime-image-and-its-harness). The commands above are its `README.md`'s.
+Core 50d6f0a's runtime and harness serve contract v23, released 2026-10-14 in chart 0.1.303,
+pinned by digest as in [step 1](#1-pin-a-runtime-image-and-its-harness):
 
-From contract v23 (built, not released) the stand-in for the platform also serves the euro's
+```makefile
+RUNTIME_IMAGE ?= ghcr.io/open-meridian/meridian-runtime:50d6f0a@sha256:31752d45e262b4e87978e486f5e3cdd201fe14970bf1e681bfb9241731d0a053
+HARNESS_IMAGE ?= ghcr.io/open-meridian/meridian-harness:50d6f0a@sha256:00c4818b8c67218ecbe237f97e97b78cad3801477520ebbae80fe29332de4115
+```
+
+The commands above are its `README.md`'s. Core 8774368's serve contract v22, released 2026-10-13
+in chart 0.1.301.
+
+From contract v23 the stand-in for the platform also serves the euro's
 TARGET calendar and a EUR/USD spot-date rule as the platform keeps such a rule (lag 2 counted on
 TARGET alone, the spot date good on TARGET and the US dollar's calendar, cut 17:00 New York), so
 EUR/USD traded Friday 9 October 2026 spots on Tuesday 13 October; and `store lake` prints an
 outcome's row as `outcome`, beside price, bar, trade and quote. The runner takes no new command.
-
-!!! note "TODO: the harness for contract v23"
-    Name the runtime and harness commit serving contract v23 and the chart (`0.1.CHART23`) once
-    published, and check these lines against its `README.md`.
 
 **The admin holds Manage alone until granted.** As a deployment's first administrator does, the
 harness's admin opens every plugin under Manage and reads or acts on no account's data through one.

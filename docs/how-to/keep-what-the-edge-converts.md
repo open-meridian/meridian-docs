@@ -158,7 +158,7 @@ cash, margin nor retirement is reported with `account_kind` unset and
 **A currency your source never states.** Core requires a security's
 currency, and the plugin gives it, always saying how: as the source states
 it, derived by a named rule (`edge.derived`), or supplied by a person. From
-open-meridian 0.27.0 (contract v23, built, not released) a plugin whose
+open-meridian 0.27.0 (contract v23) a plugin whose
 source states none declares the common setting
 `meridian.account_currency()`, **Account currency**: a linked account's
 currency, with a plugin-wide default, which its admin sets.
@@ -219,7 +219,7 @@ NOT_PRESENTED = {
 }
 ```
 
-From open-meridian 0.27.0 (contract v23, built, not released) so may the
+From open-meridian 0.27.0 (contract v23) so may the
 cases about things a custodian may never state, each marked `about`: the
 three activity plan-code cases (`plan fund codes`),
 `cash-net-of-a-fund-counted-in-cash` and `fund-larger-than-cash` (`sweep

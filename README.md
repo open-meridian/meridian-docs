@@ -31,34 +31,33 @@ developer guide. They are written from the code of
 [meridian-python](https://github.com/open-meridian/meridian-python),
 [meridian-schema](https://github.com/open-meridian/meridian-schema) and
 [meridian-ui](https://github.com/open-meridian/meridian-ui); when those
-change, the pages change with them. Today they describe CLI 0.1.42, SDK
-0.26.0 (contract v22), core's order path in the book (child orders, the
-release gate and waiting for compliance, connectivity plugins linked to an
-`ems` and its venue account map, trading instructions and the Trading
-instructions page, four tools; chart 0.1.301), the Instruments page's
-Calendars tab and its two tools, the platform's settlement calendars, the
-ten G10 currencies' and the US calendars, the suites' cases a plugin whose
-work never uses calendars, settlement dates, locates or compliance waits
-marks not presented, core's service accounts (chart 0.1.299), core's
-prepared changes, account grants and Setting up (chart 0.1.298), backup and
-restore, the role renames (`data`, `connectivity`, `confirmation`), the four
-"Using a ... plugin" pages, kit 0.12.0, and the plugins on contract v22:
-Alpaca 0.6.0, Tradier 0.5.0, Tiingo 0.4.0, Fed H.10 0.4.0, Coinbase 0.5.0,
-Kraken 0.5.0, Kalshi 0.4.0, Polymarket 0.4.0, SnapTrade 0.16.0 and its
-`connectivity` beside `custody`, the sample operations plugin 0.12.0 and
-its Flags tab, and the sample reporting plugin 0.5.0 and its Orders tab.
-Contract v23 is marked built, not released, where it applies: SDK 0.27.0
-(venue-originated fills, accepted or answered DK by the `ems`, the FIX
-acknowledgements a venue takes, a venue's value-date roll, financing and
-commission fees, an FX order's quote currency, an event contract's outcomes
-in the lake, the closed-day flag and the Data sources page's two counts and
-`unchanged` reads, a spot-date rule's counting mode, the Calendars tab's
-subject and search, `account_currency`, and the suites' v23 cases, `about`
-markers and `any_of`), CLI 0.1.43 (`role-suite` holding a suite test to its
-outcome), the "Answer a venue-originated fill" how-to, and the plugins built
-with it: Kalshi 0.5.0, Polymarket 0.5.0 and the new Polymarket US 0.1.0
-recording outcomes, and Alpaca and Tradier gaining `connectivity`, then
-`custody`. The chart serving it is `0.1.CHART23` until published.
+change, the pages change with them. Today they describe CLI 0.1.43, SDK
+0.27.0 (contract v23; chart 0.1.303): venue-originated fills, accepted or
+answered DK by the `ems`, the FIX acknowledgements a venue takes, a venue's
+value-date roll, financing and commission fees, an FX order's quote
+currency, an event contract's outcomes in the lake, the closed-day flag and
+the Data sources page's two counts and `unchanged` reads, a spot-date
+rule's counting mode, the Calendars tab's subject and search (venues shown
+by their `VEN-` IDs), `account_currency`, the suites' v23 cases, `about`
+markers and `any_of`, `role-suite` holding a suite test to its outcome, and
+the "Answer a venue-originated fill" how-to. Before it, core's order path
+in the book (child orders, the release gate and waiting for compliance,
+connectivity plugins linked to an `ems` and its venue account map, trading
+instructions and the Trading instructions page, four tools; chart
+0.1.301), the Instruments page's Calendars tab and its two tools, the
+platform's settlement calendars, the ten G10 currencies' and the US
+calendars, the suites' cases a plugin whose work never uses calendars,
+settlement dates, locates or compliance waits marks not presented, core's
+service accounts (chart 0.1.299), core's prepared changes, account grants
+and Setting up (chart 0.1.298), backup and restore, the role renames
+(`data`, `connectivity`, `confirmation`), the four "Using a ... plugin"
+pages, and kit 0.12.0. The plugins on contract v23: Kalshi 0.5.0,
+Polymarket 0.5.0 and the new Polymarket US 0.1.0 recording outcomes,
+Alpaca 0.8.0 and Tradier 0.7.0 holding `connectivity` and `custody`
+beside `data`, and SnapTrade 0.17.0 reporting venue-originated fills; on
+contract v22, Tiingo 0.4.0, Fed H.10 0.4.0, Coinbase 0.5.0, Kraken 0.5.0,
+the sample operations plugin 0.12.0 and its Flags tab, and the sample
+reporting plugin 0.5.0 and its Orders tab.
 **Notice for contract v24**, the one-ID revision: three stable reads,
 `ResolveIdentifier`, `ResolveInstrument` and `ReportMissingInstrument`,
 change. Every instrument comes to be keyed by its platform `INS-` ID; a

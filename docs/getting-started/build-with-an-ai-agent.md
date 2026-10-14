@@ -21,8 +21,8 @@ whoever works on it next has them too. `.dockerignore` keeps them out of the plu
   never use one your firm depends on. See
   [Development deployments](../concepts/development-deployments.md).
 - The `meridian` CLI, 0.1.36, whose `plugin new` builds on SDK 0.21.0 (0.22.0 from CLI
-  0.1.37, 0.23.0 from CLI 0.1.38, 0.24.0 from CLI 0.1.39, 0.25.0 from CLI 0.1.41, and 0.26.0 from
-  CLI 0.1.42): 0.1.15 brought
+  0.1.37, 0.23.0 from CLI 0.1.38, 0.24.0 from CLI 0.1.39, 0.25.0 from CLI 0.1.41, 0.26.0 from
+  CLI 0.1.42, and 0.27.0 from CLI 0.1.43): 0.1.15 brought
   `plugin check`, which `AGENTS.md` asks for, and 0.1.21 `plugin open --level`, which the checks
   below use. Check with `meridian --version`; update with `meridian upgrade`.
 - Docker on this machine. The first run builds the plugin's image.

@@ -5,9 +5,10 @@ says your accounts hold, and records it as the custodian's view in the
 deployment: statements, holdings, cash and each account's activity. Every
 custody plugin has the same first-use path, the same pages in the same
 order, and the same "not set up yet" states naming the next step. This page
-is that path, valid for every custody plugin. Today there is one,
-[plugin-snaptrade](https://github.com/open-meridian/plugin-snaptrade), so
-where this page names a setting or a page only SnapTrade has, it says so.
+is that path, valid for every custody plugin. Today they are
+[plugin-snaptrade](https://github.com/open-meridian/plugin-snaptrade) and,
+from contract v23, Alpaca's and Tradier's, so where this page names a
+setting or a page only one of them has, it says so.
 
 !!! note "Contract v20"
     The common part is in open-meridian 0.24.0 (contract v20), the kit
@@ -29,23 +30,24 @@ where this page names a setting or a page only SnapTrade has, it says so.
     It is tested against a simulated brokerage only. SnapTrade 0.15.0 is
     built on contract v21.
 
-!!! note "Contract v23, built, not released"
-    Alpaca and Tradier gain `custody`, beside `data` and `connectivity`,
-    on open-meridian 0.27.0 (contract v23), in SnapTrade's shape: the
-    account the key or token reaches, its positions, a statement as of the
-    day in New York and every activity, with **Account links**,
-    **Statements** and **History**. Tradier states no currency, so its
-    admin supplies each linked account's in **Account currency**
-    (`account_currency`), every amount carrying it as supplied, and
-    nothing needing it is reported until it is set. Each marks the custody
-    suite's cases its broker never presents (plan fund codes, a cash sweep,
-    and at Tradier splits) not presented, with why. Their connectivity
-    reports fills of orders placed in the broker's own app as
-    [venue-originated fills](answer-a-venue-originated-fill.md); neither
-    broker takes an acknowledgement, so a DK tells it nothing. TODO:
-    confirm the versions (Alpaca 0.8.0, Tradier 0.7.0, as built), their
-    release dates and the chart (`0.1.CHART23`), and update "Today there
-    is one" below.
+!!! note "Contract v23"
+    Alpaca 0.8.0 and Tradier 0.7.0, released 2026-10-14, are built on
+    open-meridian 0.27.0 (contract v23) and run on chart 0.1.303 or later.
+    They hold `custody`, beside `data` and `connectivity`, in SnapTrade's
+    shape: the account the key or token reaches, its positions, a statement
+    as of the day in New York and every activity, with **Account links**,
+    **Statements** and **History**. Tradier states no currency, so its admin
+    supplies each linked account's in **Account currency**
+    (`account_currency`), every amount carrying it as supplied, and nothing
+    needing it is reported until it is set. Each marks the custody suite's
+    cases its broker never presents (plan fund codes, a cash sweep, and at
+    Tradier splits) not presented, with why. Their connectivity reports
+    fills of orders placed in the broker's own app as [venue-originated
+    fills](answer-a-venue-originated-fill.md); neither broker takes an
+    acknowledgement, so a DK tells it nothing. SnapTrade 0.17.0, released
+    2026-10-14 on open-meridian 0.27.0, reports fills of orders placed in
+    the brokerage's own app the same way, and takes no acknowledgement
+    either.
 
 ## The first-use path
 

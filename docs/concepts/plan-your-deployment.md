@@ -153,8 +153,8 @@ The releases, in their order:
 9. **Venue-originated fills and the lake's outcomes**: a fill the venue
    originates waits for the `ems` to accept it or answer it DK, a venue's
    value-date roll, an event contract's outcome, and a daily value on a
-   closed day flagged. Contract v23 and open-meridian 0.27.0, built, not
-   released: see
+   closed day flagged. Released 2026-10-14 with contract v23 and
+   open-meridian 0.27.0: see
    [Answer a venue-originated fill](../how-to/answer-a-venue-originated-fill.md)
    and [The lake](the-lake.md#an-event-contracts-outcome).
 
@@ -202,7 +202,7 @@ reports to its investors, and trades through the order path.
 |---|---|---|---|---|
 | Holdings, cash and activity from the brokerages SnapTrade reaches | [`custody`](roles.md#custody) | SnapTrade | Local | Exists |
 | Holdings, cash and activity from a custodian or prime broker with no plugin | [`custody`](roles.md#custody) | Yours | Local | Build your own |
-| Holdings and activity read directly from Alpaca or Tradier | [`custody`](roles.md#custody) | Alpaca, Tradier | Local | Built with contract v23, to be released with it (versions TODO) |
+| Holdings and activity read directly from Alpaca or Tradier | [`custody`](roles.md#custody) | Alpaca, Tradier | Local | Exists, from contract v23: Alpaca 0.8.0 and Tradier 0.7.0; see [Using a custody plugin](../how-to/using-a-custody-plugin.md) |
 | Opening balances, daily reconciliation, breaks resolved by people | [`operations`](roles.md#operations) | The sample operations plugin, or yours | Local | Exists |
 | Consolidated end-of-day prices under the fund's own licence | [`data`](roles.md#data) | Databento, Massive | Planned | Planned, in live market data |
 | Mutual fund NAVs | [`data`](roles.md#data) | Tiingo, under the fund's own licence | Local | Exists: see [Using a data plugin](../how-to/using-a-data-plugin.md#tiingo-mutual-funds-daily-navs) |
@@ -215,7 +215,7 @@ reports to its investors, and trades through the order path.
 | An agent drafting an adjustment that a person makes | any | Any | — | Exists, from contract v20: [Prepared changes](prepared-changes.md) |
 | A nightly job running as a named account | any | Any | — | Exists, from contract v21: [Service accounts](service-accounts.md) |
 | Orders decided, worked and sent | [`portfolio`](roles.md#portfolio), [`oms`](roles.md#oms), [`ems`](roles.md#ems) | Yours | Local | Build your own: the contract carries it from v22; see [The order lifecycle](the-order-lifecycle.md) |
-| Orders placed at a broker | [`connectivity`](roles.md#connectivity) | SnapTrade; Alpaca and Tradier | Local | SnapTrade exists, from contract v22 (0.16.0, tested against a simulated brokerage only: see [Route orders through a connectivity plugin](../how-to/route-orders-through-a-connectivity-plugin.md)); Alpaca and Tradier built, each tested against a simulated brokerage only, to be released with contract v23 (versions TODO) |
+| Orders placed at a broker | [`connectivity`](roles.md#connectivity) | SnapTrade; Alpaca and Tradier | Local | SnapTrade exists, from contract v22 (0.16.0, tested against a simulated brokerage only: see [Route orders through a connectivity plugin](../how-to/route-orders-through-a-connectivity-plugin.md)); Alpaca and Tradier exist, from contract v23 (Alpaca 0.8.0, Tradier 0.7.0), each tested against a simulated brokerage only |
 
 **Configuration.** Accounts carry an owner label per fund or sleeve, and
 account groups follow them: operations staff hold `write` on the accounts

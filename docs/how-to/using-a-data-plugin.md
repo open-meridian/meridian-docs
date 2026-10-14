@@ -522,7 +522,7 @@ states in `not_presented`, with why.
 
 The two prediction-market plugins are data plugins too: see
 [Add a prediction-market plugin](add-a-prediction-market-plugin.md). From
-contract v23 (built, not released) each records its contracts' outcomes,
+contract v23 each records its contracts' outcomes,
 and a third, Polymarket US, joins them.
 
 ## Related

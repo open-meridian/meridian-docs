@@ -32,15 +32,14 @@ the deployment.
     and a data plugin reads its own datasets' licences. In core and
     open-meridian 0.24.0, released 2026-10-12 in chart 0.1.298.
 
-!!! note "Contract v23, built, not released"
+!!! note "Contract v23"
     The lake's third part, contract v23, is in core and open-meridian
-    0.27.0, built and not yet released: an event contract's
+    0.27.0, released 2026-10-14 in chart 0.1.303: an event contract's
     [outcome](#an-event-contracts-outcome), recorded by a data plugin and
     read by prices' readers and `operations`; a daily value dated on a
     closed day of its dataset's calendar [flagged](#a-daily-value-on-a-closed-day)
     and counted; and the Data sources page's reads answering `unchanged`.
-    Its operations are `preview`. Name the chart serving it
-    (`0.1.CHART23`, TODO) once released.
+    Its operations are `preview`.
 
 ## Two stores, two questions
 

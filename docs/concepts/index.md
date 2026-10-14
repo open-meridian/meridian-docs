@@ -49,9 +49,8 @@ piece of data lives.
     -- orders proposed, released, placed at a venue through a connectivity
     plugin and filled, their state decided by the book -- and settlement
     calendars; SnapTrade is the first connectivity plugin a deployment can
-    launch, tested against a simulated brokerage only. Contract v23, built
-    and not yet released, adds venue-originated fills, which the `ems`
-    accepts or answers DK, a venue's value-date roll, an event contract's
-    outcome in the lake, and the lake's flag on a daily value dated on a
-    closed day. Where a page describes something that is specified
+    launch, tested against a simulated brokerage only. Contract v23 adds
+    venue-originated fills, which the `ems` accepts or answers DK, a
+    venue's value-date roll, an event contract's outcome in the lake, and
+    the lake's flag on a daily value dated on a closed day. Where a page describes something that is specified
     but not built, it says so.

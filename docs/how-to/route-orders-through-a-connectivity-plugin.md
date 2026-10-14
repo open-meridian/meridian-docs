@@ -36,15 +36,15 @@ see [Trading through SnapTrade](using-a-custody-plugin.md#trading-through-snaptr
 Until then every order placed through it on that connection is rejected
 `unsupported`.
 
-!!! note "Contract v23, built, not released"
-    Alpaca and Tradier gain `connectivity` beside `data`, placing at
-    Alpaca's Trading API and at Tradier, each tested against a simulated
-    brokerage only, trading enabled per account by an admin of the
-    `connectivity` role; their `custody` follows in the next version,
-    which reports fills of orders placed in the broker's own app as
-    [venue-originated fills](answer-a-venue-originated-fill.md). TODO:
-    confirm the versions (Alpaca 0.7.0 and 0.8.0, Tradier 0.6.0 and
-    0.7.0, as built) and their release dates.
+!!! note "Contract v23"
+    Alpaca 0.8.0 and Tradier 0.7.0, released 2026-10-14 on open-meridian
+    0.27.0 (contract v23) for chart 0.1.303 or later, hold `connectivity`
+    beside `data` and `custody`, placing at Alpaca's Trading API and at
+    Tradier, each tested against a simulated brokerage only, trading
+    enabled per account by an admin of the `connectivity` role. They and
+    SnapTrade 0.17.0, released the same day, report fills of orders placed
+    in the broker's own app as
+    [venue-originated fills](answer-a-venue-originated-fill.md).
 
 ## Before you start
 

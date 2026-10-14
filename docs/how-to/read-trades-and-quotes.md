@@ -40,9 +40,10 @@ cd my-desk
 CLI 0.1.38 writes the plugin on open-meridian 0.23.0, CLI 0.1.39 on
 0.24.0 (contract v20), whose move from 0.23.0 rewrites only the renamed
 roles, neither `signal` nor `ems` among them, CLI 0.1.41 on 0.25.0
-(contract v21), whose move from 0.24.0 changes only the pins, and CLI
+(contract v21), whose move from 0.24.0 changes only the pins, CLI
 0.1.42 on 0.26.0 (contract v22), whose move from 0.25.0 changes only the
-pins and whose suites hold the cases below. A plugin CLI 0.1.37
+pins and whose suites hold the cases below, and CLI 0.1.43 on 0.27.0
+(contract v23), whose move from 0.26.0 changes only the pins. A plugin CLI 0.1.37
 wrote is on 0.22.0: commit it, and `meridian plugin migrate --to 0.23.0`,
 which works only on what git holds, moves its pins and changes no code.
 Then, in `pyproject.toml`:

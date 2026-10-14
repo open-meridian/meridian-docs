@@ -12,7 +12,7 @@ pip install open-meridian
 |---|---|
 | PyPI name | `open-meridian` |
 | Import name | `meridian` |
-| Version | 0.26.0; 0.27.0 built, not released |
+| Version | 0.27.0 |
 | Python | 3.11 or newer |
 | Dependencies | `grpcio>=1.68,<2`, `protobuf>=5.28,<7`, `jinja2>=3.1,<4` (from 0.10.0, for [pages](#pages)) |
 | Licence | Apache-2.0 |
@@ -20,10 +20,10 @@ pip install open-meridian
 !!! warning "Not `meridian-sdk`"
     The PyPI package `meridian-sdk` belongs to an unrelated company. Don't install it.
 
-A plugin pins the SDK exactly, `open-meridian==0.26.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.26.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls; from 0.12.0 to 0.13.0, from 0.13.0 to 0.14.0, from 0.19.0 to 0.20.0, from 0.20.0 to 0.21.0, from 0.21.0 to 0.22.0 and from 0.22.0 to 0.23.0, only the pins move, from 0.23.0 to 0.24.0 it rewrites the renamed roles (see [0.23.0 to 0.24.0](#0230-to-0240)), from 0.24.0 to 0.25.0 only the pins move (see [0.24.0 to 0.25.0](#0240-to-0250)), from 0.25.0 to 0.26.0 only the pins move (see [0.25.0 to 0.26.0](#0250-to-0260)), and from 0.26.0 to 0.27.0 (built, not released) only the pins move (see [0.26.0 to 0.27.0](#0260-to-0270)). `meridian plugin new` writes a plugin pinned to 0.19.0 from CLI 0.1.34, to 0.20.0 from CLI 0.1.35, to 0.21.0 from CLI 0.1.36, to 0.22.0 from CLI 0.1.37, to 0.23.0 from CLI 0.1.38, to 0.24.0 from CLI 0.1.39, to 0.25.0 from CLI 0.1.41, and to 0.26.0 from CLI 0.1.42.
+A plugin pins the SDK exactly, `open-meridian==0.27.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.27.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls; from 0.12.0 to 0.13.0, from 0.13.0 to 0.14.0, from 0.19.0 to 0.20.0, from 0.20.0 to 0.21.0, from 0.21.0 to 0.22.0 and from 0.22.0 to 0.23.0, only the pins move, from 0.23.0 to 0.24.0 it rewrites the renamed roles (see [0.23.0 to 0.24.0](#0230-to-0240)), from 0.24.0 to 0.25.0 only the pins move (see [0.24.0 to 0.25.0](#0240-to-0250)), from 0.25.0 to 0.26.0 only the pins move (see [0.25.0 to 0.26.0](#0250-to-0260)), and from 0.26.0 to 0.27.0 only the pins move (see [0.26.0 to 0.27.0](#0260-to-0270)). `meridian plugin new` writes a plugin pinned to 0.19.0 from CLI 0.1.34, to 0.20.0 from CLI 0.1.35, to 0.21.0 from CLI 0.1.36, to 0.22.0 from CLI 0.1.37, to 0.23.0 from CLI 0.1.38, to 0.24.0 from CLI 0.1.39, to 0.25.0 from CLI 0.1.41, to 0.26.0 from CLI 0.1.42, and to 0.27.0 from CLI 0.1.43.
 
-!!! note "0.27.0: contract v23, built, not released"
-    open-meridian 0.27.0 declares contract v23, built and not yet on PyPI.
+!!! note "0.27.0: contract v23"
+    open-meridian 0.27.0 declares contract v23.
     A connectivity plugin reports a
     [venue-originated fill](#venue-originated-fills) on no placement
     (`report_execution`'s `instrument_id`, `side`, `venue_order_id` and
@@ -46,7 +46,8 @@ A plugin pins the SDK exactly, `open-meridian==0.26.0`, in its `pyproject.toml`.
     Every operation it adds is `preview`. Nothing a plugin calls changed
     shape: `meridian plugin migrate` moves the pins (see
     [0.26.0 to 0.27.0](#0260-to-0270)). It needs a runtime serving
-    contract v23.
+    contract v23 (chart 0.1.303 or later), and CLI 0.1.43's `plugin new`
+    writes a plugin on it. Released 2026-10-14.
 
 !!! warning "Notice: contract v24 changes three stable reads"
     Contract v24, the one-ID revision, changes
@@ -60,11 +61,6 @@ A plugin pins the SDK exactly, `open-meridian==0.26.0`, in its `pyproject.toml`.
     change; a plugin that reads the `open_meridian` identifier should stop
     relying on it. A stable row changes only after a version whose notice
     says it will, and contract v23 is that version.
-
-!!! note "TODO: 0.27.0 on PyPI"
-    Name the release date, the chart serving contract v23
-    (`0.1.CHART23`), and the CLI release whose `plugin new` pins 0.27.0
-    once released: CLI 0.1.43 as built still pins 0.26.0.
 
 !!! note "0.26.0: contract v22"
     open-meridian 0.26.0 declares contract v22:
@@ -146,7 +142,7 @@ A plugin pins the SDK exactly, `open-meridian==0.26.0`, in its `pyproject.toml`.
 
 ### 0.26.0 to 0.27.0 { #0260-to-0270 }
 
-Built, not released. `meridian plugin migrate --to 0.27.0` moves the pins
+Released 2026-10-14. `meridian plugin migrate --to 0.27.0` moves the pins
 and rewrites nothing: contract v23 adds, and changes the shape of nothing a
 plugin calls. Then, by hand where they apply:
 
@@ -318,12 +314,12 @@ A plugin that serves pages declares them with [`meridian.Pages`](#pages) and pas
 | `AlgorithmDeclaration` | frozen dataclass | [Algorithms](#algorithms): one algorithm a version declares, from 0.26.0 |
 | `OrderLink`, `OrderChange`, `PlacementChange`, `AllocationInstruction`, `AllocationLine`, `Leg`, `Party`, `ReceiptQuote`, `StrategyInstruction`, `Finality`, `Fee`, `LocateAnswer`, `LocateUse`, `VenueCatalogue`, `VenueOrderType`, `VenueStrategy`, `StrategyParameter`, `VenueEligibility`, `Actor` | frozen dataclasses and a generated protobuf message | [The order path](#the-order-path), from 0.26.0 |
 | `DateBasis`, `DateCheck`, `DateRuleRef`, `SettlementDateInputs`, `SpotDateInputs`, `TenorDateInputs`, `Tenor`, `RollInputs`, `BusinessDayInputs` | frozen dataclasses and generated protobuf messages | [Settlement calendars](#settlement-calendars), from 0.26.0 |
-| `Outcome`, `OutcomeDetermination`, `OutcomeStage` | frozen dataclass, generated protobuf enums | [Outcomes](#outcomes), from 0.27.0 (built, not released) |
-| `settings`, `setting`, `environment`, `sample_data` | decorator, functions | [Typed settings](#typed-settings), from 0.24.0; `account_currency` from 0.27.0 (built, not released) |
+| `Outcome`, `OutcomeDetermination`, `OutcomeStage` | frozen dataclass, generated protobuf enums | [Outcomes](#outcomes), from 0.27.0 |
+| `settings`, `setting`, `environment`, `sample_data` | decorator, functions | [Typed settings](#typed-settings), from 0.24.0; `account_currency` from 0.27.0 |
 | `CallerMiddleware` | ASGI middleware | [`CallerMiddleware`](#callermiddleware) |
 | `MeridianError`, `Refused`, `NoSidecar`, `NotRegistered`, `NotGranted`, `CallFailed`, `NotLinked`, `CommandRefused` | exceptions | [Exceptions](#exceptions); `CommandRefused` from 0.13.0, its `fields` from 0.14.0 |
 | `DEFAULT_ADDRESS` | `str` | `"127.0.0.1:9191"`, where a sidecar listens |
-| `SCHEMA_VERSION` | `str` | the contract version sent at registration: `"v23"` from 0.27.0 (built, not released), `"v22"` in 0.26.0, `"v21"` in 0.25.0, `"v20"` in 0.24.0, `"v19"` in 0.23.0, `"v18"` in 0.22.0 (no SDK declares v17, a revision of core's alone), `"v16"` in 0.21.0, `"v15"` in 0.20.0, `"v14"` in 0.19.0, `"v13"` in 0.18.0, `"v12"` in 0.17.0, `"v11"` in 0.16.0, `"v10"` in 0.15.0, `"v9"` in 0.14.0, `"v8"` in 0.13.0, `"v7"` in 0.12.0, `"v6"` in 0.11.0, `"v5"` in 0.10.0 and 0.10.1, `"v4"` in 0.9.0, `"v3"` in 0.8.0, `"v2"` before |
+| `SCHEMA_VERSION` | `str` | the contract version sent at registration: `"v23"` from 0.27.0, `"v22"` in 0.26.0, `"v21"` in 0.25.0, `"v20"` in 0.24.0, `"v19"` in 0.23.0, `"v18"` in 0.22.0 (no SDK declares v17, a revision of core's alone), `"v16"` in 0.21.0, `"v15"` in 0.20.0, `"v14"` in 0.19.0, `"v13"` in 0.18.0, `"v12"` in 0.17.0, `"v11"` in 0.16.0, `"v10"` in 0.15.0, `"v9"` in 0.14.0, `"v8"` in 0.13.0, `"v7"` in 0.12.0, `"v6"` in 0.11.0, `"v5"` in 0.10.0 and 0.10.1, `"v4"` in 0.9.0, `"v3"` in 0.8.0, `"v2"` before |
 
 The module `meridian.testing` holds [`PageClient`](#testing) and [`heartbeat`](#testing), for a plugin's own tests.
 
@@ -614,7 +610,7 @@ From 0.12.0. A plugin whose roles hear rows receives them with `plugin.receive`,
 | `unplaced_fact_recorded` | `UnplacedFactRecorded` | An `UnplacedFactRecordedEvent`: a venue's fact the book could not place, with its reason. Heard by `operations`. From 0.26.0, `preview`. | W11.13 |
 | `trading_instruction_changed` | `TradingInstructionChanged` | A `TradingInstructionChangedEvent`: an instruction set, whatever the plugin's accounts. Heard by `oms`, `ems`, `connectivity`, `portfolio` and `compliance`; caught up by [`list_trading_instructions`](typed-operations.md#list_trading_instructions), a read naming no account. From 0.26.0, `preview`. | W11.16 |
 | `locate_updated` | `LocateUpdated` | A `LocateUpdatedEvent`: a locate and its uses. Heard by `compliance`, the `oms` and `portfolio`; caught up by [`list_locates`](typed-operations.md#list_locates). From 0.26.0, `preview`. | W11.18 |
-| `outcomes_recorded` | `OutcomesRecorded` | An `OutcomesRecordedEvent`: one [`Outcome`](#outcomes), in `outcome`, every version, never conflated, for a subject named in `subjects=`. Heard by `reporting`, `portfolio`, `compliance`, `signal` and `operations`; caught up by [`list_outcomes`](typed-operations.md#list_outcomes) after the watermark last seen. From 0.27.0 (built, not released), `preview`. | W10.5 |
+| `outcomes_recorded` | `OutcomesRecorded` | An `OutcomesRecordedEvent`: one [`Outcome`](#outcomes), in `outcome`, every version, never conflated, for a subject named in `subjects=`. Heard by `reporting`, `portfolio`, `compliance`, `signal` and `operations`; caught up by [`list_outcomes`](typed-operations.md#list_outcomes) after the watermark last seen. From 0.27.0, `preview`. | W10.5 |
 | `report_venue_catalogue` | `ReportVenueCatalogue` | A `VenueCatalogueEvent`: a connectivity plugin's venue catalogue for one venue account code, latest per plugin and code. Heard by the `ems` and the `oms`; read again with [`read_venue_catalogue`](typed-operations.md#read_venue_catalogue) on start and after a loss. From 0.26.0, `preview`. | W11.20 |
 
 ```python
@@ -1081,7 +1077,7 @@ report = run("custody", PRODUCERS, not_presented={
 
 `connectivity`'s `resolves-an-executions-venue` and `reports-a-venue-not-held` carry `Case.about_field`, `meridian.v1.ReportExecutionRequest.venue_id`: a plugin whose venue never states a fill's place of execution names both. The runner refuses, as a failure, a name in `not_presented` that is neither a closed-list case nor one with an `about` or an `about_field`.
 
-From 0.27.0 (contract v23, built, not released) more cases carry `about`, each a thing the plugin's source never states or its work never does:
+From 0.27.0 (contract v23) more cases carry `about`, each a thing the plugin's source never states or its work never does:
 
 | `about` | Cases |
 |---|---|
@@ -1127,7 +1123,7 @@ From 0.23.0, contract v19, `preview`. Still typed operations only: no WebSocket 
 
 ### Outcomes { #outcomes }
 
-From 0.27.0, contract v23, built, not released, `preview`. A data plugin
+From 0.27.0, contract v23, `preview`. A data plugin
 records an [event contract's outcome](../concepts/the-lake.md#an-event-contracts-outcome)
 from a dataset declaring `data_types=["meridian.v1.Outcome"]`, with
 [`record_outcomes`](typed-operations.md#record_outcomes), 1 to 500 a call,
@@ -1296,7 +1292,7 @@ table = json.loads(files("meridian").joinpath("transitions.json").read_text())
 
 ### Venue-originated fills { #venue-originated-fills }
 
-From 0.27.0, contract v23, built, not released. A connectivity plugin
+From 0.27.0, contract v23. A connectivity plugin
 reports a fill the venue originated on no placement with
 `report_execution`, naming its `instrument_id`, `side`, `venue_order_id`
 and, where sent, `venue_client_order_id`; the book holds it unmatched
@@ -1329,7 +1325,7 @@ and [The order lifecycle](../concepts/the-order-lifecycle.md#venue-originated-fi
 
 ### A value-date roll { #a-value-date-roll }
 
-From 0.27.0, contract v23, built, not released. A connectivity plugin whose
+From 0.27.0, contract v23. A connectivity plugin whose
 venue rolls spot FX positions reports each roll, the new value date asked
 of core for the roll's moment, after the financing charges it made:
 
@@ -2059,7 +2055,7 @@ async for current in plugin.settings(Settings):
 - **`meridian.setting(label, ...)`** takes `Setting`'s fields by keyword, and `at_least` and `at_most` to bound an integer.
 - **`meridian.environment()`**: the setting `environment`, a required choice labelled "Environment", **Live** (`live`, the default) or **Sandbox** (`sandbox`), declared first, for a vendor with more than one environment; a credential differing by it is gated with `applies_when=("environment", "sandbox")`.
 - **`meridian.sample_data()`**: the setting `sample_data`, "Sample data", off, a developer setting, last; the one convention for a plugin answering from made-up data on a development deployment, in place of each plugin's own `synthetic`.
-- **`meridian.account_currency()`**, from 0.27.0 (built, not released): the setting `account_currency`, a table labelled "Account currency", each row a linked account, or none for every linked account without a row of its own, and its currency, an ISO 4217 code. A plugin whose source states no currency for an account's securities declares it, and `meridian.edge.supplied_currency(rows, external_account_id, field)` answers the account's code with its provenance, supplied by the person who set the row (`PROVENANCE_KIND_SUPPLIED`), or `None` while no row covers it; until then the plugin reports nothing that needs the currency, never a guess.
+- **`meridian.account_currency()`**, from 0.27.0: the setting `account_currency`, a table labelled "Account currency", each row a linked account, or none for every linked account without a row of its own, and its currency, an ISO 4217 code. A plugin whose source states no currency for an account's securities declares it, and `meridian.edge.supplied_currency(rows, external_account_id, field)` answers the account's code with its provenance, supplied by the person who set the row (`PROVENANCE_KIND_SUPPLIED`), or `None` while no row covers it; until then the plugin reports nothing that needs the currency, never a guess.
 - The class is a frozen dataclass of the values, with `declared()`, `label(name)` and `.missing`; `plugin.settings(Settings)` delivers an instance at each change, `plugin.first_settings(Settings)` the first.
 
 Every page's template loader also holds the kit's macros, `meridian/kit.html` (`facts` among them).

@@ -19,9 +19,9 @@ records.
     calendars below from the same release. Their operations are `preview`
     until the first spot FX connectivity plugin has run on them.
 
-!!! note "Contract v23, built, not released"
-    Contract v23, built and not yet released, adds a spot-date rule's
-    [counting mode](#the-rules), the Calendars tab's
+!!! note "Contract v23"
+    Contract v23, released 2026-10-14 in chart 0.1.303, adds a spot-date
+    rule's [counting mode](#the-rules), the Calendars tab's
     [subject column and search](#the-calendars-tab), and the lake's flag on a
     daily value dated on a [closed day](#in-a-plugin) of its dataset's
     calendar.
@@ -217,12 +217,14 @@ From contract v22 the dashboard's **Instruments** page, at the deployment
 admin's level, has a **Calendars** tab, read-only:
 
 - **The calendars held**, one line each: its name and ID, its kind, from
-  contract v23 its **subject** (a currency's ISO 4217 code, each venue's
-  MIC or name, or the settlement system's name and country), its version,
-  the last date of its coverage (**Coverage to**) and when it was last
-  refreshed, paged. From contract v23 the list is filtered by kind and
-  searched by text on the name and the subject's codes, so it is searched
-  rather than paged through. Empty, it says none is held yet: a calendar is
+  contract v23 its **subject** (a currency's ISO 4217 code, the venues by
+  their `VEN-` IDs, or the settlement system's name and country), its
+  version, the last date of its coverage (**Coverage to**) and when it was
+  last refreshed, paged. Venues are shown by ID, labelled as IDs, because
+  the dashboard cannot yet read a venue by its ID; their MICs and names
+  come in a later version. From contract v23 the list is filtered by kind
+  and searched by text on the name and the subject's codes, a venue's MIC
+  and name among them, so it is searched rather than paged through. Empty, it says none is held yet: a calendar is
   pulled when a currency, a venue or a date read first needs it.
 - **The date rules held**, one line each: the rule's kind, its subject
   (such as `US/equity`), its version and when it was last refreshed.
@@ -232,14 +234,6 @@ admin's level, has a **Calendars** tab, read-only:
   its name and its source, with links to the year before and after and
   **Close** back to the lists. A calendar not held says so, and is asked of
   the platform.
-
-!!! note "TODO: the subject column, as built"
-    In core v23 as built, the instrument store's list carries each
-    calendar's subject (`instrument_id`, `venue_ids`, `settlement_system`)
-    and takes `kind` and `query`; the tab's **Subject** column and kind
-    filter, and `dashboard__list_calendars`'s `kind` and `query`, are not
-    drawn yet. Confirm against the release before it ships, or move this
-    to the later release that draws them.
 
 ### Through an agent
 

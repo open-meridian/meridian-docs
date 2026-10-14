@@ -745,7 +745,7 @@
         "about": {
           "shape": "text",
           "required": false,
-          "says": "for a case about one kind of data -- closes, bars, trades, quotes, prices on a venue -- that kind, in the contract's words (contract v19), or from contract v22 one kind of work -- calendars, settlement dates, locates, compliance waits; a plugin that declares it never publishes that kind, or whose work never uses it, marks the case not presented, with why, which is no exemption from the rest"
+          "says": "for a case about one kind of data -- closes, bars, trades, quotes, prices on a venue -- that kind, in the contract's words (contract v19), or from contract v22 one kind of work -- calendars, settlement dates, locates, compliance waits, and from contract v23 outcomes, disputed outcomes and venue-originated fills, a custodian's plan fund codes, sweep funds, splits and currencies not stated, and a venue's charges without a fill, busts and value-date rolls; a plugin that declares it never publishes that kind, or whose work never uses it, marks the case not presented, with why, which is no exemption from the rest"
         },
         "about_field": {
           "shape": "text",
@@ -776,6 +776,11 @@
           "shape": "boolean",
           "required": false,
           "says": "false where the plugin sends nothing on the row for the case; true when left out"
+        },
+        "any_of": {
+          "shape": "list of any",
+          "required": false,
+          "says": "in place of fields, for a case whose situation the contract answers in more than one way (contract v23): each way's fields, written as fields are, the message matched by one of them in full; each names every field one way needs, never fewer"
         }
       }
     },
