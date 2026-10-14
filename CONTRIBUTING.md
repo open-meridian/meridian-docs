@@ -27,4 +27,7 @@ so a plugin you write stays yours. Start with `meridian plugin new`; see
 
 ## For the team
 
-`mkdocs serve` previews the site, and `mkdocs build --strict` is what every push runs.
+`mkdocs serve` previews the site, and `mkdocs build --strict` is what every
+pull request runs. A change goes on a branch and lands through a pull request,
+merged when green, up to date with `main`, as a merge commit; the merge
+publishes the site.

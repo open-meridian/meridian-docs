@@ -1,7 +1,11 @@
 name: docs
 
-# Builds on every push and pull request, so a broken link fails before it is
-# merged; deploys to GitHub Pages only from main.
+# Builds on every pull request, so a broken link fails before it is merged:
+# `build` is the pull request's required check. On the merge to main it builds
+# once more, as the deploy's own step, since the site it uploads is that
+# build's output, and deploys to GitHub Pages; no other check runs again there
+# (the product owner, 2026-10-14). The pull request must be up to date with
+# main and merges with a merge commit, so main's tree is the one it passed.
 on:
   push:
     branches: [main]

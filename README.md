@@ -4,8 +4,9 @@ The documentation for [Open Meridian](https://open-meridian.com), the
 open-source OEMS, published at [open-meridian.dev](https://open-meridian.dev).
 
 A [Material for MkDocs](https://squidfunk.github.io/mkdocs-material/) site.
-Every push builds it with `mkdocs build --strict`, so a broken link fails the
-build; a push to `main` publishes it to GitHub Pages.
+Every pull request builds it with `mkdocs build --strict`, so a broken link
+fails before it merges; the merge to `main` builds it again and publishes it
+to GitHub Pages.
 
 ## Working on it
 
