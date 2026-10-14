@@ -104,7 +104,7 @@ local clone instead of GitHub), checks its digests, and writes
 filters. Its table is written at every build by an MkDocs hook,
 `tools/integrations_page.py`, from `integrations/integrations.yaml`, the rows
 kept by hand. The build fails when a row lacks a field or holds a value
-outside its list, when a status is other than `preview` or `released`, or
+outside its list, when a status is other than `released` (only released plugins are listed), or
 when a row's roles, version or contract are not its plugin's release as
 `integrations/released.json` records it: a snapshot of each plugin's main
 `pyproject.toml`, its `[project]` version, `[tool.meridian]` roles and SDK

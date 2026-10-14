@@ -5,7 +5,7 @@
    query keeps the choice: ?asset=fx&role=connectivity, a value repeated or
    comma-separated. Run on every page Material's instant navigation loads. */
 (function () {
-  var GROUPS = ["role", "asset", "environment", "status"];
+  var GROUPS = ["role", "asset", "environment"];
 
   function setUp() {
     var root = document.getElementById("om-integrations");
