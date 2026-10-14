@@ -1,0 +1,129 @@
+{
+  "refreshed_by": "python tools/integrations_page.py refresh",
+  "plugins": {
+    "plugin-tiingo": {
+      "commit": "9c6abe6021b7c10ba70797646ad11f10d59ccf4a",
+      "version": "0.4.0",
+      "roles": [
+        "data"
+      ],
+      "sdk": "0.26.0",
+      "contract": 22
+    },
+    "plugin-fed-h10": {
+      "commit": "9d289da7f0d136d3d5cda1a0b9d1fc46d67ceec1",
+      "version": "0.4.0",
+      "roles": [
+        "data"
+      ],
+      "sdk": "0.26.0",
+      "contract": 22
+    },
+    "plugin-coinbase": {
+      "commit": "a0363993bfd7431c03c2d48ef82d8f69d53b3099",
+      "version": "0.5.0",
+      "roles": [
+        "data"
+      ],
+      "sdk": "0.26.0",
+      "contract": 22
+    },
+    "plugin-kraken": {
+      "commit": "b9bcc8f7dc11ebc2522a153611212c75e86953b8",
+      "version": "0.5.0",
+      "roles": [
+        "data"
+      ],
+      "sdk": "0.26.0",
+      "contract": 22
+    },
+    "plugin-kalshi": {
+      "commit": "421d5512d79eed51fd5fa4d97beabd5f0bd11239",
+      "version": "0.5.0",
+      "roles": [
+        "data"
+      ],
+      "sdk": "0.27.0",
+      "contract": 23
+    },
+    "plugin-polymarket": {
+      "commit": "7b82ce188e0a04ad6ad4f936d1ec765ea761375a",
+      "version": "0.5.0",
+      "roles": [
+        "data"
+      ],
+      "sdk": "0.27.0",
+      "contract": 23
+    },
+    "plugin-polymarket-us": {
+      "commit": "0fbab67ff2ed19005363749c30ab2f97ae3728d6",
+      "version": "0.1.0",
+      "roles": [
+        "data"
+      ],
+      "sdk": "0.27.0",
+      "contract": 23
+    },
+    "plugin-truefx": {
+      "commit": "2d98f79c03a3d050becca042bf782893b669ddb3",
+      "version": "0.1.0",
+      "roles": [
+        "data"
+      ],
+      "sdk": "0.26.0",
+      "contract": 22
+    },
+    "plugin-alpaca": {
+      "commit": "089c03eb8d56fec4e72b4b9cf36c11699f904e1a",
+      "version": "0.8.0",
+      "roles": [
+        "data",
+        "custody",
+        "connectivity"
+      ],
+      "sdk": "0.27.0",
+      "contract": 23
+    },
+    "plugin-tradier": {
+      "commit": "fdfc3fac4a0f4efa06fff6e8ce66633e7d486bac",
+      "version": "0.7.0",
+      "roles": [
+        "data",
+        "custody",
+        "connectivity"
+      ],
+      "sdk": "0.27.0",
+      "contract": 23
+    },
+    "plugin-snaptrade": {
+      "commit": "02d66bfa51743a14f5aa57b9a78fd02455e227d6",
+      "version": "0.17.0",
+      "roles": [
+        "custody",
+        "connectivity"
+      ],
+      "sdk": "0.27.0",
+      "contract": 23
+    },
+    "plugin-oanda": {
+      "commit": "2a358cb453c12712625b4e2136bb0b2272826087",
+      "version": "0.2.0",
+      "roles": [
+        "custody",
+        "connectivity"
+      ],
+      "sdk": "0.27.0",
+      "contract": 23
+    }
+  },
+  "sdk": {
+    "0.26.0": {
+      "commit": "37f48251713f04b8100f01973beeecba716aa82b",
+      "contract": 22
+    },
+    "0.27.0": {
+      "commit": "b03b6700c213df45fd3cef57afeb684bcb64ed62",
+      "contract": 23
+    }
+  }
+}

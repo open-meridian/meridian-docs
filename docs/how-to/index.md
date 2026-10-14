@@ -5,6 +5,7 @@ Short recipes for one task each. They assume you have a deployment; if not, star
 
 | Guide | Use it to |
 |---|---|
+| [Integrations](integrations.md) | See which plugins are released, the service each works with, and filter them by role, asset class, environment or status. |
 | [Choose how people sign in](choose-sign-in.md) | Pick OpenID Connect, LDAP or accounts the deployment holds, and answer the wizard for it. |
 | [Give people access](administer-access.md) | Set up accounts, their attributes in the book, groups and permissions in the dashboard's Settings, make a plugin's admins, grant a plugin the accounts it may link to, and from contract v21 give a plugin's work a service account. |
 | [Reset a lost password](reset-a-lost-password.md) | Get a local administrator back in with a code from the platform. |

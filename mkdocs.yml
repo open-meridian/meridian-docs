@@ -18,6 +18,11 @@ plugins:
 # against the built site. See tools/boundaries_page.py.
 hooks:
   - tools/boundaries_page.py
+  # The Integrations page's table (how-to/integrations.md), from
+  # integrations/integrations.yaml, each row checked against the snapshot of
+  # its plugin's release in integrations/released.json. See
+  # tools/integrations_page.py.
+  - tools/integrations_page.py
 
 # The header logo is the mark in white, for the navy header. The tab icon is
 # meridian-design's brand/ favicon set: favicon.svg turns from indigo to soft
@@ -60,6 +65,10 @@ theme:
 
 extra_css:
   - stylesheets/extra.css
+
+# The Integrations page's filters; without it the page shows its whole table.
+extra_javascript:
+  - javascripts/integrations.js
 
 extra:
   homepage: https://open-meridian.com
@@ -120,6 +129,7 @@ nav:
       - Development deployments: concepts/development-deployments.md
   - How-to:
       - how-to/index.md
+      - Integrations: how-to/integrations.md
       - Choose how people sign in: how-to/choose-sign-in.md
       - Give people access: how-to/administer-access.md
       - Reset a lost password: how-to/reset-a-lost-password.md
