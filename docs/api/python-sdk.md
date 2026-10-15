@@ -2223,6 +2223,8 @@ Move a plugin one release at a time or several at once: [`meridian plugin migrat
 | 0.19.0 | 0.20.0 | 15 | | CLI 0.1.35 | nothing: only the pins move | see [0.19.0 to 0.20.0](#0190-to-0200) |
 | 0.18.0 | 0.19.0 | 14 | | CLI 0.1.34 | nothing: only the pins move | see [0.18.0 to 0.19.0](#0180-to-0190) |
 
+Before 0.19.0, `plugin new` pinned 0.18.0 from CLI 0.1.33, 0.17.0 from CLI 0.1.29 to 0.1.32, 0.16.0 from CLI 0.1.28, 0.15.0 from CLI 0.1.27, 0.14.0 from CLI 0.1.26, 0.12.0 from CLI 0.1.24 and 0.1.25, 0.11.0 from CLI 0.1.23, 0.10.1 from CLI 0.1.22, 0.10.0 from CLI 0.1.21, 0.9.0 from CLI 0.1.20, 0.7.1 from CLI 0.1.18 and 0.1.19, and 0.6.1 from CLI 0.1.16 and 0.1.17.
+
 ### 0.27.0 to 0.28.0 { #0270-to-0280 }
 
 TODO: released `<date>`. `meridian plugin migrate --to 0.28.0` moves the

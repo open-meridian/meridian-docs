@@ -14,7 +14,7 @@ name = "reference-plugin"
 version = "0.1.0"
 description = "A Meridian plugin"
 requires-python = ">=3.11"
-dependencies = ["open-meridian==0.22.0"]
+dependencies = ["open-meridian==0.28.0"]
 
 [project.scripts]
 reference-plugin = "reference_plugin.__main__:main"
@@ -39,7 +39,7 @@ The command line checks these before anything is built or sent:
 
 - `roles` is a list, and every item in it is a string.
 - Every role is a name: 1 to 63 characters of lowercase letters, digits and single hyphens, starting with a letter and not ending with a hyphen.
-- There is no `tags` key. A `[tool.meridian]` that declares one, even `tags = []`, is refused (from CLI 0.1.14; see below).
+- There is no `tags` key. A `[tool.meridian]` that declares one, even `tags = []`, is refused (see below).
 
 The deployment checks these again when it records the version, and also refuses:
 
@@ -49,7 +49,7 @@ The deployment checks these again when it records the version, and also refuses:
 
 ### Roles
 
-A plugin's roles come from this list, from the deployment's contract. The template's comment gives the same thirteen.
+A plugin's roles come from this list of fourteen, from the deployment's contract. The template's comment lists them.
 
 | Role | For |
 |---|---|
@@ -62,12 +62,13 @@ A plugin's roles come from this list, from the deployment's contract. The templa
 | `oms` | order management, including tax-lot selection |
 | `operations` | the post-trade pipeline: matching, servicing, reconciliation, settlement |
 | `portfolio` | portfolio construction |
+| `reference` | reference and terms data: a security's terms gathered, reconciled and offered to the instrument store. Added in contract 24. |
 | `reporting` | reporting, analytics and valuation |
 | `servicing` | non-trading transactions: corporate actions, lifecycle events, coupons |
 | `settlement` | external settlement rails |
 | `signal` | signal generation |
 
-A role's topics are exactly the rows of the contract that name it. A role that no row names yet holds nothing. In this release, `custody`, `operations`, `portfolio`, `reporting`, `compliance` and `oms` hold [typed operations](typed-operations.md): `operations` from contract v7, and from contract v8 the book of record's, which `operations` writes and the other four read.
+A role's topics are exactly the rows of the contract that name it, the [typed operations](typed-operations.md) it may take; what each role holds is on [Roles](../concepts/roles.md).
 
 ## Keys outside `[tool.meridian]`
 
@@ -100,6 +101,6 @@ The command line also reads these, and refuses an upload without them.
 
 ## Who may use a plugin is not declared here
 
-A plugin declares no `tags`, and nothing else in the manifest says who may use it. A person's level on a plugin, from contract v15 on each of its roles, is `admin`, `read` or `write`, the same for every plugin, granted by a deployment admin in the deployment's access groups; the plugin reads the session's level, and the accounts it reaches, from [`Caller`](python-sdk.md#caller). Which levels each page serves is declared in code, with [`meridian.Pages`](python-sdk.md#pages). See [Access](../concepts/access.md).
+A plugin declares no `tags`, and nothing else in the manifest says who may use it. A person's level on each of a plugin's roles is `admin`, `read` or `write`, the same for every plugin, granted by a deployment admin in the deployment's access groups; the plugin reads the session's level, and the accounts it reaches, from [`Caller`](python-sdk.md#caller). Which levels each page serves is declared in code, with [`meridian.Pages`](python-sdk.md#pages). See [Access](../concepts/access.md).
 
-A manifest written for an earlier release, with `tags = [...]` in `[tool.meridian]`, needs that line removed. `meridian plugin upload` from CLI 0.1.14 refuses it, citing the reason, before anything is built.
+A manifest with `tags = [...]` in `[tool.meridian]` needs that line removed: `meridian plugin upload` refuses it, citing the reason, before anything is built.
