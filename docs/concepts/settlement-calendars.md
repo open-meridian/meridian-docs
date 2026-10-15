@@ -274,12 +274,11 @@ calendar says is closed is recorded as reported and flagged, and counted on
 the Data sources page: see
 [A daily value on a closed day](the-lake.md#a-daily-value-on-a-closed-day).
 
-**A pair named by a deployment's own IDs finds no spot rule yet.** The
+**A pair named by a provisional record finds no spot rule.** The
 platform's spot rules and calendars name a currency by its platform `INS-`
-ID, so a pair named by the `LCL-` IDs a deployment's instrument store
-minted is answered rule not held, until the one-ID revision gives every
-record one platform ID. Until then a plugin names a pair by the platform's
-`INS-` IDs of its currencies' cash instruments.
+ID, so a pair named by a provisional `LCL-` record is answered rule not
+held. A plugin names a pair by the platform's `INS-` IDs of its currencies'
+cash instruments (see [One ID per instrument](one-id.md)).
 
 ## Known limits
 

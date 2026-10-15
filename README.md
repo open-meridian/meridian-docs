@@ -34,6 +34,15 @@ developer guide. They are written from the code of
 [meridian-ui](https://github.com/open-meridian/meridian-ui); when those
 change, the pages change with them.
 
+**Pages describe the current release only.** A tutorial names the CLI and
+SDK it needs once; an API page marks a field, tool or operation new or
+changed in the last two releases with one line ("Added in SDK 0.28.0",
+"Changed in contract 24"). History lives in two places: the Python SDK
+page's [release notes](docs/api/python-sdk.md#release-notes), and its
+[Moving a plugin to a new release](docs/api/python-sdk.md#moving-a-plugin-to-a-new-release)
+with the CLI's `plugin migrate` step table. An upgrade fact a page drops
+goes there first.
+
 **Contract v24, built, not released (TODO at release):** the pages also
 describe contract v24, each marked "TODO: built, not released": booking
 (allocations, the block, the error account, the hand-off, corrections,
