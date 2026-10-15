@@ -101,25 +101,25 @@ GUIDES = [
      "launching and stopping -- each at its page's role and level, a note on every change, "
      "never a secret's value and never a change to who holds access; and the Data sources page's "
      "five, its datasets' licences, entitlements and source priority, at the deployment admin's level; "
-     "from contract v20 the prepared changes' seven and the accounts a plugin may link to"),
+     "the prepared changes' seven and the accounts a plugin may link to"),
     ("concepts/the-lake.md", "The lake",
      "prices and bars by dataset from data plugins: versions, reads by business date and as of a "
-     "recorded time, the source priority, wants, kept or served (contract v18)"),
+     "recorded time, the source priority, wants, kept or served"),
     ("how-to/write-a-data-plugin.md", "Write a data plugin against its suite",
      "a data plugin from plugin new --role data: its catalogue, conversion at the edge, wants, "
      "and the data suite"),
     ("concepts/prepared-changes.md", "Prepared changes",
      "an agent or a person prepares a change and a person makes it; what agents may do with each act "
      "(may make, prepare only, may not), set by the deployment admin and a plugin's admin; the second "
-     "pair of eyes; the Inbox; lapse (contract v20)"),
+     "pair of eyes; the Inbox; lapse"),
     ("how-to/license-and-entitle-a-dataset.md", "License and entitle a dataset",
      "the Data sources page: a dataset's licence, the plugins entitled to it, and the source priority"),
     ("concepts/one-id.md", "One ID per instrument",
-     "from contract v24: every instrument named by the platform's INS- ID; a deployment's provisional "
+     "every instrument named by the platform's INS- ID; a deployment's provisional "
      "LCL- records, never priced, and why; test provisional, never the prefix; replacements, "
      "templates, the licence list, usage reporting and orders on local records"),
     ("concepts/booking.md", "Booking",
-     "from contract v24: an order's executions booked to its accounts, the exact check, lots, the block, "
+     "an order's executions booked to its accounts, the exact check, lots, the block, "
      "the error account, the hand-off, corrections, sleeves, give-ups and alerts"),
 ]
 
@@ -135,14 +135,14 @@ HOLDER_NAMES = {"bor": "the book", "platform": "the platform"}
 STORES = {
     "street": ("The street", "what custodians say an account holds, as a plugin at the edge reports it"),
     "instrument": ("The instrument store", "the deployment's instrument records, and resolving an identifier to one; "
-                   "from contract v18 the venues it pulled from the platform's venue master"),
+                   "the venues it pulled from the platform's venue master"),
     "lake": ("The lake", "what data sources say: prices and bars by dataset, each dataset's entitlements, "
-             "and the source priority a default read takes (contract v18)"),
+             "and the source priority a default read takes"),
     "bor": ("The book of record", "the deployment's own record of positions, lots, breaks and figures"),
     "conductor": ("The conductor's accounts", "the deployment's accounts and the links a plugin makes to them, "
                   "and a plugin's settings, holds and moves as core's tools show them"),
     "dashboard": ("The dashboard's records", "tickets, their notes and the inbox's notices, a setting as the "
-                  "settings tool shows it, and from contract v20 what agents may do with each act and a "
+                  "settings tool shows it, what agents may do with each act and a "
                   "person's own settings, as the dashboard keeps them"),
     "sidecar": ("The sidecar", "registration, settings, access, scope, figures, refusals and the delivery stream"),
     "envelope": ("The envelope", "what every bus message carries about itself"),
