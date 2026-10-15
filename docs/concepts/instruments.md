@@ -7,14 +7,6 @@ identifiers in several schemes. This page explains how Open Meridian keeps
 instrument identity, where it lives, and what a deployment does when it meets
 an instrument it does not know.
 
-!!! note "Contract v20"
-    From contract v20 an identifier the deployment pulled from the platform
-    answers for dates before it entered the master, so an earlier-dated
-    report no longer makes a duplicate record; a currency the deployment
-    does not hold is fetched from the platform's master, not minted; a
-    `reporting` plugin's resolve is read-only; and wherever a table names an
-    instrument, it is chosen with a search-as-you-type picker. Released 2026-10-12 in chart 0.1.298.
-
 !!! note "TODO: contract v24, built, not released"
     From contract v24, the one-ID revision, every instrument a deployment
     holds is named by the platform master's `INS-` ID, minted by the
@@ -49,7 +41,7 @@ all keep their IDs, and no other instrument is ever given one, as no venue
 is ever given another's [venue ID](venues.md). A position, an order or a
 row in the lake stores the ID and nothing else about identity; everything
 that moves (a ticker, a symbol, a venue's code) is a dated identifier,
-resolved where outside data arrives. From contract v19 the contract says so where an instrument's ID is defined, for
+resolved where outside data arrives. The contract says so where an instrument's ID is defined, for
 every ID a master mints, instruments and venues alike.
 
 **Resolution is dated.** The question is always "which instrument did this
@@ -61,8 +53,7 @@ which version was in force; it never changes which record an ID is.
 
 ### Each identifier's window
 
-From contract v19 (chart 0.1.293), every identifier
-on a record carries its **window**: `valid_from_ns`, when it began naming
+Every identifier on a record carries its **window**: `valid_from_ns`, when it began naming
 the record, and `valid_until_ns`, when it left, 0 while it is still on it.
 An identifier leaving a record (moved by a merge, removed by a completion,
 or ended by the platform once a person accepts that end) has its window
@@ -72,9 +63,7 @@ opens a window from that date.
 So the deployment's instrument store answers a resolve **as of any date it
 holds**, without asking the platform. A ticker freed by a delisting and
 given to another company answers the first record for the dates it named
-it, and the second for the dates after. Contract v18 wrote a record's
-identifiers whole on each change, and an identifier that left a record
-stopped answering even for the dates it had named it.
+it, and the second for the dates after.
 
 The windows are shown with each identifier on the Instruments page and a
 record's history, and answered by its tools. The platform fills them on a
@@ -82,18 +71,14 @@ pull, the identifiers it ended included, so the deployment can offer each
 end; an end is in force only once a person accepts it. A plugin never sets a
 window.
 
-**A window from the platform opens from the start** (contract v20). The platform records an identifier's window from the day the
-master learnt it, which for every record a deployment pulled before then is
-a recent day, not the day the identifier began naming the security. In v19
-a report dated earlier, such as a custodian's older statement, an H.10 rate,
-or a resolve stating no date, found no record holding the identifier then,
-and a duplicate local record was minted beside the platform's. From v20 the
-store opens such a window from the start, or from where another window of
-the same identifier on another security closed, so an earlier-dated report
-finds the record held. On upgrade, each record so corrected is a version of
-its own, naming each window and the date it replaced. A duplicate already
-minted is left as it is, for a person to merge: see
-[Known limits](#known-limits).
+**A window from the platform opens from the start.** The platform records
+an identifier's window from the day the master learnt it, which for many
+records is a recent day, not the day the identifier began naming the
+security. So the store opens such a window from the start, or from where
+another window of the same identifier on another security closed, and an
+earlier-dated report, such as a custodian's older statement, an H.10 rate,
+or a resolve stating no date, finds the record held rather than minting a
+duplicate beside it.
 
 ## The security master
 
@@ -140,7 +125,7 @@ identifier should mean one instrument at a time.
 
 ## Binary event contracts
 
-From contract v19, an instrument's type can be a
+An instrument's type can be a
 **binary event contract**, under the class `event_contract`: a contract
 that pays a fixed amount if an event happens, and nothing if not, as Kalshi
 and Polymarket list them. Its record carries two attributes:
@@ -173,8 +158,7 @@ refused, naming the field.
   offers the class, the type and the venue's title for a record that lacks
   them.
 
-From contract v23 what a contract paid once its
-venue resolved it is not on its record: it is an observation, recorded in
+What a contract paid once its venue resolved it is not on its record: it is an observation, recorded in
 the lake as the contract's
 [outcome](the-lake.md#an-event-contracts-outcome), with its own
 determination and settlement value, so no field says which side a token
@@ -195,14 +179,14 @@ wait.
 Records are applied under their version. A record arriving twice, or an older
 one arriving late, changes nothing, so a retried delivery is always safe.
 
-From contract v18 the store also keeps the
+The store also keeps the
 [venues](venues.md) the deployment pulled from the platform's venue master, one
 at a time as something names them, and answers which venue a code names; an
 instrument's listing venue is a venue ID, `listing_venue_id`, in place of its
 MIC. Every [amount](money-and-instruments.md) names a cash instrument in this
 store, a currency's or a token's.
 
-From contract v22 it also keeps every version of the
+It also keeps every version of the
 [settlement calendars](settlement-calendars.md) and date rules the
 deployment pulled from the platform, and works out a settlement, spot or
 tenor date from them, one way, for any plugin that asks. The
@@ -227,40 +211,34 @@ trusted least.
 **An ambiguous miss is flagged, never escalated.** Only a person can say
 which of two records a set of identifiers means, or whether they are one
 security to merge, and the platform holds neither of the deployment's
-records. So from contract v19 an ambiguous resolve
-takes no record and goes to no one outside the deployment: the conflict it
+records. So an ambiguous resolve takes no record and goes to no one outside the deployment: the conflict it
 meets is listed on the Instruments page with its reason, `ambiguous` (a
 resolve met both records), for the deployment's own person to settle. A
 conflict a join or a completion met carries no reason.
 
-**A reporting plugin resolves, read-only.** From contract v19 a
-`reporting` plugin may name an instrument by an identifier, such as its
+**A reporting plugin resolves, read-only.** A `reporting` plugin may name an instrument by an identifier, such as its
 reporting currency by its ISO 4217 code, and the store answers the record
 it holds for the date. Asked by `reporting`, nothing is minted, joined,
 offered or listed: nothing matched is not found, and several matched is
 ambiguous, with no conflict listed.
 
-From contract v20 core enforces it. The store reads
+Core enforces it. The store reads
 which plugin instance asked from the message's envelope, which the
 sidecar stamps, and the roles that instance was launched with from the
 deployment's launch records, and answers read-only when none of its roles
 may mint: `custody` and `data` may, `reporting` may not. A plugin holding
 `reporting` beside `custody` or `data` resolves as those do. A plugin cannot
-claim a role by what it sends. In v19 core did not tell the store a resolve
-was a `reporting` plugin's, so a code nothing matched could record a miss
-and mint a local record.
+claim a role by what it sends.
 
 ### A currency is fetched from the master
 
-From contract v20, when a plugin or core names a
-currency by its ISO 4217 code and no record the deployment holds carries
+When a plugin or core names a currency by its ISO 4217 code and no record the deployment holds carries
 it, the instrument store asks the platform's master for it itself, through
 the conductor, with no person asking or approving, keeps the master's
 record as the deployment's, and answers the resolve with it, found, not
 minted. A currency is curated reference data carrying no account's
 information, so fetching it needs no one's decision, and it stops plugins
-leaving local copies beside the master's (in v19 a data plugin naming a
-currency the deployment did not hold minted a local stub for it).
+leaving local copies beside the master's.
 
 A stub is minted for the code only when the master does not hold it. While
 the platform cannot be reached, the resolve mints as before, and the store
@@ -271,8 +249,7 @@ below.
 
 ### Searching the deployment's records
 
-From contract v20 wherever a table names an
-instrument, such as a table setting's Instrument column, it is chosen with
+Wherever a table names an instrument, such as a table setting's Instrument column, it is chosen with
 a search-as-you-type picker: type part of a name, a symbol or an
 identifier, and once typing pauses it lists up to eight of the deployment's
 records whose identifier values, symbols or description contain it, each
@@ -300,7 +277,7 @@ misses:
    store applies it. If not, the conductor may ask the platform to define it,
    and the platform may decline.
 
-From contract v24 a miss no longer waits for a person: the conductor asks
+A miss does not wait for a person: the conductor asks
 the platform to match or mint the security, and the deployment keeps a
 provisional local record until it answers (see
 [One ID per instrument](one-id.md)).
@@ -312,8 +289,8 @@ key; the instrument store itself holds no address and no key.
 
 ## Through an agent
 
-The Instruments page's existing tools on the deployment's MCP surface take
-and answer what contract v19 adds, with no new tool:
+The Instruments page's tools on the deployment's MCP surface take and
+answer a record's type, its attributes and its identifiers' windows:
 `dashboard__read_instrument`, `dashboard__read_instrument_history`,
 `dashboard__list_instruments_to_complete` and
 `dashboard__complete_instruments`.
@@ -347,29 +324,17 @@ and answer what contract v19 adds, with no new tool:
   An end the platform offered is accepted as the identifier with its
   `valid_until_ns`.
 
-From contract v22 two more tools read the
-**Calendars** tab, at the deployment admin's level:
+Two more tools read the **Calendars** tab, at the deployment admin's level:
 [`dashboard__list_calendars`](../api/core-tools.md#dashboard__list_calendars)
 and [`dashboard__read_calendar`](../api/core-tools.md#dashboard__read_calendar).
 
 ## Known limits
 
-- **Before contract v19, one version of an identifier set.** A runtime
-  before chart 0.1.293 writes a record's identifiers whole on each change,
-  so an identifier a later change dropped no longer resolves as of a date
-  when it was still valid. That fails safe, never the wrong instrument;
-  contract v19 keeps every window instead.
-- **Duplicates minted before contract v20 stay until merged.** A local
-  record minted in v19 beside the platform's, by an earlier-dated report or
-  by a data plugin naming a currency the deployment did not hold, is not
-  removed by the upgrade: merge each into the platform's record on the
-  **Instruments** page. The upgrade then opens the platform record's
-  windows from the start.
 - **No bulk distribution.** A deployment pulls the one instrument it just
   missed. There is no snapshot of the whole master to download.
 
 ## Related
 
-- [One ID per instrument](one-id.md): from contract v24, `INS-` records
+- [One ID per instrument](one-id.md): `INS-` records
   minted by the platform, and local `LCL-` records until it answers.
 - [Review provisional records and the migration](../how-to/review-provisional-records.md).

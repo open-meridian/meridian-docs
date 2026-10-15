@@ -1,10 +1,10 @@
 # One ID per instrument
 
-From contract v24 every instrument a deployment holds is named by the
+Every instrument a deployment holds is named by the
 platform master's ID, `INS-` followed by a unique value, once the platform
 holds it. Two deployments holding one security name it by one ID. The
-platform mints that record; a deployment no longer mints its own
-permanent IDs.
+platform mints that record; a deployment mints no permanent ID of its
+own.
 
 A deployment still keeps working when the platform cannot answer. It then
 keeps a **local record** of its own, under an `LCL-` ID, until the
@@ -238,7 +238,7 @@ platform received it.
 
 ## Through an agent
 
-The Instruments tools take and answer what contract v24 adds (see
+The Instruments tools take and answer the one-ID model's fields (see
 [Core's tools](../api/core-tools.md)):
 
 - `dashboard__list_instruments_to_complete` takes `provisional`, the
@@ -258,8 +258,8 @@ The Instruments tools take and answer what contract v24 adds (see
 - **Ask `provisional`, not the prefix.** A resolve answers whether the
   record is provisional (`ResolveIdentifierResult.provisional`); an `LCL-`
   record may be resolved, and stays `LCL-`.
-- **The `open_meridian` identifier is no longer written.** Read the record's
-  `instrument_id` instead.
+- **No `open_meridian` identifier is written.** The record's `instrument_id`
+  is the platform's ID.
 - **Every role hears a replacement**, and catches up with
   `list_replacements`; the SDK keeps a current-ID map from both, for a
   plugin that keeps instrument IDs in its own storage. Every role also

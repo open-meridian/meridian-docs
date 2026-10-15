@@ -5,23 +5,17 @@ A plugin at the edge (`connectivity`, `custody`, `servicing`, `confirmation`, `s
 **raw records**, in storage the deployment gives its instance alone. It keeps
 them to reach further back than the vendor does: a custodian may keep two
 years of activity, and the deployment's history should not stop where the
-vendor's does. From contract v16 how long a record stays in that storage is
+vendor's does. How long a record stays in that storage is
 an admin's to set, per kind of record, and what happens after that is an
 admin's choice too: the record moves to an **archive**, stays where it is,
 or, only when an admin chose it, is deleted. Every move leaves its own
 record.
 
-!!! note "Contract v16"
-    This page describes a runtime serving contract v16 (chart 0.1.277 or later),
-    open-meridian 0.21.0, CLI 0.1.36 and the SnapTrade plugin 0.13.0. A runtime serving v15 or earlier refuses a plugin
-    built on 0.21.0 at registration, naming both versions, and a plugin
-    declaring no kinds keeps its records as before.
-
 ## Kinds and windows
 
 A plugin's version declares the **kinds** of raw record it keeps, each with
 a name, a label people read, a default **window** in days and whether a unit
-of it can be archived. SnapTrade 0.13.0 declares two:
+of it can be archived. SnapTrade declares two:
 
 | Kind | Label | Default window | Archivable |
 |---|---|---|---|
@@ -47,7 +41,7 @@ No plugin may declare a setting of either name for a kind it declares: the
 SDK refuses it when the declaration is built, the sidecar at registration,
 and `meridian plugin check` before either
 ([`window-settings`](../api/cli.md#the-rules)). A plugin declaring no kinds
-keeps one retention for its records, as before contract v16.
+keeps one retention for its records.
 
 ## Past the window
 
@@ -88,7 +82,7 @@ named when the deployment is installed:
 - **In a cloud**, a bucket in the provider's cold class, made for the
   deployment and named in the chart's values with the account whose workload
   identity is scoped to it. The chart and the launcher make no bucket. The
-  SDK 0.21.0 reads an `s3://` bucket.
+  SDK reads an `s3://` bucket.
 - **None**, the default. Nothing is archived, and records past their window
   are kept in each plugin's storage.
 
@@ -146,14 +140,14 @@ checked against what was archived, and is readable there for seven days.
 Then it is removed and its return recorded. Asking again meanwhile changes
 nothing.
 
-SnapTrade 0.13.0 offers it on its **Raw responses** tab, in the **Archive**
+SnapTrade offers it on its **Raw responses** tab, in the **Archive**
 view: each unit it moved, for the accounts the person may read, with
 **Restore** under Open.
 
 Deleting a unit already in the archive is an admin's act, never a window's:
 the deployment refuses a deletion of an archived unit that names no person,
 and the person must hold `admin` on one of the plugin's edge roles. SnapTrade
-0.13.0 offers no such action.
+offers no such action.
 
 ## Every move is its own record
 
@@ -186,8 +180,8 @@ The plugin's **Summary**, under Manage, shows them in two parts:
 ## Related
 
 - [Keep older records in the archive](../how-to/keep-older-records-in-the-archive.md):
-  allowing an archive, setting a hold and a plugin's windows, restoring,
-  and upgrading SnapTrade to 0.13.0.
+  allowing an archive, setting a hold and a plugin's windows, and
+  restoring.
 - [The archive in the Python SDK](../api/python-sdk.md#the-archive): what a
   plugin declares and calls.
 - [Keep what your custody plugin converts](../how-to/keep-what-the-edge-converts.md):

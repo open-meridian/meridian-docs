@@ -1,6 +1,6 @@
 # The order lifecycle
 
-From contract v22 an order reaches a venue through the
+An order reaches a venue through the
 [book of record](the-book-of-record.md), and what the venue does comes back
 into it. Plugins **ask and report**; the book **decides, journals and
 publishes**. No plugin sets an order's state: it asks for a change (a
@@ -9,32 +9,16 @@ nothing, or it reports a fact from the venue, which the book never refuses
 for the state it arrives in. An order's status is derived from its journal,
 one entry at a time, and stored nowhere as a fact.
 
-!!! note "Contract v22"
-    The order path's slice A is in core for contract v22, released
-    2026-10-13 in chart 0.1.301, with open-meridian 0.26.0 (see
-    [The order path](../api/python-sdk.md#the-order-path)). Its operations
-    are `preview`: they may change in a later contract version, with a
-    migration. Core proves the path end to end against a simulated venue
-    only, with stand-in plugins for each role; no broker, brokerage, paper
-    account or trading API is reached by those tests. The first
-    connectivity plugin a deployment can launch is SnapTrade 0.16.0,
-    released 2026-10-13, tested against a simulated brokerage only (see
+!!! note "Tested against simulated venues"
+    The order path's operations are `preview`: they may change in a later
+    contract version, with a migration (see
+    [The order path](../api/python-sdk.md#the-order-path)). Core proves the
+    path end to end against a simulated venue only, which takes the FIX
+    acknowledgements, with stand-in plugins for each role; no broker,
+    brokerage, paper account or trading API is reached by those tests. The
+    connectivity plugins a deployment can launch, SnapTrade, Alpaca and
+    Tradier, are each tested against a simulated brokerage only (see
     [Trading through SnapTrade](../how-to/using-a-custody-plugin.md#trading-through-snaptrade)).
-
-!!! note "Contract v23"
-    Contract v23 adds, in core and open-meridian 0.27.0, released
-    2026-10-14 in chart 0.1.303:
-    [venue-originated fills](#venue-originated-fills), a fill the
-    venue reports on no placement, which waits in the book until the `ems`
-    accepts it or answers it DK; a venue's
-    [value-date roll](#a-venues-value-date-roll) of a spot FX position, and
-    the fee kinds financing and commission; and an FX order's
-    [quote currency](#proposing-an-order). Every operation it adds is
-    `preview`. Core proves them against a simulated venue, which takes the
-    FIX acknowledgements, and stand-in plugins only. The first
-    connectivity plugins reporting venue-originated fills are Alpaca 0.8.0,
-    Tradier 0.7.0 and SnapTrade 0.17.0, released 2026-10-14, each tested
-    against a simulated brokerage only.
 
 !!! note "TODO: contract v24, built, not released"
     Contract v24 adds, in core and open-meridian 0.28.0, to be released in
@@ -59,12 +43,12 @@ owns fills.**
 |---|---|---|
 | [`portfolio`](roles.md#portfolio) | Proposes orders, with their allocation instruction, sleeve and the fields its decision owns; amends and withdraws its own proposals; increases or reduces an order's quantity | Releases or places |
 | [`oms`](roles.md#oms) | Releases or rejects proposed orders; sets time in force, execution instructions, the lot-relief method and capacity; claims, holds and pauses; records a telephoned or outside order; enters manual and done-away fills; aligns an order that does not tie out, with a reason; acknowledges late facts | Changes an order's instrument, account or side |
-| [`ems`](roles.md#ems) | Claims, holds and pauses; proposes [child orders](#child-orders) under a released order; creates placements, each at one of the connectivity plugins linked to it, with the venue account code it mapped the account to; asks for their changes; enters manual fills; from contract v23 accepts a [venue-originated fill](#venue-originated-fills) to an order or answers it DK | Changes an ordered quantity |
-| [`connectivity`](roles.md#connectivity) | The venue: sends the placements naming its instance, in the venue's vocabulary; reports acknowledgements, rejections, restatements, fills, busts, finality, charges and unknown outcomes in the contract's meanings, each with the raw record it keeps in its own storage; from contract v23 reports a fill on no placement and a venue's value-date roll, and tells its venue an accept or a DK where the venue takes it; records locates; publishes its venue's catalogue | Records an order or creates a placement; links accounts of its own: it reaches accounts only through its one `ems` |
+| [`ems`](roles.md#ems) | Claims, holds and pauses; proposes [child orders](#child-orders) under a released order; creates placements, each at one of the connectivity plugins linked to it, with the venue account code it mapped the account to; asks for their changes; enters manual fills; accepts a [venue-originated fill](#venue-originated-fills) to an order or answers it DK | Changes an ordered quantity |
+| [`connectivity`](roles.md#connectivity) | The venue: sends the placements naming its instance, in the venue's vocabulary; reports acknowledgements, rejections, restatements, fills, busts, finality, charges and unknown outcomes in the contract's meanings, each with the raw record it keeps in its own storage; reports a fill on no placement and a venue's value-date roll, and tells its venue an accept or a DK where the venue takes it; records locates; publishes its venue's catalogue | Records an order or creates a placement; links accounts of its own: it reaches accounts only through its one `ems` |
 | [`compliance`](roles.md#compliance) | Records checks and verdicts on an order version or a placement; requires approval by its policy; overrides a block for a person its policy allows; checks a short order's locate | Sets an order's state |
 | [`operations`](roles.md#operations) | Hears executions and unplaced facts; acknowledges late facts; reconciles the book with the street, a traded position no longer a break | Moves a date in the book |
 | [`reporting`](roles.md#reporting) | Reads orders, executions, their history and the fields recorded for reporting, and publishes outward | Anything on the order path |
-| The book (`bor`) | Decides every transition, mints identifiers, holds the release gate, records the trading instructions and account attributes, expires orders by the deployment's clock, journals everything, and moves the trade-date position by reported fills, from contract v23 an unmatched fill only once accepted | Polices: limits, credit, restricted lists and which orders need approval are plugins' |
+| The book (`bor`) | Decides every transition, mints identifiers, holds the release gate, records the trading instructions and account attributes, expires orders by the deployment's clock, journals everything, and moves the trade-date position by reported fills, an unmatched fill only once accepted | Polices: limits, credit, restricted lists and which orders need approval are plugins' |
 | The dashboard | Sets the [trading instructions](#trading-instructions) and whether an account's releases wait for compliance; makes a connectivity plugin available and links it to an `ems` | Decides an order |
 | The conductor | Keeps each connectivity plugin's link to its `ems`, the `ems`'s map of accounts to venue account codes, and the venue's catalogue | |
 
@@ -175,7 +159,7 @@ accepted, recorded and flagged, a fill after a cancel took effect setting
 | i6 | released, working | A cancel under a stop: each working plugin's cancel, its cause the stop's entry; a connectivity plugin's cancel at the venue reported at once | `oms`, `ems`, `connectivity` | cancelled |
 | i7 | proposed | A day order never released: its day ends, by the deployment's clock, awaiting a check or an approval included | the book | expired |
 
-From contract v23 the table holds an execution's rows beside the order's
+The table holds an execution's rows beside the order's
 (see [Venue-originated fills](#venue-originated-fills)):
 
 | Row | From | What happens | Caused by | To |
@@ -206,7 +190,7 @@ its identity and never change**: a different one is a new order.
   mistake is refused `INVALID_ARGUMENT`, naming both fields. An order of 0
   quantity is refused, naming `quantity`.
 - **Its type and limit**, and on a currency pair its dealt currency, a cash
-  instrument, and from contract v23 its **quote currency**
+  instrument, and its **quote currency**
   (`quote_currency`): the pair's second currency as it is quoted, USD for
   EUR/USD, by its cash instrument's ID, so a market order, which states no
   price, still names both currencies. The dealt currency still says which
@@ -233,7 +217,7 @@ its identity and never change**: a different one is a new order.
   LEIs where given, and the orders a firm's order represents. Core stores
   them and reports nothing; a `reporting` plugin reads them and publishes
   outward.
-- **References kept for a later revision**, carried empty in v22: an axe's
+- **References kept for a later revision**, carried empty: an axe's
   source and counterparty on the order, and on a placement the RFQ and the
   axe it answers (`rfq_id`, `axe_id`). A plugin may send them; they mean
   nothing until the RFQ revision defines them.
@@ -292,9 +276,8 @@ covering the account must have recorded a verdict on this version of the
 order. Until then the release refuses nothing: the order stays proposed,
 **awaiting check**, with no bound but its own time in force.
 
-**An account waits for compliance by default.** Every new account does, and
-at the upgrade to contract v22 the book records it for every account it
-holds, each its own entry. A deployment admin changes it per account on the
+**An account waits for compliance by default.** Every account does, each
+recorded by its own entry. A deployment admin changes it per account on the
 **Accounts** tab (see [Set trading instructions and whether releases wait](../how-to/set-trading-instructions.md#whether-an-accounts-releases-wait-for-compliance)).
 A deployment with no `compliance` plugin therefore releases nothing until a
 deployment admin turns waiting off for the account, by design.
@@ -362,8 +345,8 @@ it states (fractionable, shortable, borrow status, an options level). The
 `ems` and the `oms` read it and build a typed order from it; the
 connectivity plugin constructs the venue's own message, so an `ems` never
 meets a venue's wire format. What is not listed is rejected `unsupported` if
-sent, by the venue's plugin, never refused by core. From contract v23 it
-also says which acknowledgement the venue takes of an accepted or DK'd
+sent, by the venue's plugin, never refused by core. It also
+says which acknowledgement the venue takes of an accepted or DK'd
 venue-originated fill (`execution_acknowledgement`; see
 [What the venue is told](#what-the-venue-is-told)), unspecified reading as
 none.
@@ -403,13 +386,13 @@ raw record it was converted from, kept in the plugin's own storage (see
   rebate negative), the counterparty where known, its **settlement date**,
   and the fields recorded for reporting. A bust or correction names the
   execution it supersedes, with the date it takes effect; nothing is
-  edited. A fee's kind is exchange, cancel or network, and from contract
-  v23 **financing** (`FEE_KIND_FINANCING`, a rolling position's cost or
+  edited. A fee's kind is exchange, cancel, network,
+  **financing** (`FEE_KIND_FINANCING`, a rolling position's cost or
   credit of carrying it to the next value date) or **commission**
   (`FEE_KIND_COMMISSION`, the broker's, which FIX keeps apart from its
   other fees).
 - **A charge** with no fill, a venue's cancel fee, moving cash and counting
-  toward no quantity; from contract v23 also a rolling position's financing
+  toward no quantity; also a rolling position's financing
   at a roll, on the placement whose fill opened it.
 
 **It reports on the `ems`'s placements, and on nothing of its own.** A
@@ -417,11 +400,10 @@ connectivity plugin records no order and creates no placement: its
 `RecordOrder` or `CreatePlacement` is refused by its sidecar,
 `PERMISSION_DENIED`, as any operation its role does not hold. A telephoned
 or outside order is the `oms`'s to record, for a person or its service
-account (row 23a). From contract v23 a fill the venue reports on no
-placement the `ems` made, such as a liquidation or an order placed in the
-broker's own app, is reported as such and waits for the `ems`'s answer: see
-[Venue-originated fills](#venue-originated-fills). In v22 it had no path
-into the book.
+account (row 23a). A fill the venue reports on no placement the `ems`
+made, such as a liquidation or an order placed in the broker's own app, is
+reported as such and waits for the `ems`'s answer: see
+[Venue-originated fills](#venue-originated-fills).
 
 **The settlement date is the venue's, or worked out in core.** The date the
 venue states is kept as stated. Where it states none, or where the plugin
@@ -455,21 +437,21 @@ Reported fills move the account's trade-date position at once:
   positions, lots and pending lines they move; reconciliation compares the
   account as the sum of its sleeves.
 - **An unmatched fill moves nothing** until the `ems` accepts it, and one
-  answered DK never does (contract v23; see
+  answered DK never does (see
   [Venue-originated fills](#venue-originated-fills)).
 - **A venue's value-date roll** moves pending lines to the next value date,
-  the trade-date position unchanged (contract v23; see
+  the trade-date position unchanged (see
   [A venue's value-date roll](#a-venues-value-date-roll)).
 
-`operations` reconciles the next statement against the book as before, so a
-traded position is not a break. From contract v24 a fill's lots are
+`operations` reconciles the next statement against the book, so a
+traded position is not a break. A fill's lots are
 provisional until the `oms` books the executions to their accounts, and a
 fill in a currency other than the account's base currency opens lots: see
 [Booking](booking.md).
 
 ## Venue-originated fills
 
-From contract v23. **A fill the venue originates** -- an order placed in
+**A fill the venue originates** -- an order placed in
 the broker's own app, a liquidation -- reaches the book through the
 connectivity plugin that hears it, and waits there until the `ems` answers
 it. Positions move only when it is accepted.
@@ -482,7 +464,7 @@ it. Positions move only when it is accepted.
    (`venue_client_order_id`, FIX 11) where the venue sent one. A venue's
    open orders are not recorded. The sidecar stamps the account from the
    `ems`'s map; an unmapped code is kept as an
-   [unplaced fact](#what-the-venue-reports), as in v22.
+   [unplaced fact](#what-the-venue-reports).
 2. **The book holds it unmatched.** It mints an `EXE-` ID and records an
    execution with no order and no placement, its state **unmatched**. The
    linked `ems` hears it, and the `ems`'s and the operations plugins' pages
@@ -497,7 +479,7 @@ An execution's state is derived from the journal, never stored:
 
 | State | Means |
 |---|---|
-| **Matched** (`EXECUTION_STATE_MATCHED`) | On a placement: every fill of v22's, and an unmatched fill once accepted |
+| **Matched** (`EXECUTION_STATE_MATCHED`) | On a placement: every fill on a placement the `ems` made, and an unmatched fill once accepted |
 | **Unmatched** (`EXECUTION_STATE_UNMATCHED`) | Reported on no placement, its account mapped, waiting for the `ems`'s answer |
 | **DK** (`EXECUTION_STATE_DONT_KNOW`) | Answered DK: recorded and closed, never moving a position |
 
@@ -599,7 +581,7 @@ The execution's transitions, rows `e1` to `e8`, are in the
 
 ## A venue's value-date roll
 
-From contract v23. A retail FX broker never settles a spot position: at its
+A retail FX broker never settles a spot position: at its
 daily roll, 17:00 New York, it moves the position's value date to the next
 spot, and charges or credits the financing separately. The connectivity
 plugin reports the roll (`ReportValueDateRoll`): the venue account code,
@@ -648,7 +630,7 @@ The level it was set at is stamped by the dashboard from the setter's
 access, never entered. **The most restrictive in force governs**, stop over
 pause over active, so a plugin's admin narrows a deployment admin's
 instruction and never lifts it; an instruction is lifted only at the level
-that set it. **A user group is not a target in v22**: an instruction naming
+that set it. **A user group is not a target yet**: an instruction naming
 one is refused `INVALID_ARGUMENT`, naming `target.user_group_id`, until a
 later revision resolves a group's people.
 
@@ -668,7 +650,7 @@ Set them on the **Trading instructions** page or through
 
 ## Orders on local records
 
-From contract v24 an order may name an instrument whose record is still a
+An order may name an instrument whose record is still a
 deployment's local `LCL-` record, one the platform has not answered for
 (see [One ID per instrument](one-id.md)), while the deployment's setting
 **Allow orders on local records** is on, as it is by default. The order is
@@ -719,7 +701,7 @@ deployment admin and the plugin's admin (see
 
 An automated strategy, or an `ems` placing on its own, acts as its role's
 [service account](service-accounts.md), through the plugin's own acts, the
-levels and the gate applying. From contract v22 its call names the
+levels and the gate applying. Its call names the
 **algorithm** it runs, one its plugin's version declares (`algorithm_id`):
 the sidecar checks it and stamps it on every command the act sends, so none
 can name another, and the book records it on the entry's service account
@@ -743,7 +725,7 @@ Each change is published with the whole new record: an order's to the
 `oms`, `ems`, `compliance`, `portfolio`, `operations` and `reporting`
 plugins within their read scopes; a placement's to the `ems`, `oms` and
 `compliance`, and to its connectivity plugin alone of its role; executions
-to the order's hearers, and from contract v23 to the connectivity plugin
+to the order's hearers and to the connectivity plugin
 that reported each, and an unmatched one to the `ems` linked to it;
 unplaced facts to `operations`. A plugin catches up
 after a gap by reading the records changed since the watermark it last
@@ -758,20 +740,20 @@ whole history from its first entry.
 | `REFUSAL_REASON_ALLOCATION_UNBALANCED` | A release whose allocation does not sum to the ordered quantity |
 | `REFUSAL_REASON_CHECK_BLOCKS` | A release with a block standing and no override |
 | `REFUSAL_REASON_APPROVAL_REQUIRED` | A release where approval is required and not given |
-| `REFUSAL_REASON_CLAIMED` | A change to an order's placements or child orders by other than the instance holding its claim; from contract v23 an accept onto an order another claims |
-| `REFUSAL_REASON_QUANTITY_EXCEEDS_ORDER` | From contract v23: an accept whose quantity, added to what the order has filled, passes its ordered quantity |
-| `REFUSAL_REASON_EXECUTION_STATE` | From contract v23: an accept or a DK naming an execution answered already, or superseded by a bust or a correction |
-| `REFUSAL_REASON_EXECUTIONS_DIFFER` | From contract v23: an accept naming fills of more than one account, instrument, side, connectivity plugin or trade date, or a fill whose side is the order's opposite |
+| `REFUSAL_REASON_CLAIMED` | A change to an order's placements or child orders by other than the instance holding its claim; an accept onto an order another claims |
+| `REFUSAL_REASON_QUANTITY_EXCEEDS_ORDER` | An accept whose quantity, added to what the order has filled, passes its ordered quantity |
+| `REFUSAL_REASON_EXECUTION_STATE` | An accept or a DK naming an execution answered already, or superseded by a bust or a correction |
+| `REFUSAL_REASON_EXECUTIONS_DIFFER` | An accept naming fills of more than one account, instrument, side, connectivity plugin or trade date, or a fill whose side is the order's opposite |
 | `REFUSAL_REASON_CONNECTIVITY_NOT_ALLOWED` | A placement at a connectivity plugin not linked to the placing `ems`, or not made available to whoever it acts for; recorded. Also an `ems`'s mapping at a connectivity plugin not linked to it |
 | `REFUSAL_REASON_CONNECTIVITY_LINKED` | A connectivity plugin linked to a second `ems` |
 | `REFUSAL_REASON_ACCOUNT_NOT_LINKABLE` | An `ems`'s mapping naming an account not granted to it (`FAILED_PRECONDITION`) |
 | `REFUSAL_REASON_IDENTIFIER_IN_USE` | An identifier already used for another record |
 | `REFUSAL_REASON_ACTOR_REQUIRED` | A command other than a fact report with no person or service account behind it, an accept or a DK among them; an approval or override with no person |
 | `REFUSAL_REASON_REASON_REQUIRED` | A justified act, an override or an instruction, with no reason |
-| `REFUSAL_REASON_LOCAL_RECORD_NOT_ALLOWED` | From contract v24: a proposal naming a local record, or an accept of a fill on one, while orders on local records are off |
-| `REFUSAL_REASON_BOOKING_UNBALANCED`, `REFUSAL_REASON_ACCOUNT_NOT_INSTRUCTED` | From contract v24: a booking that does not tie out, or allocates to an account its instruction does not name; see [Booking](booking.md#refusals) |
+| `REFUSAL_REASON_LOCAL_RECORD_NOT_ALLOWED` | A proposal naming a local record, or an accept of a fill on one, while orders on local records are off |
+| `REFUSAL_REASON_BOOKING_UNBALANCED`, `REFUSAL_REASON_ACCOUNT_NOT_INSTRUCTED` | A booking that does not tie out, or allocates to an account its instruction does not name; see [Booking](booking.md#refusals) |
 | `REFUSAL_REASON_INCOMPLETE` | A proposal missing a required field, each named; an order recorded naming an instrument whose record is incomplete |
-| `INVALID_ARGUMENT`, naming fields | Both or neither of `quantity` and `cash_quantity`; a child naming another instrument or side; a fill with no `settlement_date`; an instruction on `target.user_group_id`; an algorithm the version does not declare (`algorithm_id`). From contract v23: a fill on no placement without `instrument_id`, `side` or `venue_order_id`; an execution named twice in one accept (`execution_ids[i]`); a DK with reason other and no `text`; a quote currency naming the order's own instrument (`quote_currency`), or a limit or stop priced in another currency (`limit_price`, `stop_price`, `change.limit_price`); a roll whose `pair` is not two cash instruments, or with no date or basis |
+| `INVALID_ARGUMENT`, naming fields | Both or neither of `quantity` and `cash_quantity`; a child naming another instrument or side; a fill with no `settlement_date`; an instruction on `target.user_group_id`; an algorithm the version does not declare (`algorithm_id`); a fill on no placement without `instrument_id`, `side` or `venue_order_id`; an execution named twice in one accept (`execution_ids[i]`); a DK with reason other and no `text`; a quote currency naming the order's own instrument (`quote_currency`), or a limit or stop priced in another currency (`limit_price`, `stop_price`, `change.limit_price`); a roll whose `pair` is not two cash instruments, or with no date or basis |
 | `PERMISSION_DENIED`, no code | A command naming a record whose account is outside the plugin's write scope or the person's write access; a connectivity plugin's `RecordOrder` or `CreatePlacement`, refused by its sidecar |
 
 In the Python SDK a coded refusal is a `CommandRefused` carrying its code,
@@ -779,16 +761,16 @@ an `INVALID_ARGUMENT` a `CallFailed` of kind `"invalid"` naming the fields,
 and a `PERMISSION_DENIED` a `NotGranted` (see
 [Exceptions](../api/python-sdk.md#exceptions)).
 
-## Not in v24
+## Not built yet { #not-built-yet }
 
 - **RFQs and axes**: their references are carried empty on the order and
   the placement until the RFQ revision (slice C); an order of 0 quantity, a
   pass, is refused until then.
 - **Confirming an allocation with a client**, non-order transactions and
-  settlement: see [Booking](booking.md#not-in-v24).
+  settlement: see [Booking](booking.md#not-built-yet).
 - **Other named links** between orders -- street orders, two-way quotes,
-  alternatives, baskets -- wait for their slices. The split link and, from
-  v24, the block are the ones there are.
+  alternatives, baskets -- wait for their slices. The split link and the
+  block are the ones there are.
 - **A trading instruction on a user group**, until groups are resolved to
   their people.
 - **Derivative terms** on an execution, which come with the instrument
@@ -803,7 +785,7 @@ and a `PERMISSION_DENIED` a `NotGranted` (see
   the accounts.
 - [Answer a venue-originated fill](../how-to/answer-a-venue-originated-fill.md):
   accept it to an order, or answer it DK.
-- [Booking](booking.md): from contract v24, an order's executions booked to
+- [Booking](booking.md): an order's executions booked to
   its accounts.
 - [Set trading instructions and whether releases wait](../how-to/set-trading-instructions.md).
 - [Settlement calendars](settlement-calendars.md): how a settlement date

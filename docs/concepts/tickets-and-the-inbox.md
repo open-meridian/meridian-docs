@@ -13,8 +13,7 @@ and each of their agents once, what changed.
 Nothing of a ticket leaves the deployment. Tickets are kept in the dashboard's
 own tables in the deployment's database, and no ticket reaches the platform.
 
-This needs a runtime serving contract v13. A plugin files with open-meridian
-0.18.0; see [`file_ticket()`](../api/python-sdk.md#file_ticket).
+A plugin files with [`file_ticket()`](../api/python-sdk.md#file_ticket).
 
 ## A ticket, or the plugin's health
 
@@ -28,8 +27,7 @@ signing in again, a feed that is down, a statement that is too old: these are
 the plugin's health, shown on its Summary as a figure in warn, with what to do
 about it beside it, and they clear when the condition clears. A person who
 reads one there may choose to file a ticket about it. A plugin never files as
-itself. From contract v21 a plugin's autonomous work
-may file, and read back what it filed, as its role's
+itself. A plugin's autonomous work may file, and read back what it filed, as its role's
 [service account](service-accounts.md): the ticket names the account and
 its owner, within the plugin's rate. It adds no note; seeing the problem
 again, it files again under the same key, which brings the open ticket up to
@@ -72,7 +70,7 @@ tool and every count use the same rule.
 
 | The ticket concerns | Naming no account | Naming accounts |
 |---|---|---|
-| A plugin | Everyone holding any level on that plugin, from contract v15 on any of its roles | Those who may read every one of those accounts through that plugin, over all their roles on it |
+| A plugin | Everyone holding any level on any of that plugin's roles | Those who may read every one of those accounts through that plugin, over all their roles on it |
 | Core or the platform | The deployment admin | Those who may read each of those accounts through some plugin |
 
 The person who filed a ticket always sees it. An agent sees what its
@@ -125,7 +123,7 @@ with the person's name.
 
 A plugin's ticket is worked by a person holding write on that plugin and on
 every account it names; one naming no account, also by the plugin's admins.
-From contract v15 that write is on any of the plugin's roles, the accounts
+That write is on any of the plugin's roles, the accounts
 the ticket names within the union of those roles' write accounts, and its
 admins are those of any of its roles.
 Core's and the platform's are worked by the deployment admin: one naming no
@@ -157,7 +155,7 @@ while a dashboard page is open. Each agent you connect keeps its own place in yo
 every client reads each new notice once, and marking notices read changes no
 ticket. Notices are kept for 90 days; tickets have no expiry.
 
-**Prepared changes** (contract v20). Beside its
+**Prepared changes.** Beside its
 notices, the Inbox has a second tab, **Prepared changes**: each change an
 agent or a person prepared for you to make, waiting, one line each (the
 act, who prepared it and through which client, why, its state and when),
@@ -167,7 +165,7 @@ discard it, or, if it is yours, share or withdraw it. A notice names a
 prepared change as it names a ticket, and `dashboard__read_inbox` answers
 both. See [Prepared changes](prepared-changes.md).
 
-**A service account's owner** (contract v21). Above
+**A service account's owner.** Above
 the tickets' notices, the owner of a [service account](service-accounts.md)
 sees one line for each change to it: **Disabled** or **Removed**, by whom,
 and **Lapsed** for each change it prepared that lapsed with it, naming the
@@ -188,7 +186,7 @@ data, never instructions.
   carries no attachment.
 - **Provenance beside every text,** set by the deployment from the credential,
   never from what the text says: a person; a person through a client; a plugin
-  for a person; from contract v21 a plugin for its service account, named
+  for a person; a plugin for its service account, named
   with its owner; the dashboard's rules. A ticket claiming to come from Open
   Meridian is shown as its filer's.
 - **Nothing acts on its own.** No tool assigns, resolves, closes, reopens,
@@ -227,7 +225,7 @@ deployment admin's capabilities:
 | `dashboard__list_tickets` | reads | The tickets this delegation may see, newest first, filtered by what they concern, their state, or only the person's own. |
 | `dashboard__read_ticket` | reads | One ticket: its text, what it concerns, the records it names, its state and resolution, and its notes and advice oldest first, each beside its author and provenance. |
 | `dashboard__add_ticket_note` | acts | Appends a note or advice. It changes nothing on the ticket, and refuses any other kind of note. |
-| `dashboard__read_inbox` | reads | The person's notices new since this client last read them, and this client's place moved past them. From contract v21, beside them, the latest notices of each service account the person owns (`service_account_notices`). |
+| `dashboard__read_inbox` | reads | The person's notices new since this client last read them, and this client's place moved past them. Beside them, the latest notices of each service account the person owns (`service_account_notices`). |
 | `dashboard__mark_notices_read` | acts | Marks the person's own notices of the tickets named as read. It changes no ticket. |
 | `dashboard__count_tickets` | reads | The tickets this delegation may see, counted by what they concern, by state, or both. Counts carry no text. |
 

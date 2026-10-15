@@ -326,7 +326,7 @@ deployment stamped them. A code nobody linked travels as reported, with no
 instrument, and nothing is resolved by symbol. The plugin only reads the
 table: no page of its own sets any setting, and its **Account links** tab
 only shows how many plan-code links and cash links the settings hold. See
-[The custodian's activity](../concepts/the-custodians-activity.md#snaptrade-0110).
+[The custodian's activity](../concepts/the-custodians-activity.md#snaptrade).
 
 From SnapTrade 0.12.0 (contract v15), activity
 that arrived before a row was added is re-resolved too: on the read the
@@ -335,7 +335,7 @@ is re-resolved as the row's instrument, naming who added or last changed the
 row and when, beside the activity as it first arrived, which is kept.
 Changing the row re-resolves them again; removing it sends nothing, and they
 keep their latest resolution. A restart re-resolves nothing twice. See
-[SnapTrade 0.12.0](../concepts/the-custodians-activity.md#snaptrade-0120-a-plan-code-linked-later).
+[SnapTrade 0.12.0](../concepts/the-custodians-activity.md#snaptrade-a-plan-code-linked-later).
 
 ### SnapTrade: cash links
 

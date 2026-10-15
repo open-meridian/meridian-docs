@@ -2,16 +2,10 @@
 
 A **venue** is where a price or a trade comes from: an exchange, an
 alternative trading system, a crypto exchange, a dealer network, or a
-facility trades are reported to. From contract v18 every venue a deployment
-names has an ID of the platform's, `VEN-` followed by letters and digits,
+facility trades are reported to. Every venue a deployment names has an ID of the platform's, `VEN-` followed by letters and digits,
 from the platform's **venue master**, kept beside the security master. A
 deployment pulls the venues it needs from it, one at a time, and never mints
 one.
-
-!!! note "Contract v18"
-    This page describes contract v18: core from chart 0.1.292 and
-    open-meridian 0.22.0, and the platform's venue master, deployed
-    2026-10-10.
 
 ## A venue ID, and its codes
 
@@ -71,10 +65,9 @@ new record in the venue master, never a change to the contract.
   a dataset is, where it is one venue's; empty for a consolidated dataset.
 - **An instrument's listing venue** (`InstrumentRecord.listing_venue_id`),
   in place of its MIC: a segment's venue where the listing is on one. The
-  instrument's `exchange_mic` is deprecated from v18 and read until every
-  record carries a venue ID.
-- **On the order path**, from contract v22: a
-  placement's destination, set by the `ems`, and an execution's place of
+  instrument's `exchange_mic` is deprecated, and read until every record
+  carries a venue ID.
+- **On the order path**: a placement's destination, set by the `ems`, and an execution's place of
   execution, reported by the connectivity plugin, each a venue ID resolved
   at the edge; a connectivity plugin resolves and reports a missing venue
   as a data plugin does. A trading calendar names the venues that follow

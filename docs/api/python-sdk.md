@@ -2048,7 +2048,9 @@ Each release of the SDK, the contract it declares, the runtime it needs, and the
     the `ems`'s placements and records no order and creates no placement; a
     venue-originated fill is not supported in contract v22, its handling
     planned for a later release. The order path's and the
-    calendars' operations are `preview`. Nothing a plugin calls changed
+    calendars' operations are `preview`. At the upgrade to contract v22 the
+    book records that every account it holds waits for compliance, each
+    its own entry. Nothing a plugin calls changed
     shape: `meridian plugin migrate` moves the pins (see
     [0.25.0 to 0.26.0](#0250-to-0260)). It needs a runtime serving contract
     v22 (chart 0.1.301 or later), and CLI 0.1.42's `plugin new` writes
@@ -2086,6 +2088,19 @@ Each release of the SDK, the contract it declares, the runtime it needs, and the
     [0.23.0 to 0.24.0](#0230-to-0240). It needs a runtime serving contract
     v20 (chart 0.1.298 or later), and CLI 0.1.39's `plugin new` writes a
     plugin on it. Released 2026-10-11.
+    At the upgrade to contract v20 the instrument store opens a pulled
+    identifier's window from the start, each record so corrected a version
+    of its own naming each window and the date it replaced; a duplicate
+    local record minted before it, beside the platform's, by an
+    earlier-dated report or a data plugin naming a currency the deployment
+    did not hold, is left for a person to merge on the **Instruments** page.
+    Each account a plugin had linked is granted to it at the upgrade,
+    recorded as made then, so nothing that worked stops.
+    A deployment's grants and access entries naming an old role name are
+    rewritten once by core at the upgrade.
+    At the upgrade every act is "may make", with the second pair of eyes
+    off, which is what every delegation could do before, each recorded as
+    set then.
 
 !!! note "0.23.0: contract v19"
     open-meridian 0.23.0 declares contract v19, the lake's trades
@@ -2103,6 +2118,35 @@ Each release of the SDK, the contract it declares, the runtime it needs, and the
     readers, a `Money` naming its instrument and real dates. It needs a
     runtime serving contract v18 (chart 0.1.292 or later), which refuses
     nothing a plugin on 0.21.0 sends. See [Plugin manifest](plugin-manifest.md).
+    A plugin built before it keeps sending the currency code it always sent,
+    and core resolves it to the currency's cash instrument. At the upgrade
+    to contract v18 the street and the book resolve every currency code they
+    hold to its cash instrument, once, each resolution its own record saying
+    it was filled in then, not when the amount was first recorded; no entry
+    or record is rewritten, and a code the instrument store does not answer
+    for yet is resolved by a later sweep.
+
+!!! note "0.20.0: contract v15"
+    open-meridian 0.20.0 declares contract v15: a person's level is granted
+    per role of a plugin (see [Access per role](../concepts/access.md#access-per-role)),
+    and a page, route, tool and setting names the roles it serves; a custody
+    plugin re-resolves an activity once its instrument resolves. It needs a
+    runtime serving contract v15 (chart 0.1.268 or later), and CLI 0.1.35's
+    `plugin new` writes a plugin on it. A runtime serving v14 or earlier
+    grants each plugin as a whole. **The upgrade to contract v15 rewrites
+    every grant once**, changing what nobody can do: every access entry on a
+    plugin holding exactly one role is rewritten to name it, at the level it
+    had, in the group it was in (a plugin's roles being what its sidecar
+    last reported, or its latest launch); an entry on a plugin holding no
+    role is left naming none; user groups, account groups, permissions and
+    links are untouched, and **All plugins (admin)** grants `admin` on every
+    role. A delegation covering everything is untouched; each row of a
+    narrowed one is rewritten to name the plugin's one role, and a row the
+    rewrite cannot name is kept, covers nothing, and is flagged on Connected
+    clients. Each group the upgrade rewrote is recorded, made by no person.
+    A runtime at contract v15 keeps no session for a terminal and serves CLI
+    0.1.25 or later, which holds a [delegation](../concepts/access.md#delegations-to-the-cli)
+    in place of a session.
 
 ## Moving a plugin to a new release { #moving-a-plugin-to-a-new-release }
 

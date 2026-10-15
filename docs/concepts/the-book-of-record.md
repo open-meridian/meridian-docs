@@ -2,7 +2,7 @@
 
 There are two beliefs about what an account holds: the firm's and the
 custodian's. The custodian's arrives in the **street store**, as custody
-plugins report it. From contract v8 a deployment also keeps the firm's own:
+plugins report it. A deployment also keeps the firm's own:
 the **book of record**, a core component, `bor`, with its own store. An
 account enters the book once, with an opening balance a person answers for;
 after that the book changes only by its own entries; and an `operations`
@@ -12,29 +12,6 @@ difference as a break.
 The rule is short. **The street is what custodians say. The book is verified
 against it, and never overwritten by it.** No statement is ever applied to the
 book.
-
-!!! note "Contract v22"
-    From contract v22 the book also holds the order path: every order,
-    placement, execution, charge, unplaced fact, locate and trading
-    instruction, an order's state derived from its journal, and reported
-    fills moving the account's trade-date position at once (see
-    [The order lifecycle](the-order-lifecycle.md)). Positions, lots and
-    pending lines carry a **sleeve**, empty for an account's unsleeved part;
-    each account's attributes say whether its releases wait for compliance;
-    and a break may name a value date that is not a business day (see
-    [Settlement calendars](settlement-calendars.md)). Released 2026-10-13
-    in chart 0.1.301.
-
-!!! note "Contract v23"
-    From contract v23 a fill the venue originated waits in the book
-    unmatched, moving no position until the `ems` accepts it, and then as of
-    its trade date (entries `execution-accepted` and
-    `execution-dont-know`); and a venue's daily roll of a spot FX position
-    moves its pending lines to the next value date by an entry of its own,
-    `value-date-rolled`, the trade-date position unchanged. See
-    [Venue-originated fills](the-order-lifecycle.md#venue-originated-fills)
-    and [A venue's value-date roll](the-order-lifecycle.md#a-venues-value-date-roll).
-    Released 2026-10-14 in chart 0.1.303.
 
 !!! note "TODO: contract v24, built, not released"
     From contract v24 the `oms` books an order's executions to its accounts,
@@ -56,7 +33,7 @@ is a copy of another.
 | | What it holds | Who writes it |
 |---|---|---|
 | **The edge** | A plugin's raw records, as it received them from outside: a vendor's responses, a statement as sent | The edge plugin alone, in storage of its own. Core never reads it, and no other plugin does |
-| **The street** | The custodian's view, as reported: statements, holdings and custodial positions, each statement's figures, and what of each holding is available and what cannot move; from contract v14, each activity on the account and each sync status | Custody plugins, through the street store. See [Record a holdings statement](../tutorials/record-a-holdings-statement.md) and [The custodian's activity](the-custodians-activity.md) |
+| **The street** | The custodian's view, as reported: statements, holdings and custodial positions, each statement's figures, and what of each holding is available and what cannot move; each activity on the account and each sync status | Custody plugins, through the street store. See [Record a holdings statement](../tutorials/record-a-holdings-statement.md) and [The custodian's activity](the-custodians-activity.md) |
 | **The book** | The firm's view: positions, lots, pending settlements, encumbrances, breaks, figures and each account's attributes, every change a journalled entry | An `operations` plugin, through the book; the dashboard sets an account's attributes |
 
 A custody plugin converts what its vendor sends into the street's terms at
@@ -78,15 +55,15 @@ value a source did not state is unset, never zero.
 
 | Record | What it is |
 |---|---|
-| **Position** | An instrument and a side in one account. Its trade-date quantity is its settled quantity plus what is pending on each value date, by construction. A position held under a placeholder instrument is flagged. |
-| **Lot** | The book's own record of how a position was acquired: its open and original quantity, its cost and currency, its acquisition date, and where it came from. A position's open lots sum to its trade-date quantity; cash has none. From contract v9 every lot the book opens carries its cost and its acquisition date. |
+| **Position** | An instrument and a side in one account, and a **sleeve**, a part of the account, empty for its unsleeved part. Its trade-date quantity is its settled quantity plus what is pending on each value date, by construction. A position held under a placeholder instrument is flagged. |
+| **Lot** | The book's own record of how a position was acquired: its open and original quantity, its cost and currency, its acquisition date, and where it came from. A position's open lots sum to its trade-date quantity; cash in the base currency has none. Every lot the book opens carries its cost and its acquisition date. |
 | **Pending settlement** | Quantity pending on a value date, which may be years out, with whether it is failing and its new expected date where the source reports a fail. |
 | **Encumbrance** | What of a position cannot move, as the latest statement states it: its kind (pledged, posted, on loan, blocked, restricted, in transit, or other with the source's own code), its quantity, to whom and where, and the margin agreement where the source names one. An attribute of the position, never a movement: its quantities do not change. |
 | **Free quantity** | Derived, never reported: the settled quantity less the encumbrances. Unset while the settled quantity is unknown. It is what is free to trade. |
 | **Break** | A difference between the book and the street, open, resolved or closed. See [Breaks](#breaks). |
 | **Figures** | The account's figures for a business date, one set per margin agreement, as the street recorded them, with the collateral held under it and the custodian's own value and margin requirement for each position, labelled as the custodian's. A series, never a figure the book computed. |
-| **Attributes** | The account's base currency, its default method of relieving lots when a sale names none, and its standing opening balance; from contract v22, whether its releases wait for compliance. |
-| **Orders and executions** | From contract v22: each order, its placements, executions and charges, the facts the book could not place, the locates, and the trading instructions. See [The order lifecycle](the-order-lifecycle.md). |
+| **Attributes** | The account's base currency, its default method of relieving lots when a sale names none, and its standing opening balance; and whether its releases wait for compliance. |
+| **Orders and executions** | Each order, its placements, executions and charges, the facts the book could not place, the locates, and the trading instructions, an order's state derived from its journal. Reported fills move the account's trade-date position at once; a fill the venue originated waits unmatched, moving no position until the `ems` accepts it, and then as of its trade date; a venue's daily roll of a spot FX position moves its pending lines to the next value date by an entry of its own, the trade-date position unchanged. See [The order lifecycle](the-order-lifecycle.md). |
 
 The book records; it does not police. It computes no margin, no projection, no
 scenario and no return, and converts nothing with the base currency. Plugins
@@ -100,7 +77,7 @@ corrects. Every entry that moves a position is a set of movement lines, and a
 position is its account's opening balance plus every entry's lines since.
 Each entry records its kind (`opening-balance`, `adjustment`, `reversal`,
 `break-recorded` and others, an open list), its cause, who made it (a
-person, from contract v21 a service account with its owner, or the plugin
+person, a service account with its owner, or the plugin
 itself for a finding), the plugin
 instance that sent it, when it was sent, received and committed, and the
 business date it stands for. Every record an entry changes is numbered from
@@ -122,7 +99,7 @@ nothing enters with an empty balance.
 
 An opening balance is the fact every later break inherits, so **a person
 confirms it**. An `operations` plugin composes it, typically from the
-account's first completed statement, and from contract v14 may propose a
+account's first completed statement, and may propose a
 position's lots from the custodian's activity
 ([the opening balance's lots](the-custodians-activity.md#the-opening-balances-lots)),
 and shows it on its own page; a person
@@ -133,7 +110,7 @@ reason, and the book records that person as having made it. The book refuses:
   reason (`REFUSAL_REASON_REASON_REQUIRED`);
 - a second one for an account that has one standing
   (`REFUSAL_REASON_OPENING_BALANCE_RECORDED`);
-- from contract v9, one missing anything the book requires
+- one missing anything the book requires
   (`REFUSAL_REASON_INCOMPLETE`), naming each missing field: see
   [What the book requires](#what-the-book-requires);
 - lots that do not sum to their position (`REFUSAL_REASON_LOTS_UNBALANCED`).
@@ -151,7 +128,7 @@ reversed one.
 The edge keeps what the custodian sent as it was sent, and the street keeps
 the custodian's view as reported, gaps and all. The book alone holds the
 minimum that what comes after it needs: tax tracking, valuation, confirmation
-and settlement. From contract v9 it refuses an entry missing any of it, with
+and settlement. It refuses an entry missing any of it, with
 `REFUSAL_REASON_INCOMPLETE`, records nothing, and names every missing field by
 its path in the command, such as `positions[0].settled_quantity` or
 `positions[1].lots[0].terms.cost`, so the plugin can show, position by
@@ -174,7 +151,7 @@ And its lots, by asset class:
 |---|---|
 | Equity, fund and ETF; crypto; option | At least one. Each with its quantity, its cost in all, and its acquisition date. They sum to the trade-date quantity. |
 | Money market fund | One lot at its stable value: cost is the quantity × 1. A lot like any other here. |
-| Cash | None. From contract v24, none only in the account's base currency: a position in any other currency carries lots, each with its cost in the base currency and its acquisition date. |
+| Cash | None in the account's base currency. A position in any other currency carries lots, each with its cost in the base currency and its acquisition date. |
 
 The book reads whether an instrument is cash from its record: its asset class,
 or a currency identifier. Where the record cannot say, because the position
@@ -238,12 +215,10 @@ is derived from those dates, never stored.
 
 The plugin's matching offers **candidate causes**: an unbooked trade,
 settlement timing, a cost or price difference, a corporate action, a fail, a
-custodian error, or unknown, and from contract v14 income the custodian
-reinvested, and from contract v22 a value date that
-is not a business day, linked to the date read's check (the date, the
+custodian error, unknown, income the custodian reinvested, or a value date
+that is not a business day, linked to the date read's check (the date, the
 calendars and their versions, and why the day is closed), each with the
-item found to cause it. From v14 that item may be
-the custodian's own activity: a reinvestment, a split, a trade made away from
+item found to cause it. That item may be the custodian's own activity: a reinvestment, a split, a trade made away from
 the platform, linked by value, from which the plugin proposes the adjustment.
 See [The custodian's activity](the-custodians-activity.md#how-operations-explains-a-break). A person
 confirms one, and sets who owns the break, its escalation level and its due
@@ -260,7 +235,7 @@ date. Then a person ends it, with a reason, in one of three ways:
 
 A break is never closed by silence, and a statement never overwrites the book.
 
-**An unrecognized security** (contract v24). A statement line too thin to
+**An unrecognized security.** A statement line too thin to
 make an instrument record -- less than an identifier, a description and a
 currency -- is kept in the street as a placeholder, outside the book. The
 `operations` plugin records it as a break of its own category,
@@ -271,8 +246,7 @@ See [One ID per instrument](one-id.md#why-a-thinly-described-security-stays-unre
 
 ### A person, or a service account { #a-person-or-a-service-account }
 
-From contract v21 the book's justified acts -- an
-opening balance, a break's cause and handling, its resolution, closing it as
+The book's justified acts -- an opening balance, a break's cause and handling, its resolution, closing it as
 cleared -- are a user's: a person, or a
 [service account](service-accounts.md) a plugin's autonomous work acted as,
 through the plugin's own act. The reason is still required, and the book
@@ -281,8 +255,8 @@ Whether a service account may make an act is the admins' levels and its own
 setting, which by default only prepare it for a person to make: the book
 records, and does not police. An entry a service account made names it, by
 its `SA-` ID, and its owner when it acted, so it never reads as a person's
-act nor as the plugin's own finding. The first such act is the sample
-operations plugin's close of cleared breaks (see
+act nor as the plugin's own finding. The sample operations plugin's close
+of cleared breaks is one (see
 [Using an operations plugin](../how-to/using-an-operations-plugin.md#close-cleared-breaks-automatically)).
 
 ## Who reads the book
@@ -295,17 +269,16 @@ street; see [Accounts](accounts.md#how-accounts-bound-a-plugin).
 | Positions | `operations` | `portfolio`, `reporting`, `compliance`, `oms`, `operations` |
 | Breaks | `operations` | `operations`, `oms`, `compliance`, `portfolio`, `reporting` |
 | Figures | `operations` | `operations`, `portfolio`, `compliance`, `reporting` |
-| Attributes | the dashboard, for a deployment admin; the standing opening balance by the book, when `operations` records one | `portfolio`, `reporting`, `compliance`, `oms`, `operations`, and the dashboard; from contract v22 `ems` and `connectivity` too |
-| Orders, placements, executions | from contract v22: `portfolio`, `oms` and `ems` propose; the `oms` releases; the `ems` places; connectivity plugins report the venue's facts | `oms`, `ems`, `compliance`, `portfolio`, `operations`, `reporting`; a placement's connectivity plugin alone of its role |
-| Trading instructions | from contract v22: the dashboard, for a deployment admin or a plugin's admin | `oms`, `ems`, `connectivity`, `portfolio`, `compliance`, whatever their accounts |
+| Attributes | the dashboard, for a deployment admin; the standing opening balance by the book, when `operations` records one | `portfolio`, `reporting`, `compliance`, `oms`, `operations`, `ems`, `connectivity`, and the dashboard |
+| Orders, placements, executions | `portfolio`, `oms` and `ems` propose; the `oms` releases; the `ems` places; connectivity plugins report the venue's facts | `oms`, `ems`, `compliance`, `portfolio`, `operations`, `reporting`; a placement's connectivity plugin alone of its role |
+| Trading instructions | the dashboard, for a deployment admin or a plugin's admin | `oms`, `ems`, `connectivity`, `portfolio`, `compliance`, whatever their accounts |
 
 A position is delivered whole, its lots and pending settlements included, so
 a plugin that hears it needs no second read.
 
 ## An account's attributes, on the Accounts tab { #the-accounts-tab }
 
-From contract v20 a deployment admin sees the book's
-attributes of each account on the **Accounts** tab of the dashboard's
+A deployment admin sees the book's attributes of each account on the **Accounts** tab of the dashboard's
 **Settings**, with the account itself: there is one book per deployment, so
 they sit with the account they belong to. Each account's row has two
 columns from the book:
@@ -314,7 +287,7 @@ columns from the book:
 |---|---|
 | **Base currency** | The account's base currency in the book |
 | **Lot relief** | The method a sale relieves lots by when it names none: first in, first out; last in, first out; highest cost; lowest cost; or average cost |
-| **Compliance** | From contract v22: **Waits** where the account's releases wait for every covering `compliance` plugin's verdict, as a new account's do, or **Does not wait**; set under **In the book** as **Releases** |
+| **Compliance** | **Waits** where the account's releases wait for every covering `compliance` plugin's verdict, as a new account's do, or **Does not wait**; set under **In the book** as **Releases** |
 
 An account's **Edit** has a section of its own, **In the book**, beside
 **Account**. Beside its title it says since when the account is in the book,
@@ -328,10 +301,6 @@ attributes before its opening balance. If the book does not answer, the
 tab says so above the accounts, and the rest is drawn without it. See
 [In the book](accounts.md#in-the-book).
 
-Before contract v20 the same attributes, and the date, were on a tab of
-their own, **Books**, one row an account, with the same dialog headed with
-the account's name.
-
 The tab shows no position, lot or break. The dashboard reads every account's
 attributes and no account's data, as a deployment admin reaches no account's
 data: positions and breaks are for the plugins that read them, shown on their
@@ -341,7 +310,7 @@ own pages to the people granted access to them.
 
 - [Accounts](accounts.md): the accounts a book is kept for, and what bounds a
   plugin's reach.
-- [Booking](booking.md): from contract v24, an order's executions booked to
+- [Booking](booking.md): an order's executions booked to
   its accounts.
 - [The custodian's activity](the-custodians-activity.md): the custodian's
   record of what happened, which explains a break and proposes its entry.

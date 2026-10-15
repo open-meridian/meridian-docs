@@ -3,28 +3,14 @@
 A value date, or a settlement date, is worked out from which days are
 business days and from a rule: a US equity bought on Friday 9 October 2026
 settles one business day later on the US securities settlement calendar,
-which skips Columbus Day, so on Tuesday 13 October. From contract v22 a
-deployment works such dates out **one way, in core**, from **settlement
+which skips Columbus Day, so on Tuesday 13 October. A deployment works such dates out **one way, in core**, from **settlement
 calendars** and **date rules** the platform keeps and the deployment pulls,
 so every plugin, and every deployment, gets the same answer from the same
 records.
 
-!!! note "Contract v22"
-    Settlement calendars are in contract v22, released 2026-10-13: the
-    platform's records and curation, the deployment's copy in its
-    instrument store, the date read and the calendar read (`compute_date`,
-    `read_calendar` in open-meridian 0.26.0), the **Calendars** tab on the
-    **Instruments** page and its two tools, in chart 0.1.301. The
-    platform serves the ten G10 currencies' settlement calendars and the US
-    calendars below from the same release. Their operations are `preview`
-    until the first spot FX connectivity plugin has run on them.
-
-!!! note "Contract v23"
-    Contract v23, released 2026-10-14 in chart 0.1.303, adds a spot-date
-    rule's [counting mode](#the-rules), the Calendars tab's
-    [subject column and search](#the-calendars-tab), and the lake's flag on a
-    daily value dated on a [closed day](#in-a-plugin) of its dataset's
-    calendar.
+The platform serves the ten G10 currencies' settlement calendars and the US
+calendars below. The calendars' operations are `preview` until the first
+spot FX connectivity plugin has run on them.
 
 ## A calendar
 
@@ -75,7 +61,7 @@ named by its kind, its subject and its version.
   and one after by its second.
 - **A spot-date rule**, for a currency pair named by its two cash
   instruments in either order: the lag; the calendars an intermediate day
-  must be good in to count; from contract v23 how they count (its
+  must be good in to count; how they count (its
   **counting mode**, below); the calendars the spot date itself must be
   good in; and the day's cut, a local time with its zone (17:00 New York
   for FX), at or after which an execution's trade date is the next day.
@@ -87,12 +73,11 @@ Whether a cross's spot date may fall on a US dollar holiday, and which
 currencies count US dollar days, are parameters of each pair's rule, each
 with its cited source, not constants in core.
 
-**A spot-date rule's counting mode**, from contract v23
-(`counting_mode`), says how its lag counts:
+**A spot-date rule's counting mode** (`counting_mode`) says how its lag counts:
 
 | Mode | A day counts toward the lag when |
 |---|---|
-| **Joint** (`SPOT_COUNTING_MODE_JOINT`, and a rule naming none, as every v22 rule) | It is a business day on every counting calendar |
+| **Joint** (`SPOT_COUNTING_MODE_JOINT`, and a rule naming none) | It is a business day on every counting calendar |
 | **Each currency** (`SPOT_COUNTING_MODE_EACH_CURRENCY`) | Each currency's spot is counted on its own calendar; the later of the two is taken, then rolled to a day good on every counting and spot calendar |
 
 The two differ for EUR/GBP traded Thursday 30 April 2026, 1 May a TARGET
@@ -117,8 +102,7 @@ it holds or as of a recorded time:
 - **Whether a date is a business day** on a set of calendars.
 
 A set of calendars combines one way: **a day is good only if it is good in
-every one**, save a spot lag counted each currency on its own (from
-contract v23, above). The same inputs and the same versions always give the same
+every one**, save a spot lag counted each currency on its own (above). The same inputs and the same versions always give the same
 date, and a read as of an earlier recorded time reproduces an answer given
 before a later version. The date is worked out from the date on the
 message or the deployment's clock, never the wall clock.
@@ -223,16 +207,16 @@ platform holds no rule for is answered "rule not held".
 
 ## The Calendars tab
 
-From contract v22 the dashboard's **Instruments** page, at the deployment
+The dashboard's **Instruments** page, at the deployment
 admin's level, has a **Calendars** tab, read-only:
 
-- **The calendars held**, one line each: its name and ID, its kind, from
-  contract v23 its **subject** (a currency's ISO 4217 code, the venues by
+- **The calendars held**, one line each: its name and ID, its kind, its
+  **subject** (a currency's ISO 4217 code, the venues by
   their `VEN-` IDs, or the settlement system's name and country), its
   version, the last date of its coverage (**Coverage to**) and when it was
   last refreshed, paged. Venues are shown by ID, labelled as IDs, because
   the dashboard cannot yet read a venue by its ID; their MICs and names
-  come in a later version. From contract v23 the list is filtered by kind
+  come in a later version. The list is filtered by kind
   and searched by text on the name and the subject's codes, a venue's MIC
   and name among them, so it is searched rather than paged through. Empty, it says none is held yet: a calendar is
   pulled when a currency, a venue or a date read first needs it.
@@ -259,8 +243,8 @@ a calendar's days with `read_calendar` or asks for a date with
 `compute_date`, answered whatever its accounts, with the basis the date was
 worked out on (see
 [Settlement calendars in the Python SDK](../api/python-sdk.md#settlement-calendars)).
-The SDK carries the two operations and no calendar library. From contract
-v22 every role's suite holds `reads-a-calendar`, and every role's but
+The SDK carries the two operations and no calendar library. Every role's
+suite holds `reads-a-calendar`, and every role's but
 `connectivity`'s and `operations`' `asks-for-a-settlement-date`, which a
 plugin's suite test maps; a plugin whose work never uses calendars or
 settlement dates marks them not presented, with why (see
@@ -281,11 +265,11 @@ is not a business day**, linked to the check: the date, the calendars and
 their versions, and why the day is closed (a weekend, a named holiday, or
 outside coverage). A venue's revised date is reported as stated.
 
-**A dataset may name its calendar.** From contract v22 a data plugin's
+**A dataset may name its calendar.** A data plugin's
 [dataset](the-lake.md#datasets) may name the calendar its business dates
 follow, by its `CAL-` ID (`calendar_id`), beside its day's zone and end
-(see [A dataset's day](dates-and-time.md#a-datasets-day)). In v22 the lake
-applies nothing by it. From contract v23 a daily value dated on a day that
+(see [A dataset's day](dates-and-time.md#a-datasets-day)). A daily value
+dated on a day that
 calendar says is closed is recorded as reported and flagged, and counted on
 the Data sources page: see
 [A daily value on a closed day](the-lake.md#a-daily-value-on-a-closed-day).

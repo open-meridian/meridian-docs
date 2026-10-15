@@ -1,6 +1,6 @@
 # Booking
 
-From contract v24 a fill does not stop at the order. The `oms` **books**
+A fill does not stop at the order. The `oms` **books**
 the order's executions to the accounts they were for: one allocation per
 account, each with its quantity, average price, fees and settlement date.
 The book checks that the allocations add up to the executions exactly,
@@ -116,7 +116,7 @@ nothing for lateness: which rule applies is the `oms`'s policy and
 
 ### Cash
 
-From contract v24 an account's **base currency** is a balance, and every
+An account's **base currency** is a balance, and every
 other currency opens lots:
 
 - a fill or an opening position in the account's base currency moves its
@@ -128,8 +128,7 @@ other currency opens lots:
   applies from then on: lots already open in the new base currency stay
   open until relieved, and none opens in it after the change.
 
-The book converts nothing with the base currency. Until contract v24 no
-cash position had lots. See
+The book converts nothing with the base currency. See
 [What the book requires](the-book-of-record.md#what-the-book-requires).
 
 ## The block order
@@ -324,7 +323,7 @@ are one instrument (see [One ID per instrument](one-id.md)).
   with the cause other and no text; a sleeve cross naming an order of
   another account or instrument, or two orders of one side.
 
-## Not in v24
+## Not built yet { #not-built-yet }
 
 - **Confirming an allocation with a client** (`confirmation`), and matching
   a trade's confirmation to a booking.

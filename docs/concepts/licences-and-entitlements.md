@@ -8,11 +8,6 @@ by the deployment alone, never sent to the platform:
 - its **entitlements**: which plugin instances may read it, and which of
   its fields.
 
-!!! note "Contract v18"
-    This page describes contract v18, core's lake, from chart 0.1.292; and
-    contract v19's trades and quotes, from chart 0.1.293, released in chart
-    0.1.294.
-
 A licence records what the admin entered. Neither it nor anything else in a
 deployment says the deployment meets a vendor's or an exchange's terms:
 reading those terms, and keeping to them, stays the firm's.
@@ -39,14 +34,13 @@ flagged on the Data sources page, and in `dashboard__list_datasets`, where
 more than one person holds `read` or `write` on a plugin entitled to it,
 naming them: each person who has signed in, and each login a user group
 names, signed in yet or not. It warns; it does not refuse. A deployment
-enforces entitlements per plugin and per field in v18, not per person.
+enforces entitlements per plugin and per field, not yet per person.
 
-**The data plugin knows its datasets' licences** (contract v20). A data plugin reads the licence a deployment admin set on each
+**The data plugin knows its datasets' licences.** A data plugin reads the licence a deployment admin set on each
 dataset its own catalogue declares, and no other's, so its **Datasets** page
 says **Licensed** or **Not licensed yet** exactly, and the plugin's admin,
 who sets no licence, sees what is still waiting for the deployment admin.
-Before v20 a data plugin did not know, and its page guessed from the wants it
-heard. Every licence change is answered there with the plugin's next read.
+Every licence change is answered there with the plugin's next read.
 A licence still says only what the admin entered.
 
 ## Entitlements
@@ -77,14 +71,13 @@ data at a different price, is a dataset of its own, licensed and entitled
 per plugin instance like any other, with nothing more in the contract. So a
 deployment admin can give the live trades to an `ems` plugin and the
 closes to everything else. Trades and quotes are read only by plugins
-holding `signal` or `ems` (contract v19), whatever
+holding `signal` or `ems`, whatever
 they are entitled to: see [Who reads what](the-lake.md#who-reads-what).
 
 ## Which dataset a default read takes
 
 A reader that names no dataset takes the deployment's **source priority**:
-for each data type (prices, bars, and from contract v19 trades and
-quotes), and for prices each kind (close, last, NAV, settlement), an
+for each data type (prices, bars, trades and quotes), and for prices each kind (close, last, NAV, settlement), an
 ordered list of datasets, first to last. A read falls
 through to the next where one is silent beyond its cadence, does not cover
 the subject, or is not entitled, and says why. With no priority set, a
@@ -107,8 +100,8 @@ saying why. A note is required through the tools, and optional at the page.
 The Data sources page has five tools on the deployment's MCP surface, at
 the deployment admin's level: see
 [Core's tools](../api/core-tools.md#the-data-sources-page). None reads a
-price. A tool's answer is the page shown to the same person. From contract
-v20 each of the page's three acts, setting a licence,
+price. A tool's answer is the page shown to the same person. Each of the
+page's three acts, setting a licence,
 an entitlement and a source priority, can also be
 [prepared](prepared-changes.md) by an agent or a person, for the deployment
 admin to make.
