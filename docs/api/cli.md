@@ -436,6 +436,11 @@ If the deployment can't be reached, the delegation is still forgotten here. It s
 meridian plugin new <name> [--into <dir>] [--role data|custody|operations|reporting]
 ```
 
+!!! note "TODO: CLI 0.1.45, built, not released"
+    CLI 0.1.45 pins SDK 0.28.0 (contract v24), whose plugins need a runtime
+    serving contract v24 (chart `0.1.CHART24` or later). TODO: the release
+    date, and what its templates change, as built.
+
 !!! note "CLI 0.1.43"
     CLI 0.1.43, released 2026-10-14, pins SDK 0.27.0 (contract v23), whose
     plugins need a runtime serving contract v23 (chart 0.1.303 or later);
@@ -490,6 +495,14 @@ Writes a working plugin to start from: the Python SDK's reference plugin, rename
 ```text
 meridian plugin check [--dir <dir>] [--run-tests] [--verified] [--json]
 ```
+
+!!! note "TODO: CLI 0.1.45, built, not released"
+    CLI 0.1.45, with contract v24, warns a plugin that writes a replaced
+    instrument ID, so it can update what it keeps (see
+    [One ID per instrument](../concepts/one-id.md#for-a-plugins-author)).
+    Its `role-suite` and `roles-declared` read contract v24's roles and
+    suites, `reference` among the roles. TODO: the warning's rule name, and
+    whether `tool-meridian` admits `reference`, as built.
 
 !!! note "CLI 0.1.43"
     CLI 0.1.43, released 2026-10-14 with contract v23, holds a role's
@@ -666,6 +679,7 @@ The rewrites keep a file's formatting and comments wherever they change nothing.
 | 0.24.0 to 0.25.0: the SDK declares contract v21, a service account runs a plugin's autonomous work: an act called as the role's service account (`meridian.runs_as(role)`), answered made or prepared, a refusal naming its field (`NotGranted.fields`, `CallFailed.fields`); a caller who is a service account (`Caller.subject_kind`, `Caller.owner_subject`, `meridian.SubjectKind`); and a tool called as one in a plugin's own test (`PageClient.call_tool(subject_kind=, owner_subject=)`). It needs chart 0.1.299 or later. See [0.24.0 to 0.25.0](python-sdk.md#0240-to-0250) | Nothing: only the pins move | |
 | 0.25.0 to 0.26.0: the SDK declares contract v22, the order path's slice A and settlement calendars: the order path's typed operations and deliveries, its refusal codes and the transition table (`meridian/transitions.json`); `read_calendar` and `compute_date`; a version's algorithms (`Declaration(algorithms=)`, `AlgorithmDeclaration`, `runs_as(role, algorithm_id=)`, `Caller.algorithm_id`); the connectivity plugins a caller may route through (`Caller.connectivity_instance_ids`); a sleeve on positions, lots and movement lines; the suites' v22 cases. It needs chart 0.1.301 or later. See [0.25.0 to 0.26.0](python-sdk.md#0250-to-0260) | Nothing: only the pins move | a suite test meeting the settlement calendars' cases (`reads-a-calendar`, every role's; `asks-for-a-settlement-date`, every role's but `connectivity`'s and `operations`'): map each, or, where the plugin's work never uses calendars or settlement dates, name it in `not_presented` with why (see [A case not presented](python-sdk.md#a-case-not-presented)) |
 | 0.26.0 to 0.27.0: the SDK declares contract v23, venue-originated fills and the lake's outcomes: a fill on no placement (`report_execution`'s `instrument_id`, `side`, `venue_order_id`, `venue_client_order_id`), waiting unmatched (`Execution.state`); the `ems`'s accept and DK (`accept_execution`, `dont_know_execution`) and their refusal codes; a connectivity plugin hearing the executions it reported; `VenueCatalogue.execution_acknowledgement`; `list_orders(execution_state=)`; a value-date roll (`report_value_date_roll`), financing and commission fees, an order's `quote_currency`; an event contract's outcomes (`record_outcomes`, `receive(outcomes_recorded=)`, `list_outcomes`); the closed-day flag and counts; `meridian.account_currency()`; the suites' v23 cases, their `about` markers and `any_of`. See [0.26.0 to 0.27.0](python-sdk.md#0260-to-0270) | Nothing: only the pins move | |
+| 0.27.0 to 0.28.0: the SDK declares contract v24: booking (`book_order`, `hand_off_booking`, `correct_booking`, `set_allocation_instruction`, `record_sleeve_cross`, `report_give_up`, `raise_alert`, `acknowledge_alert`, `list_bookings`, `list_alerts`); every instrument named by the platform's `INS-` ID, a local `LCL-` record provisional (`ResolveIdentifierResult.provisional`); `list_replacements` and the current-ID map, `list_templates`, `read_template`, `offer_template_fields`; `read_local_record_orders`; the suites' v24 cases. It needs chart `0.1.CHART24` or later. See [0.27.0 to 0.28.0](python-sdk.md#0270-to-0280) | a test of the prefix `LCL-` on an instrument ID to a read of the record's `provisional`; a read of the `open_meridian` identifier for the platform's ID to the record's `instrument_id`; the suites' `LCL-suite-n` fixtures to `INS-` IDs, with provisional cases beside them (TODO: the rule names, as built) | a plugin keeping instrument IDs in its own storage, which follows each replacement through the SDK's current-ID map; a suite test meeting v24's cases |
 
 `plugin migrate` adds two rules of its own: `pin-elsewhere`, for the old release still named in another file (a Makefile's base image, a workflow, a README), which it reports rather than moves because some of those are history; and `unreadable`, for a file that is not UTF-8, or that a step could not read as Python, which it leaves as it was.
 

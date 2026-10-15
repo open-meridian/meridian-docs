@@ -32,7 +32,26 @@ developer guide. They are written from the code of
 [meridian-python](https://github.com/open-meridian/meridian-python),
 [meridian-schema](https://github.com/open-meridian/meridian-schema) and
 [meridian-ui](https://github.com/open-meridian/meridian-ui); when those
-change, the pages change with them. Today they describe CLI 0.1.43, SDK
+change, the pages change with them.
+
+**Contract v24, built, not released (TODO at release):** the pages also
+describe contract v24, each marked "TODO: built, not released": booking
+(allocations, the block, the error account, the hand-off, corrections,
+sleeves, give-ups and alerts, and cash lots outside the base currency), the
+one-ID model (`INS-` records minted by the platform, local `LCL-` records
+never priced, the Provisional tab and the upgrade's migration, orders on
+local records, the licence list and the usage report), closing an account
+still attached, and `meridian plugin migrate`'s v24 rewrites. To fill at
+release: chart `0.1.CHART24` and its date; open-meridian 0.28.0's PyPI date
+(and whether the role helpers are in it); CLI 0.1.45's date; the runtime
+and harness commit and digests; the plugins on contract v24, Tradier 0.8.0,
+Alpaca 0.9.0, Tiingo `0.5.0?`, the sample operations plugin `0.13.0?` and
+the sample reporting plugin `0.6.0?` (next minors, TODO), with their
+dates and links; `integrations/released.json` refreshed. `boundaries/` is
+vendored from meridian-schema a6a0af7 (contract 24); refresh it if schema
+moves before release.
+
+Today they describe CLI 0.1.43, SDK
 0.27.0 (contract v23; chart 0.1.303): venue-originated fills, accepted or
 answered DK by the `ems`, the FIX acknowledgements a venue takes, a venue's
 value-date roll, financing and commission fees, an FX order's quote

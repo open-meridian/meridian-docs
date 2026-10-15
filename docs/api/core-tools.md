@@ -13,8 +13,10 @@ entitlements, and the source priority. From contract v20, seven more work [prepa
 and one reads the accounts a plugin may link to. From contract v21, one reads the [service accounts](#service-accounts). From
 contract v22, four set and list the
 [trading instructions and account attributes](#trading-instructions-and-account-attributes),
-and two read the Instruments page's [Calendars tab](#the-calendars-tab). This
-page is the reference for those thirty-three. An agent calls them as the person who
+and two read the Instruments page's [Calendars tab](#the-calendars-tab). From
+contract v24, one sets [orders on local records](#dashboard__set_local_record_orders)
+and one the [usage report](#dashboard__set_reports_usage). This
+page is the reference for those thirty-five. An agent calls them as the person who
 delegated to it, and only as far as that person could at the page each tool
 mirrors, and from v20 only as far as the deployment lets agents go with each
 act.
@@ -80,6 +82,19 @@ act.
     [Settlement calendars](../concepts/settlement-calendars.md). Released
     2026-10-13 in chart 0.1.301.
 
+!!! note "TODO: contract v24, built, not released"
+    [`dashboard__set_local_record_orders`](#dashboard__set_local_record_orders)
+    sets orders on local records, a deployment admin's act, preparable and at
+    **May not** for agents until loosened;
+    [`dashboard__set_reports_usage`](#dashboard__set_reports_usage) sets the
+    usage report; `dashboard__set_account_attribute` and
+    `dashboard__list_account_attributes` take and answer the error and
+    allocation account marks; the Instruments tools answer the provisional
+    records and the migration's counts (see
+    [The Instruments page's v24 additions](#the-instruments-pages-v24-additions));
+    and a lock time is a decimal string. To be released in chart
+    `0.1.CHART24` (TODO: the date).
+
 ## What every one of them does
 
 - **The page's gate.** Each tool is listed only through a delegation that
@@ -141,7 +156,10 @@ or a change that changed nothing, `refused` with a `reason`, a `detail` and
 the `fields` it refused, each by its path in the tool's input. Its `data`
 is the record's own fields by their names: an enumeration is its proto name,
 such as `ACCESS_LEVEL_ADMIN`; a time is nanoseconds since the epoch; a
-decimal is a string.
+decimal is a string. From contract v24 a time a tool takes back as its
+lock against a change made meanwhile, such as `against_updated_at_ns`, is
+a decimal string, in and out: an integer is still accepted up to 2^53, and
+one above it is refused, naming the field.
 
 ## Who may call them
 
@@ -180,6 +198,8 @@ decimal is a string.
 | [`dashboard__set_account_attribute`](#dashboard__set_account_attribute) | acts | The deployment admin, once loosened from May not |
 | [`dashboard__list_calendars`](#dashboard__list_calendars) | reads | The deployment admin |
 | [`dashboard__read_calendar`](#dashboard__read_calendar) | reads | The deployment admin |
+| [`dashboard__set_local_record_orders`](#dashboard__set_local_record_orders) | acts | The deployment admin, once loosened from May not (contract v24) |
+| [`dashboard__set_reports_usage`](#dashboard__set_reports_usage) | acts | The deployment admin (contract v24) |
 
 "An admin of a role" is `admin` on that role of the plugin, at **Manage**,
 held through the delegation (see [Admin per role](../concepts/access.md#admin-per-role));
@@ -738,7 +758,8 @@ book. No account's positions or orders.
 **Answer:** `accounts`, each with its `account_id`, `base_currency_code`,
 `lot_relief_default` (`first_in_first_out`, `last_in_first_out`,
 `highest_cost`, `lowest_cost` or `average_cost`, empty where not set),
-`waits_for_compliance` and `opening_balance_as_of`, the date its opening
+`waits_for_compliance`, from contract v24 `error_account` and
+`allocation_account`, and `opening_balance_as_of`, the date its opening
 balance stands for, empty for none.
 
 ### `dashboard__set_account_attribute`
@@ -747,9 +768,12 @@ An account's **Edit**, **In the book**: one attribute at a time, each its own
 entry.
 
 **Input:** `account_id`, `note` (kept as the entry's reason), and exactly one of `base_currency_code`
-(three capital letters), `lot_relief_default` (as above) or
+(three capital letters), `lot_relief_default` (as above),
 `waits_for_compliance` (`false` lets a release pass the gate without a
-compliance verdict).
+compliance verdict), or from contract v24 `error_account` (an error
+account, where a booking's overfills and errors are booked) or
+`allocation_account` (a block order's account until its allocations are
+booked out). See [Booking](../concepts/booking.md).
 
 **Answer:** `outcome: "made"`, the account's `attributes` as they stand,
 and the `entry_id`.
@@ -758,6 +782,53 @@ and the `entry_id`.
 {"account_id": "ACC-01JA2Q3R4S5T6V7W8X9Y0Z1A2B", "waits_for_compliance": false,
  "note": "No compliance plugin covers this account; releases are reviewed by the desk."}
 ```
+
+### `dashboard__set_local_record_orders`
+
+From contract v24. The Trading instructions page's **Allow orders on local
+records**: whether an order may name a local record, one the platform has
+not answered for yet (see
+[Orders on local records](../concepts/the-order-lifecycle.md#orders-on-local-records)).
+A deployment admin's; a call by anyone else is refused `not_permitted`. It
+can be prepared, and is at **May not** for agents until the deployment
+admin loosens it.
+
+**Input:** `allows_local_record_orders`, `true` or `false`; `note`, kept as
+the entry's reason.
+
+**Answer:** `outcome: "made"`, with `allows_local_record_orders`, the
+setting in force, and `open_order_count`, the live orders on local records
+across the deployment, naming no account and no order.
+
+```json
+{"allows_local_record_orders": false,
+ "note": "The platform is reachable again; new orders wait for its records."}
+```
+
+## The Instruments page's v24 additions
+
+From contract v24. The Instruments tools take and answer the provisional
+records (see [One ID per instrument](../concepts/one-id.md)):
+`dashboard__list_instruments_to_complete` takes `provisional`, the
+provisional records alone, complete or not, each with its
+`provisional_reason` (`PROVISIONAL_REASON_UNREACHABLE`, `_INCOMPLETE`,
+`_AWAITING_STAFF`, `_CLASS_NEEDED` or `_HELD_BACK`); each record answers
+`provisional`, `template_id`, `template_version` and `missing_fields`; and
+the answer carries `migration_counts` (`already_held`, `matched`, `minted`,
+`near_match`, `awaiting_staff`, `kept_local`, `unreachable`, `held_back`
+and `remaining`) and `backfill_counts` (per `scheme`, `matched`,
+`awaiting_person` and `remaining`).
+
+### `dashboard__set_reports_usage`
+
+The **Licensed identifiers** tab's **Report identifier usage**: whether the
+conductor sends the platform the deployment's usage statistics weekly, per
+identifier scheme, counts only. At the deployment admin's level.
+
+**Input:** `reports_usage`, `true` or `false`; `note`, why, kept with the
+change's record.
+
+**Answer:** `outcome: "made"`, with `reports_usage`, the setting in force.
 
 ## The Calendars tab
 

@@ -198,6 +198,14 @@ venue. The runner's `instrument` command takes `--ask-platform`, asking the plat
 record from its page as a deployment admin's button does, so a `compute_date` for that equity
 gives its settlement date in a harness run (T+1) rather than "rule not held".
 
+!!! note "TODO: the harness for contract v24"
+    Name the runtime and harness commit serving contract v24, its digests,
+    and the chart (`0.1.CHART24`) once released. From contract v24 the
+    harness's stand-in for the platform answers v24's matching, template,
+    licence-list and replacement routes, and its order-path run books a
+    block order across two funds (TODO: the runner's new commands, as
+    built).
+
 Core 50d6f0a's runtime and harness serve contract v23, released 2026-10-14 in chart 0.1.303,
 pinned by digest as in [step 1](#1-pin-a-runtime-image-and-its-harness):
 

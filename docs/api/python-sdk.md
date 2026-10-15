@@ -20,7 +20,36 @@ pip install open-meridian
 !!! warning "Not `meridian-sdk`"
     The PyPI package `meridian-sdk` belongs to an unrelated company. Don't install it.
 
-A plugin pins the SDK exactly, `open-meridian==0.27.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.27.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls; from 0.12.0 to 0.13.0, from 0.13.0 to 0.14.0, from 0.19.0 to 0.20.0, from 0.20.0 to 0.21.0, from 0.21.0 to 0.22.0 and from 0.22.0 to 0.23.0, only the pins move, from 0.23.0 to 0.24.0 it rewrites the renamed roles (see [0.23.0 to 0.24.0](#0230-to-0240)), from 0.24.0 to 0.25.0 only the pins move (see [0.24.0 to 0.25.0](#0240-to-0250)), from 0.25.0 to 0.26.0 only the pins move (see [0.25.0 to 0.26.0](#0250-to-0260)), and from 0.26.0 to 0.27.0 only the pins move (see [0.26.0 to 0.27.0](#0260-to-0270)). `meridian plugin new` writes a plugin pinned to 0.19.0 from CLI 0.1.34, to 0.20.0 from CLI 0.1.35, to 0.21.0 from CLI 0.1.36, to 0.22.0 from CLI 0.1.37, to 0.23.0 from CLI 0.1.38, to 0.24.0 from CLI 0.1.39, to 0.25.0 from CLI 0.1.41, to 0.26.0 from CLI 0.1.42, and to 0.27.0 from CLI 0.1.43.
+A plugin pins the SDK exactly, `open-meridian==0.27.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.27.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls; from 0.12.0 to 0.13.0, from 0.13.0 to 0.14.0, from 0.19.0 to 0.20.0, from 0.20.0 to 0.21.0, from 0.21.0 to 0.22.0 and from 0.22.0 to 0.23.0, only the pins move, from 0.23.0 to 0.24.0 it rewrites the renamed roles (see [0.23.0 to 0.24.0](#0230-to-0240)), from 0.24.0 to 0.25.0 only the pins move (see [0.24.0 to 0.25.0](#0240-to-0250)), from 0.25.0 to 0.26.0 only the pins move (see [0.25.0 to 0.26.0](#0250-to-0260)), from 0.26.0 to 0.27.0 only the pins move (see [0.26.0 to 0.27.0](#0260-to-0270)), and from 0.27.0 to 0.28.0 it rewrites a test of the `LCL-` prefix and a read of the `open_meridian` identifier (see [0.27.0 to 0.28.0](#0270-to-0280)). `meridian plugin new` writes a plugin pinned to 0.19.0 from CLI 0.1.34, to 0.20.0 from CLI 0.1.35, to 0.21.0 from CLI 0.1.36, to 0.22.0 from CLI 0.1.37, to 0.23.0 from CLI 0.1.38, to 0.24.0 from CLI 0.1.39, to 0.25.0 from CLI 0.1.41, to 0.26.0 from CLI 0.1.42, to 0.27.0 from CLI 0.1.43, and to 0.28.0 from CLI 0.1.45.
+
+!!! note "TODO: 0.28.0: contract v24, built, not released"
+    open-meridian 0.28.0 declares contract v24.
+    The `oms` [books](../concepts/booking.md) an order's executions to its
+    accounts (`book_order`, `hand_off_booking`, `correct_booking`), with
+    the block order, the error account, sleeve crosses
+    (`record_sleeve_cross`) and give-ups (`report_give_up`); `portfolio` and
+    `operations` set an allocation instruction
+    (`set_allocation_instruction`); `compliance` raises and acknowledges
+    alerts (`raise_alert`, `acknowledge_alert`); and readers list bookings
+    and alerts (`list_bookings`, `list_alerts`). Every instrument is named
+    by the platform's `INS-` ID, a deployment's local `LCL-` record
+    provisional until the platform answers
+    (`ResolveIdentifierResult.provisional`; see
+    [One ID per instrument](../concepts/one-id.md)); every role hears a
+    replacement and catches up with `list_replacements`, the SDK keeping a
+    current-ID map from both, and reads the templates (`list_templates`,
+    `read_template`); `reference` offers a template's fields
+    (`offer_template_fields`); and the order path's roles read whether an
+    order may name a local record (`read_local_record_orders`). An
+    account's base currency is a balance and every other currency opens
+    lots. `meridian.environment()` defaults to **Sandbox**, **Live** only
+    where the plugin's code says so (TODO: as built). The suites gain v24's
+    cases. Every operation it adds is `preview`.
+    [`meridian plugin migrate`](cli.md#plugin-migrate) rewrites what changed
+    (see [0.27.0 to 0.28.0](#0270-to-0280)). It needs a runtime serving
+    contract v24 (chart `0.1.CHART24` or later), and CLI 0.1.45's
+    `plugin new` writes a plugin on it. TODO: released on PyPI on
+    `<date>`; whether the role helpers are in 0.28.0 or 0.29.0.
 
 !!! note "0.27.0: contract v23"
     open-meridian 0.27.0 declares contract v23.
@@ -139,6 +168,44 @@ A plugin pins the SDK exactly, `open-meridian==0.27.0`, in its `pyproject.toml`.
     readers, a `Money` naming its instrument and real dates. It needs a
     runtime serving contract v18 (chart 0.1.292 or later), which refuses
     nothing a plugin on 0.21.0 sends. See [Plugin manifest](plugin-manifest.md).
+
+### 0.27.0 to 0.28.0 { #0270-to-0280 }
+
+TODO: released `<date>`. `meridian plugin migrate --to 0.28.0` moves the
+pins and rewrites what the one-ID revision changed (see
+[One ID per instrument](../concepts/one-id.md#for-a-plugins-author)):
+
+- **A test of the `LCL-` prefix** on an instrument ID, such as
+  `instrument_id.startswith("LCL-")`, is rewritten to read the record's
+  `provisional`. The prefix only says the deployment minted the ID: a
+  resolved `LCL-` ID stays `LCL-`.
+- **A read of the `open_meridian` identifier** for the platform's ID is
+  rewritten to the record's `instrument_id`, which is the platform's ID
+  from contract v24. The `open_meridian` identifier is no longer added to
+  records.
+- **The suites' `LCL-suite-n` fixtures** become `INS-` IDs, with
+  provisional cases beside them.
+
+Then, by hand where they apply:
+
+- **A plugin that keeps instrument IDs** in its own storage or state
+  follows each replacement to the record it became: the SDK's current-ID
+  map does it from `list_replacements` and the deliveries. One that keeps
+  none needs nothing. `meridian plugin check` warns a plugin that writes a
+  replaced ID.
+- **A suite test** meets v24's cases: every role's
+  `hears-and-reads-a-replacement` and `reads-the-template-catalogue`, and
+  booking's cases for `oms`, `operations`, `compliance`, `connectivity`,
+  `confirmation`, `portfolio` and `reporting` (TODO: the case list, and
+  which may be marked not presented, as built).
+- **A plugin declaring `meridian.environment()`** that meant Live by
+  default says so in its code (TODO: as built).
+- **An `operations` plugin** may declare its `affirmation_deadline`, the
+  time of day a held booking's alert is due by (TODO: as built).
+
+A plugin that does none of these keeps working on 0.27.0's pins against a
+runtime serving contract v24: IDs are opaque, and a resolved `LCL-` ID is
+accepted on every write, forever.
 
 ### 0.26.0 to 0.27.0 { #0260-to-0270 }
 
