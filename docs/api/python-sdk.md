@@ -62,7 +62,7 @@ A plugin that serves pages declares them with [`meridian.Pages`](#pages) and pas
 | `Column` | frozen dataclass | [`Column`](#column) |
 | `Pages`, `Request`, `Response` | class, frozen dataclasses | [Pages](#pages) |
 | `AccessLevel` | generated protobuf enum | [`AccessLevel`](#accesslevel) |
-| `Money` | frozen dataclass | [Typed operations](typed-operations.md#money); its `instrument_id` |
+| `Money` | frozen dataclass | [Typed operations](typed-operations.md#money) |
 | `StatementFigures`, `ReportedCollateral`, `ReportedLot` | frozen dataclasses | [Typed operations](typed-operations.md#statementfigures) |
 | `ReportedEncumbrance` | frozen dataclass | [Typed operations](typed-operations.md#reportedencumbrance) |
 | `OpeningSource`, `OpeningPosition`, `OpeningLot`, `PendingSettlement`, `LotTerms`, `PositionKey`, `BreakDifference`, `BreakValue`, `BreakCause`, `PendingSettlementRef`, `AgreementFigures`, `ReportedPositionValue`, `PositionEncumbrances`, `Encumbrance`, `Adjustment`, `MovementLine`, `BasisAdjustment` | frozen dataclasses | [Typed operations](typed-operations.md#types), the book's |
@@ -70,11 +70,11 @@ A plugin that serves pages declares them with [`meridian.Pages`](#pages) and pas
 | `as_decimal`, `as_money` | functions | [Typed operations](typed-operations.md#numbers-and-amounts) |
 | `Identifier`, `MissReason` | generated protobuf message and enum | [Types](#types) |
 | `Figure`, `FigureState` | frozen dataclass, generated protobuf enum | [Figures](#figures) |
-| `AssetClass`, `CollateralDirection`, `ExternalAccount`, `HoldingSide`, `SyncState` | generated protobuf enums and message | [Typed operations](typed-operations.md#types); `CollateralDirection` |
+| `AssetClass`, `CollateralDirection`, `ExternalAccount`, `HoldingSide`, `SyncState` | generated protobuf enums and message | [Typed operations](typed-operations.md#types) |
 | `Heard` | frozen dataclass | [Receive](#receive) |
 | `TicketKind`, `TicketState`, `TicketResolution`, `TicketSubject`, `TicketReference` | generated protobuf enums, `StrEnum`, frozen dataclass | [`file_ticket()`](#file_ticket) |
 | `CustodialActivity` | frozen dataclass | [Typed operations](typed-operations.md#custodialactivity) |
-| `Storage`, `RecordKind` | frozen dataclasses | [The archive](#the-archive); `RecordKind` |
+| `Storage`, `RecordKind` | frozen dataclasses | [The archive](#the-archive) |
 | `StoredSpan`, `MoveOutcome` | generated protobuf message and enum | [The archive](#the-archive) |
 | `ActivityKind`, `ActivityRef` | generated protobuf enum and message | [Typed operations](typed-operations.md#activitykind) |
 | `DatasetDeclaration`, `DatasetLicence` | frozen dataclasses | [A data plugin's catalogue](#a-data-plugins-catalogue) |
@@ -89,7 +89,7 @@ A plugin that serves pages declares them with [`meridian.Pages`](#pages) and pas
 | `OrderLink`, `OrderChange`, `PlacementChange`, `AllocationInstruction`, `AllocationLine`, `Leg`, `Party`, `ReceiptQuote`, `StrategyInstruction`, `Finality`, `Fee`, `LocateAnswer`, `LocateUse`, `VenueCatalogue`, `VenueOrderType`, `VenueStrategy`, `StrategyParameter`, `VenueEligibility`, `Actor` | frozen dataclasses and a generated protobuf message | [The order path](#the-order-path) |
 | `DateBasis`, `DateCheck`, `DateRuleRef`, `SettlementDateInputs`, `SpotDateInputs`, `TenorDateInputs`, `Tenor`, `RollInputs`, `BusinessDayInputs` | frozen dataclasses and generated protobuf messages | [Settlement calendars](#settlement-calendars) |
 | `Outcome`, `OutcomeDetermination`, `OutcomeStage` | frozen dataclass, generated protobuf enums | [Outcomes](#outcomes). Added in SDK 0.27.0 |
-| `settings`, `setting`, `environment`, `sample_data` | decorator, functions | [Typed settings](#typed-settings), from 0.24.0; `account_currency`. Added in SDK 0.27.0 |
+| `settings`, `setting`, `environment`, `sample_data` | decorator, functions | [Typed settings](#typed-settings); `account_currency` added in SDK 0.27.0 |
 | `CallerMiddleware` | ASGI middleware | [`CallerMiddleware`](#callermiddleware) |
 | `MeridianError`, `Refused`, `NoSidecar`, `NotRegistered`, `NotGranted`, `CallFailed`, `NotLinked`, `CommandRefused` | exceptions | [Exceptions](#exceptions) |
 | `DEFAULT_ADDRESS` | `str` | `"127.0.0.1:9191"`, where a sidecar listens |
