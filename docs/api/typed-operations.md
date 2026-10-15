@@ -31,6 +31,8 @@ From 0.25.0, contract v21, no operation is added. A plugin's autonomous work cal
 
 From 0.26.0, contract v22, it also lists [the order path](#the-order-path)'s twenty-two operations, by which `portfolio`, `oms`, `ems`, `compliance` and `operations` plugins and connectivity plugins propose, release, check, claim, place, report and read orders, and an `ems` maps its accounts to venue account codes; and the [settlement calendars' reads](#settlement-calendars-reads), [`read_calendar`](#read_calendar) and [`compute_date`](#compute_date), which every role may call. `connectivity` also gains [`resolve_identifier`](#resolve_identifier), [`report_missing_instrument`](#report_missing_instrument), [`resolve_instrument`](#resolve_instrument), [`resolve_venue`](#resolve_venue), [`report_missing_venue`](#report_missing_venue) and [`list_account_attributes`](#list_account_attributes); `ems` gains `resolve_instrument`, `resolve_venue` and `list_account_attributes`. Each new operation is `preview` in v22. A command naming an order, a placement, a change request or a locate by its ID is admitted on the role's grant and held by the book to the plugin's write scope (see [The order lifecycle](../concepts/the-order-lifecycle.md#a-command-naming-a-record-by-its-id)).
 
+From 0.28.0, contract v24, it also lists [contract v24's operations](#contract-v24s-operations): [booking](../concepts/booking.md)'s, by which the `oms` books an order's executions to its accounts and hands the booking off, `portfolio` and `operations` set an allocation instruction, `operations` corrects a booking, `compliance` raises and acknowledges alerts, and a `connectivity` or `confirmation` plugin reports a give-up's answer; [`read_local_record_orders`](#read_local_record_orders), the setting for orders on local records; and the one-ID revision's reads every role may call, [`list_replacements`](#list_replacements), [`list_templates`](#list_templates) and [`read_template`](#read_template), with `reference`'s [`offer_template_fields`](#offer_template_fields). Each is `preview` in v24. A resolve answers whether its record is provisional (see [One ID per instrument](../concepts/one-id.md)).
+
 ## Summary
 
 | Python method | gRPC rpc | Workflow step | Kind | Role | Returns |
@@ -100,6 +102,21 @@ From 0.26.0, contract v22, it also lists [the order path](#the-order-path)'s twe
 | [`accept_execution`](#accept_execution) | `AcceptExecution` | W11.23 Accept an unmatched execution to an order | command | `ems`, from v23 | `AcceptExecutionResult` |
 | [`dont_know_execution`](#dont_know_execution) | `DontKnowExecution` | W11.24 Answer an unmatched execution DK | command | `ems`, from v23 | `DontKnowExecutionResult` |
 | [`report_value_date_roll`](#report_value_date_roll) | `ReportValueDateRoll` | W11.25 Report a value-date roll | command | `connectivity`, from v23 | `ReportValueDateRollResult` |
+| [`set_allocation_instruction`](#set_allocation_instruction) | `SetAllocationInstruction` | W11.26 Set an order's allocation instruction | command | `portfolio`, `operations`, from v24 | `SetAllocationInstructionResult` |
+| [`book_order`](#book_order) | `BookOrder` | W11.27 Book an order's executions to its accounts | command | `oms`, from v24 | `BookOrderResult` |
+| [`hand_off_booking`](#hand_off_booking) | `HandOffBooking` | W11.28 Hand off or close a booking | command | `oms`, from v24 | `HandOffBookingResult` |
+| [`correct_booking`](#correct_booking) | `CorrectBooking` | W11.29 Correct a booking | command | `oms`, `operations`, from v24 | `CorrectBookingResult` |
+| [`list_bookings`](#list_bookings) | `ListBookings` | W11.31 Read bookings | query | `oms`, `operations`, `compliance`, `portfolio`, `reporting`, from v24 | `ListBookingsResult` |
+| [`report_give_up`](#report_give_up) | `ReportGiveUp` | W11.32 Report a give-up's answer | command | `connectivity`, `confirmation`, from v24 | `ReportGiveUpResult` |
+| [`record_sleeve_cross`](#record_sleeve_cross) | `RecordSleeveCross` | W11.33 Record a sleeve cross | command | `oms`, from v24 | `RecordSleeveCrossResult` |
+| [`raise_alert`](#raise_alert) | `RaiseAlert` | W11.34 Raise, acknowledge and clear an alert | command | `compliance`, from v24 | `RaiseAlertResult` |
+| [`acknowledge_alert`](#acknowledge_alert) | `AcknowledgeAlert` | W11.34 Raise, acknowledge and clear an alert | command | `compliance`, from v24 | `AcknowledgeAlertResult` |
+| [`list_alerts`](#list_alerts) | `ListAlerts` | W11.35 Hear and read alerts | query | `compliance`, `reporting`, `oms`, `operations`, from v24 | `ListAlertsResult` |
+| [`read_local_record_orders`](#read_local_record_orders) | `ReadLocalRecordOrders` | W11.37 Read whether an order may name a local record | query | `oms`, `ems`, `connectivity`, `portfolio`, `compliance`, from v24 | `ReadLocalRecordOrdersResult` |
+| [`list_replacements`](#list_replacements) | `ListReplacements` | W3.22 Catch up on replacements | query | every role, from v24 | `ListReplacementsResult` |
+| [`list_templates`](#list_templates) | `ListTemplates` | W3.24 Read the template catalogue | query | every role, from v24 | `ListTemplatesResult` |
+| [`read_template`](#read_template) | `ReadTemplate` | W3.24 Read the template catalogue | query | every role, from v24 | `ReadTemplateResult` |
+| [`offer_template_fields`](#offer_template_fields) | `OfferTemplateFields` | W3.23 Offer a template's fields | command | `reference`, from v24 | `OfferTemplateFieldsResult` |
 | [`read_calendar`](#read_calendar) | `ReadCalendar` | W3.19 Read a calendar | query | every role, from v22 | `ReadCalendarResult` |
 | [`compute_date`](#compute_date) | `ComputeDate` | W3.20 Work out a date | query | every role, from v22 | `ComputeDateResult` |
 
@@ -961,6 +978,8 @@ async def resolve_identifier(
 | Kind | query, on `platform.reference.query.resolve-identifier` |
 | Role | `custody`; from contract v18 also `data`, resolving its vendor's codes to the instruments its rows name; from contract v19 also `reporting`, read-only |
 | Served by | the instrument store, the deployment's replica of the security master |
+
+**Provisional, from contract v24.** Nothing matched, the store asks the platform to match or mint the security, within a short bounded wait; answered, the record is the platform's, under its `INS-` ID. Otherwise the store mints a provisional local record, under an `LCL-` ID, and the result's `provisional` is `True`; `minted` keeps its meaning, this resolve created the deployment's record. Test `provisional`, never the `LCL-` prefix: a resolved `LCL-` ID stays `LCL-` and answers as the `INS-` record it became. A source stating less than an identifier, a description and a currency mints nothing: `found` is `False`, `miss_reason` `MISS_REASON_NOT_FOUND`, and the holding is recorded unresolved. The `open_meridian` identifier is no longer added to records. See [One ID per instrument](../concepts/one-id.md).
 
 **Read-only, for `reporting`** (contract v19). A `reporting` plugin names an instrument by an identifier, such as its reporting currency by its ISO 4217 code (`Identifier(scheme="iso4217", value="EUR")`), and the store answers the record it holds for the date. Asked by `reporting`, nothing is minted, joined, offered or listed: nothing matched is `MISS_REASON_NOT_FOUND`, several matched `MISS_REASON_AMBIGUOUS`. From contract v20 core enforces it, from the asking instance's launched roles; in v19 it did not, so a code nothing matched could record a miss, a local record minted for it as for any plugin's resolve (see [Instruments](../concepts/instruments.md#resolving-an-identifier)).
 
@@ -2471,6 +2490,149 @@ next value date. See
 (`UNPLACED_REASON_UNMAPPED_VENUE_ACCOUNT`) or nothing is pending on the
 from date (`UNPLACED_REASON_NOTHING_PENDING`). A missing date or basis, or
 a new date not after the old, is refused `invalid`, naming the field.
+
+## Contract v24's operations { #contract-v24s-operations }
+
+From 0.28.0, contract v24. Every one is `preview`. A command acting for
+a person takes `acting_for`, as the order path's do. See [Booking](../concepts/booking.md) and
+[One ID per instrument](../concepts/one-id.md).
+
+!!! note "TODO: as built in open-meridian 0.28.0"
+    The method names and result types here follow the generator's
+    convention and the contract's names. Check each signature against
+    open-meridian 0.28.0 once it is built.
+
+### `set_allocation_instruction` { #set_allocation_instruction }
+
+`portfolio`, or `operations` for a client's instruction, amends an order's
+allocation instruction: `order_id`, `allocation_instruction` (its lines,
+each an account with its amount or weight and its sleeve) and `reason`.
+**Returns** the order. Refused `REFUSAL_REASON_ORDER_STATE` where an
+account would fall below what its live bookings already allocate;
+`_REASON_REQUIRED`, `_ACTOR_REQUIRED`.
+
+### `book_order` { #book_order }
+
+The `oms` books an explicit list of executions on one order, a block
+included: `order_id`, `execution_ids`, `allocations` (each an
+`Allocation`: `account_id`, `sleeve`, `quantity`, `average_price`,
+`gross_amount`, `fees` each with its kind and `capitalised`, `net_amount`,
+`intended_settlement_date`, `average_priced`, `relieve_lot_ids`, and on an
+error account `error_cause`, `reason` and `error_text`) and `hand_off`, to
+hand off in the same act where the check passes. **Returns** the
+`booking` (its `BKG-` ID, state and allocations, each with its `ALC-` ID),
+its `entry` and `journal`. Refused `REFUSAL_REASON_BOOKING_UNBALANCED`,
+`_ACCOUNT_NOT_INSTRUCTED`, `_ORDER_STATE` (naming the execution),
+`_REASON_REQUIRED` or `_ACTOR_REQUIRED`; `ERROR_CAUSE_OTHER` with no text
+`invalid`, naming the field.
+
+### `hand_off_booking` { #hand_off_booking }
+
+The `oms` hands a booked booking off to `operations` (`booking_id`), or
+closes a client's booking the firm does not settle (`close`). **Returns**
+the booking handed off or closed, or held with its `held_reason` where
+executed no longer equals allocated, a held-booking alert raised. Refused
+`REFUSAL_REASON_ORDER_STATE` for a booking handed off, closed or
+cancelled; `_ACTOR_REQUIRED`.
+
+### `correct_booking` { #correct_booking }
+
+`booking_id`, `kind` (`BOOKING_CORRECTION_KIND_CANCEL`, the `oms`'s before
+the hand-off; `BOOKING_CORRECTION_KIND_REPLACE`, `operations`' after it),
+the whole new `allocations`, `effective_date` (a replace's, the trade date
+by default) and `reason`. **Returns** the booking cancelled, or its new
+version, the movement lines journalled as their own entry. Refused as
+`book_order` is, and `_ORDER_STATE` for the wrong kind for the state or
+the actor.
+
+### `list_bookings` { #list_bookings }
+
+The bookings in the plugin's read scope: `account_id`, `since` (a
+watermark), `state`, `page_size` and `cursor`. **Returns** `bookings`, each
+with its allocations, `as_of` and `next_cursor`. A reader also hears each booking change, BookingUpdated.
+
+### `report_give_up` { #report_give_up }
+
+A `connectivity` or `confirmation` plugin reports a prime broker's answer
+to a give-up: `execution_id`, `allocation_id` where one is booked,
+`answer` (`GIVE_UP_ANSWER_ACCEPTED` or `GIVE_UP_ANSWER_REJECTED`),
+`prime_reference`, `reason` and `raw_record`. A fact, never refused for its
+state. **Returns** the book's fact reply; a report naming nothing the book
+holds is an unplaced fact.
+
+### `record_sleeve_cross` { #record_sleeve_cross }
+
+The `oms` records a cross between two sleeves of one account, at
+`portfolio`'s decision: a `SleeveCross` naming the instrument, the giving
+and receiving sleeves, the quantity, the cross price and its source, who
+decided and why, and `order_ids`, the two opposite orders it stands in for.
+**Returns** the `sleeve_cross` (its `SXC-` ID) and `journal`. Refused
+`invalid` naming `order_ids` for an order of another account or
+instrument, or two of one side; `_ORDER_STATE` for an order ended;
+`_ACTOR_REQUIRED`, `_REASON_REQUIRED`.
+
+### `raise_alert` { #raise_alert }
+
+`compliance` raises an alert of its own on an account: `account_id`,
+`kind` (`ALERT_KIND_COMPLIANCE`), `reason` and `subject` (an order, a
+booking, an allocation or a position). **Returns** the `alert` (its `ALR-`
+ID) and `journal`.
+
+### `acknowledge_alert` { #acknowledge_alert }
+
+`compliance` acknowledges an alert for a person: `alert_id` and `reason`.
+An error-account alert is acknowledged so; a held-booking alert records
+the acknowledgement and stays until the booking hands off or closes.
+Refused `_ACTOR_REQUIRED` with no person, `_REASON_REQUIRED`.
+
+### `list_alerts` { #list_alerts }
+
+The alerts in the plugin's read scope: `account_id`, `since`, `state`,
+`kind`, `page_size` and `cursor`. **Returns** `alerts`, `as_of` and
+`next_cursor`. A reader also hears each alert change, AlertChanged.
+
+### `read_local_record_orders` { #read_local_record_orders }
+
+Takes nothing. **Returns** `allows_local_record_orders`, the setting in
+force, and `open_order_count`, the live orders on local records across the
+deployment, naming no account and no order. A plugin that proposes or
+accepts reads it, so it can tell a person before sending that an order on a
+local record would be refused (`REFUSAL_REASON_LOCAL_RECORD_NOT_ALLOWED`).
+
+### `list_replacements` { #list_replacements }
+
+Every role. The replacements the instrument store recorded after
+`after_sequence`: **returns** `replacements`, each as its
+instrument-replaced event carried it (the record replaced, the record it
+became, its `cause`, `REPLACEMENT_CAUSE_MERGED`, `_RESOLVED` or
+`_PLATFORM_MERGED`, and its `sequence`), and the `sequence` read to.
+Reference data, answered whatever the plugin's accounts. Every role also
+hears each replacement as it happens; the SDK keeps a current-ID map from
+both.
+
+### `list_templates` { #list_templates }
+
+Every role. The template catalogue the deployment holds, paged: each
+template's `template_id`, `template_version`, `name`, `asset_class`,
+`instrument_type` (unspecified for a class's base template), `base`, its
+`fields` (each with its path, type and whether it is required) and its
+`match_rule`.
+
+### `read_template` { #read_template }
+
+Every role. One template at a version, `template_id` and
+`template_version`, as `list_templates` answers each; or not held.
+
+### `offer_template_fields` { #offer_template_fields }
+
+A `reference` plugin offers a record's template fields, each value with
+its provenance, the plugin itself the source: `instrument_id`,
+`template_id`, `template_version` and `fields`. The values are kept as
+offers, never decisions: one is in force only once a person accepts it,
+and never overwrites a person's. The plugin never asks for a mint.
+**Returns** the record at its new version. Refused, naming the field, for
+a field the template does not have, a value not of its type, or a template
+or version the catalogue does not hold.
 
 ## Settlement calendars' reads { #settlement-calendars-reads }
 
