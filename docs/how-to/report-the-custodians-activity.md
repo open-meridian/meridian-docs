@@ -251,37 +251,6 @@ activity names its `activity_id` in `event_reference`. Every entry still
 waits for a person. Never relieve lots first in, first out where the
 custodian names none: ask the person which.
 
-## Move a plugin to 0.19.0 { #move-a-plugin-to-0190 }
-
-From 0.18.0, `meridian plugin migrate` moves only the pins: `open-meridian==0.19.0`
-in `pyproject.toml`, and `plugin-python:0.19.0` in the `Dockerfile`. Nothing a
-plugin calls changed. What 0.19.0 adds, a plugin adds by hand:
-
-- **A custody plugin** sends `history_from` on its sync status and reports
-  each activity with `record_activity`, its raw record kept as above, and
-  maps the custody suite's new cases.
-- **An operations plugin** may read and hear activity and sync statuses, and
-  link a cause to an activity. One that does none of this needs nothing more.
-
-A plugin built on 0.19.0 declares contract v14, and a runtime serving v13
-refuses it at registration, naming both versions: upgrade the deployment
-first ([Upgrade a deployment](upgrade-a-deployment.md)), then relaunch the
-plugin on the new version. A test that stands in for the SDK's private
-`Operations._receive` is now handed only the rows given a handler, not every
-row with `None` for the rest.
-
-## Move a plugin to 0.20.0 { #move-a-plugin-to-0200 }
-
-`meridian plugin migrate` moves only the pins: `open-meridian==0.20.0` and
-`plugin-python:0.20.0`. Nothing a plugin calls changed. A custody plugin
-that resolves activities by anything a person can change later, such as a
-plan code's link, adds `re_resolve_activity` as above; an operations plugin
-that reads activities reads `re_resolutions` beside them. One that does
-neither needs nothing more. A plugin built on 0.20.0 declares contract v15,
-and a runtime serving v14 refuses it at registration, naming both versions.
-0.20.0 also brings [access per role](../concepts/access.md#access-per-role),
-which changes nothing for a plugin holding one role.
-
 ## Related
 
 - [The custodian's activity](../concepts/the-custodians-activity.md)

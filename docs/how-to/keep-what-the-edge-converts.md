@@ -109,29 +109,6 @@ DECLARATION = Declaration(
 
 Each call, argument by argument, is in [The archive](../api/python-sdk.md#the-archive).
 
-### Move a plugin to 0.21.0 { #move-a-plugin-to-0210 }
-
-`meridian plugin migrate` moves only the pins: `open-meridian==0.21.0` and
-`plugin-python:0.21.0`. Nothing a plugin calls changed, and a plugin keeping one retention,
-`Storage(retention_days=...)`, keeps its records under it as before. A plugin adopting kinds drops
-any setting of its own that held a window, and its release notes name that setting and the
-window setting it maps to, for the admin to set once at upgrade, as SnapTrade 0.13.0's do (see
-[Upgrade SnapTrade to 0.13.0](keep-older-records-in-the-archive.md#upgrade-snaptrade-to-0130)). A
-plugin built on 0.21.0 declares contract v16, and a runtime serving v15 refuses it at
-registration, naming both versions.
-
-### Move a plugin to 0.22.0 { #move-a-plugin-to-0220 }
-
-`meridian plugin migrate` moves only the pins: `open-meridian==0.22.0` and
-`plugin-python:0.22.0`. A `Money` naming its currency by its ISO 4217
-code keeps its shape, and core resolves the code to the currency's cash instrument; a date sent as
-valid ISO text is sent as before. Left for you: a test comparing a `Money` read back with one it
-made, which now carries `instrument_id` (compare `amount` and `currency_code`), and a date sent as
-text that is no date, now refused. A plugin built on 0.22.0 declares contract v18, and a runtime
-serving v16 refuses it at registration, naming both versions. SnapTrade 0.13.1 and the sample
-operations plugin 0.9.1 are this move and nothing else. See
-[Money and instruments](../concepts/money-and-instruments.md).
-
 ## Say how you came by what the vendor did not send
 
 A value your vendor did not send, and you closed, carries its **provenance**:

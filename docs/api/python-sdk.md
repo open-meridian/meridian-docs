@@ -12,308 +12,15 @@ pip install open-meridian
 |---|---|
 | PyPI name | `open-meridian` |
 | Import name | `meridian` |
-| Version | 0.27.0 |
+| Version | 0.28.0 |
 | Python | 3.11 or newer |
-| Dependencies | `grpcio>=1.68,<2`, `protobuf>=5.28,<7`, `jinja2>=3.1,<4` (from 0.10.0, for [pages](#pages)) |
+| Dependencies | `grpcio>=1.68,<2`, `protobuf>=5.28,<7`, `jinja2>=3.1,<4` (for [pages](#pages)) |
 | Licence | Apache-2.0 |
 
 !!! warning "Not `meridian-sdk`"
     The PyPI package `meridian-sdk` belongs to an unrelated company. Don't install it.
 
-A plugin pins the SDK exactly, `open-meridian==0.27.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.27.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls; from 0.12.0 to 0.13.0, from 0.13.0 to 0.14.0, from 0.19.0 to 0.20.0, from 0.20.0 to 0.21.0, from 0.21.0 to 0.22.0 and from 0.22.0 to 0.23.0, only the pins move, from 0.23.0 to 0.24.0 it rewrites the renamed roles (see [0.23.0 to 0.24.0](#0230-to-0240)), from 0.24.0 to 0.25.0 only the pins move (see [0.24.0 to 0.25.0](#0240-to-0250)), from 0.25.0 to 0.26.0 only the pins move (see [0.25.0 to 0.26.0](#0250-to-0260)), from 0.26.0 to 0.27.0 only the pins move (see [0.26.0 to 0.27.0](#0260-to-0270)), and from 0.27.0 to 0.28.0 it rewrites a test of the `LCL-` prefix and a read of the `open_meridian` identifier (see [0.27.0 to 0.28.0](#0270-to-0280)). `meridian plugin new` writes a plugin pinned to 0.19.0 from CLI 0.1.34, to 0.20.0 from CLI 0.1.35, to 0.21.0 from CLI 0.1.36, to 0.22.0 from CLI 0.1.37, to 0.23.0 from CLI 0.1.38, to 0.24.0 from CLI 0.1.39, to 0.25.0 from CLI 0.1.41, to 0.26.0 from CLI 0.1.42, to 0.27.0 from CLI 0.1.43, and to 0.28.0 from CLI 0.1.45.
-
-!!! note "TODO: 0.28.0: contract v24, built, not released"
-    open-meridian 0.28.0 declares contract v24.
-    The `oms` [books](../concepts/booking.md) an order's executions to its
-    accounts (`book_order`, `hand_off_booking`, `correct_booking`), with
-    the block order, the error account, sleeve crosses
-    (`record_sleeve_cross`) and give-ups (`report_give_up`); `portfolio` and
-    `operations` set an allocation instruction
-    (`set_allocation_instruction`); `compliance` raises and acknowledges
-    alerts (`raise_alert`, `acknowledge_alert`); and readers list bookings
-    and alerts (`list_bookings`, `list_alerts`). Every instrument is named
-    by the platform's `INS-` ID, a deployment's local `LCL-` record
-    provisional until the platform answers
-    (`ResolveIdentifierResult.provisional`; see
-    [One ID per instrument](../concepts/one-id.md)); every role hears a
-    replacement and catches up with `list_replacements`, the SDK keeping a
-    current-ID map from both, and reads the templates (`list_templates`,
-    `read_template`); `reference` offers a template's fields
-    (`offer_template_fields`); and the order path's roles read whether an
-    order may name a local record (`read_local_record_orders`). An
-    account's base currency is a balance and every other currency opens
-    lots. `meridian.environment()` defaults to **Sandbox**, **Live** only
-    where the plugin's code says so (TODO: as built). The suites gain v24's
-    cases. Every operation it adds is `preview`.
-    [`meridian plugin migrate`](cli.md#plugin-migrate) rewrites what changed
-    (see [0.27.0 to 0.28.0](#0270-to-0280)). It needs a runtime serving
-    contract v24 (chart `0.1.CHART24` or later), and CLI 0.1.45's
-    `plugin new` writes a plugin on it. TODO: released on PyPI on
-    `<date>`; whether the role helpers are in 0.28.0 or 0.29.0.
-
-!!! note "0.27.0: contract v23"
-    open-meridian 0.27.0 declares contract v23.
-    A connectivity plugin reports a
-    [venue-originated fill](#venue-originated-fills) on no placement
-    (`report_execution`'s `instrument_id`, `side`, `venue_order_id` and
-    `venue_client_order_id`), which waits unmatched (`Execution.state`);
-    the `ems` accepts it (`accept_execution`, to an `order_id` or a
-    `new_order`) or answers it DK (`dont_know_execution`, with a reason);
-    a connectivity plugin hears the executions it reported, and its
-    catalogue says which acknowledgement its venue takes
-    (`VenueCatalogue.execution_acknowledgement`); `list_orders` takes
-    `execution_state`. A connectivity plugin reports a venue's
-    [value-date roll](#a-value-date-roll) (`report_value_date_roll`), a fee
-    may be financing or commission, and an FX order names its
-    `quote_currency`. A data plugin records an event contract's
-    [outcomes](#outcomes) (`record_outcomes`, `Outcome`), which prices'
-    readers and `operations` hear and read (`list_outcomes`); a daily value
-    on a closed day carries `ObservationMeta.closed_day`. A plugin whose
-    source states no currency declares
-    [`meridian.account_currency()`](#typed-settings). The suites gain v23's
-    cases, their [`about` markers](#a-case-not-presented) and `any_of`.
-    Every operation it adds is `preview`. Nothing a plugin calls changed
-    shape: `meridian plugin migrate` moves the pins (see
-    [0.26.0 to 0.27.0](#0260-to-0270)). It needs a runtime serving
-    contract v23 (chart 0.1.303 or later), and CLI 0.1.43's `plugin new`
-    writes a plugin on it. Released 2026-10-14.
-
-!!! warning "Notice: contract v24 changes three stable reads"
-    Contract v24, the one-ID revision, changes
-    [`ResolveIdentifier`](typed-operations.md#resolve_identifier),
-    [`ResolveInstrument`](typed-operations.md#resolve_instrument) and
-    [`ReportMissingInstrument`](typed-operations.md#report_missing_instrument). Every
-    instrument comes to be keyed by its platform `INS-` ID: a deployment's
-    provisional records stay `LCL-`, resolved to their `INS-` record, and a
-    resolved `LCL-` ID is accepted forever. The `open_meridian` identifier
-    stops being added to records. Plugins treat IDs as opaque and need no
-    change; a plugin that reads the `open_meridian` identifier should stop
-    relying on it. A stable row changes only after a version whose notice
-    says it will, and contract v23 is that version.
-
-!!! note "0.26.0: contract v22"
-    open-meridian 0.26.0 declares contract v22:
-    [the order path](#the-order-path) and
-    [settlement calendars](#settlement-calendars). Each role on the order
-    path does its part through typed operations (`propose_order`,
-    `release_order`, `create_placement`, `report_execution` and the rest)
-    and hears the book's records (`receive(order_updated=...,
-    placement_updated=..., execution_recorded=...,
-    trading_instruction_changed=...)`); a refusal by the order's state, a
-    claim or a link is a `CommandRefused` with its code, and the order's
-    transition table ships as `meridian/transitions.json`. Every role works
-    out a date in core (`read_calendar`, `compute_date`). A version declares
-    the algorithms its autonomous work may name
-    (`Declaration(algorithms=[AlgorithmDeclaration(...)])`), and
-    [`runs_as(role, algorithm_id=...)`](#runs_as) names one; a
-    [`Caller`](#caller) carries `algorithm_id` and, for an `ems`, the
-    connectivity plugins the user may route through
-    (`connectivity_instance_ids`). A placement carries its own change
-    requests (`change_requests`). A connectivity plugin reports fills on
-    the `ems`'s placements and records no order and creates no placement; a
-    venue-originated fill is not supported in contract v22, its handling
-    planned for a later release. The order path's and the
-    calendars' operations are `preview`. Nothing a plugin calls changed
-    shape: `meridian plugin migrate` moves the pins (see
-    [0.25.0 to 0.26.0](#0250-to-0260)). It needs a runtime serving contract
-    v22 (chart 0.1.301 or later), and CLI 0.1.42's `plugin new` writes
-    a plugin on it. Released 2026-10-13.
-
-!!! note "0.25.0: contract v21"
-    open-meridian 0.25.0 declares contract v21. A plugin's autonomous work -- a scheduled sweep, a strategy, an agent
-    inside the plugin -- calls its own acts as the
-    [service account](../concepts/service-accounts.md) its role runs as,
-    [`meridian.runs_as(role)`](#runs_as), answered made or prepared; a
-    refusal names its field (`NotGranted.fields`, `CallFailed.fields`), and
-    a sidecar older than v21 is said to be (`CallFailed`, kind
-    `"unimplemented"`). An act's route reached for such a call reads a
-    [`Caller`](#caller) whose `subject_kind` is a service account, naming
-    its `owner_subject` (`meridian.SubjectKind`), and acts as for a person;
-    `meridian.testing` calls a tool so (`subject_kind=`, `owner_subject=`).
-    Nothing a plugin calls changed shape: `meridian plugin migrate` moves
-    the pins (see [0.24.0 to 0.25.0](#0240-to-0250)). It needs a runtime
-    serving contract v21 (chart 0.1.299 or later), and CLI 0.1.41's
-    `plugin new` writes a plugin on it. Released 2026-10-12.
-
-!!! note "0.24.0: contract v20"
-    open-meridian 0.24.0 declares contract v20. An act can be [prepared](#prepared) rather than made (`checked_by=`,
-    `accounts=`, `made_on=`, `request.prepared()`); a setting may be
-    [each person's own](#own_settings) (`per_person`,
-    `plugin.set_own_settings`, `request.own_settings`); a plugin links only
-    to the accounts a deployment admin granted it; a data plugin reads its
-    own datasets' licences and backfills a restart's gap
-    (`meridian.roles.data.backfill_restart`); the roles `dgm`, `ccm` and
-    `match` are named `data`, `connectivity` and `confirmation`; and each
-    role's common part is [`meridian.roles`](#each-roles-common-part), with
-    typed settings (`@meridian.settings`, `meridian.environment()`,
-    `meridian.sample_data()`) and the kit's macros (`meridian/kit.html`).
-    From 0.23.0 `meridian plugin migrate` rewrites the old role names; see
-    [0.23.0 to 0.24.0](#0230-to-0240). It needs a runtime serving contract
-    v20 (chart 0.1.298 or later), and CLI 0.1.39's `plugin new` writes a
-    plugin on it. Released 2026-10-11.
-
-!!! note "0.23.0: contract v19"
-    open-meridian 0.23.0 declares contract v19, the lake's trades
-    and quotes: a data plugin records them in batches, `signal` and `ems` read and
-    hear them, every trade in full and caught up after a watermark;
-    `reporting` resolves an identifier; the suites' 1b cases and a case
-    about a kind of data a plugin never publishes marked not presented. It
-    needs a runtime serving contract v19 (chart 0.1.294 or later), which
-    refuses nothing a plugin on 0.22.0 sends. Released 2026-10-10. See
-    [Trades and quotes](#trades-and-quotes).
-
-!!! note "0.22.0: contract v18"
-    open-meridian 0.22.0 declares contract v18, [the lake](#the-lake): a
-    `data`'s catalogue, prices and bars recorded in batches, wants, the
-    readers, a `Money` naming its instrument and real dates. It needs a
-    runtime serving contract v18 (chart 0.1.292 or later), which refuses
-    nothing a plugin on 0.21.0 sends. See [Plugin manifest](plugin-manifest.md).
-
-### 0.27.0 to 0.28.0 { #0270-to-0280 }
-
-TODO: released `<date>`. `meridian plugin migrate --to 0.28.0` moves the
-pins and rewrites what the one-ID revision changed (see
-[One ID per instrument](../concepts/one-id.md#for-a-plugins-author)):
-
-- **A test of the `LCL-` prefix** on an instrument ID, such as
-  `instrument_id.startswith("LCL-")`, is rewritten to read the record's
-  `provisional`. The prefix only says the deployment minted the ID: a
-  resolved `LCL-` ID stays `LCL-`.
-- **A read of the `open_meridian` identifier** for the platform's ID is
-  rewritten to the record's `instrument_id`, which is the platform's ID
-  from contract v24. The `open_meridian` identifier is no longer added to
-  records.
-- **The suites' `LCL-suite-n` fixtures** become `INS-` IDs, with
-  provisional cases beside them.
-
-Then, by hand where they apply:
-
-- **A plugin that keeps instrument IDs** in its own storage or state
-  follows each replacement to the record it became: the SDK's current-ID
-  map does it from `list_replacements` and the deliveries. One that keeps
-  none needs nothing. `meridian plugin check` warns a plugin that writes a
-  replaced ID.
-- **A suite test** meets v24's cases: every role's
-  `hears-and-reads-a-replacement` and `reads-the-template-catalogue`, and
-  booking's cases for `oms`, `operations`, `compliance`, `connectivity`,
-  `confirmation`, `portfolio` and `reporting` (TODO: the case list, and
-  which may be marked not presented, as built).
-- **A plugin declaring `meridian.environment()`** that meant Live by
-  default says so in its code (TODO: as built).
-- **An `operations` plugin** may declare its `affirmation_deadline`, the
-  time of day a held booking's alert is due by (TODO: as built).
-
-A plugin that does none of these keeps working on 0.27.0's pins against a
-runtime serving contract v24: IDs are opaque, and a resolved `LCL-` ID is
-accepted on every write, forever.
-
-### 0.26.0 to 0.27.0 { #0260-to-0270 }
-
-Released 2026-10-14. `meridian plugin migrate --to 0.27.0` moves the pins
-and rewrites nothing: contract v23 adds, and changes the shape of nothing a
-plugin calls. Then, by hand where they apply:
-
-- **A suite test** meets v23's cases. `connectivity`'s four
-  (`reports-a-fill-on-no-placement`,
-  `reports-a-later-fill-on-the-accepted-placement`,
-  `re-reports-a-charge-on-the-accepted-placement`, about `venue-originated
-  fills`, and `reports-a-value-date-roll`, about `value-date rolls`), the
-  data suite's three outcome cases (about `outcomes` and `disputed
-  outcomes`), and each reader's `hears-and-reads-an-outcome` (about
-  `outcomes`) may be named in `not_presented`, with why, where the plugin's
-  source or work never has them; `ems`'s four and `operations`' and
-  `compliance`'s new cases are required. Cases that were required may now
-  be marked too: custody's plan-code, sweep-fund, split and
-  currency-not-stated cases, and connectivity's `reports-a-bust` and
-  `reports-a-charge`. See [A case not presented](#a-case-not-presented).
-- **A test that skips or expects a suite test to fail** fails CLI 0.1.43's
-  `role-suite`: run the suite, mark what is not presented, and
-  `assert report.passed, report.failures` in the next statement (see
-  [`meridian plugin check`](cli.md#plugin-check)).
-- **A client of `dashboard__list_datasets` or
-  `dashboard__list_source_priorities`** accepts `outcome: "unchanged"`, which
-  they answer from contract v23, as well as `read`.
-- **A custody plugin whose source states no currency** declares
-  `meridian.account_currency()` and gives the currency it supplies with its
-  provenance (see [Typed settings](#typed-settings)).
-
-### 0.25.0 to 0.26.0 { #0250-to-0260 }
-
-Released 2026-10-13. `meridian plugin migrate --to 0.26.0` moves the pins
-and rewrites nothing: contract v22 adds, and changes the shape of nothing a
-plugin calls. Then, by hand where they apply:
-
-- **A suite test** meets the settlement calendars' cases: every role's
-  suite now holds `reads-a-calendar`, and every role's but `connectivity`'s
-  and `operations`' `asks-for-a-settlement-date`. Map each to a call of
-  `read_calendar` and `compute_date` (the role templates' `test_suite.py`
-  show both), or, where your plugin's work never uses calendars or
-  settlement dates, name it in `not_presented`, with why: the two are about
-  `calendars` and `settlement dates` (see [A case not presented](#a-case-not-presented)).
-  A plugin holding `connectivity` or `oms` meets its role's suite, and one
-  holding `portfolio`, `ems`, `compliance`, `operations` or `reporting`
-  that role's order path cases.
-- **A settlement or value date your plugin works out itself** is asked of
-  core instead, with `compute_date`, and recorded with its basis (see
-  [Settlement calendars](#settlement-calendars)).
-- **Work the plugin does on its own that runs an algorithm** declares it,
-  `Declaration(algorithms=[AlgorithmDeclaration("twap-v1", "...")])`, and
-  names it, `meridian.runs_as(role, algorithm_id="twap-v1")`, keeping each
-  identifier stable across versions.
-- **A plugin that reads positions, lots or movement lines** finds a
-  `sleeve` on each, empty for an account's unsleeved part.
-
-### 0.24.0 to 0.25.0 { #0240-to-0250 }
-
-`meridian plugin migrate --to 0.25.0` moves the pins
-and rewrites nothing: contract v21 adds, and changes the shape of nothing a
-plugin calls. Then, by hand where they apply:
-
-- **Work the plugin does on its own** that changes something calls the
-  plugin's own act as its role's service account,
-  [`meridian.runs_as(role)`](#runs_as), and reads whether it was made or
-  prepared. Each act called so names its check tool (`checked_by=`): from
-  CLI 0.1.41 `meridian plugin check` fails one that names none
-  (`runs-as-checked`).
-- **An act's route** may be reached for a service account: it acts as for
-  a person, `acting_for=request.caller.header`. Show
-  `request.caller.subject_kind` and `owner_subject` where the page says who
-  acted.
-- **A test that compares a refusal's attributes** finds `fields` on
-  `NotGranted` and `CallFailed` too, empty where the sidecar named none.
-
-### 0.23.0 to 0.24.0 { #0230-to-0240 }
-
-`meridian plugin migrate --to 0.24.0` moves the pins and
-rewrites one thing, the renamed roles, wherever a plugin names a role: its
-`pyproject.toml`'s `[tool.meridian] roles`, a `roles=` argument, the role
-`meridian.suites.run`, `run_async`, `suite` or `names` is given, and the role
-`Caller.level_for`, `read_for` or `write_for` asks; `dgm` becomes `data`, `ccm`
-`connectivity` and `match` `confirmation`. Nothing else a plugin calls changed
-shape. The release is marked breaking for the rename alone. Then, by hand
-where they apply:
-
-- **An act you want preparable** names its check tool, accounts and page
-  (`checked_by=`, `accounts=`; `made_on=` is filled for you): see
-  [Prepared changes](#prepared). A verified plugin's act without a check fails
-  `meridian plugin check --verified` from CLI 0.1.39.
-- **A form field named `prepare`** is refused: rename it.
-- **A data plugin** meets the data suite's three new cases: map
-  `a-restarts-gap-backfilled` (or, where it records no trades, it is about
-  trades and may be marked not presented) and `reads-its-datasets-licences`;
-  map `the-takers-side-stated` or, where the source never states the
-  aggressor, mark it with why. See
-  [Write a data plugin](../how-to/write-a-data-plugin.md).
-- **A plugin linking external accounts** is answered only the accounts a
-  deployment admin granted it, nothing at first: say so on its page, and
-  expect `REFUSAL_REASON_ACCOUNT_NOT_LINKABLE` for any other.
-- **A plugin of a role with a common part** (`data`, `custody`,
-  `operations`, `reporting`) may move its pages onto
-  [`meridian.roles`](#each-roles-common-part), and is held to the role's
-  pages by `role-pages` under `--verified` from CLI 0.1.39.
-- **`synthetic`**, each plugin's own until now, may become
-  `meridian.sample_data()` (`sample_data`), the ruled convention: a plugin
-  chooses when, at its next versioned push.
+A plugin pins the SDK exactly, `open-meridian==0.28.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.28.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls (see [Moving a plugin to a new release](#moving-a-plugin-to-a-new-release)). `meridian plugin new` writes a plugin pinned to 0.28.0.
 
 | Optional extra | Installs | For |
 |---|---|---|
@@ -2245,3 +1952,338 @@ The sidecar's status is mapped onto these for typed operations:
 ## `meridian-dev`
 
 The package installs one command, `meridian-dev run`. On a development deployment it is the plugin container's command. It runs the plugin's own entry point, the first one in `[project.scripts]`, from the live folder, and restarts it on each change the sidecar writes. The pod, the sidecar and its credential stay as they are. It uses the standard library alone. A plugin author doesn't run it directly. See [Development deployments](../concepts/development-deployments.md) and [`plugin dev` events](plugin-dev-events.md).
+
+## Release notes { #release-notes }
+
+Each release of the SDK, the contract it declares, the runtime it needs, and the CLI whose `plugin new` writes a plugin on it. What a plugin's author does to move to it is in [Moving a plugin to a new release](#moving-a-plugin-to-a-new-release).
+
+!!! note "TODO: 0.28.0: contract v24, built, not released"
+    open-meridian 0.28.0 declares contract v24.
+    The `oms` [books](../concepts/booking.md) an order's executions to its
+    accounts (`book_order`, `hand_off_booking`, `correct_booking`), with
+    the block order, the error account, sleeve crosses
+    (`record_sleeve_cross`) and give-ups (`report_give_up`); `portfolio` and
+    `operations` set an allocation instruction
+    (`set_allocation_instruction`); `compliance` raises and acknowledges
+    alerts (`raise_alert`, `acknowledge_alert`); and readers list bookings
+    and alerts (`list_bookings`, `list_alerts`). Every instrument is named
+    by the platform's `INS-` ID, a deployment's local `LCL-` record
+    provisional until the platform answers
+    (`ResolveIdentifierResult.provisional`; see
+    [One ID per instrument](../concepts/one-id.md)); every role hears a
+    replacement and catches up with `list_replacements`, the SDK keeping a
+    current-ID map from both, and reads the templates (`list_templates`,
+    `read_template`); `reference` offers a template's fields
+    (`offer_template_fields`); and the order path's roles read whether an
+    order may name a local record (`read_local_record_orders`). An
+    account's base currency is a balance and every other currency opens
+    lots. `meridian.environment()` defaults to **Sandbox**, **Live** only
+    where the plugin's code says so (TODO: as built). The suites gain v24's
+    cases. Every operation it adds is `preview`.
+    [`meridian plugin migrate`](cli.md#plugin-migrate) rewrites what changed
+    (see [0.27.0 to 0.28.0](#0270-to-0280)). It needs a runtime serving
+    contract v24 (chart `0.1.CHART24` or later), and CLI 0.1.45's
+    `plugin new` writes a plugin on it. TODO: released on PyPI on
+    `<date>`; whether the role helpers are in 0.28.0 or 0.29.0.
+
+!!! note "0.27.0: contract v23"
+    open-meridian 0.27.0 declares contract v23.
+    A connectivity plugin reports a
+    [venue-originated fill](#venue-originated-fills) on no placement
+    (`report_execution`'s `instrument_id`, `side`, `venue_order_id` and
+    `venue_client_order_id`), which waits unmatched (`Execution.state`);
+    the `ems` accepts it (`accept_execution`, to an `order_id` or a
+    `new_order`) or answers it DK (`dont_know_execution`, with a reason);
+    a connectivity plugin hears the executions it reported, and its
+    catalogue says which acknowledgement its venue takes
+    (`VenueCatalogue.execution_acknowledgement`); `list_orders` takes
+    `execution_state`. A connectivity plugin reports a venue's
+    [value-date roll](#a-value-date-roll) (`report_value_date_roll`), a fee
+    may be financing or commission, and an FX order names its
+    `quote_currency`. A data plugin records an event contract's
+    [outcomes](#outcomes) (`record_outcomes`, `Outcome`), which prices'
+    readers and `operations` hear and read (`list_outcomes`); a daily value
+    on a closed day carries `ObservationMeta.closed_day`. A plugin whose
+    source states no currency declares
+    [`meridian.account_currency()`](#typed-settings). The suites gain v23's
+    cases, their [`about` markers](#a-case-not-presented) and `any_of`.
+    Every operation it adds is `preview`. Nothing a plugin calls changed
+    shape: `meridian plugin migrate` moves the pins (see
+    [0.26.0 to 0.27.0](#0260-to-0270)). It needs a runtime serving
+    contract v23 (chart 0.1.303 or later), and CLI 0.1.43's `plugin new`
+    writes a plugin on it. Released 2026-10-14.
+
+!!! warning "Notice: contract v24 changes three stable reads"
+    Contract v24, the one-ID revision, changes
+    [`ResolveIdentifier`](typed-operations.md#resolve_identifier),
+    [`ResolveInstrument`](typed-operations.md#resolve_instrument) and
+    [`ReportMissingInstrument`](typed-operations.md#report_missing_instrument). Every
+    instrument comes to be keyed by its platform `INS-` ID: a deployment's
+    provisional records stay `LCL-`, resolved to their `INS-` record, and a
+    resolved `LCL-` ID is accepted forever. The `open_meridian` identifier
+    stops being added to records. Plugins treat IDs as opaque and need no
+    change; a plugin that reads the `open_meridian` identifier should stop
+    relying on it. A stable row changes only after a version whose notice
+    says it will, and contract v23 is that version.
+
+!!! note "0.26.0: contract v22"
+    open-meridian 0.26.0 declares contract v22:
+    [the order path](#the-order-path) and
+    [settlement calendars](#settlement-calendars). Each role on the order
+    path does its part through typed operations (`propose_order`,
+    `release_order`, `create_placement`, `report_execution` and the rest)
+    and hears the book's records (`receive(order_updated=...,
+    placement_updated=..., execution_recorded=...,
+    trading_instruction_changed=...)`); a refusal by the order's state, a
+    claim or a link is a `CommandRefused` with its code, and the order's
+    transition table ships as `meridian/transitions.json`. Every role works
+    out a date in core (`read_calendar`, `compute_date`). A version declares
+    the algorithms its autonomous work may name
+    (`Declaration(algorithms=[AlgorithmDeclaration(...)])`), and
+    [`runs_as(role, algorithm_id=...)`](#runs_as) names one; a
+    [`Caller`](#caller) carries `algorithm_id` and, for an `ems`, the
+    connectivity plugins the user may route through
+    (`connectivity_instance_ids`). A placement carries its own change
+    requests (`change_requests`). A connectivity plugin reports fills on
+    the `ems`'s placements and records no order and creates no placement; a
+    venue-originated fill is not supported in contract v22, its handling
+    planned for a later release. The order path's and the
+    calendars' operations are `preview`. Nothing a plugin calls changed
+    shape: `meridian plugin migrate` moves the pins (see
+    [0.25.0 to 0.26.0](#0250-to-0260)). It needs a runtime serving contract
+    v22 (chart 0.1.301 or later), and CLI 0.1.42's `plugin new` writes
+    a plugin on it. Released 2026-10-13.
+
+!!! note "0.25.0: contract v21"
+    open-meridian 0.25.0 declares contract v21. A plugin's autonomous work -- a scheduled sweep, a strategy, an agent
+    inside the plugin -- calls its own acts as the
+    [service account](../concepts/service-accounts.md) its role runs as,
+    [`meridian.runs_as(role)`](#runs_as), answered made or prepared; a
+    refusal names its field (`NotGranted.fields`, `CallFailed.fields`), and
+    a sidecar older than v21 is said to be (`CallFailed`, kind
+    `"unimplemented"`). An act's route reached for such a call reads a
+    [`Caller`](#caller) whose `subject_kind` is a service account, naming
+    its `owner_subject` (`meridian.SubjectKind`), and acts as for a person;
+    `meridian.testing` calls a tool so (`subject_kind=`, `owner_subject=`).
+    Nothing a plugin calls changed shape: `meridian plugin migrate` moves
+    the pins (see [0.24.0 to 0.25.0](#0240-to-0250)). It needs a runtime
+    serving contract v21 (chart 0.1.299 or later), and CLI 0.1.41's
+    `plugin new` writes a plugin on it. Released 2026-10-12.
+
+!!! note "0.24.0: contract v20"
+    open-meridian 0.24.0 declares contract v20. An act can be [prepared](#prepared) rather than made (`checked_by=`,
+    `accounts=`, `made_on=`, `request.prepared()`); a setting may be
+    [each person's own](#own_settings) (`per_person`,
+    `plugin.set_own_settings`, `request.own_settings`); a plugin links only
+    to the accounts a deployment admin granted it; a data plugin reads its
+    own datasets' licences and backfills a restart's gap
+    (`meridian.roles.data.backfill_restart`); the roles `dgm`, `ccm` and
+    `match` are named `data`, `connectivity` and `confirmation`; and each
+    role's common part is [`meridian.roles`](#each-roles-common-part), with
+    typed settings (`@meridian.settings`, `meridian.environment()`,
+    `meridian.sample_data()`) and the kit's macros (`meridian/kit.html`).
+    From 0.23.0 `meridian plugin migrate` rewrites the old role names; see
+    [0.23.0 to 0.24.0](#0230-to-0240). It needs a runtime serving contract
+    v20 (chart 0.1.298 or later), and CLI 0.1.39's `plugin new` writes a
+    plugin on it. Released 2026-10-11.
+
+!!! note "0.23.0: contract v19"
+    open-meridian 0.23.0 declares contract v19, the lake's trades
+    and quotes: a data plugin records them in batches, `signal` and `ems` read and
+    hear them, every trade in full and caught up after a watermark;
+    `reporting` resolves an identifier; the suites' 1b cases and a case
+    about a kind of data a plugin never publishes marked not presented. It
+    needs a runtime serving contract v19 (chart 0.1.294 or later), which
+    refuses nothing a plugin on 0.22.0 sends. Released 2026-10-10. See
+    [Trades and quotes](#trades-and-quotes).
+
+!!! note "0.22.0: contract v18"
+    open-meridian 0.22.0 declares contract v18, [the lake](#the-lake): a
+    `data`'s catalogue, prices and bars recorded in batches, wants, the
+    readers, a `Money` naming its instrument and real dates. It needs a
+    runtime serving contract v18 (chart 0.1.292 or later), which refuses
+    nothing a plugin on 0.21.0 sends. See [Plugin manifest](plugin-manifest.md).
+
+## Moving a plugin to a new release { #moving-a-plugin-to-a-new-release }
+
+Move a plugin one release at a time or several at once: [`meridian plugin migrate`](cli.md#plugin-migrate) runs every step between the plugin's pin and the target, in order, and its table of [what each step does](cli.md#what-each-step-does) lists every step from 0.5.0. The recent ones:
+
+| From | To | Contract | Runtime | `plugin new` writes it from | `plugin migrate` rewrites | Then by hand |
+|---|---|---|---|---|---|---|
+| 0.27.0 | 0.28.0 | 24 | chart `0.1.CHART24` or later | CLI 0.1.45 | a test of the `LCL-` prefix; a read of the `open_meridian` identifier; the suites' `LCL-suite-n` fixtures | see [0.27.0 to 0.28.0](#0270-to-0280) |
+| 0.26.0 | 0.27.0 | 23 | chart 0.1.303 or later | CLI 0.1.43 | nothing: only the pins move | see [0.26.0 to 0.27.0](#0260-to-0270) |
+| 0.25.0 | 0.26.0 | 22 | chart 0.1.301 or later | CLI 0.1.42 | nothing: only the pins move | see [0.25.0 to 0.26.0](#0250-to-0260) |
+| 0.24.0 | 0.25.0 | 21 | chart 0.1.299 or later | CLI 0.1.41 | nothing: only the pins move | see [0.24.0 to 0.25.0](#0240-to-0250) |
+| 0.23.0 | 0.24.0 | 20 | chart 0.1.298 or later | CLI 0.1.39 | the renamed roles: `dgm` to `data`, `ccm` to `connectivity`, `match` to `confirmation` | see [0.23.0 to 0.24.0](#0230-to-0240) |
+| 0.22.0 | 0.23.0 | 19 | chart 0.1.294 or later | CLI 0.1.38 | nothing: only the pins move | a data plugin's suite test meets the data suite's trades and quotes cases |
+| 0.21.0 | 0.22.0 | 18 | chart 0.1.292 or later | CLI 0.1.37 | nothing: only the pins move | see [0.21.0 to 0.22.0](#0210-to-0220) |
+| 0.20.0 | 0.21.0 | 16 | | CLI 0.1.36 | nothing: only the pins move | see [0.20.0 to 0.21.0](#0200-to-0210) |
+| 0.19.0 | 0.20.0 | 15 | | CLI 0.1.35 | nothing: only the pins move | see [0.19.0 to 0.20.0](#0190-to-0200) |
+| 0.18.0 | 0.19.0 | 14 | | CLI 0.1.34 | nothing: only the pins move | see [0.18.0 to 0.19.0](#0180-to-0190) |
+
+### 0.27.0 to 0.28.0 { #0270-to-0280 }
+
+TODO: released `<date>`. `meridian plugin migrate --to 0.28.0` moves the
+pins and rewrites what the one-ID revision changed (see
+[One ID per instrument](../concepts/one-id.md#for-a-plugins-author)):
+
+- **A test of the `LCL-` prefix** on an instrument ID, such as
+  `instrument_id.startswith("LCL-")`, is rewritten to read the record's
+  `provisional`. The prefix only says the deployment minted the ID: a
+  resolved `LCL-` ID stays `LCL-`.
+- **A read of the `open_meridian` identifier** for the platform's ID is
+  rewritten to the record's `instrument_id`, which is the platform's ID
+  from contract v24. The `open_meridian` identifier is no longer added to
+  records.
+- **The suites' `LCL-suite-n` fixtures** become `INS-` IDs, with
+  provisional cases beside them.
+
+Then, by hand where they apply:
+
+- **A plugin that keeps instrument IDs** in its own storage or state
+  follows each replacement to the record it became: the SDK's current-ID
+  map does it from `list_replacements` and the deliveries. One that keeps
+  none needs nothing. `meridian plugin check` warns a plugin that writes a
+  replaced ID.
+- **A suite test** meets v24's cases: every role's
+  `hears-and-reads-a-replacement` and `reads-the-template-catalogue`, and
+  booking's cases for `oms`, `operations`, `compliance`, `connectivity`,
+  `confirmation`, `portfolio` and `reporting` (TODO: the case list, and
+  which may be marked not presented, as built).
+- **A plugin declaring `meridian.environment()`** that meant Live by
+  default says so in its code (TODO: as built).
+- **An `operations` plugin** may declare its `affirmation_deadline`, the
+  time of day a held booking's alert is due by (TODO: as built).
+
+A plugin that does none of these keeps working on 0.27.0's pins against a
+runtime serving contract v24: IDs are opaque, and a resolved `LCL-` ID is
+accepted on every write, forever.
+
+### 0.26.0 to 0.27.0 { #0260-to-0270 }
+
+Released 2026-10-14. `meridian plugin migrate --to 0.27.0` moves the pins
+and rewrites nothing: contract v23 adds, and changes the shape of nothing a
+plugin calls. Then, by hand where they apply:
+
+- **A suite test** meets v23's cases. `connectivity`'s four
+  (`reports-a-fill-on-no-placement`,
+  `reports-a-later-fill-on-the-accepted-placement`,
+  `re-reports-a-charge-on-the-accepted-placement`, about `venue-originated
+  fills`, and `reports-a-value-date-roll`, about `value-date rolls`), the
+  data suite's three outcome cases (about `outcomes` and `disputed
+  outcomes`), and each reader's `hears-and-reads-an-outcome` (about
+  `outcomes`) may be named in `not_presented`, with why, where the plugin's
+  source or work never has them; `ems`'s four and `operations`' and
+  `compliance`'s new cases are required. Cases that were required may now
+  be marked too: custody's plan-code, sweep-fund, split and
+  currency-not-stated cases, and connectivity's `reports-a-bust` and
+  `reports-a-charge`. See [A case not presented](#a-case-not-presented).
+- **A test that skips or expects a suite test to fail** fails CLI 0.1.43's
+  `role-suite`: run the suite, mark what is not presented, and
+  `assert report.passed, report.failures` in the next statement (see
+  [`meridian plugin check`](cli.md#plugin-check)).
+- **A client of `dashboard__list_datasets` or
+  `dashboard__list_source_priorities`** accepts `outcome: "unchanged"`, which
+  they answer from contract v23, as well as `read`.
+- **A custody plugin whose source states no currency** declares
+  `meridian.account_currency()` and gives the currency it supplies with its
+  provenance (see [Typed settings](#typed-settings)).
+
+### 0.25.0 to 0.26.0 { #0250-to-0260 }
+
+Released 2026-10-13. `meridian plugin migrate --to 0.26.0` moves the pins
+and rewrites nothing: contract v22 adds, and changes the shape of nothing a
+plugin calls. Then, by hand where they apply:
+
+- **A suite test** meets the settlement calendars' cases: every role's
+  suite now holds `reads-a-calendar`, and every role's but `connectivity`'s
+  and `operations`' `asks-for-a-settlement-date`. Map each to a call of
+  `read_calendar` and `compute_date` (the role templates' `test_suite.py`
+  show both), or, where your plugin's work never uses calendars or
+  settlement dates, name it in `not_presented`, with why: the two are about
+  `calendars` and `settlement dates` (see [A case not presented](#a-case-not-presented)).
+  A plugin holding `connectivity` or `oms` meets its role's suite, and one
+  holding `portfolio`, `ems`, `compliance`, `operations` or `reporting`
+  that role's order path cases.
+- **A settlement or value date your plugin works out itself** is asked of
+  core instead, with `compute_date`, and recorded with its basis (see
+  [Settlement calendars](#settlement-calendars)).
+- **Work the plugin does on its own that runs an algorithm** declares it,
+  `Declaration(algorithms=[AlgorithmDeclaration("twap-v1", "...")])`, and
+  names it, `meridian.runs_as(role, algorithm_id="twap-v1")`, keeping each
+  identifier stable across versions.
+- **A plugin that reads positions, lots or movement lines** finds a
+  `sleeve` on each, empty for an account's unsleeved part.
+
+### 0.24.0 to 0.25.0 { #0240-to-0250 }
+
+`meridian plugin migrate --to 0.25.0` moves the pins
+and rewrites nothing: contract v21 adds, and changes the shape of nothing a
+plugin calls. Then, by hand where they apply:
+
+- **Work the plugin does on its own** that changes something calls the
+  plugin's own act as its role's service account,
+  [`meridian.runs_as(role)`](#runs_as), and reads whether it was made or
+  prepared. Each act called so names its check tool (`checked_by=`): from
+  CLI 0.1.41 `meridian plugin check` fails one that names none
+  (`runs-as-checked`).
+- **An act's route** may be reached for a service account: it acts as for
+  a person, `acting_for=request.caller.header`. Show
+  `request.caller.subject_kind` and `owner_subject` where the page says who
+  acted.
+- **A test that compares a refusal's attributes** finds `fields` on
+  `NotGranted` and `CallFailed` too, empty where the sidecar named none.
+
+### 0.23.0 to 0.24.0 { #0230-to-0240 }
+
+`meridian plugin migrate --to 0.24.0` moves the pins and
+rewrites one thing, the renamed roles, wherever a plugin names a role: its
+`pyproject.toml`'s `[tool.meridian] roles`, a `roles=` argument, the role
+`meridian.suites.run`, `run_async`, `suite` or `names` is given, and the role
+`Caller.level_for`, `read_for` or `write_for` asks; `dgm` becomes `data`, `ccm`
+`connectivity` and `match` `confirmation`. Nothing else a plugin calls changed
+shape. The release is marked breaking for the rename alone. Then, by hand
+where they apply:
+
+- **An act you want preparable** names its check tool, accounts and page
+  (`checked_by=`, `accounts=`; `made_on=` is filled for you): see
+  [Prepared changes](#prepared). A verified plugin's act without a check fails
+  `meridian plugin check --verified` from CLI 0.1.39.
+- **A form field named `prepare`** is refused: rename it.
+- **A data plugin** meets the data suite's three new cases: map
+  `a-restarts-gap-backfilled` (or, where it records no trades, it is about
+  trades and may be marked not presented) and `reads-its-datasets-licences`;
+  map `the-takers-side-stated` or, where the source never states the
+  aggressor, mark it with why. See
+  [Write a data plugin](../how-to/write-a-data-plugin.md).
+- **A plugin linking external accounts** is answered only the accounts a
+  deployment admin granted it, nothing at first: say so on its page, and
+  expect `REFUSAL_REASON_ACCOUNT_NOT_LINKABLE` for any other.
+- **A plugin of a role with a common part** (`data`, `custody`,
+  `operations`, `reporting`) may move its pages onto
+  [`meridian.roles`](#each-roles-common-part), and is held to the role's
+  pages by `role-pages` under `--verified` from CLI 0.1.39.
+- **`synthetic`**, each plugin's own until now, may become
+  `meridian.sample_data()` (`sample_data`), the ruled convention: a plugin
+  chooses when, at its next versioned push.
+
+### 0.21.0 to 0.22.0 { #0210-to-0220 }
+
+`meridian plugin migrate` moves only the pins: `open-meridian==0.22.0` and `plugin-python:0.22.0`. A `Money` naming its currency by its ISO 4217 code keeps its shape, and core resolves the code to the currency's cash instrument; a date sent as valid ISO text is sent as before. Left for you: a test comparing a `Money` read back with one it made, which now carries `instrument_id` (compare `amount` and `currency_code`), and a date sent as text that is no date, now refused. A plugin built on 0.22.0 declares contract v18, and a runtime serving v16 refuses it at registration, naming both versions. See [Money and instruments](../concepts/money-and-instruments.md).
+
+### 0.20.0 to 0.21.0 { #0200-to-0210 }
+
+`meridian plugin migrate` moves only the pins: `open-meridian==0.21.0` and `plugin-python:0.21.0`. Nothing a plugin calls changed, and a plugin keeping one retention, `Storage(retention_days=...)`, keeps its records under it as before. A plugin adopting [record kinds](#the-archive) drops any setting of its own that held a window, and its release notes name that setting and the window setting it maps to, for the admin to set once at upgrade. A plugin built on 0.21.0 declares contract v16, and a runtime serving v15 refuses it at registration, naming both versions.
+
+### 0.19.0 to 0.20.0 { #0190-to-0200 }
+
+`meridian plugin migrate` moves only the pins: `open-meridian==0.20.0` and `plugin-python:0.20.0`. Nothing a plugin calls changed. A custody plugin that resolves activities by anything a person can change later, such as a plan code's link, adds `re_resolve_activity`; an operations plugin that reads activities reads `re_resolutions` beside them. One that does neither needs nothing more (see [Report the custodian's activity](../how-to/report-the-custodians-activity.md)). A plugin built on 0.20.0 declares contract v15, and a runtime serving v14 refuses it at registration, naming both versions. 0.20.0 also brings [access per role](../concepts/access.md#access-per-role), which changes nothing for a plugin holding one role.
+
+### 0.18.0 to 0.19.0 { #0180-to-0190 }
+
+`meridian plugin migrate` moves only the pins: `open-meridian==0.19.0` in `pyproject.toml`, and `plugin-python:0.19.0` in the `Dockerfile`. Nothing a plugin calls changed. What 0.19.0 adds, a plugin adds by hand:
+
+- **A custody plugin** sends `history_from` on its sync status and reports each activity with `record_activity`, its raw record kept, and maps the custody suite's new cases.
+- **An operations plugin** may read and hear activity and sync statuses, and link a cause to an activity. One that does none of this needs nothing more.
+
+A plugin built on 0.19.0 declares contract v14, and a runtime serving v13 refuses it at registration, naming both versions: upgrade the deployment first ([Upgrade a deployment](../how-to/upgrade-a-deployment.md)), then relaunch the plugin on the new version. A test that stands in for the SDK's private `Operations._receive` is now handed only the rows given a handler, not every row with `None` for the rest.
