@@ -13,13 +13,14 @@ piece of data lives.
 | [Plan your deployment](plan-your-deployment.md) | A firm's profile answered in three layers — core as its books and records, plugins by role, configuration — with what exists, what is planned and what to build, worked for three firms |
 | [Projects and deployments](projects-and-deployments.md) | How a deployment is registered on the platform, how it proves who it is, and the one-time codes it is set up with |
 | [Plugins, roles and grants](plugins.md) | What a plugin is, what it may do on the bus, how that is decided, and how people reach its pages, by Manage, Open and View |
-| [Roles](roles.md) | Each of the thirteen roles: its persona, duties, what it leaves to another role and what it holds; the principles a plugin must fit, and how an idea maps to the least roles |
+| [Roles](roles.md) | Each of the fourteen roles, from contract v24 `reference` among them: its persona, duties, what it leaves to another role and what it holds; the principles a plugin must fit, and how an idea maps to the least roles |
 | [Access](access.md) | How people sign in to a deployment, and how the dashboard decides what each of them may reach, per role of a plugin from contract v15; from contract v20 the access levels and account access, and a person's own settings |
 | [Accounts](accounts.md) | The firm's accounts, how an account at a broker or custodian is tied to one, and from contract v20 the accounts a plugin may link to and each account's attributes in the book |
 | [The book of record](the-book-of-record.md) | The firm's own record of what each account holds, how it differs from the street and the edge, and how operations opens and reconciles it |
 | [The custodian's activity](the-custodians-activity.md) | What a custody plugin reports of what happened on an account, and how operations explains a break and proposes its entry from it |
 | [The archive](the-archive.md) | An edge plugin's raw records: each kind's window, archived, kept or deleted past it, the deployment admin's archive, bound and holds, restore, and the record every move leaves. |
 | [Instruments](instruments.md) | Instrument identity, the security master, and the copy a deployment keeps of it; from contract v19 each identifier's window, binary event contracts, and an ID never reused |
+| [One ID per instrument](one-id.md) | From contract v24: every instrument named by the platform's `INS-` ID, minted from the platform's own source; local `LCL-` records until it answers, never priced; why a thin statement line stays unrecognised; the licence list, usage reporting and orders on local records |
 | [The lake](the-lake.md) | Where a deployment keeps what its data sources say, prices and bars, by dataset: versions, reads as of a recorded time, the source priority, wants, kept or served (contract v18); trades and quotes, streamed, caught up after a watermark, and who reads them (contract v19) |
 | [Licences and entitlements](licences-and-entitlements.md) | The terms a dataset is kept on, the one-person warning, which plugins may read it and which fields, and who changed what |
 | [Money and instruments](money-and-instruments.md) | Why every amount names a cash instrument, fiat and tokens alike, a code resolved by core, and the records filled in at upgrade |
@@ -29,6 +30,7 @@ piece of data lives.
 | [Prepared changes](prepared-changes.md) | An agent or a person prepares a change and a person makes it; what agents may do with each act, set by the deployment admin and a plugin's admin; the second pair of eyes; lapse (contract v20) |
 | [Service accounts](service-accounts.md) | A user of the deployment that is not a person, which a plugin's autonomous work runs as: its owner, prepare only or act, granted per role, what binds it and what is recorded (contract v21) |
 | [The order lifecycle](the-order-lifecycle.md) | How an order reaches a venue through the book: who does what by role, the states and the transition table, child orders, the release gate and waiting for compliance, connectivity plugins linked to an `ems`, fills moving positions, and trading instructions (contract v22) |
+| [Booking](booking.md) | From contract v24: an order's executions booked to its accounts, the block, the error account, the hand-off, corrections, sleeves, give-ups and alerts, and which currency has lots |
 | [Settlement calendars](settlement-calendars.md) | Business-day calendars and date rules the platform keeps and a deployment pulls; a settlement, spot or tenor date worked out one way in core, with its basis; coverage, and the Calendars tab (contract v22) |
 | [Development deployments](development-deployments.md) | A deployment installed for writing plugins, and why a firm's own deployment is never one |
 
@@ -52,5 +54,9 @@ piece of data lives.
     launch, tested against a simulated brokerage only. Contract v23 adds
     venue-originated fills, which the `ems` accepts or answers DK, a
     venue's value-date roll, an event contract's outcome in the lake, and
-    the lake's flag on a daily value dated on a closed day. Where a page describes something that is specified
+    the lake's flag on a daily value dated on a closed day. Contract v24
+    (TODO: built, not released) books an order's executions to its
+    accounts, and names every instrument by the platform's `INS-` ID, a
+    deployment keeping local records, never priced, until the platform
+    answers. Where a page describes something that is specified
     but not built, it says so.

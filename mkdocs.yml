@@ -116,6 +116,7 @@ nav:
       - The custodian's activity: concepts/the-custodians-activity.md
       - The archive: concepts/the-archive.md
       - Instruments: concepts/instruments.md
+      - One ID per instrument: concepts/one-id.md
       - The lake: concepts/the-lake.md
       - Licences and entitlements: concepts/licences-and-entitlements.md
       - Money and instruments: concepts/money-and-instruments.md
@@ -125,6 +126,7 @@ nav:
       - Prepared changes: concepts/prepared-changes.md
       - Service accounts: concepts/service-accounts.md
       - The order lifecycle: concepts/the-order-lifecycle.md
+      - Booking: concepts/booking.md
       - Settlement calendars: concepts/settlement-calendars.md
       - Development deployments: concepts/development-deployments.md
   - How-to:
@@ -160,6 +162,7 @@ nav:
       - Working your tickets: how-to/work-your-tickets.md
       - Release a plugin version: how-to/release-a-plugin.md
       - Upgrade a deployment: how-to/upgrade-a-deployment.md
+      - Review provisional records and the migration: how-to/review-provisional-records.md
       - Back up and restore a deployment: how-to/back-up-and-restore.md
       - Remove or start over: how-to/remove-or-start-over.md
       - Troubleshoot an install: how-to/troubleshoot-install.md

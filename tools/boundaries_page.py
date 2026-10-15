@@ -114,6 +114,13 @@ GUIDES = [
      "pair of eyes; the Inbox; lapse (contract v20)"),
     ("how-to/license-and-entitle-a-dataset.md", "License and entitle a dataset",
      "the Data sources page: a dataset's licence, the plugins entitled to it, and the source priority"),
+    ("concepts/one-id.md", "One ID per instrument",
+     "from contract v24: every instrument named by the platform's INS- ID; a deployment's provisional "
+     "LCL- records, never priced, and why; test provisional, never the prefix; replacements, "
+     "templates, the licence list, usage reporting and orders on local records"),
+    ("concepts/booking.md", "Booking",
+     "from contract v24: an order's executions booked to its accounts, the exact check, lots, the block, "
+     "the error account, the hand-off, corrections, sleeves, give-ups and alerts"),
 ]
 
 # How llms.txt says which roles hold an operation.

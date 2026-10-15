@@ -71,7 +71,9 @@ identifier, custodian, type, owner or note hold every word you type.
 
 To change one, choose **Edit** on its row. What you save under **Account** replaces all four, so a
 field you empty is cleared. To close one, choose **Close**. A closed account is kept, and nobody
-works in it. Accounts are never deleted.
+works in it. Accounts are never deleted. From contract v24 an account still linked, granted or
+mapped by a plugin lists each in the **Close** dialog, to undo first (see
+[Closing an account](../concepts/accounts.md#closing-an-account)).
 
 ## To set an account's attributes in the book
 
@@ -85,7 +87,9 @@ them:
    currency**, three capital letters, and **Lot relief, when a sale names none**; and from
    contract v22 **Releases**, **Wait for compliance** (every new account's)
    or **Do not wait** (see
-   [Whether an account's releases wait for compliance](set-trading-instructions.md#whether-an-accounts-releases-wait-for-compliance)).
+   [Whether an account's releases wait for compliance](set-trading-instructions.md#whether-an-accounts-releases-wait-for-compliance));
+   and from contract v24 **Marked**: **Neither**, **An error account** or
+   **An allocation account** (see [Booking](../concepts/booking.md)).
 3. Enter a **Reason**, and choose **Save**.
 
 Each attribute you change is its own entry in the account's journal, with your reason. **In the

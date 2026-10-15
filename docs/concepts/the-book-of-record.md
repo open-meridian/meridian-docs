@@ -36,6 +36,18 @@ book.
     and [A venue's value-date roll](the-order-lifecycle.md#a-venues-value-date-roll).
     Released 2026-10-14 in chart 0.1.303.
 
+!!! note "TODO: contract v24, built, not released"
+    From contract v24 the `oms` books an order's executions to its accounts,
+    with the block order, the error account and alerts (see
+    [Booking](booking.md)); an account's base currency is a balance and
+    every other currency opens lots (see
+    [What the book requires](#what-the-book-requires)); a position under a
+    provisional instrument record is a **local line**, recorded and
+    reconciled, never priced; and a statement line too thin to make an
+    instrument record is a break of its own category, an unrecognized
+    security (see [One ID per instrument](one-id.md)). To be released in
+    chart `0.1.CHART24` (TODO: the date).
+
 ## The edge, the street and the book
 
 What is held is recorded in three places, by three owners, and no one of them
@@ -162,7 +174,7 @@ And its lots, by asset class:
 |---|---|
 | Equity, fund and ETF; crypto; option | At least one. Each with its quantity, its cost in all, and its acquisition date. They sum to the trade-date quantity. |
 | Money market fund | One lot at its stable value: cost is the quantity × 1. A lot like any other here. |
-| Cash | None. |
+| Cash | None. From contract v24, none only in the account's base currency: a position in any other currency carries lots, each with its cost in the base currency and its acquisition date. |
 
 The book reads whether an instrument is cash from its record: its asset class,
 or a currency identifier. Where the record cannot say, because the position
@@ -248,6 +260,15 @@ date. Then a person ends it, with a reason, in one of three ways:
 
 A break is never closed by silence, and a statement never overwrites the book.
 
+**An unrecognized security** (contract v24). A statement line too thin to
+make an instrument record -- less than an identifier, a description and a
+currency -- is kept in the street as a placeholder, outside the book. The
+`operations` plugin records it as a break of its own category,
+`BREAK_CATEGORY_UNRECOGNIZED_SECURITY`, naming no instrument and the street
+record by its identifiers, brought up to date while it persists. A local
+line, a position under a provisional record, is reconciled as any position.
+See [One ID per instrument](one-id.md#why-a-thinly-described-security-stays-unrecognised).
+
 ### A person, or a service account { #a-person-or-a-service-account }
 
 From contract v21 the book's justified acts -- an
@@ -320,6 +341,8 @@ own pages to the people granted access to them.
 
 - [Accounts](accounts.md): the accounts a book is kept for, and what bounds a
   plugin's reach.
+- [Booking](booking.md): from contract v24, an order's executions booked to
+  its accounts.
 - [The custodian's activity](the-custodians-activity.md): the custodian's
   record of what happened, which explains a break and proposes its entry.
 - [Record a holdings statement](../tutorials/record-a-holdings-statement.md):

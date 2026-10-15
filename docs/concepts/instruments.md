@@ -15,18 +15,22 @@ an instrument it does not know.
     `reporting` plugin's resolve is read-only; and wherever a table names an
     instrument, it is chosen with a search-as-you-type picker. Released 2026-10-12 in chart 0.1.298.
 
-!!! warning "Notice: contract v24 changes three stable reads"
-    Contract v24, the one-ID revision, changes
+!!! note "TODO: contract v24, built, not released"
+    From contract v24, the one-ID revision, every instrument a deployment
+    holds is named by the platform master's `INS-` ID, minted by the
+    platform from its own source at the deployment's request. A
+    deployment's `LCL-` record is provisional: a local record, never
+    priced, until the platform answers, then resolved to its `INS-` record,
+    its `LCL-` ID accepted forever. See
+    [One ID per instrument](one-id.md). As contract v23's notice said, this
+    changes three stable reads,
     [`ResolveIdentifier`](../api/typed-operations.md#resolve_identifier),
     [`ResolveInstrument`](../api/typed-operations.md#resolve_instrument) and
-    [`ReportMissingInstrument`](../api/typed-operations.md#report_missing_instrument). Every
-    instrument comes to be keyed by its platform `INS-` ID: a deployment's
-    provisional records stay `LCL-`, resolved to their `INS-` record, and a
-    resolved `LCL-` ID is accepted forever. The `open_meridian` identifier
-    stops being added to records. Plugins treat IDs as opaque and need no
-    change; a plugin that reads the `open_meridian` identifier should stop
-    relying on it. A stable row changes only after a version whose notice
-    says it will, and contract v23 is that version.
+    [`ReportMissingInstrument`](../api/typed-operations.md#report_missing_instrument):
+    keys become `INS-`, and the `open_meridian` identifier is no longer
+    added to records. To be released in chart `0.1.CHART24` (TODO: the
+    date). Until then this page describes contract v23, where each
+    deployment's records were its own.
 
 ## Identity is the answer; a ticker is an attribute
 
@@ -296,6 +300,11 @@ misses:
    store applies it. If not, the conductor may ask the platform to define it,
    and the platform may decline.
 
+From contract v24 a miss no longer waits for a person: the conductor asks
+the platform to match or mint the security, and the deployment keeps a
+provisional local record until it answers (see
+[One ID per instrument](one-id.md)).
+
 The conductor's reaction is throttled, so a burst of misses for the same
 identifiers is not a burst of requests, and never a burst of new instruments.
 Only the conductor calls the platform, because only it holds the deployment's
@@ -358,3 +367,9 @@ and [`dashboard__read_calendar`](../api/core-tools.md#dashboard__read_calendar).
   windows from the start.
 - **No bulk distribution.** A deployment pulls the one instrument it just
   missed. There is no snapshot of the whole master to download.
+
+## Related
+
+- [One ID per instrument](one-id.md): from contract v24, `INS-` records
+  minted by the platform, and local `LCL-` records until it answers.
+- [Review provisional records and the migration](../how-to/review-provisional-records.md).

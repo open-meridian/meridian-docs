@@ -1,0 +1,180 @@
+# Review provisional records and the migration
+
+From contract v24 every instrument a deployment holds is named by the
+platform's `INS-` ID, and a record the platform has not answered for yet is
+a **provisional** local record (see [One ID per instrument](../concepts/one-id.md)).
+This page is for a deployment admin: where to see those records and why
+each is waiting, how the upgrade to v24 migrates the records you already
+hold, and the usage report's setting.
+
+!!! note "TODO: contract v24, built, not released"
+    The Provisional tab, the migration's counts and the usage report's
+    setting are in core for contract v24, to be released in chart
+    `0.1.CHART24` (TODO: the date).
+
+## Before you start
+
+- You are a deployment admin. The **Instruments** page is theirs.
+- Back up the deployment before upgrading to v24 (see
+  [Back up and restore a deployment](back-up-and-restore.md)). The
+  migration rewrites nothing, but the records the platform mints and the
+  replacements it makes are recorded for good.
+
+## The Provisional tab
+
+Open **Settings**, then **Instruments**, then the **Provisional** tab. Its
+label carries the count, such as **Provisional (4)**. The home page links
+here too, from the line counting the provisional records ("See why").
+
+Under **Provisional records** the tab lists each provisional record, one
+line each, searchable with **Search provisional records**:
+
+- **Record**: its `LCL-` ID, which opens the record and its history.
+- **Description**: as the source stated it.
+- **Why**: the reason it is provisional, in words.
+- **Template**: the template it names and its version, such as
+  `TPL-equity v1`, or "none yet" where its class is not known.
+- **Missing**: the template's fields it lacks, or a dash.
+- **Age**: how long since it was first recorded, such as "9 days".
+
+With none it says "None: every record is the platform's."
+
+The **Why** column reads one of:
+
+- **the platform not reached; asked again on reconnecting**. Nothing to
+  do: the conductor asks again once the platform can be reached.
+- **incomplete against its template**. The **Missing** column says which
+  fields. The record resolves once the platform's own source confirms it.
+- **with the platform's staff; asked again daily**. The platform's source
+  could not confirm the security, and its staff review it.
+- **class needed: no asset class stated**. Set the record's asset class
+  on the **To complete** tab: the book refuses a position on it until
+  then.
+- **held back at the migration**. You held its line back at the upgrade;
+  see [Hold a line back](#hold-a-line-back).
+
+A provisional record is a **local line** in the book: recorded and
+reconciled, never priced. Each resolves on its own when the platform
+answers, its history reading across the link; nobody needs to act.
+
+## The upgrade's migration
+
+At the upgrade to contract v24 the instrument store sends every `LCL-`
+record it holds to the platform as a matching request, in batches of at
+most 100, at the pace the platform's licence list names. The run is a view
+of the store, so it resumes where it stopped if the deployment restarts.
+Records keyed by an `INS-` ID before contract v10 stay as they are.
+
+The answers are sorted into sections. The Provisional tab counts each,
+under **The upgrade's migration**:
+
+- **Already held**: the record already carried the platform's ID, such as
+  a currency pulled since contract v20.
+- **Matched**: the platform holds the security.
+- **Minted**: the platform's source confirmed it, and the platform minted
+  it.
+- **Near match**: minted, and flagged for the platform's staff to review.
+- **With the platform's staff**: the request waits for their review.
+- **Kept local**: nothing on the licence list to look for.
+- **Not reached**: the platform could not be reached.
+- **Held back**: lines you held back.
+- **Still to send**: records not yet sent.
+
+Below them, **Backfills** counts each scheme the licence list added after
+the upgrade: how many records were linked, how many wait for a person, and
+how many are still to send.
+
+### Apply the prepared change
+
+The migration prepares its answers for you as
+[prepared changes](../concepts/prepared-changes.md); nothing is applied
+without you.
+
+- **The exact lines** are one prepared change, applied together.
+- **Each uncertain line** is its own prepared change, decided on its own:
+  two `LCL-` records answered by one `INS-` ID (a duplicate, which the book
+  sums once applied); a platform value contradicting one a person set; an
+  identifier meeting two records.
+
+To apply one:
+
+1. Open your **Inbox**, under **Prepared changes**, or the change from the
+   Instruments page.
+2. Read the lines: each names the `LCL-` record and the `INS-` record it
+   would become.
+3. Choose **Make** to apply it, or discard it.
+
+On making, each line's record is replaced by its `INS-` record: its
+positions move, its `LCL-` ID stays on the new record under
+`open_meridian_local`, and its history reads across the link. A line not
+made leaves its record provisional, with its reason.
+
+An agent may prepare the change for you through
+[`dashboard__prepare_call`](../api/core-tools.md#dashboard__prepare_call).
+It never applies it.
+
+!!! note "TODO: applying the lines, as built"
+    Core as built (contract v24's branch) records each record's section and
+    shows the counts above; the act that applies the prepared change's lines,
+    and the way a line is held back, are not built yet. Name the page's
+    controls once they are, or say here that they wait for a later release.
+
+### Hold a line back
+
+You may hold back any line before you make the change. The record keeps
+its existing `LCL-` ID, provisional, with the reason **held back at the
+migration**, until its line is made; nothing is minted for it. A record
+minted after the list was prepared resolves on its own, as any new one
+does.
+
+Hold a line back when you are unsure the platform's record is the same
+security: an uncertain line is better decided alone than applied with the
+rest.
+
+### After the migration
+
+- The usage report is sent once (see below).
+- Every plugin hears each replacement, and reads what it missed.
+- A plugin's table setting naming a replaced record is re-pointed by core
+  as a recorded settings change.
+- Check the book: quantities and positions are unchanged, now under the
+  `INS-` records, and local lines are shown as not priced.
+
+## The usage report
+
+The **Licensed identifiers** tab shows how many identifiers in licensed
+schemes your records carry, per scheme, kept here and never sent: only how
+many are counted in the usage report.
+
+Below it, **Report identifier usage** is on by default. While on, the
+conductor sends the platform, weekly and once after the migration, per
+identifier scheme, how many records carry it, how many resolve only
+through it and how many misses arrived with it alone: counts only, never a
+value, a holding, a quantity or an account.
+
+To turn it off or on:
+
+1. Choose **On** or **Off** under **Report identifier usage**.
+2. Say **Why**.
+3. Choose **Set**, or **Prepare** for someone to make it later.
+
+The tab then lists each report sent: its period, how many schemes it
+counted, and whether the platform received it. With none it says "None
+sent yet."
+
+## Through an agent
+
+- `dashboard__list_instruments_to_complete` with `provisional: true` lists
+  the provisional records, each with its `provisional_reason`, and answers
+  `migration_counts` and `backfill_counts`.
+- `dashboard__set_reports_usage` sets the usage report, with a `note`.
+- `dashboard__prepare_call` prepares a change for you to make.
+
+See [Core's tools](../api/core-tools.md).
+
+## Related
+
+- [One ID per instrument](../concepts/one-id.md): `INS-` and `LCL-`
+  records, the local line and the licence list.
+- [Upgrade a deployment](upgrade-a-deployment.md).
+- [Prepared changes](../concepts/prepared-changes.md).

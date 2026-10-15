@@ -35,6 +35,17 @@ the cluster, and the dashboard does not upgrade itself.
 Take a backup before you upgrade, and copy it off the cluster: `meridian backup --to <dir>`, on chart
 0.1.298 or later with backups set up. See [Back up and restore a deployment](back-up-and-restore.md).
 
+!!! note "TODO: upgrading to contract v24"
+    The upgrade to contract v24 (chart `0.1.CHART24`) also migrates the
+    deployment's instrument records to the platform's IDs: every `LCL-`
+    record is sent as a matching request, and the answers wait as prepared
+    changes for a deployment admin to apply on the Instruments page. Nothing
+    is rewritten, and nothing is applied without the admin, but what the
+    platform mints is recorded for good, so take the backup first. See
+    [Review provisional records and the migration](review-provisional-records.md).
+    The setting **Allow orders on local records** is on after the upgrade,
+    and so is the usage report.
+
 ## To upgrade with the command line
 
 ```bash

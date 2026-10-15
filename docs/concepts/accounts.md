@@ -26,6 +26,14 @@ explains both, and how accounts bound what a plugin may read and write.
     [Accounts a plugin may link to](#accounts-a-plugin-may-link-to)).
     Released 2026-10-13 in chart 0.1.301.
 
+!!! note "TODO: contract v24, built, not released"
+    From contract v24 an account may be marked an **error account** or an
+    **allocation account** in the book (see [In the book](#in-the-book) and
+    [Booking](booking.md)); the base currency decides which currency has
+    lots; and an account still linked, granted or mapped is closed only once
+    each is undone (see [Closing an account](#closing-an-account)). To be
+    released in chart `0.1.CHART24` (TODO: the date).
+
 ## The firm's accounts
 
 A deployment admin creates accounts on the **Accounts** tab of the dashboard's
@@ -61,7 +69,11 @@ sections, each saved on its own:
   wait**, shown in the row's **Compliance** column as **Waits** or **Does
   not wait**), each change saved to the book with a **Reason**, its own
   act, journalled in the account's partition. A new account waits; see
-  [The release gate](the-order-lifecycle.md#the-release-gate-and-waiting-for-compliance). Beside the title it says
+  [The release gate](the-order-lifecycle.md#the-release-gate-and-waiting-for-compliance).
+  From contract v24 it also says whether the account is **Marked**:
+  **Neither**, **An error account**, where a booking's overfills and errors
+  go, or **An allocation account**, where a block order's executions wait
+  until they are booked out (see [Booking](booking.md)). Beside the title it says
   since when the book holds the account, the date its opening balance
   stands for, or "not yet". That date is set only by the book, when a
   person confirms the opening balance, never here.
@@ -77,6 +89,32 @@ own, **Books**.
 - it is never writable, by anybody, whatever their permissions say;
 - nothing new is recorded against it, and an external account cannot be
   linked to it.
+
+### Closing an account
+
+Each account's row on the Accounts tab has **Close**. With nothing attached
+to the account, the dashboard asks you to confirm: "A closed account is
+kept, and nobody works in it."
+
+From contract v24 an account still attached to a plugin is not closed
+until each attachment is undone, so nothing is left pointing at a closed
+account. **Close** opens a dialog headed **Close** and the account's name,
+listing what is **Still attached to it**, each linking to the plugin's
+page:
+
+- a plugin's link of its external account to it ("snaptrade-1 links its
+  external account FID-401K-1 to it");
+- a plugin granted it ("snaptrade-1 is granted it");
+- an `ems`'s map of a venue account code to it ("ems-1 maps ACCT-0001 at
+  fix-1 to it").
+
+Where only grants are left, choose **Unlink all and close**: each grant is
+withdrawn as its own record, and then the account is closed. Or choose
+**Cancel**.
+
+Where a link or an `ems`'s mapping is left, the dialog offers only
+**Cancel**: a link and a mapping are undone at the plugin's own page. Open
+each from the list, undo it, and close the account then.
 
 Accounts are given to people through **account groups**: explicit lists of
 accounts, which a permission names, with no nesting. One is built in, **All

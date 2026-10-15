@@ -36,6 +36,15 @@ one entry at a time, and stored nowhere as a fact.
     Tradier 0.7.0 and SnapTrade 0.17.0, released 2026-10-14, each tested
     against a simulated brokerage only.
 
+!!! note "TODO: contract v24, built, not released"
+    Contract v24 adds, in core and open-meridian 0.28.0, to be released in
+    chart `0.1.CHART24` (TODO: the date): [booking](booking.md), by which
+    the `oms` books an order's executions to its accounts, with the block
+    order, the error account, the hand-off, corrections, sleeve crosses,
+    give-ups and alerts; and [orders on local records](#orders-on-local-records),
+    a deployment setting. Every operation it adds is `preview`. Core proves
+    booking against a simulated venue and stand-in plugins only.
+
 ## Who does what
 
 The duties are kept apart by role, whichever plugins hold them. In one
@@ -453,8 +462,10 @@ Reported fills move the account's trade-date position at once:
   [A venue's value-date roll](#a-venues-value-date-roll)).
 
 `operations` reconciles the next statement against the book as before, so a
-traded position is not a break. Booking (allocations, give-ups) is a later
-revision.
+traded position is not a break. From contract v24 a fill's lots are
+provisional until the `oms` books the executions to their accounts, and a
+fill in a currency other than the account's base currency opens lots: see
+[Booking](booking.md).
 
 ## Venue-originated fills
 
@@ -655,6 +666,24 @@ Set them on the **Trading instructions** page or through
 `dashboard__set_trading_instruction`: see
 [Set trading instructions](../how-to/set-trading-instructions.md).
 
+## Orders on local records
+
+From contract v24 an order may name an instrument whose record is still a
+deployment's local `LCL-` record, one the platform has not answered for
+(see [One ID per instrument](one-id.md)), while the deployment's setting
+**Allow orders on local records** is on, as it is by default. The order is
+marked "local record: not priced".
+
+Off, a proposal naming a local record and an accept of a venue-originated
+fill on one are refused, `REFUSAL_REASON_LOCAL_RECORD_NOT_ALLOWED`, from
+the change on. Orders already working continue, as do their placements and
+child orders; a trading instruction stops them. An order the `oms` records
+for a telephoned or outside order is recorded whatever the setting. A
+plugin that proposes or accepts reads the setting
+(`ReadLocalRecordOrders`) so it can tell a person before sending. A
+deployment admin sets it on the **Trading instructions** page (see
+[Allow orders on local records](../how-to/set-trading-instructions.md#allow-orders-on-local-records)).
+
 ## A command naming a record by its ID
 
 Releasing, checking, approving, claiming, placing, changing, reporting on
@@ -739,6 +768,8 @@ whole history from its first entry.
 | `REFUSAL_REASON_IDENTIFIER_IN_USE` | An identifier already used for another record |
 | `REFUSAL_REASON_ACTOR_REQUIRED` | A command other than a fact report with no person or service account behind it, an accept or a DK among them; an approval or override with no person |
 | `REFUSAL_REASON_REASON_REQUIRED` | A justified act, an override or an instruction, with no reason |
+| `REFUSAL_REASON_LOCAL_RECORD_NOT_ALLOWED` | From contract v24: a proposal naming a local record, or an accept of a fill on one, while orders on local records are off |
+| `REFUSAL_REASON_BOOKING_UNBALANCED`, `REFUSAL_REASON_ACCOUNT_NOT_INSTRUCTED` | From contract v24: a booking that does not tie out, or allocates to an account its instruction does not name; see [Booking](booking.md#refusals) |
 | `REFUSAL_REASON_INCOMPLETE` | A proposal missing a required field, each named; an order recorded naming an instrument whose record is incomplete |
 | `INVALID_ARGUMENT`, naming fields | Both or neither of `quantity` and `cash_quantity`; a child naming another instrument or side; a fill with no `settlement_date`; an instruction on `target.user_group_id`; an algorithm the version does not declare (`algorithm_id`). From contract v23: a fill on no placement without `instrument_id`, `side` or `venue_order_id`; an execution named twice in one accept (`execution_ids[i]`); a DK with reason other and no `text`; a quote currency naming the order's own instrument (`quote_currency`), or a limit or stop priced in another currency (`limit_price`, `stop_price`, `change.limit_price`); a roll whose `pair` is not two cash instruments, or with no date or basis |
 | `PERMISSION_DENIED`, no code | A command naming a record whose account is outside the plugin's write scope or the person's write access; a connectivity plugin's `RecordOrder` or `CreatePlacement`, refused by its sidecar |
@@ -748,20 +779,16 @@ an `INVALID_ARGUMENT` a `CallFailed` of kind `"invalid"` naming the fields,
 and a `PERMISSION_DENIED` a `NotGranted` (see
 [Exceptions](../api/python-sdk.md#exceptions)).
 
-## Not in v23
+## Not in v24
 
-- **Booking**: allocations, give-ups and their acceptance, and closing an
-  order that does not tie out by booking to an error account, are a later
-  revision (slice B), with booking's corrections of a wrong accept and its
-  kernel alert after the trade.
 - **RFQs and axes**: their references are carried empty on the order and
   the placement until the RFQ revision (slice C); an order of 0 quantity, a
   pass, is refused until then.
-- **Whether a cash instrument opens lots**, which an FX position's two legs
-  raise, is booking's question (v24).
-- **Other named links** between orders -- blocks, allocations, street
-  orders, two-way quotes, alternatives, baskets -- wait for their slices.
-  The split link is the one in v22 and v23.
+- **Confirming an allocation with a client**, non-order transactions and
+  settlement: see [Booking](booking.md#not-in-v24).
+- **Other named links** between orders -- street orders, two-way quotes,
+  alternatives, baskets -- wait for their slices. The split link and, from
+  v24, the block are the ones there are.
 - **A trading instruction on a user group**, until groups are resolved to
   their people.
 - **Derivative terms** on an execution, which come with the instrument
@@ -776,6 +803,8 @@ and a `PERMISSION_DENIED` a `NotGranted` (see
   the accounts.
 - [Answer a venue-originated fill](../how-to/answer-a-venue-originated-fill.md):
   accept it to an order, or answer it DK.
+- [Booking](booking.md): from contract v24, an order's executions booked to
+  its accounts.
 - [Set trading instructions and whether releases wait](../how-to/set-trading-instructions.md).
 - [Settlement calendars](settlement-calendars.md): how a settlement date
   is worked out when the venue states none.
