@@ -174,15 +174,12 @@ each value recorded with its source and the person; the plugin checks it: the
 lots sum to the quantity, the dates fall on or before the opening balance's,
 the costs are plausible. The book's refusal is the second line, not the form.
 
-!!! note "Retired in contract v9"
-    A contract v8 book admitted a lot of unknown cost, for a position whose
-    source reported no lots or for the remainder of lots that did not sum,
-    and a settlement bucket "not stated", for a position whose source gave no
-    settled quantity. Neither is admitted now. They stay on the wire for what
-    a v8 book recorded: a position's not-stated quantity is zero on every
-    position v9 records, and its settled quantity is set. A lot a v8 book
-    opened with its cost unknown is given its cost by an adjustment, once it
-    is known.
+!!! note "Older records"
+    The book admits no lot of unknown cost and no settlement bucket "not
+    stated". They stay on the wire for older records: a position's
+    not-stated quantity is zero on every position the book records now, and
+    its settled quantity is set. A lot an older opening balance opened with
+    its cost unknown is given its cost by an adjustment, once it is known.
 
 ## Reconciling each statement
 
