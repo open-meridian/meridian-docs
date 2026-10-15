@@ -1,6 +1,6 @@
 # Route orders through a connectivity plugin
 
-From contract v22 an `ems` places orders at a venue through a **connectivity
+An `ems` places orders at a venue through a **connectivity
 plugin**, a plugin holding the `connectivity` role, which sends what it is
 given in the venue's vocabulary and reports back what the venue did.
 `portfolio` and the `oms` own orders, the `ems` owns placements, and the
@@ -22,29 +22,18 @@ refusal recorded, and the connectivity plugin reaches no account and hears
 nothing. See [The order lifecycle](../concepts/the-order-lifecycle.md#placements-and-the-connectivity-plugins-an-ems-may-use)
 for why it is set up this way.
 
-!!! note "Contract v22"
-    The link, the map and the checks are in core for contract v22, released
-    2026-10-13 in chart 0.1.301. Core proves them against a simulated
-    venue only.
-
-The first connectivity plugin a deployment can launch is SnapTrade 0.16.0,
-released 2026-10-13, which holds `connectivity` beside `custody`. It is
-tested against a simulated brokerage only. Its connections are read-only
-until an admin of its `connectivity` role enables trading on each, with
-**Enable trading** on its **Connections** page (the `enable_trading` tool):
-see [Trading through SnapTrade](using-a-custody-plugin.md#trading-through-snaptrade).
-Until then every order placed through it on that connection is rejected
-`unsupported`.
-
-!!! note "Contract v23"
-    Alpaca 0.8.0 and Tradier 0.7.0, released 2026-10-14 on open-meridian
-    0.27.0 (contract v23) for chart 0.1.303 or later, hold `connectivity`
-    beside `data` and `custody`, placing at Alpaca's Trading API and at
-    Tradier, each tested against a simulated brokerage only, trading
-    enabled per account by an admin of the `connectivity` role. They and
-    SnapTrade 0.17.0, released the same day, report fills of orders placed
-    in the broker's own app as
-    [venue-originated fills](answer-a-venue-originated-fill.md).
+Core proves the link, the map and the checks against a simulated venue
+only. Three connectivity plugins can be launched: SnapTrade, which holds
+`connectivity` beside `custody`, and Alpaca and Tradier, which hold it beside
+`data` and `custody`, placing at Alpaca's Trading API and at Tradier. Each is
+tested against a simulated brokerage only. Trading is enabled per
+connection or account by an admin of the plugin's `connectivity` role, at
+SnapTrade with **Enable trading** on its **Connections** page (the
+`enable_trading` tool): see
+[Trading through SnapTrade](using-a-custody-plugin.md#trading-through-snaptrade).
+Until then every order placed through it there is rejected `unsupported`.
+Each reports fills of orders placed in the broker's own app as
+[venue-originated fills](answer-a-venue-originated-fill.md).
 
 ## Before you start
 
@@ -63,8 +52,8 @@ Until then every order placed through it on that connection is rejected
    may route**.
 2. Choose **Make available**, say **Why**, and confirm.
 
-At the upgrade to contract v22 no connectivity plugin is available or
-linked, each recorded so. To withdraw one, choose **Withdraw**: it then
+A connectivity plugin is not available until a deployment admin makes it
+so. To withdraw one, choose **Withdraw**: it then
 reaches no account, and the placements already made stay as they are.
 
 ## 2. Grant the `ems` its accounts
@@ -163,15 +152,14 @@ see [Set trading instructions](set-trading-instructions.md).
   and the `ems`'s: a connectivity plugin's `RecordOrder` or
   `CreatePlacement` is refused by its sidecar (`PERMISSION_DENIED`). A
   telephoned or outside order is recorded by the `oms`, for a person.
-- **It reports a venue-originated fill** from contract v23. A fill the
+- **It reports a venue-originated fill.** A fill the
   venue reports on no placement the `ems` made -- a liquidation, say, or an
   order placed in the broker's own app -- is reported on no placement and
   waits in the book, unmatched, for the linked `ems` to accept it to an
   order or answer it DK, and its account is stamped by the same venue
   account map: see
-  [Answer a venue-originated fill](answer-a-venue-originated-fill.md). In
-  contract v22 it had no path into the book.
-- **It reports a venue's value-date roll** from contract v23, where its
+  [Answer a venue-originated fill](answer-a-venue-originated-fill.md).
+- **It reports a venue's value-date roll**, where its
   venue rolls spot FX positions (see
   [A venue's value-date roll](../concepts/the-order-lifecycle.md#a-venues-value-date-roll)).
 

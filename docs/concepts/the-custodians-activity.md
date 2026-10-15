@@ -159,7 +159,7 @@ How a plugin matches is its own behaviour, as reconciling is. The contract's
 `operations` suite asks for a reinvestment and a split each to explain the
 units they added, for activity heard after a break to bring it up to date,
 and for activity to book nothing by itself. What follows is what the sample
-operations plugin 0.8.0 does.
+operations plugin does.
 
 When an `operations` plugin finds a difference in a security's units, it
 reads the account's activity

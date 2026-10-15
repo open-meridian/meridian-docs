@@ -10,28 +10,17 @@ is one, the sample reporting plugin (plugin-sample-reporting): see
 [Value the book](value-the-book.md) and
 [Watch the market on the Board](watch-the-board.md) for its pages.
 
-!!! note "Contract v20"
-    The common part is in open-meridian 0.24.0 (contract v20), the kit
-    0.12.0 and core's **Setting up**, and a person's own settings in core
-    and the SDK, released 2026-10-12 in chart 0.1.298. The sample
-    reporting plugin 0.3.0, released 2026-10-12, takes the common part: a
-    Datasets page under Manage, and the figures "Last valued" and "Not
-    priced". Each person with `write` saves their own Board, its watchlist
-    and charts, as their own (see
-    [Your own Board](watch-the-board.md#your-own-board)). The sample
-    reporting plugin 0.2.0 is built on contract v19.
-
-!!! note "Contract v22"
-    The sample reporting plugin 0.5.0, released 2026-10-13, is built on
-    open-meridian 0.26.0 (contract v22) and runs on chart 0.1.301 or
-    later. An **Orders** tab under Open and View (`read_orders`) lists the
-    orders in the accounts you may read, newest first, one line each:
-    account, instrument, side, ordered, filled, state, and who decided and
-    who executed it. An order opens to its history (`read_order_history`),
-    each step with who took it and when. It records nothing. Its suite's
-    two calendar cases are not presented, with why: it values at a business
-    date's prices as the lake holds them, and never reads a settlement
-    calendar or asks for a settlement date.
+The sample reporting plugin takes the common part: a Datasets page under
+Manage, and the figures "Last valued" and "Not priced". Each person with
+`write` saves their own Board, its watchlist and charts, as their own (see
+[Your own Board](watch-the-board.md#your-own-board)). An **Orders** tab
+under Open and View (`read_orders`) lists the orders in the accounts you may
+read, newest first, one line each: account, instrument, side, ordered,
+filled, state, and who decided and who executed it. An order opens to its
+history (`read_order_history`), each step with who took it and when. It
+records nothing. Its suite's two calendar cases are not presented, with
+why: it values at a business date's prices as the lake holds them, and
+never reads a settlement calendar or asks for a settlement date.
 
 ## The first-use path
 
@@ -42,8 +31,7 @@ is one, the sample reporting plugin (plugin-sample-reporting): see
 | 3 | **Grant people read** | a deployment admin | access: a group holding `read` or `write` on the plugin over accounts. See [Give people access](administer-access.md). |
 | 4 | **Read its reports** | people with `read` or `write` | its report pages, under Open or View |
 
-From contract v20 core's **Setting up**, on the
-plugin's **Summary**, judges the first three from its own records: every
+Core's **Setting up**, on the plugin's **Summary**, judges the first three from its own records: every
 required setting set; the plugin entitled to at least one dataset, linking
 a deployment admin to Data sources; and a group holding `read` or `write`
 on it over an account group, linking to its **Access** tab. To anyone but a
@@ -59,8 +47,7 @@ currency. Then the plugin's own.
 
 ## Each person's own views
 
-From contract v20 a reporting plugin may declare
-settings that are **each person's own** (`per_person`), such as a watchlist
+A reporting plugin may declare settings that are **each person's own** (`per_person`), such as a watchlist
 or a saved chart, so the three access levels read:
 
 | Level | What the person does |

@@ -16,21 +16,6 @@ So a permission reads: *the people in this user group, using these plugins, on t
 `admin`, `write` and `read` are the **access levels**; `read` or `write`, the levels that reach
 accounts, are a person's **account access**.
 
-!!! note "Contract v20"
-    From contract v20 the **Books** tab is merged into **Accounts** (see
-    [To set an account's attributes in the book](#to-set-an-accounts-attributes-in-the-book)),
-    a deployment admin grants each plugin the accounts it may link to (see
-    [To grant a plugin accounts to link](#to-grant-a-plugin-accounts-to-link)), and the **Agents**
-    tab sets what people's agents may do with each act (see
-    [Prepared changes](../concepts/prepared-changes.md#what-agents-may-do)). Released 2026-10-12 in chart 0.1.298.
-
-!!! note "Contract v21"
-    From contract v21 Settings gains a **Service accounts** tab, where a
-    deployment admin creates the users a plugin's autonomous work runs as,
-    and a plugin's **Access** tab gains **Runs as** (see
-    [To give a plugin's work a service account](#to-give-a-plugins-work-a-service-account)).
-    Released 2026-10-12 in chart 0.1.299.
-
 ## To open Settings
 
 1. Sign in to the dashboard.
@@ -41,9 +26,8 @@ back to your plugins. The breadcrumb beside the mark reads **Settings**, and in 
 **Settings / Plugins /** and the plugin's name.
 
 Settings' tabs are **Plugins**, **Permissions**, **User groups**, **Account groups**,
-**Access groups**, **Accounts**, **Holds**, **Agents**, from contract v21
-**Service accounts**, and **Connected clients** (before contract v20, **Books** in place of
-**Agents**). Each lists its
+**Access groups**, **Accounts**, **Holds**, **Agents**, **Service accounts**, and **Connected
+clients**. Each lists its
 records in a table with a search box above it, which keeps the rows holding every word you type,
 and headings that sort it. On the three group tabs the section is headed **User**, **Account** or
 **Access**. Where a tab makes records, **+ Add** beside its heading opens a dialog headed with what it makes, such as **New
@@ -71,29 +55,28 @@ identifier, custodian, type, owner or note hold every word you type.
 
 To change one, choose **Edit** on its row. What you save under **Account** replaces all four, so a
 field you empty is cleared. To close one, choose **Close**. A closed account is kept, and nobody
-works in it. Accounts are never deleted. From contract v24 an account still linked, granted or
-mapped by a plugin lists each in the **Close** dialog, to undo first (see
+works in it. Accounts are never deleted. An account still linked, granted or mapped by a plugin
+lists each in the **Close** dialog, to undo first (see
 [Closing an account](../concepts/accounts.md#closing-an-account)).
 
 ## To set an account's attributes in the book
 
-From contract v20 the tab's **Base currency** and **Lot relief** columns are
-each account's attributes in the [book of record](../concepts/the-book-of-record.md). To change
+The tab's **Base currency** and **Lot relief** columns are each account's attributes in the [book of record](../concepts/the-book-of-record.md). To change
 them:
 
 1. Choose **Edit** on the account's row. The dialog has two sections, **Account** and **In the
    book**, each with its own save.
 2. Under **In the book**, which says since when the account is in the book, set the **Base
-   currency**, three capital letters, and **Lot relief, when a sale names none**; and from
-   contract v22 **Releases**, **Wait for compliance** (every new account's)
+   currency**, three capital letters, and **Lot relief, when a sale names none**;
+   **Releases**, **Wait for compliance** (every new account's)
    or **Do not wait** (see
    [Whether an account's releases wait for compliance](set-trading-instructions.md#whether-an-accounts-releases-wait-for-compliance));
-   and from contract v24 **Marked**: **Neither**, **An error account** or
+   and **Marked**: **Neither**, **An error account** or
    **An allocation account** (see [Booking](../concepts/booking.md)).
 3. Enter a **Reason**, and choose **Save**.
 
 Each attribute you change is its own entry in the account's journal, with your reason. **In the
-book** is shown only for an account that already exists. Before v20 this was the **Books** tab.
+book** is shown only for an account that already exists.
 
 ## To group accounts
 
@@ -115,8 +98,8 @@ edited.
 3. Say who is in it, in any of three ways:
     - **People.** Choose them from the searchable list, which names each person by their user ID,
       then their login ID. It lists everybody the dashboard can name: people already in a user
-      group, people holding a delegation, and the accounts the deployment holds itself; from
-      contract v21 also each service account, by its `SA-` ID, named
+      group, people holding a delegation, and the accounts the deployment holds itself; and
+      each service account, by its `SA-` ID, named
       such as *The sweep (service account)*.
     - **Other logins, one per line.** For somebody not listed yet, such as a person from your
       directory who has never been named here. For an account the deployment holds itself, a login
@@ -137,7 +120,7 @@ the first part of their entry's name (`ada` of `uid=ada,ou=people,…`).
 
 ## To say what: make an access group
 
-An access group lists plugins, and from contract v15 each role of each, at a level. It is the same
+An access group lists each role of each plugin at a level. It is the same
 three levels for every plugin and role:
 
 - `admin`: the person configures the plugin's role, its settings and its own pages at `admin`, and
@@ -147,8 +130,7 @@ three levels for every plugin and role:
   write.
 
 A plugin names no parts of itself. Which topics it may publish and read is its roles', and has
-nothing to do with who may use it; from contract v15 a person is granted a level on each role of a
-plugin, so a grant on one role reaches nothing of another. See
+nothing to do with who may use it; a person is granted a level on each role of a plugin, so a grant on one role reaches nothing of another. See
 [Access per role](../concepts/access.md#access-per-role).
 
 1. Open **Access groups** and choose **+ Add**. The dialog is headed **New access group**.
@@ -172,10 +154,6 @@ An entry kept on a role the plugin no longer holds, after a version without that
 holds nothing. Its row stays in the editor, flagged **not held now**, naming the roles the plugin
 holds now, and saving the group keeps it as written. Grant the role the plugin holds instead, or
 choose **None** on the flagged row to drop it.
-
-Before contract v15 the editor listed plugins without roles, each chosen from a searchable list,
-with **Read**, **Write (includes read)**, **Admin (configures it, no account)**, **Admin and read**
-and **Admin and write**.
 
 Two access groups are built in, and neither can be edited:
 
@@ -220,18 +198,17 @@ it to **All plugins (admin)** as well.
 They find the plugin on their home with **Manage**, which opens on its **Summary**, its status and
 the figures it reports, with its **Settings** and its pages at `admin` after it. Its settings are
 also in the dashboard's admin view of the plugin, at `/admin/plugins/<instance>`, which shows them
-the tabs **Overview**, **Settings** and **Access**, and from contract v20 **Accounts**; they read
+the tabs **Overview**, **Settings**, **Access** and **Accounts**; they read
 who holds access on **Access** and the accounts granted on **Accounts**, and change neither, since
-only a deployment admin grants. From contract v15 **Access** lists each grant with its **Role**:
+only a deployment admin grants. **Access** lists each grant with its **Role**:
 the user group, the role, the level and the accounts, a grant holding nothing flagged with the
-plugin's roles, paged. From contract v20 it also lists the plugin's acts under
+plugin's roles, paged. It also lists the plugin's acts under
 **What agents may do**: who may make each by hand, what their agents may (May make, Prepare only
 or May not, capped where the deployment's ceiling is stricter) and whether it needs a second pair
 of eyes, which an admin of the act's role sets with **Edit** on its row (see
-[Prepared changes](../concepts/prepared-changes.md#what-agents-may-do)). From contract v21 it also shows, under **Runs as**, the service account each role's autonomous work
+[Prepared changes](../concepts/prepared-changes.md#what-agents-may-do)). It also shows, under **Runs as**, the service account each role's autonomous work
 runs as, which an admin of the role chooses (see
-[To give a plugin's work a service account](#to-give-a-plugins-work-a-service-account)), and its
-dialogs open, **What agents may do**'s **Edit** among them, which on chart 0.1.298 opened none.
+[To give a plugin's work a service account](#to-give-a-plugins-work-a-service-account)).
 How they fill the form is in [Set a plugin's settings](set-a-plugins-settings.md).
 
 To make every plugin's admins one group, grant **All plugins (admin)** on **None**. To keep
@@ -246,8 +223,7 @@ lose what it gave them.
 
 ## To grant a plugin accounts to link
 
-From contract v20 a plugin that links external accounts links them only to
-the accounts a deployment admin granted it, and a new plugin instance is granted none. To grant
+A plugin that links external accounts links them only to the accounts a deployment admin granted it, and a new plugin instance is granted none. To grant
 some:
 
 1. On the **Plugins** tab, open the plugin, then its **Accounts** tab, **Accounts it may link to**.
@@ -258,17 +234,15 @@ some:
 
 The tab says, for each account granted, whether the plugin has linked it yet, and who last changed
 the grant and when. A grant lets the plugin's admins link; it gives nobody anything to read or
-write, which is still a permission. At the upgrade to v20 each plugin is granted the accounts its
-links already named. See [Accounts a plugin may link to](../concepts/accounts.md#accounts-a-plugin-may-link-to).
+write, which is still a permission. See [Accounts a plugin may link to](../concepts/accounts.md#accounts-a-plugin-may-link-to).
 
-From contract v22 an `ems` is granted here the accounts its admins may map to
+An `ems` is granted here the accounts its admins may map to
 venue account codes, nothing by default; see
 [Route orders through a connectivity plugin](route-orders-through-a-connectivity-plugin.md).
 
 ## To give a plugin's work a service account
 
-From contract v21 a plugin's autonomous work, such as the sample operations
-plugin's sweep, changes something only as a
+A plugin's autonomous work, such as the sample operations plugin's sweep, changes something only as a
 [service account](../concepts/service-accounts.md), a user of the deployment that is not a person:
 
 1. On the **Service accounts** tab, choose **+ Add**: its name, purpose, owner (a person who
@@ -286,8 +260,7 @@ change is its own record. See
 
 A plugin that reads a broker or custodian names accounts as that source does. Linking tells the
 deployment which of your accounts that is. Until a source's account is linked, the deployment
-refuses the plugin's rows for it. From contract v20 the plugin offers only the accounts granted
-to it (above).
+refuses the plugin's rows for it. The plugin offers only the accounts granted to it (above).
 
 Each plugin links its own external accounts, on its own pages at `admin`, because only the plugin
 knows what its accounts mean. An admin of the plugin links them, under **Manage**. For SnapTrade:
@@ -340,4 +313,4 @@ operations write, custody read*. See [Manage, Open and View](../concepts/plugins
 - [Plugins, roles and grants](../concepts/plugins.md): roles, and what a plugin may do.
 - [Recover administration](recover-administration.md): if nobody can open Settings.
 - [Service accounts](../concepts/service-accounts.md): the users a plugin's autonomous work runs
-  as (contract v21).
+  as.

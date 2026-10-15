@@ -241,7 +241,7 @@ information, so fetching it needs no one's decision, and it stops plugins
 leaving local copies beside the master's.
 
 A stub is minted for the code only when the master does not hold it. While
-the platform cannot be reached, the resolve mints as before, and the store
+the platform cannot be reached, the resolve mints a stub, and the store
 asks again at the code's next miss; a stub then met by the master's record
 is listed as a conflict on the Instruments page, for a person to merge.
 Only `iso4217` is fetched so: every other miss waits for a person, as

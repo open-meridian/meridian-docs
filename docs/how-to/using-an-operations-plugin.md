@@ -10,38 +10,24 @@ valid for every operations plugin. Today there is one, the sample
 operations plugin (plugin-sample-operations), so where this page names
 something only it has, it says so.
 
-!!! note "Contract v20"
-    The common part is in open-meridian 0.24.0 (contract v20), the kit
-    0.12.0 and core's **Setting up**, released 2026-10-12 in chart
-    0.1.298. The sample operations plugin 0.10.0, released 2026-10-12,
-    is built on open-meridian 0.24.0 and runs on chart 0.1.298 or
-    later. It takes the common part, gives its Breaks and Reconciliations
-    pages tools of their own, and makes every act preparable, its opening
-    balance among them. The sample operations plugin 0.9.1 is built on
-    contract v18.
-
-!!! note "Contract v21"
-    The sample operations plugin 0.11.0, released 2026-10-12, is built on
-    open-meridian 0.25.0 (contract v21) and runs on chart 0.1.299 or
-    later. It closes cleared breaks automatically as the operations role's
-    [service account](../concepts/service-accounts.md) (see
-    [Close cleared breaks automatically](#close-cleared-breaks-automatically)).
-
-!!! note "Contract v22"
-    The sample operations plugin 0.12.0, released 2026-10-13, is built on
-    open-meridian 0.26.0 (contract v22) and runs on chart 0.1.301 or
-    later. It reads the [order path](../concepts/the-order-lifecycle.md):
-    a fill traded after a statement's date is taken back out when the book
-    is compared with that statement, so a traded position is not a break,
-    and a fill the book records compares its account's latest statement
-    again. A **Flags** tab under Open and View (`read_flags`) lists, in the
-    accounts you may read, each order carrying a late fact and each venue's
-    fact the book holds on no order, with why; a late fact is acknowledged
-    with a reason (`acknowledge_flag`, under Open). Each run asks core
-    whether every pending fill's value date is a business day on its
-    [settlement calendars](../concepts/settlement-calendars.md), and where
-    it is not, offers that as a break's first candidate cause, linked to
-    the check; the book never moves the date. It passes every case of the operations suite.
+The sample operations plugin takes the role's common part, gives its Breaks
+and Reconciliations pages tools of their own, and makes every act
+preparable, its opening balance among them. It can close cleared breaks
+automatically as the operations role's
+[service account](../concepts/service-accounts.md) (see
+[Close cleared breaks automatically](#close-cleared-breaks-automatically)).
+It reads the [order path](../concepts/the-order-lifecycle.md): a fill traded
+after a statement's date is taken back out when the book is compared with
+that statement, so a traded position is not a break, and a fill the book
+records compares its account's latest statement again. A **Flags** tab
+under Open and View (`read_flags`) lists, in the accounts you may read, each
+order carrying a late fact and each venue's fact the book holds on no
+order, with why; a late fact is acknowledged with a reason
+(`acknowledge_flag`, under Open). Each run asks core whether every pending
+fill's value date is a business day on its
+[settlement calendars](../concepts/settlement-calendars.md), and where it is
+not, offers that as a break's first candidate cause, linked to the check;
+the book never moves the date.
 
 ## The first-use path
 
@@ -53,8 +39,7 @@ something only it has, it says so.
 | 4 | **Reconcile** | the plugin, or a person with `write` | the plugin's **Reconciliations** page |
 | 5 | **Work the breaks** | a person with `write` | the plugin's **Breaks** page: daily work, not a setup step |
 
-From contract v20 core's **Setting up**, on the
-plugin's **Summary**, judges the first two from its own records: every
+Core's **Setting up**, on the plugin's **Summary**, judges the first two from its own records: every
 required setting set, and a group holding `write` on the plugin over an
 account group, linking to the plugin's **Access** tab, or, to anyone but a
 deployment admin, "Ask a deployment admin to have access and a street
@@ -86,7 +71,7 @@ Under **Open** and **View**, the page you return to daily first:
   with **Confirm**. With none in scope: "Nothing to confirm: no account is
   in this plugin's scope yet; a deployment admin grants it".
 
-From contract v20 an opening balance can be
+An opening balance can be
 [prepared](../concepts/prepared-changes.md): an agent prepares it through
 the deployment's MCP, checked by `check_opening_draft`, or a person with
 **Prepare** beside **Confirm**, and a person makes it on **Opening
@@ -99,9 +84,8 @@ confirms it.
 
 A break whose difference has gone at the next reconciliation is not closed
 by silence: it is closed as cleared, citing the statement where it cleared,
-a justified act. Until contract v21 a person closes them, in one action on
-**Breaks**. From the sample operations plugin 0.11.0 (contract v21), with
-its setting **Close cleared breaks automatically** (`auto_close_cleared`,
+a justified act. A person closes them, in one action on **Breaks**; or,
+with the sample operations plugin's setting **Close cleared breaks automatically** (`auto_close_cleared`,
 off by default) turned on, each reconciliation that
 finds cleared breaks calls the plugin's own act `close_cleared_breaks`,
 checked by `check_close_cleared_breaks`, as the
@@ -123,7 +107,7 @@ breaks, and in the plugin's log:
 |---|---|---|
 | **Made** | the account is set to **act**, and every level lets agents make the act with no second pair of eyes | "Closed N cleared break(s) automatically, as the service account the operations role runs as." The breaks are closed as cleared; the book's entry names the service account and its owner, and Breaks names the closer "service account SA-… owned by …" |
 | **Prepared** | otherwise, the default | "Closing them automatically was prepared (PC-…) for a person who may close them to make." The prepared change waits in the Inbox of everyone who may close those breaks, and the account's owner, its reason naming how many cleared breaks of which account and the statement's date that found no difference for them; the breaks stay open until a person makes it. It is not prepared again for the same statement and breaks until a person asks, with **Reconcile now**, or the plugin restarts |
-| **Refused** | the role runs as no service account | "Closing them automatically waits for a service account: the operations role runs as none. A deployment admin grants one, and an admin of this plugin chooses it on its Access tab." A person closes them, as before, in one action |
+| **Refused** | the role runs as no service account | "Closing them automatically waits for a service account: the operations role runs as none. A deployment admin grants one, and an admin of this plugin chooses it on its Access tab." A person closes them in one action |
 | **Refused** | the account is disabled, removed or not granted | "Closing them automatically was refused: …", with the reason. Nothing is closed |
 | **Failed** | the plugin's act refused, or the call failed | "Closing them automatically was refused by this plugin's act: …" or "Closing them automatically failed: …". Nothing is closed |
 
@@ -131,8 +115,8 @@ None of them fails the reconciliation.
 
 ## Unmatched fills and outcomes
 
-From contract v23, what an operations plugin may
-offer as a break's cause gains two sources:
+What an operations plugin may offer as a break's cause includes two more
+sources:
 
 - **An unmatched fill.** A fill the venue originated waits in the book,
   unmatched, until the `ems` accepts it, so the custodian's change shows as
@@ -144,20 +128,20 @@ offer as a break's cause gains two sources:
   after a DK it stays for a person. A fee on a DK'd fill stays unplaced,
   for you. See [Answer a venue-originated fill](answer-a-venue-originated-fill.md).
 - **An event contract's outcome.** A custodian's payout of a resolved
-  contract is not in the book in v23, so it shows as a break, which the
+  contract is not in the book yet, so it shows as a break, which the
   plugin may explain with `BREAK_CAUSE_CATEGORY_CORPORATE_ACTION` and the
   outcome's row key as its event reference, reading the lake's outcomes
   (`list_outcomes`), the one thing an operations plugin reads from the lake.
 
 The operations suite's `names-an-unmatched-fill-as-a-breaks-cause` and
-`hears-and-reads-an-outcome` hold them. The sample operations plugin 0.12.0
-does neither.
+`hears-and-reads-an-outcome` hold them. The sample operations plugin does
+neither yet.
 
 ## Its figures
 
 **Open breaks**, **Overdue breaks**, **Awaiting an opening balance**,
 **Street missing** (only when any) and **Last reconciliation**: the
-sample's, now every operations plugin's.
+same on every operations plugin.
 
 ## Related
 

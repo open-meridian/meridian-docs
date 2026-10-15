@@ -6,11 +6,8 @@ those secrets are sealed with. A reset of Rancher Desktop, a lost node or a dele
 them. A backup is one file that holds what a restore needs to bring the deployment back, sealed so
 that only you can open it.
 
-!!! note "Chart 0.1.298"
-    Backups are made by chart 0.1.298 or later, in an image of their own,
-    `ghcr.io/open-meridian/meridian-backup`, which the published chart pins to the image built with
-    it. `meridian backup` and `meridian backup key` are in CLI 0.1.39 and later. Restore needs a
-    later CLI: see [Restore a backup](#restore-a-backup).
+Backups are made in an image of their own, `ghcr.io/open-meridian/meridian-backup`, which the
+published chart pins to the image built with it. You need CLI 0.1.45.
 
 | To | Run or do |
 |---|---|
@@ -151,7 +148,7 @@ At install, pass them to `meridian up` in a values file:
 meridian up --id DEP-… -f backup.yaml
 ```
 
-On a running deployment, from CLI 0.1.42, give them to `meridian upgrade-deployment`, which merges
+On a running deployment, give them to `meridian upgrade-deployment`, which merges
 them over the deployment's own values, shows each path they set, never a value, and asks first; at
 the version it already runs, that is an upgrade at that version:
 
@@ -159,7 +156,7 @@ the version it already runs, that is an upgrade at that version:
 meridian upgrade-deployment -f backup.yaml
 ```
 
-With CLI 0.1.41 or earlier, or from your own pipeline, apply them with Helm, as an upgrade to the
+From your own pipeline, apply them with Helm, as an upgrade to the
 version it already runs, keeping its own values (see
 [Upgrade a deployment](upgrade-a-deployment.md#plain-helm)):
 
@@ -204,17 +201,9 @@ release or namespace; `--timeout` (default `10m`) is how long it waits. See
 
 ## Restore a backup
 
-!!! warning "Restore needs CLI 0.1.40 or later"
-    CLI 0.1.39 has `meridian restore`, but its restore gives the components the database's URL
-    without restarting the conductor and the dashboard, which read it only when they start: the
-    conductor is left without its database, and first run keeps waiting with its rights. Run
-    `meridian upgrade` first. `meridian --version` says which you have.
-
-!!! note "CLI 0.1.42"
-    From CLI 0.1.42 restore checks everything before it changes anything, shows what it will do
-    and asks `Restore it here?`, refuses a namespace a deployment kept anything in, never installs
-    a chart older than the backup's, and loads a dump of a database you run itself. CLI 0.1.41 and
-    earlier did not ask, so check `kubectl config current-context` first with those.
+Restore checks everything before it changes anything, shows what it will do and asks `Restore it
+here?`, refuses a namespace a deployment kept anything in, never installs a chart older than the
+backup's, and loads a dump of a database you run itself.
 
 You need the backup file, the identity it was sealed to, and a cluster to restore into, with
 `kubectl` pointing at it. Restore goes only into a namespace holding no deployment, so it never
@@ -286,9 +275,8 @@ Restored meridian into meridian from meridian-20261012T143005Z.meridian-backup.
   Launched plugins whose images are not in the deployment's registry, which a backup does not hold: <instance> (<image>), …. Upload each again with `meridian plugin upload` from its directory; an edge plugin's own storage starts empty, and it gathers again what its vendor still serves.
 ```
 
-From CLI 0.1.42 the counts are given by store, and it reads each launched plugin's pod for at most
-two minutes and names only those whose image could not be pulled; CLI 0.1.41 and earlier name
-every launched plugin.
+The counts are given by store, and it reads each launched plugin's pod for at most two minutes and
+names only those whose image could not be pulled.
 
 ### After a restore
 
@@ -304,7 +292,7 @@ again. Empty the namespace, or restore into another with `-n`.
 ### Restoring on the same cluster
 
 After a namespace is deleted, the volume made from `backup.path` is left behind, `Released`.
-Delete it before you restore; from CLI 0.1.42 restore refuses while it is there, naming the command. The directory and the backups in it are
+Delete it before you restore; restore refuses while it is there, naming the command. The directory and the backups in it are
 kept:
 
 ```bash
@@ -319,16 +307,14 @@ When the database is one you run, and the backup does not include it, restore pu
 it was, and the deployment reaches that database again. Its records are the ones the database
 holds, so restore it from your provider's own backups first if it was lost.
 
-A backup taken with `backup.database: true` holds a dump of that database. From CLI 0.1.42 restore
-loads it itself, into that database, which must be empty: it needs `backup.image`, the URL to load
+A backup taken with `backup.database: true` holds a dump of that database. Restore loads it
+itself, into that database, which must be empty: it needs `backup.image`, the URL to load
 with, and your right to add a container to a pod and exec into it, all checked before it changes
 anything. The plan names the database by its host and name, never its credentials; stop anything
 else running against it first. Restore adds a container of `backup.image` beside the conductor,
 which reaches the database by the cluster's own path and is gone when the conductor restarts, loads
 the dump in one transaction as the migrating role, and counts every table against the backup's
-before the components are given the URL. CLI 0.1.41 and earlier do not load it: they install the
-release, stop with the URL withheld, and say to restore the database with your provider's tools and
-then fill the database's Secret.
+before the components are given the URL.
 
 ## Related
 

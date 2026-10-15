@@ -2050,7 +2050,8 @@ Each release of the SDK, the contract it declares, the runtime it needs, and the
     planned for a later release. The order path's and the
     calendars' operations are `preview`. At the upgrade to contract v22 the
     book records that every account it holds waits for compliance, each
-    its own entry. Nothing a plugin calls changed
+    its own entry, and no connectivity plugin is available or linked, each
+    recorded so. Nothing a plugin calls changed
     shape: `meridian plugin migrate` moves the pins (see
     [0.25.0 to 0.26.0](#0250-to-0260)). It needs a runtime serving contract
     v22 (chart 0.1.301 or later), and CLI 0.1.42's `plugin new` writes
@@ -2101,6 +2102,8 @@ Each release of the SDK, the contract it declares, the runtime it needs, and the
     At the upgrade every act is "may make", with the second pair of eyes
     off, which is what every delegation could do before, each recorded as
     set then.
+    A secret of 16 characters or more shows its last four characters in
+    its placeholder once it is set again after the upgrade.
 
 !!! note "0.23.0: contract v19"
     open-meridian 0.23.0 declares contract v19, the lake's trades
@@ -2126,6 +2129,25 @@ Each release of the SDK, the contract it declares, the runtime it needs, and the
     or record is rewritten, and a code the instrument store does not answer
     for yet is resolved by a later sweep.
 
+!!! note "0.21.0: contract v16"
+    open-meridian 0.21.0 declares contract v16, [the archive](#the-archive):
+    a plugin at the edge declares the kinds of raw record it keeps, and past
+    each kind's window archives, keeps or deletes them as its admin chose,
+    each move reported. It needs a runtime serving contract v16 (chart
+    0.1.277 or later), and CLI 0.1.36's `plugin new` writes a plugin on it;
+    CLI 0.1.36's `meridian up` asks where older records go (`--archive`,
+    `--no-archive`). A plugin declaring no kinds keeps one retention, as
+    before. **SnapTrade 0.13.0**, the first plugin on it, drops 0.12.0's
+    **Keep raw responses for** (`raw_retention_days`) and **Keep activity
+    records for** (`activity_retention_days`) and carries neither value
+    over: its windows, **Raw responses: window** (`responses_window_days`,
+    30 days by default) and **Reported activity: window**
+    (`activity_window_days`, 2,555 days), take their place, set once at
+    upgrade. Upgrade the deployment first, note what the two old settings
+    hold, launch 0.13.0 in place, then set the two windows and what is done
+    past each. What 0.12.0 deleted is not brought back; on its first pass
+    0.13.0 moves 0.12.0's records into units, keeping their times.
+
 !!! note "0.20.0: contract v15"
     open-meridian 0.20.0 declares contract v15: a person's level is granted
     per role of a plugin (see [Access per role](../concepts/access.md#access-per-role)),
@@ -2147,6 +2169,42 @@ Each release of the SDK, the contract it declares, the runtime it needs, and the
     A runtime at contract v15 keeps no session for a terminal and serves CLI
     0.1.25 or later, which holds a [delegation](../concepts/access.md#delegations-to-the-cli)
     in place of a session.
+
+!!! note "0.19.0: contract v14"
+    open-meridian 0.19.0 declares contract v14:
+    [the custodian's activity](../concepts/the-custodians-activity.md),
+    reported by a custody plugin, and read, heard and linked by
+    `operations`, with each sync status the street keeps; and a setting may
+    be a table of typed columns. It needs a runtime serving contract v14
+    (chart 0.1.262 or later), and CLI 0.1.34's `plugin new` writes a plugin
+    on it. Released 2026-10-05. From contract v14 every settings change is
+    its own record. At the upgrade the deployment redacts the records of
+    every setting already secret; a change made before it, recorded with
+    who and when and without the value, is filled in from the value the
+    setting still holds where its latest change set it, and says so; and
+    each setting changed before the upgrade gets one more record saying
+    the earlier values are not known before then.
+
+!!! note "The plugin UI kit, by version"
+    The kit pages link, at `/.meridian/ui/<version>/`, served by the
+    deployment. A 0.x release only adds, and the dashboard serves the newest
+    0.x it carries to any 0.x request (see
+    [Build a plugin's page](../how-to/build-a-plugin-page.md#the-kits-version)).
+
+    | Version | What it added |
+    |---|---|
+    | 0.1.0 | The brand's tokens and colour schemes, the platform's CSS classes, and `om-grid` (with its high-rate mode), `om-chart`, `om-asof`, `om-instrument-picker`, `om-live` and `om-panels` |
+    | 0.2.0 | The seamless frame: a page the dashboard frames drops its own heading and tab row, and the frame is sized to the page. See [Inside the dashboard's frame](../how-to/build-a-plugin-page.md#inside-the-dashboards-frame). |
+    | 0.3.0 | `om-account-map`; `om-moment`; the grid's declared JSON, rich cells and narrow layouts; list rows that wrap; option and field-row styles, and a select as tall as an input |
+    | 0.4.0 | Header actions: a framed page's head buttons, drawn by the dashboard in its own header. See [Header actions](../how-to/build-a-plugin-page.md#header-actions). |
+    | 0.5.0 | `om-account-map` at scale: a dense table with search, filters, grouping, pages, a chooser found by typing, suggestions, and several links in one form (`link-several`). See [At thousands of accounts](../how-to/build-a-plugin-page.md#at-thousands-of-accounts). |
+    | 0.6.0 | `om-status`, a status dot with its note on hover, focus or a tap; and in `om-account-map`, each account's optional `status` and `values`, a Status column and a filter by state |
+    | 0.7.0 | Header status: a framed page's head `om-status` marked `data-om-header`, drawn by the dashboard beside the plugin's name. See [Header status](../how-to/build-a-plugin-page.md#header-status). |
+    | 0.8.0 | Icon actions: a button marked `data-om-icon="refresh"` is drawn as a circular arrow, in the page and as a header action in the dashboard's header. See [Icon actions](../how-to/build-a-plugin-page.md#icon-actions). |
+    | 0.9.0 | `om-entry-grid`: a table of typed inputs a person enters rows in, posted with the page's own form, the server's messages placed on their cells, a spreadsheet's paste and a CSV in a dialog |
+    | 0.10.0 | Every page fits one screen: a height budget the dashboard holds to the screen, compact chrome, one-line rows (`table.one-line`, `om-grid`'s `one-line`) with the whole row a click away, `om-pager`, as many rows a page as fit, and the overflow check |
+    | 0.11.0 | A search beside the pager, `search` on `om-grid`, `om-pager` and `om-entry-grid`, `search-param` on `om-pager`, and the `om-search` event; and fields gated on a choice, `data-om-applies-when` and `data-om-one-of`. See [To search a list, and show a field only when it applies](../how-to/build-a-plugin-page.md#to-search-a-list-and-show-a-field-only-when-it-applies). Served from chart 0.1.293 (contract v19). |
+    | 0.12.0 | An `instrument` column on `om-entry-grid` with its `src`, found as you type; the patterns **Facts**, **Next step** and **Prepare**; and `meridian:open` with `data-om-opens`, a link from a framed page to one of the dashboard's own tabs. See [Role pages, instruments and Prepare](../how-to/build-a-plugin-page.md#role-pages-instruments-and-prepare). Served from chart 0.1.298 (contract v20). |
 
 ## Moving a plugin to a new release { #moving-a-plugin-to-a-new-release }
 

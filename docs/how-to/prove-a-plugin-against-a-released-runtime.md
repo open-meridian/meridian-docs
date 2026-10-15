@@ -74,9 +74,8 @@ docker rm "$id"
 ```
 
 Add `.e2e/` to `.gitignore` and `.dockerignore`, and remove the copy when the run ends, however it
-ends: the harness's runner is not your plugin. From CLI 0.1.24, `meridian plugin check` reads
-nothing under `.e2e/` and `meridian plugin dev` sends nothing from it; an earlier `plugin check`
-read the runner as your plugin's code, and failed it on `settings-declared`.
+ends: the harness's runner is not your plugin. `meridian plugin check` reads nothing under `.e2e/`
+and `meridian plugin dev` sends nothing from it.
 
 ## 3. Write the plugins
 
@@ -167,18 +166,18 @@ Each prints what it found and exits 0, or exits non-zero saying why. Every wait 
 | Command | What it does |
 |---|---|
 | `ready [--seconds N]` | Waits until the plugin has registered and the dashboard lists it, healthy or not. The first command of a run, once for each plugin. |
-| `settings NAME=VALUE ... [--seconds N] [--expect TEXT]` | Sets the plugin's settings in its settings form, as its admin does, once it has declared each; a secret in its secret field. A developer setting is accepted. From a runtime serving contract v14, a [table setting](set-a-plugins-settings.md#a-table-setting)'s cell is `NAME[ROW].COLUMN=VALUE`, the rows given being the table's whole, found on the table's own tab, and `--expect` reads the Settings tab after saving and fails unless it says `TEXT`, such as who last changed them. |
+| `settings NAME=VALUE ... [--seconds N] [--expect TEXT]` | Sets the plugin's settings in its settings form, as its admin does, once it has declared each; a secret in its secret field. A developer setting is accepted. A [table setting](set-a-plugins-settings.md#a-table-setting)'s cell is `NAME[ROW].COLUMN=VALUE`, the rows given being the table's whole, found on the table's own tab, and `--expect` reads the Settings tab after saving and fails unless it says `TEXT`, such as who last changed them. |
 | `account NAME [--seconds N]` | Defines an account and prints its ID, for a page that links only to an account that exists. |
-| `grant --level read\|write\|admin [--role ROLE]` | Grants the admin that level on the plugin, on All accounts, as a deployment admin does: a user group holding the admin, an access group, and the permission joining them. From a runtime serving contract v15 the grant is on one of the plugin's roles: `--role` names it, else the plugin's one role, or the plugin as a whole where it holds none. |
+| `grant --level read\|write\|admin [--role ROLE]` | Grants the admin that level on the plugin, on All accounts, as a deployment admin does: a user group holding the admin, an access group, and the permission joining them. The grant is on one of the plugin's roles: `--role` names it, else the plugin's one role, or the plugin as a whole where it holds none. |
 | `page --level admin\|write\|read PATH [--until TEXT] [--seconds N]` | Opens a session on the plugin's own host at that level (Manage, Open, View), GETs `PATH`, prints the status and the body; with `--until`, again until the body says `TEXT`. |
 | `form --level L --page PATH --post PATH [--csrf-field NAME] [--from-page NAME ...] [--expect TEXT] FIELD=VALUE ...` | In such a session, reads `--page`, takes its CSRF field (`csrf`, the SDK's name) and each field `--from-page` names, with the value the page gives it, and posts them with the fields you give to `--post`; prints the status and the body. |
 | `unlinked [--expect N] [--seconds N]` | Prints how many external accounts the plugin reported that nothing links, as the dashboard counts them; with `--expect`, waits for `N`. |
-| `licence DATASET kept=true\|false retention_days=N derived_use=true\|false display=true\|false personal_use=true\|false [default_fields=A,B] [note=TEXT]` | From a runtime serving contract v18: sets a dataset's licence on the Data sources page, as a deployment admin does, replacing it whole; a term left out is false. See [License and entitle a dataset](license-and-entitle-a-dataset.md). |
-| `entitle DATASET [--fields A,B] [--withdraw] [note=TEXT]` | From contract v18: entitles the plugin to a dataset, every field or those named, or withdraws it, and waits until the bus admits the plugin to the dataset's subject before the entitlement is recorded. |
-| `priority DATA_TYPE [--kind KIND] DATASET ... [note=TEXT] [--against N]` | From contract v18: sets the priority a default read takes for `meridian.v1.Price`, one kind of it (`close`, `last`, `nav`, `settlement`), or `meridian.v1.Bar`: the datasets first to last, replaced whole, against the priority as the page shows it. |
-| `service-account create NAME --owner PERSON [--setting prepare_only\|act] [--purpose TEXT]`, `set SA [--setting ...] [--name NAME] [--owner PERSON]`, `disable\|enable\|remove SA`, `grant SA --role ROLE --level read\|write`, `runs-as (SA \| none) --role ROLE [--level write\|read]`, `list` | From a runtime serving contract v21: a [service account](../concepts/service-accounts.md), as a deployment admin makes it on Settings' Service accounts tab: created with a name, an owner (one of the run's people, or `harness`) and a setting, prepare only unless `--setting act`, its `SA-` ID printed; changed; disabled (by its owner too), re-enabled or removed. `grant` grants it a level on one of the plugin's roles, on All accounts, by its ID in a user group's logins; `runs-as` chooses, on the plugin's Access tab, what the role's autonomous work runs as, or none; `list` prints each account's ID, name, setting and state. With `--expect-refused TEXT`, fails unless the change is refused saying `TEXT`. |
+| `licence DATASET kept=true\|false retention_days=N derived_use=true\|false display=true\|false personal_use=true\|false [default_fields=A,B] [note=TEXT]` | Sets a dataset's licence on the Data sources page, as a deployment admin does, replacing it whole; a term left out is false. See [License and entitle a dataset](license-and-entitle-a-dataset.md). |
+| `entitle DATASET [--fields A,B] [--withdraw] [note=TEXT]` | Entitles the plugin to a dataset, every field or those named, or withdraws it, and waits until the bus admits the plugin to the dataset's subject before the entitlement is recorded. |
+| `priority DATA_TYPE [--kind KIND] DATASET ... [note=TEXT] [--against N]` | Sets the priority a default read takes for `meridian.v1.Price`, one kind of it (`close`, `last`, `nav`, `settlement`), or `meridian.v1.Bar`: the datasets first to last, replaced whole, against the priority as the page shows it. |
+| `service-account create NAME --owner PERSON [--setting prepare_only\|act] [--purpose TEXT]`, `set SA [--setting ...] [--name NAME] [--owner PERSON]`, `disable\|enable\|remove SA`, `grant SA --role ROLE --level read\|write`, `runs-as (SA \| none) --role ROLE [--level write\|read]`, `list` | A [service account](../concepts/service-accounts.md), as a deployment admin makes it on Settings' Service accounts tab: created with a name, an owner (one of the run's people, or `harness`) and a setting, prepare only unless `--setting act`, its `SA-` ID printed; changed; disabled (by its owner too), re-enabled or removed. `grant` grants it a level on one of the plugin's roles, on All accounts, by its ID in a user group's logins; `runs-as` chooses, on the plugin's Access tab, what the role's autonomous work runs as, or none; `list` prints each account's ID, name, setting and state. With `--expect-refused TEXT`, fails unless the change is refused saying `TEXT`. |
 
-From a runtime serving contract v22 the runner also takes
+The runner also takes
 `connectivity available [--withdraw] [--note TEXT]` and `connectivity link --ems EMS
 [--user person:SUBJECT ...] [--note TEXT]`, which make the plugin available, or withdraw it, as a
 deployment admin does, and link it to an `ems` with who may route through it, people by subject,
@@ -191,7 +190,7 @@ admin within their plugin, and prints what the page then lists for it; and `attr
 waits=true|false note=TEXT [--expect-refused TEXT]`, whether the account's releases wait for
 compliance (see [Set trading instructions](set-trading-instructions.md)).
 
-From contract v22 the harness's stand-in for the platform also holds the seed
+The harness's stand-in for the platform also holds the seed
 [settlement calendars](../concepts/settlement-calendars.md) and the US equities rule, the XNYS and
 XNAS venue records, and one test equity, Apple Inc., with XNAS, where it lists, as its listing
 venue. The runner's `instrument` command takes `--ask-platform`, asking the platform about a
@@ -214,14 +213,13 @@ RUNTIME_IMAGE ?= ghcr.io/open-meridian/meridian-runtime:50d6f0a@sha256:31752d45e
 HARNESS_IMAGE ?= ghcr.io/open-meridian/meridian-harness:50d6f0a@sha256:00c4818b8c67218ecbe237f97e97b78cad3801477520ebbae80fe29332de4115
 ```
 
-The commands above are its `README.md`'s. Core 8774368's serve contract v22, released 2026-10-13
-in chart 0.1.301.
+The commands above are its `README.md`'s.
 
-From contract v23 the stand-in for the platform also serves the euro's
+The stand-in for the platform also serves the euro's
 TARGET calendar and a EUR/USD spot-date rule as the platform keeps such a rule (lag 2 counted on
 TARGET alone, the spot date good on TARGET and the US dollar's calendar, cut 17:00 New York), so
 EUR/USD traded Friday 9 October 2026 spots on Tuesday 13 October; and `store lake` prints an
-outcome's row as `outcome`, beside price, bar, trade and quote. The runner takes no new command.
+outcome's row as `outcome`, beside price, bar, trade and quote.
 
 **The admin holds Manage alone until granted.** As a deployment's first administrator does, the
 harness's admin opens every plugin under Manage and reads or acts on no account's data through one.
@@ -248,7 +246,7 @@ $H run --rm -T store book
 prints that store as stable, sorted lines, so a file from one run compares with the next. Whoever
 reads a store needs no database user, password, file or query of their own.
 
-From a runtime serving contract v18, `store lake` prints what the
+`store lake` prints what the
 [lake](../concepts/the-lake.md) kept, one line each: every row version (its dataset, data type,
 sequence, row key, version, subject, kind or interval, venue, business date and how many values
 were left unconverted), each priority's changes, each want asked, answered, declined or withdrawn,
@@ -304,22 +302,21 @@ unplaced|<account, empty for none>|<fact kind>|<reason>|<instance>|<placed>
 instruction|<partition>|<value>|<setter level>
 ```
 
-- From contract v22 the [order path](../concepts/the-order-lifecycle.md)'s
-  records print too, the last five kinds; `<side>`, `<state>`, `<reason>`, `<value>` and `<setter
+- The [order path](../concepts/the-order-lifecycle.md)'s records print too, the last five kinds; `<side>`, `<state>`, `<reason>`, `<value>` and `<setter
   level>` are their enums' numbers. A book holding no orders prints none of them.
 
 - `<account>` and `<instrument>` as the street store prints them. No identifier the book mints, of
   an entry, a lot or a break, and no partition number or time is printed, so a file from one run
   compares with the next.
-- `<not stated>` is 0 on every position a book at contract v9 records, and `<settled>` is set; on
-  a position a v8 opening balance opened with some of its quantity not stated, `<settled>` is empty:
-  unknown, never zero. A `pending` line with no value date is "date not stated", from a v8 opening
-  balance or an adjustment the street gave no date for.
+- `<not stated>` is 0 on every position the book records now, and `<settled>` is set; on a
+  position an older opening balance opened with some of its quantity not stated, `<settled>` is
+  empty: unknown, never zero. A `pending` line with no value date is "date not stated", from such an
+  opening balance or an adjustment the street gave no date for.
 - An enum is printed as its number, 0 for none: `<lot relief>`, `<category>`, `<state>` (1 open,
   2 resolved, 3 closed), `<confirmed cause>` and `<source>`. `<resolved by>` is `entries`,
   `explanation` or `cleared`, empty while the break is open.
 - `<recorded by>` and `<actor>` are a person's subject, such as `local|harness` for the harness's
-  admin, `instance <id>` for a finding a plugin sent as itself, from contract v21 `service account <SA- ID> owned by <subject>` for an act a plugin's autonomous work made
+  admin, `instance <id>` for a finding a plugin sent as itself, `service account <SA- ID> owned by <subject>` for an act a plugin's autonomous work made
   as its role's service account, or `book` for the book's own act.
 - Entries are listed in the order each account's were made.
 

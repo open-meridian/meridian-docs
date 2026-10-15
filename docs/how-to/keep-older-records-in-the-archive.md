@@ -7,10 +7,6 @@ install, allow a plugin its archive and set holds, and an admin of a plugin
 how to set its windows and restore what was archived. Why it works this way
 is in [The archive](../concepts/the-archive.md).
 
-!!! note "Contract v16"
-    This page describes a runtime serving contract v16 (chart 0.1.277 or later),
-    open-meridian 0.21.0, CLI 0.1.36 and the SnapTrade plugin 0.13.0.
-
 Who does what:
 
 | Task | Who |
@@ -137,7 +133,7 @@ kind the plugin declares has two settings:
 | *Kind*: window | How long a record of the kind stays in the plugin's storage, in days from when it was received. Empty, it is the version's default. |
 | *Kind*: past the window | **Archived**, moved to the archive and restorable; **Kept**, left in the plugin's storage; or **Deleted**, never inside the hold. Empty, it is **Archived** where the plugin has an archive and the kind can be archived, and **Kept** otherwise. |
 
-SnapTrade 0.13.0's are **Reported activity: window** (2,555 days by
+SnapTrade's are **Reported activity: window** (2,555 days by
 default), **Reported activity: past the window**, **Raw responses: window**
 (30 days) and **Raw responses: past the window**.
 
@@ -145,7 +141,7 @@ Choose **Save settings**. The deployment refuses the save, naming the
 setting, for a window shorter than the hold over the plugin
 (`activity_window_days: 90 is below the hold of 400 days`), and for
 **Archived** where no archive is allowed or the kind cannot be archived.
-The change reaches the plugin without a restart; SnapTrade 0.13.0 moves what
+The change reaches the plugin without a restart; SnapTrade moves what
 is now past its window when its settings arrive and after each read. Each
 change is recorded, naming you.
 
@@ -156,7 +152,7 @@ made, by which window or which person.
 ## Restore archived records
 
 As a person holding `write` on the plugin, on the plugin's own page, under
-**Open**. In SnapTrade 0.13.0:
+**Open**. In SnapTrade:
 
 1. Open SnapTrade with **Open**, and its **Raw responses** tab.
 2. Choose the account, then the **Archive** view. Each unit SnapTrade moved
@@ -173,44 +169,6 @@ while it is in the archive. The restore is recorded, naming you.
 An agent connected to the deployment for you restores the same way, with the
 plugin's `restore_unit` tool, the kind and the unit (see
 [Offer your pages to agents](offer-your-pages-to-agents.md)).
-
-## Upgrade SnapTrade to 0.13.0
-
-SnapTrade 0.12.0 kept each read's responses for **Keep raw responses for**
-(`raw_retention_days`) and each activity's record for **Keep activity
-records for** (`activity_retention_days`), then deleted them. 0.13.0 drops
-both settings and carries neither value over: its two kinds' windows take
-their place, and the deployment admin sets them once at upgrade.
-
-| 0.12.0's setting | 0.13.0's setting | Default |
-|---|---|---|
-| `raw_retention_days` (Keep raw responses for) | `responses_window_days` (Raw responses: window) | 30 days |
-| `activity_retention_days` (Keep activity records for) | `activity_window_days` (Reported activity: window) | 2,555 days |
-
-1. Upgrade the deployment to a runtime serving contract v16 first
-   ([Upgrade a deployment](upgrade-a-deployment.md)): SnapTrade 0.13.0 is
-   built on open-meridian 0.21.0, which a runtime serving v15 refuses at
-   registration, naming both versions.
-2. On SnapTrade's **Settings** form, under 0.12.0, note what the two old
-   settings hold. One never saved, or holding its default, needs nothing
-   set later.
-3. Move the instance to 0.13.0:
-
-    ```bash
-    meridian plugin stop snaptrade
-    meridian plugin launch snaptrade 0.13.0 --instance snaptrade
-    ```
-
-4. On SnapTrade's **Settings** form, set **Raw responses: window** and
-   **Reported activity: window** to the values you noted, and choose what is
-   done past each window.
-5. If SnapTrade should archive, allow it an archive (above).
-
-Until a window is set it is its default. From 0.13.0 nothing is deleted
-unless an admin chooses **Deleted**, and a reported activity is never
-deleted within the history SnapTrade reported. What 0.12.0 deleted past its
-retention is not brought back. On its first pass 0.13.0 moves 0.12.0's
-records into units, keeping their times.
 
 ## Related
 

@@ -3,33 +3,15 @@
 A plugin declares the settings it needs in its code, and an admin of the
 plugin gives them in the dashboard: on its **Settings** form, and each table
 on a tab of its own beside it. Those are the only places a setting is set,
-and from contract v17 an admin's own agent may set
-them too, as the admin, through the deployment's MCP surface (see
+and an admin's own agent may set them too, as the admin, through the deployment's MCP surface (see
 [Let your agent manage a plugin's settings and archive](let-your-agent-manage-a-plugin.md)).
 A plugin reads its settings as they arrive, and never sets one, its own
 included. Every change is recorded, naming who made it.
 
-From contract v14 a setting may also be a **table**: rows of typed columns,
+A setting may also be a **table**: rows of typed columns,
 such as, per account, a plan's own fund code and the instrument it is. This
 page shows an admin how to fill the form and a table's tab, and a plugin's
 developer how to declare a table and read its rows.
-
-!!! note "Released 2026-10-05"
-    This page describes open-meridian 0.19.0 (contract v14), on PyPI, with
-    CLI 0.1.34, the runtime chart 0.1.262 and the SnapTrade plugin 0.11.1.
-    The data dictionary marks the table setting's rows `preview` in the
-    contract. A runtime serving v13 refuses a plugin built on 0.19.0, naming
-    both versions.
-
-!!! note "Contract v20"
-    From contract v20 a secret's field says where it stands in its
-    placeholder, with its last four characters for a long one, and an
-    optional secret has **Remove** in place of **Clear it** (see
-    [A secret](#a-secret)); the form and each table's tab have **Prepare**
-    beside Save (see [Prepare instead of saving](#prepare-instead-of-saving));
-    an instrument column is a search-as-you-type picker; and a plugin may
-    declare a setting each person keeps for themselves (see
-    [A person's own settings](#a-persons-own-settings)). Released 2026-10-12 in chart 0.1.298.
 
 ## Open the form
 
@@ -63,25 +45,22 @@ value against what the plugin declared before it keeps any, and refuses the
 save, saying why, when one does not read. Once saved, the settings reach the
 plugin without a restart.
 
-From contract v17, the form and each table's tab
-carry the version of the settings they were drawn from. A save made after
+The form and each table's tab carry the version of the settings they were drawn from. A save made after
 the settings changed since, at the page or through an agent, is refused,
 saying so, and changes nothing: open the form again and make the change on
 what is set now.
 
 ### On a plugin holding several roles
 
-From contract v15 a person is an admin of a plugin's role rather than of the
-plugin (see [Admin per role](../concepts/access.md#admin-per-role)), and a
+A person is an admin of a plugin's role rather than of the plugin (see [Admin per role](../concepts/access.md#admin-per-role)), and a
 plugin holding several roles names the roles each setting serves. The form
 shows a setting to an admin of any role it serves, and lets only one holding
 admin on every one of them change it. To an admin of some of them it is
 shown read-only, saying which roles it serves, such as **Serves custody and
 operations: set by an admin of every one**, and posts nothing; a change to
 it from anyone else is refused before anything is sent, naming the roles
-they do not administer. A setting declared before v15, naming no role,
-serves every role the plugin holds. On a plugin holding one role, nothing
-changes.
+they do not administer. A setting naming no role serves every role the
+plugin holds.
 
 ## A secret
 
@@ -92,29 +71,23 @@ field empty keeps the secret; typing into it replaces it. Nobody reads a
 secret back, a deployment admin included: it is never shown, logged,
 reported or bundled, and is sealed before it is stored.
 
-From contract v20:
-
-- **Its last four characters.** For a secret of 16 characters or more set
-  from v20, the placeholder begins with its last four, such as *Ends in
-  a9F2 · set by Ada, 2026-10-09 14:02 UTC*, so you can tell which key is in
-  place without seeing it. They are kept apart from the secret, and are not
-  the value: a shorter secret shows none, and one set before v20 shows none
-  until it is set again.
+- **Its last four characters.** For a secret of 16 characters or more, the
+  placeholder begins with its last four, such as *Ends in a9F2 · set by
+  Ada, 2026-10-09 14:02 UTC*, so you can tell which key is in place without
+  seeing it. They are kept apart from the secret, and are not the value: a
+  shorter secret shows none.
 - **Remove.** An optional secret that is set has a small **Remove** beside
   its field, which asks first and removes it alone; the plugin then has no
   value for it until it is set again. A required secret is only ever
-  replaced, never removed. **Clear it**, the tick box under every secret,
-  is gone.
+  replaced, never removed.
 
-Before v20 the field said only **set** or **not set**, and a tick box,
-**Clear it**, removed the secret. A setting held
-sealed is never shown, whatever the plugin declares of it later: a plugin
-re-declaring it as not secret clears it (see
-[A setting re-declared](#a-setting-re-declared)). What changed for secrets in
-v14 is in their records: a setting that becomes secret has its earlier plain
-values redacted (see [Who changed what](#who-changed-what)).
+A setting held sealed is never shown, whatever the plugin declares of it
+later: a plugin re-declaring it as not secret clears it (see
+[A setting re-declared](#a-setting-re-declared)), and a setting that becomes
+secret has its earlier plain values redacted (see
+[Who changed what](#who-changed-what)).
 
-From contract v17 the form says who set a secret and when, and through which
+The form says who set a secret and when, and through which
 client where they used one, such as *Set by Ada, 2026-10-09 14:02 UTC,
 through Claude*. Never its value. An agent never reads or types a secret: it
 may only clear one, with a note.
@@ -159,7 +132,7 @@ anything, so the two refuse alike:
 | Date | A real date, `YYYY-MM-DD`. |
 | Choice | One of the column's options, chosen from them. |
 | External account | One of the external accounts this plugin reported, chosen from them. |
-| Instrument | One of the deployment's instrument records, found by searching them and held by its ID, never a symbol. One the deployment does not hold is refused. From contract v20 the cell is a search-as-you-type picker: type part of a name, a symbol or an identifier, and once you pause it lists up to eight of the deployment's records, each with its name, identifiers and ID; choose one with the arrows and Enter, or a click, and Escape puts the cell back. The cell shows the name and keeps the ID. Words typed and not chosen hold the save. Only the deployment's own records are searched; nothing lists every record, and the platform is not asked. |
+| Instrument | One of the deployment's instrument records, found by searching them and held by its ID, never a symbol. One the deployment does not hold is refused. The cell is a search-as-you-type picker: type part of a name, a symbol or an identifier, and once you pause it lists up to eight of the deployment's records, each with its name, identifiers and ID; choose one with the arrows and Enter, or a click, and Escape puts the cell back. The cell shows the name and keeps the ID. Words typed and not chosen hold the save. Only the deployment's own records are searched; nothing lists every record, and the platform is not asked. |
 
 A column marked required must be filled on every row. A cell that does not
 read is marked, and the tab names it by row and column, with its path, as in
@@ -178,8 +151,7 @@ A table is never a secret.
 
 ## Prepare instead of saving
 
-From contract v20 the form and each table's tab have
-**Prepare** beside **Save**. It checks the change as Save would and keeps
+The form and each table's tab have **Prepare** beside **Save**. It checks the change as Save would and keeps
 it, unsaved, as a [prepared change](../concepts/prepared-changes.md) for
 someone who may make it: it appears in their Inbox, and the form opens
 started from it, marked "prepared by" you with your note. Nothing changes
@@ -194,8 +166,7 @@ save, is what the deployment admin and the plugin's admin set for the act
 
 ## A person's own settings
 
-From contract v20 a plugin may declare a setting
-**each person's own** (`per_person`), such as a reporting plugin's
+A plugin may declare a setting **each person's own** (`per_person`), such as a reporting plugin's
 watchlist. It is not on the Settings form and has no value for the whole
 deployment. Each person who holds `write` on a role it serves saves their
 own on the plugin's own pages, under Open; the dashboard keeps them under
@@ -212,7 +183,7 @@ is read from the change records, so a clear counts as a change: where the
 latest was the plugin's re-declaring a setting, it says **Last changed by
 the plugin's re-declaring a setting, which cleared it**, and when.
 
-Behind it, from contract v14, every change is its own record in the
+Behind it, every change is its own record in the
 deployment's configuration: which setting, whether it was set or cleared, the
 value it was set to, who, through which delegation where they used one, and
 when. A secret's record says only that it was set or cleared, never its value.
@@ -222,15 +193,7 @@ becomes secret, because the plugin re-declares it secret or its value is
 stored sealed, the plain values its earlier records hold are redacted: each
 value is blanked, and every record stays, with who and when. The redaction is
 a record of its own, saying which records it blanked and why, made by no
-person, and when. On upgrading to v14, the deployment redacts the records of
-every setting already secret, at its own clock as it upgrades.
-
-The changes made before v14 were recorded with who and when, and without the
-value. Where the setting still holds the value its latest change set, that
-change's record is filled in from it, and says so. For every setting changed
-before v14, one more record says the earlier values are not known before the
-moment the deployment was upgraded, by the deployment's clock. Nothing is
-back-dated or guessed.
+person, and when. Nothing is back-dated or guessed.
 
 ### A setting re-declared
 
@@ -308,7 +271,7 @@ for where that provenance goes, and
 ### SnapTrade: plan-code links
 
 A retirement plan may report a fund under a code only the plan uses, such as
-Fidelity's `OQKR` for the plan's VIGIX. SnapTrade 0.11.0 resolves such a code
+Fidelity's `OQKR` for the plan's VIGIX. SnapTrade resolves such a code
 only where an admin of the plugin has linked it, in the table setting
 **Plan-code links** (`plan_code_links`), its own tab beside SnapTrade's
 **Settings** under Manage:
@@ -328,14 +291,13 @@ table: no page of its own sets any setting, and its **Account links** tab
 only shows how many plan-code links and cash links the settings hold. See
 [The custodian's activity](../concepts/the-custodians-activity.md#snaptrade).
 
-From SnapTrade 0.12.0 (contract v15), activity
-that arrived before a row was added is re-resolved too: on the read the
+Activity that arrived before a row was added is re-resolved too: on the read the
 change wakes, each activity already recorded under that code on that account
 is re-resolved as the row's instrument, naming who added or last changed the
 row and when, beside the activity as it first arrived, which is kept.
 Changing the row re-resolves them again; removing it sends nothing, and they
 keep their latest resolution. A restart re-resolves nothing twice. See
-[SnapTrade 0.12.0](../concepts/the-custodians-activity.md#snaptrade-a-plan-code-linked-later).
+[SnapTrade: a plan code linked later](../concepts/the-custodians-activity.md#snaptrade-a-plan-code-linked-later).
 
 ### SnapTrade: cash links
 
@@ -344,7 +306,7 @@ decide, from what its vendor says; the street and operations take what it
 sends. A custodian may hold an account's cash as something else, such as
 Fidelity's FDIC-insured bank deposit as an IRA's core position
 (`FDIC99532`), which SnapTrade reports as a position beside the cash.
-SnapTrade 0.11.0 decides in this order:
+SnapTrade decides in this order:
 
 1. **SnapTrade's own flag first.** A position SnapTrade marks a cash
    equivalent that is not a fund is already counted in the cash it reports
@@ -367,10 +329,7 @@ Its columns are in the order of Plan-code links':
 | Symbol | The position as SnapTrade names it, such as `FDIC99532`. Required. |
 | Currency | The ISO 4217 code of the cash it is, such as `USD`. Required. |
 
-The table holds at most 200 rows. In SnapTrade 0.11.0 it was labelled
-Positions counted as cash, the account its last column; 0.11.1 relabels it
-and moves the account first, the setting's name unchanged, and a row saved
-in the old order reads the same. A money market fund stays a fund, whatever
+The table holds at most 200 rows. A money market fund stays a fund, whatever
 lists it. A row whose currency is not an ISO 4217 code or differs from the
 currency SnapTrade states for the position, or a position with no price,
 counts nothing: the plugin says so and sends the position as it is. Where
@@ -384,17 +343,13 @@ which a person confirms once, as an adjustment.
 
 ### An edge plugin's windows
 
-From contract v16 every plugin at the edge that
-declares kinds of raw record has two settings per kind on this form, the
-same for every such plugin: *Kind*: **window**, in days, and *Kind*: **past
-the window**, archived, kept or deleted. SnapTrade 0.13.0's are **Reported
-activity: window** and **Raw responses: window**, with a past-the-window
-choice for each; they replace 0.12.0's **Keep activity records for** and
-**Keep raw responses for**, whose values are not carried over. The
-deployment refuses a window below the hold over the plugin, and archived
+Every plugin at the edge that declares kinds of raw record has two
+settings per kind on this form, the same for every such plugin: *Kind*:
+**window**, in days, and *Kind*: **past the window**, archived, kept or
+deleted. SnapTrade's are **Reported activity: window** and **Raw responses:
+window**, with a past-the-window choice for each. The deployment refuses a window below the hold over the plugin, and archived
 where no archive is allowed. See
-[Set a plugin's windows](keep-older-records-in-the-archive.md#set-a-plugins-windows)
-and [Upgrade SnapTrade to 0.13.0](keep-older-records-in-the-archive.md#upgrade-snaptrade-to-0130).
+[Set a plugin's windows](keep-older-records-in-the-archive.md#set-a-plugins-windows).
 
 ## Related
 

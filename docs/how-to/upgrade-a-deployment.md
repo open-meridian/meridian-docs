@@ -7,12 +7,7 @@ image, and the data, the key and the configuration stay.
 What people notice:
 
 - **The CLI stays connected.** A delegation from `meridian connect` is kept in the deployment's
-  database, so it survives the dashboard restarting, and nobody reconnects a terminal. A session a
-  CLI from before delegations kept, 0.1.24 or earlier, was kept too up to contract v15, which
-  retires them: a runtime at v15 serves CLI 0.1.25 or later, so connect again with a current CLI.
-- **CLI 0.1.25 needs chart 0.1.223 or later.** Against an older dashboard, `meridian connect`
-  says it does not take delegations yet. Upgrade the deployment, or connect with CLI 0.1.24 until you
-  do.
+  database, so it survives the dashboard restarting, and nobody reconnects a terminal.
 - **Browsers sign in again.** A browser's session is held in the dashboard's memory, so the
   dashboard's restart ends it.
 - **The database stays up.** A database the deployment brought, and its plugin registry, run images
@@ -32,8 +27,10 @@ the cluster, and the dashboard does not upgrade itself.
 | Upgrade from your own pipeline | Plain Helm, Argo CD or Flux, below |
 | Upgrade the command line itself | `meridian upgrade`, which is a different thing |
 
-Take a backup before you upgrade, and copy it off the cluster: `meridian backup --to <dir>`, on chart
-0.1.298 or later with backups set up. See [Back up and restore a deployment](back-up-and-restore.md).
+Take a backup before you upgrade, and copy it off the cluster: `meridian backup --to <dir>`, with
+backups set up. See [Back up and restore a deployment](back-up-and-restore.md). What an upgrade
+changes on the way, release by release, is in the
+[release notes](../api/python-sdk.md#release-notes).
 
 !!! note "TODO: upgrading to contract v24"
     The upgrade to contract v24 (chart `0.1.CHART24`) also migrates the
@@ -78,8 +75,7 @@ Upgrading meridian in meridian:
 Upgrade it? [y/N]
 ```
 
-From CLI 0.1.36, where the deployment was installed with an archive for its
-edge plugins' older records, the plan says it is kept, as every value the deployment was given is:
+Where the deployment was installed with an archive for its edge plugins' older records, the plan says it is kept, as every value the deployment was given is:
 
 ```text
   Its archive, /mnt/nas/meridian-archive on the cluster's node, is kept: the deployment's own values carry it.
@@ -177,7 +173,7 @@ release's labels. A pod still pending, running or terminating on the old image i
 ### After an upgrade: relaunch plugins
 
 A launched plugin keeps the sidecar it was launched with until it is launched again, so after an
-upgrade it may still run beside the old version's sidecar. From CLI 0.1.19 the report ends by naming
+upgrade it may still run beside the old version's sidecar. The report ends by naming
 each such plugin, and each plugin whose pod started while the upgrade was under way, when the old
 launcher may have launched it. For each it prints the commands that move it:
 

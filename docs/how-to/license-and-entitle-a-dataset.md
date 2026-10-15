@@ -8,16 +8,10 @@ on, its licence. Both are on the dashboard's **Data sources** page, and
 through its tools for an agent. What each term means is in
 [Licences and entitlements](../concepts/licences-and-entitlements.md).
 
-!!! note "Contract v18"
-    This page describes contract v18, core's lake and the Data sources page,
-    from chart 0.1.292; and contract v19's trades and quotes, from chart
-    0.1.293, released in chart 0.1.294.
-
-!!! note "Contract v20"
-    From contract v20 a data plugin's **Datasets** page says whether each of
-    its datasets is licensed, and each dialog on this page has **Prepare**
-    beside **Save**, to keep the change for another person to make (see
-    [Prepared changes](../concepts/prepared-changes.md)). Released 2026-10-12 in chart 0.1.298.
+A data plugin's **Datasets** page says whether each of its datasets is
+licensed, and each dialog on this page has **Prepare** beside **Save**, to
+keep the change for another person to make (see
+[Prepared changes](../concepts/prepared-changes.md)).
 
 You need the deployment admin's capabilities, and a data plugin launched:
 its datasets are listed from the moment it runs. See
@@ -30,13 +24,12 @@ In the dashboard, open **Settings**, then **Data sources**, beside
 
 | Tab | One row per |
 |---|---|
-| **Datasets** | dataset a launched data plugin's catalogue declares: its ID (`alpaca-1:daily`), its vendor (and aggregator), what it serves, the licence enforced, how many plugins are entitled to it, how many of its values were left unconverted, and how many identifiers and venues its plugin reported missing; from contract v23 **Closed days**, how many of its daily rows are dated on a closed day of its calendar, those outside the calendar's coverage beside them ("(2 outside)"): see [A daily value on a closed day](../concepts/the-lake.md#a-daily-value-on-a-closed-day) |
+| **Datasets** | dataset a launched data plugin's catalogue declares: its ID (`alpaca-1:daily`), its vendor (and aggregator), what it serves, the licence enforced, how many plugins are entitled to it, how many of its values were left unconverted, and how many identifiers and venues its plugin reported missing; and **Closed days**, how many of its daily rows are dated on a closed day of its calendar, those outside the calendar's coverage beside them ("(2 outside)"): see [A daily value on a closed day](../concepts/the-lake.md#a-daily-value-on-a-closed-day) |
 | **Entitlements** | plugin entitled to a dataset, with the fields it may read, who set it and when |
 | **Priority** | data type and price kind, with the datasets a default read takes first to last |
 
 The page shows no price: prices are read by the plugins entitled to them, on
-their own pages. From chart 0.1.293 (contract v19) each
-tab has a search above its rows, beside its pager.
+their own pages. Each tab has a search above its rows, beside its pager.
 
 ## Confirm or change a dataset's licence
 
@@ -49,7 +42,7 @@ so on hover. To set the deployment's own:
    are served, not kept), **Derived data may be made**, **It may be shown**,
    and **Its terms are one person's**.
 3. **Kept for, in days**: 0 keeps rows with no limit set; at most 36,500.
-   From chart 0.1.293 it is shown only while the lake may keep its rows.
+   It is shown only while the lake may keep its rows.
 4. **Fields readable by default**: leave it empty for every field, or list
    dictionary entries, such as `meridian.v1.Bar.vwap`.
 5. Add a **Note** saying why, and **Save**.
@@ -67,8 +60,8 @@ clear it, narrow who holds access to the entitled plugins (see
 ## Entitle a plugin
 
 Entitle each plugin to what its roles read: a `reporting`, `portfolio` or
-`compliance` plugin to datasets of prices and bars; from contract v19, a
-`signal` or `ems` plugin to datasets of trades and quotes too. Entitling a
+`compliance` plugin to datasets of prices and bars; a `signal` or `ems`
+plugin to datasets of trades and quotes too. Entitling a
 `reporting` plugin to a trades dataset gives it nothing: its role reads no
 trade or quote.
 
@@ -91,7 +84,7 @@ type and, for prices, the kind. With none set, it takes the datasets in the
 order the lake lists them.
 
 1. On **Priority**, select **+ Add**, or a row's **Edit** to change one.
-2. **Data type**: Price or Bar, and from chart 0.1.293 Trade or Quote.
+2. **Data type**: Price, Bar, Trade or Quote.
    **Kind, for prices**: Close, Last, NAV or Settlement, asked only for a
    price.
 3. **Datasets, first to last, one a line**: at most 16, each declaring the
@@ -116,10 +109,9 @@ note. See [Core's tools](../api/core-tools.md#the-data-sources-page).
 | Set a priority, against its `updated_at_ns` as read | `dashboard__set_source_priority` |
 
 A delegation covering the deployment admin's capabilities reaches all five.
-One narrowed before contract v18 keeps, from its first use after the
-upgrade, every tool it reaches then, these among them; from then on, a tool
-that changes something and arrives later waits until you consent again from
-that client.
+One narrowed to part of what you hold keeps the tools that change something
+its consent page listed; a tool that arrives later waits until you consent
+again from that client.
 
 ## Related
 

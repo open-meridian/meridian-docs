@@ -2,23 +2,21 @@
 
 A **venue-originated fill** is one the venue reports on no order the book
 sent: an order someone placed in the broker's own app, or a liquidation.
-From contract v23 the connectivity plugin that hears it reports it, and the
+The connectivity plugin that hears it reports it, and the
 book holds it **unmatched**, moving no position, until a trader at the
 `ems` linked to that connectivity plugin answers it: **accept** it to an
 order, or answer it **DK** (don't know). This page is for that trader, and
 for whoever writes the `ems` or connectivity plugin. What the book does is
 on [The order lifecycle](../concepts/the-order-lifecycle.md#venue-originated-fills).
 
-!!! note "Contract v23"
-    The accept and the DK are in core and open-meridian 0.27.0, released
-    2026-10-14 in chart 0.1.303. Core proves them with a stand-in `ems`
+!!! note "Tested against a simulated venue"
+    Core proves the accept and the DK with a stand-in `ems`
     page (its **Unmatched fills**) against a simulated venue that takes
     FIX's acknowledgements; no broker is reached. Their operations are
     `preview`. No `ems` plugin offering these acts is released yet: an
     `ems` is yours to build. The connectivity plugins that report
-    venue-originated fills are Alpaca 0.8.0, Tradier 0.7.0 and SnapTrade
-    0.17.0, released 2026-10-14, each tested against a simulated brokerage
-    only; none of their brokers takes an acknowledgement, so a DK tells
+    venue-originated fills are Alpaca, Tradier and SnapTrade, each tested
+    against a simulated brokerage only; none of their brokers takes an acknowledgement, so a DK tells
     the broker nothing.
 
 ## Where they show
@@ -96,7 +94,7 @@ admin sets; core never answers one on its own.
 
 ## In a plugin
 
-From open-meridian 0.27.0. **A connectivity plugin** reports the fill with
+**A connectivity plugin** reports the fill with
 [`report_execution`](../api/typed-operations.md#report_execution), naming no
 placement, and hears what became of it:
 

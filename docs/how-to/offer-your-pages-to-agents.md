@@ -7,7 +7,7 @@ only what they ticked, recorded as them through that client. Your plugin
 offers its tools there without writing any: the SDK derives a tool from each
 route that declares its inputs as one typed record.
 
-This needs open-meridian 0.17.0 (contract v12) and a runtime serving v12.
+You need CLI 0.1.45 and SDK 0.28.0 (contract 24).
 
 ## Declare a route's inputs as one record
 
@@ -80,8 +80,7 @@ data it renders (`answers=`), and a POST route that changes nothing
 
 ## Let an act be prepared
 
-From open-meridian 0.24.0 (contract v20) an agent, or a
-person on your page, may [prepare](../concepts/prepared-changes.md) an act
+An agent, or a person on your page, may [prepare](../concepts/prepared-changes.md) an act
 instead of making it, for a person to make on your page. Your plugin makes
 that possible for each act that changes something by naming three things on
 its route:
@@ -127,15 +126,14 @@ a field `prepare`. Where the act's second pair of eyes is on for the person,
 dashboard refuses a direct make whatever the page draws).
 
 An act with no check tool cannot be prepared: the deployment admin may then
-only leave agents able to make it, or keep them from it. From CLI 0.1.39 `meridian plugin check --verified` fails a verified
+only leave agents able to make it, or keep them from it. `meridian plugin check --verified` fails a verified
 plugin's act that names no check tool, and `meridian plugin check` warns.
 
-From open-meridian 0.25.0 (contract v21) your plugin's
-own autonomous work calls its acts the same way, as the
+Your plugin's own autonomous work calls its acts the same way, as the
 [service account](../concepts/service-accounts.md) its role runs as
 ([`meridian.runs_as`](../api/python-sdk.md#runs_as)), and is prepared or
 made by the same levels. An act it calls so names its check tool: a service
-account set to prepare only is refused one with none, and from CLI 0.1.41
+account set to prepare only is refused one with none, and
 `meridian plugin check` fails it (`runs-as-checked`).
 
 ## Routes you cannot offer
@@ -148,9 +146,9 @@ for a derived tool where you want a different one.
 
 ## Tools by role { #tools-by-role }
 
-From contract v15 (open-meridian 0.20.0), a person's level is granted on each
-role of a plugin, and a tool serves its route's roles. On a plugin holding
-one role, or none, nothing changes. On one holding several, name the roles
+A person's level is granted on each role of a plugin, and a tool serves its
+route's roles. On a plugin holding one role, or none, the route names none.
+On one holding several, name the roles
 on the route, and its tool takes them:
 
 ```python
@@ -186,19 +184,18 @@ assert answered.outcome == "made"
 test's person holds -- write, then read, then admin -- with claims naming a
 delegation, its client and the tool, as the dashboard's would. No form token
 is needed: only the dashboard's `/mcp` names a tool, and the sidecar admits
-that claim at the tool's own route alone. From 0.20.0 it takes `roles=`, as
+that claim at the tool's own route alone. It takes `roles=`, as
 [`PageClient.caller`](../api/python-sdk.md#testing) does, to call it in a
 session narrowed to some roles.
 
 ## Beside core's own tools
 
 The surface lists core's tools beside your plugin's, named `dashboard__...`:
-the Instruments tools, to a deployment admin, from contract v13 seven
-ticket and inbox tools, to any delegation that reaches a level on any plugin,
-and from contract v17 thirteen tools over the parts of
+the Instruments tools, to a deployment admin; the ticket and inbox tools, to
+any delegation that reaches a level on any plugin; tools over the parts of
 your plugin's area the dashboard draws -- its Summary, settings, archive,
-and launching and stopping it -- each at its page's role and level, and from
-contract v20 the prepared changes' seven. Your plugin declares nothing for
+and launching and stopping it -- each at its page's role and level; and the
+prepared changes' tools, among others. Your plugin declares nothing for
 them; see [Core's tools](../api/core-tools.md).
 An agent that meets a problem with your plugin can file a ticket about your
 instance with `dashboard__file_ticket`, as its person; a person on your page
@@ -210,10 +207,10 @@ sees a ticket, are in [Tickets and the inbox](../concepts/tickets-and-the-inbox.
 
 When they connect an agent, the consent page lists under each plugin and
 level the tools that row reaches, reads and acts apart; they tick rows,
-never single tools. From contract v15 a row is a plugin's role at a level,
+never single tools. A row is a plugin's role at a level,
 each listing the tools it reaches, and a delegation narrowed to rows
 reaches only those roles. Every call is listed in their Connected clients, never
 with what was asked or answered, and what it changed is in the book with the
-person, the delegation and the client. From contract v20 a row also offers **Make** or **Prepare only**, and an act the
+person, the delegation and the client. A row also offers **Make** or **Prepare only**, and an act the
 deployment sets to Prepare only is listed saying so, its direct call refused
 with `prepare_only`; one at May not is not listed.
