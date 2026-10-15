@@ -216,10 +216,10 @@ deployment records and checks, and the firm answers to MAS.
 | Clients reaching their own accounts through the firm's app | [`portfolio`](roles.md#portfolio) and [`reporting`](roles.md#reporting) | Yours, acting as a service account | Local | Build your own |
 | The Travel Rule's information on each crypto transfer, and proof a client owns a self-hosted address | [`custody`](roles.md#custody) | Yours | Local | Spec to bring: an on-chain transfer's details are not in the contract yet |
 | Orders for US equities and crypto | [`oms`](roles.md#oms), [`connectivity`](roles.md#connectivity) | The carrying broker's and the exchange's | Planned | Planned: the contract carries the order path; these plugins come after it |
-| Returns to MAS, kept as sent | [`reporting`](roles.md#reporting) | Yours | Local | Build your own: a `reporting` plugin reads the orders and executions too |
+| Returns to the regulator, kept as sent | [`reporting`](roles.md#reporting) | Yours | Local | Build your own: a `reporting` plugin reads the orders and executions too |
 
 **Configuration.** A hold of five years on every edge plugin's raw records,
-for MAS's record-keeping rules, set on the archive; the book
+set on the archive; the book
 keeps every change as its own record. The deployment and its storage installed in
 Singapore. A static egress address, so exchange keys can be bound to it: an
 OKX key that trades and is bound to no address expires after 14 days unused. The firm's staff by role, by access per role:
