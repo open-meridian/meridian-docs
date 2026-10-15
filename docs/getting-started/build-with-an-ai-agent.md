@@ -12,7 +12,7 @@ Every plugin made by `meridian plugin new` carries the instructions an agent nee
 | `CLAUDE.md` | Claude Code. It points to `AGENTS.md`. |
 | `.claude/skills/develop-live/SKILL.md` | Claude Code. A skill that also leads to `AGENTS.md`. |
 
-`CLAUDE.md` and the skill come with CLI v0.1.8 and later. Commit all three with the plugin, so
+Commit all three with the plugin, so
 whoever works on it next has them too. `.dockerignore` keeps them out of the plugin's image.
 
 ## Before you start
@@ -20,11 +20,8 @@ whoever works on it next has them too. `.dockerignore` keeps them out of the plu
 - A deployment installed **for development**. Development deployments run unreviewed code, so
   never use one your firm depends on. See
   [Development deployments](../concepts/development-deployments.md).
-- The `meridian` CLI, 0.1.36, whose `plugin new` builds on SDK 0.21.0 (0.22.0 from CLI
-  0.1.37, 0.23.0 from CLI 0.1.38, 0.24.0 from CLI 0.1.39, 0.25.0 from CLI 0.1.41, 0.26.0 from
-  CLI 0.1.42, and 0.27.0 from CLI 0.1.43): 0.1.15 brought
-  `plugin check`, which `AGENTS.md` asks for, and 0.1.21 `plugin open --level`, which the checks
-  below use. Check with `meridian --version`; update with `meridian upgrade`.
+- The `meridian` CLI 0.1.45, whose `plugin new` builds on SDK 0.28.0 (contract 24). Check with
+  `meridian --version`; update with `meridian upgrade`.
 - Docker on this machine. The first run builds the plugin's image.
 - A coding agent that can run shell commands in the plugin's directory.
 
@@ -45,11 +42,10 @@ Every page of this deployment says **Development deployment**.
 meridian connect
 ```
 
-Only you can do this. It signs in through your browser, so an agent cannot run it for you. From CLI
-0.1.25 it then asks you to let the CLI on this computer act as you; choose **Allow**. Every command
-the agent runs later acts on this delegation, recorded as yours, through the CLI. It lasts up to 90
-days and the CLI keeps its access fresh by itself, so the agent can work overnight; an earlier CLI's
-session lasts 12 hours at most.
+Only you can do this. It signs in through your browser, so an agent cannot run it for you. It then
+asks you to let the CLI on this computer act as you; choose **Allow**. Every command the agent runs
+later acts on this delegation, recorded as yours, through the CLI. It lasts up to 90 days and the
+CLI keeps its access fresh by itself, so the agent can work overnight.
 
 ## 3. Make the plugin
 

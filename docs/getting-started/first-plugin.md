@@ -12,14 +12,8 @@ It works on any deployment. For the faster loop where each save runs at once, se
 
 - A deployment you installed with [Install a deployment](installation.md).
 - You hold **deployment admin** on it. Only a deployment admin brings plugins in.
-- The `meridian` CLI, 0.1.36 (`meridian --version`), whose scaffold this page shows: on SDK
-  0.21.0, so the deployment's sidecar must accept contract v16. Update with `meridian upgrade`.
-  CLI 0.1.37 writes the same plugin on SDK 0.22.0, which
-  needs a sidecar accepting contract v18, CLI 0.1.38 on SDK 0.23.0, which needs one accepting
-  contract v19, CLI 0.1.39 on SDK 0.24.0, which needs one accepting contract v20, and CLI 0.1.41
-  on SDK 0.25.0, which needs one accepting contract v21, CLI 0.1.42 on SDK 0.26.0, which needs
-  one accepting contract v22, and CLI 0.1.43 on SDK 0.27.0, which needs one accepting contract
-  v23.
+- The `meridian` CLI 0.1.45 (`meridian --version`; update with `meridian upgrade`). Its
+  `plugin new` writes a plugin on SDK 0.28.0, so the deployment must serve contract 24.
 - Docker on this machine. `meridian plugin upload` builds the plugin's image here, from its own
   `Dockerfile`.
 
@@ -31,9 +25,9 @@ meridian connect
 
 With no address it signs in to the deployment on this machine, `https://meridian.localhost`. For any
 other, give its address: `meridian connect https://meridian.firm.example`. Your browser opens the
-deployment's sign-in. From CLI 0.1.25 it then asks you to let the CLI on this computer act as you;
-choose **Allow**. The CLI holds that delegation for up to 90 days, and nothing asks for a browser
-again until it lapses. An earlier CLI keeps a session of 30 minutes idle and 12 hours at most.
+deployment's sign-in. It then asks you to let the CLI on this computer act as you; choose
+**Allow**. The CLI holds that delegation for up to 90 days, and nothing asks for a browser again
+until it lapses.
 
 ## 2. Make the plugin
 
@@ -74,8 +68,8 @@ writes it somewhere other than `./my-plugin`. It never writes over a directory t
 | `src/my_plugin/__main__.py` | Connects to the sidecar, declaring its pages, logs who it was launched as and what it may do, serves the pages, and reports itself healthy. |
 | `src/my_plugin/page.py` | The pages people see through the dashboard, each a view function declared with the levels it serves: **Setup** (`/setup`), at `admin`, says what the plugin is and what the deployment lets it do, shows no account's data, and is where an admin links the external account the plugin reports to one of the deployment's accounts; **Accounts** (`/`), at `write` and `read`, shows the accounts the person may read and write through the plugin, and under Open an **Open a statement** button (below the table). |
 | `src/my_plugin/templates/` | The pages' Jinja2 templates, `setup.html` and `accounts.html`, each extending the kit's base template. |
-| `pyproject.toml` | The package, pinned exactly to the SDK, `open-meridian==0.27.0` from CLI 0.1.43 (0.26.0 from CLI 0.1.42, 0.25.0 from CLI 0.1.41, 0.24.0 from CLI 0.1.39, 0.23.0 from CLI 0.1.38, 0.22.0 from CLI 0.1.37, 0.21.0 from CLI 0.1.36, 0.20.0 from CLI 0.1.35, 0.19.0 from CLI 0.1.34). Its `[tool.meridian]` table declares the plugin's `roles` and whether it serves a page. |
-| `Dockerfile` | Builds on the SDK's base image of the same version, `ghcr.io/open-meridian/plugin-python:0.27.0` (0.26.0 from CLI 0.1.42, 0.25.0 from CLI 0.1.41, 0.24.0 from CLI 0.1.39, 0.23.0 from CLI 0.1.38, 0.22.0 from CLI 0.1.37, 0.21.0 from CLI 0.1.36). |
+| `pyproject.toml` | The package, pinned exactly to the SDK, `open-meridian==0.28.0`. Its `[tool.meridian]` table declares the plugin's `roles` and whether it serves a page. |
+| `Dockerfile` | Builds on the SDK's base image of the same version, `ghcr.io/open-meridian/plugin-python:0.28.0`. |
 | `tests/test_page.py` | Tests of the pages, run by `meridian plugin check --run-tests`: each page under each level, no account data under Manage, linking on Setup, and the statement button under Open, including what the page says while nothing is linked. |
 | `.github/workflows/check.yaml` | A CI workflow that runs `meridian plugin check --run-tests` on every push. |
 | `AGENTS.md`, `CLAUDE.md`, `.claude/skills/develop-live/` | Instructions for coding agents: building pages with the kit, the live loop, and `meridian plugin check`. `.dockerignore` keeps them out of the image. |
@@ -103,8 +97,7 @@ interface = true
 ```
 
 That is a plugin admitted with no topics. It can serve pages and read who is asking, and nothing
-more. Who may use it is not declared here: a person's level on a plugin, from contract v15 on each
-of its roles, is `admin`, `read` or `write`, the same for every plugin, and a deployment admin grants it (see
+more. Who may use it is not declared here: a person's level on each of a plugin's roles is `admin`, `read` or `write`, the same for every plugin, and a deployment admin grants it (see
 [Give people access](../how-to/administer-access.md)). See [Plugin manifest](../api/plugin-manifest.md) for every key.
 
 ## 4. Upload it
@@ -156,7 +149,7 @@ meridian plugin list
 
 ```text
 Versions:
-  my-plugin 0.1.0  roles: none  page: yes  SDK 0.21.0
+  my-plugin 0.1.0  roles: none  page: yes  SDK 0.28.0
 Launches:
   my-plugin  my-plugin 0.1.0  launched
 ```

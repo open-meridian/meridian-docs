@@ -24,16 +24,10 @@ Allow 30 minutes.
 
 - A deployment installed with `meridian up --development`, and you are a deployment admin on it.
   See [Install a deployment](../getting-started/installation.md).
-- The `meridian` CLI, 0.1.36 (`meridian --version`; `meridian upgrade` updates it), and Docker on
-  this machine. From CLI 0.1.36, `meridian plugin new` builds on SDK 0.21.0 (contract v16), and
-  writes the **Setup** page that links accounts, which this tutorial uses; the deployment's sidecar
-  must accept contract v16. CLI 0.1.37 builds on SDK 0.22.0
-  (contract v18), and the tutorial runs on it unchanged; CLI 0.1.38 builds on SDK 0.23.0 (contract
-  v19), whose move from 0.22.0 changes only the pins; CLI 0.1.39 builds on SDK 0.24.0 (contract
-  v20), whose move from 0.23.0 rewrites only the renamed roles, `custody` not among them; CLI
-  0.1.41 builds on SDK 0.25.0 (contract v21), whose move from 0.24.0 changes only the pins; CLI
-  0.1.42 builds on SDK 0.26.0 (contract v22), whose move from 0.25.0 changes only the pins; CLI
-  0.1.43 builds on SDK 0.27.0 (contract v23), whose move from 0.26.0 changes only the pins.
+- CLI 0.1.45 and SDK 0.28.0 (contract 24): `meridian --version` says which CLI you have, and
+  `meridian upgrade` updates it. Its `meridian plugin new` builds on SDK 0.28.0 and writes the
+  **Setup** page that links accounts, which this tutorial uses.
+- Docker on this machine.
 - To have done [Change your plugin's page, live](change-the-page-live.md), or be comfortable with
   `meridian plugin dev`.
 
@@ -146,8 +140,7 @@ Open the dashboard, sign in, and choose the gear at the top right, **Settings**.
 **Accounts** tab, choose **+ Add**, name it `Demo brokerage account`, and choose **Create**.
 See [Give people access](../how-to/administer-access.md) for more on the tab.
 
-From contract v20 the plugin links only to the accounts a deployment admin granted it: on the
-plugin's **Accounts** tab in the dashboard's admin view, grant it `Demo brokerage account`. See
+The plugin links only to the accounts a deployment admin granted it: on the plugin's **Accounts** tab in the dashboard's admin view, grant it `Demo brokerage account`. See
 [To grant a plugin accounts to link](../how-to/administer-access.md#to-grant-a-plugin-accounts-to-link).
 
 That is all the plugin needs from Settings. You do not group the account or grant a person a
@@ -199,12 +192,11 @@ pip install -e . pytest
 meridian plugin check --run-tests
 ```
 
-`tests-pass` passes. On CLI 0.1.36 one rule fails, `role-suite`: a plugin holding `custody` runs
-the custody suite in its tests, each case mapped to its own exchange with its vendor. This plugin
-converts no vendor's data, so it has nothing to map, and nothing in this tutorial needs the check to
-pass: `plugin dev` does not run it. From CLI 0.1.37, `role-suite` is held only
-under `--verified`, and shown skipped otherwise, so every rule holds: a plugin not passing its
-role's suite is not verified for the role, which breaks no rule. A real custody plugin passes it,
+`tests-pass` passes, and every rule holds. `role-suite`, by which a plugin holding `custody` runs
+the custody suite in its tests, each case mapped to its own exchange with its vendor, is held only
+under `--verified`, and shown skipped otherwise: a plugin not passing its role's suite is not
+verified for the role, which breaks no rule. This plugin converts no vendor's data, so it has
+nothing to map. A real custody plugin passes it,
 checked with `meridian plugin check --verified --run-tests`; see
 [Pass the role's suite](../how-to/keep-what-the-edge-converts.md#pass-the-roles-suite).
 
@@ -345,10 +337,10 @@ source that reports no buying power sends none, which is not zero. See
     the source's own statement id, so a statement delivered twice comes back with
     `already_recorded` set, instead of being recorded twice.
 
-!!! note "Changes in SDK 0.22.0"
-    From SDK 0.22.0 a `Money` also names its currency's cash instrument, and a date field takes a
-    `datetime.date` as well as its ISO 8601 text. `Money(amount, "USD")` and the text date above
-    keep working unchanged. See [Money and instruments](../concepts/money-and-instruments.md) and
+!!! note "Money and dates"
+    A `Money` also names its currency's cash instrument, which core resolves from the code, so
+    `Money(amount, "USD")` is enough. A date field takes a `datetime.date` as well as its ISO 8601
+    text, as above. See [Money and instruments](../concepts/money-and-instruments.md) and
     [Dates and time](../concepts/dates-and-time.md).
 
 ## 8. Call it on start

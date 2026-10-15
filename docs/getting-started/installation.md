@@ -159,7 +159,7 @@ included.
     ```
 
     It is reached at `https://meridian.localhost`, and needs no DNS. It is HTTPS because an AI
-    agent signs in to the deployment's MCP over nothing else. From CLI 0.1.30 the certificate comes
+    agent signs in to the deployment's MCP over nothing else. The certificate comes
     from this machine's own certificate authority, which `meridian up` makes the first time, able
     to sign names under `.localhost` and nothing else. Before asking anything it says what the
     authority is for; on macOS it then offers to add it to your login keychain, and macOS asks for
@@ -197,8 +197,8 @@ included.
 wizard's address. It prints the Helm command it ran, so you can see exactly what it did. The
 namespace is `meridian`; `-n` picks another.
 
-!!! note "Where older records go: CLI 0.1.36"
-    From CLI 0.1.36, `meridian up` asks one more question before it installs:
+!!! note "Where older records go"
+    `meridian up` asks one more question before it installs:
     where plugins at the edge move their older records, an archive on a directory of the
     cluster's node, such as a NAS export or a second disk, or none. Answer it with
     `--archive <path>` or `--no-archive`; pressing Enter is none. Naming one allows no plugin an
@@ -281,7 +281,7 @@ Applying takes a couple of minutes and restarts what changed.
 
     On a laptop, just `meridian connect`: with no address it signs in to
     `https://meridian.localhost`, where `meridian up` puts a deployment. It opens the deployment's own sign-in
-    in your browser and never takes a password. From CLI 0.1.25 it then asks you to let the CLI on
+    in your browser and never takes a password. It then asks you to let the CLI on
     this computer act as you: choose **Allow**. That is a delegation of everything you hold, for 90
     days unless you choose less, and the CLI keeps its access fresh by itself until then. See
     [`meridian connect`](../api/cli.md#meridian-connect).
