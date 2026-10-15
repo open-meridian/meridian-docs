@@ -67,7 +67,7 @@ sections, each saved on its own:
   average cost), and from contract v22 whether its
   **Releases** wait for compliance (**Wait for compliance** or **Do not
   wait**, shown in the row's **Compliance** column as **Waits** or **Does
-  not wait**), each change saved to the book with a **Reason**, its own
+  not wait**), each change saved to the book with a **Why**, its own
   act, journalled in the account's partition. A new account waits; see
   [The release gate](the-order-lifecycle.md#the-release-gate-and-waiting-for-compliance).
   From contract v24 it also says whether the account is **Marked**:
