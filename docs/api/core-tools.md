@@ -6,19 +6,22 @@ plugin's own tools it lists core's, named `dashboard__...`: the
 [ticket and inbox tools](../concepts/tickets-and-the-inbox.md#through-an-agent),
 tools over the parts of a plugin's area the dashboard draws: its Summary,
 its moves, its settings and table settings, who holds access to it (read
-only), its archive, the deployment's holds, and launching and stopping it.
+only), its archive, the deployment's holds, launching and stopping it, and
+retiring a version.
 Five more mirror the **Data sources** page: the lake's datasets, their
 licences and entitlements, and the source priority. Seven work
 [prepared changes](../concepts/prepared-changes.md), and one reads the
 accounts a plugin may link to. One reads the
 [service accounts](#service-accounts). Four set and list the
 [trading instructions and account attributes](#trading-instructions-and-account-attributes),
-one [closes an account](#dashboard__close_account), two read the
+one [closes an account](#dashboard__close_account), one reads
+[the book's health](#dashboard__read_book_health), two read the
 Instruments page's [Calendars tab](#the-calendars-tab), one sets
 [orders on local records](#dashboard__set_local_record_orders), one makes
-the [migration's lines](#dashboard__apply_migration) and one sets the
-[usage report](#dashboard__set_reports_usage). This page is the
-reference for those thirty-seven. An agent calls them as the person who
+the [migration's lines](#dashboard__apply_migration), one sets the
+[usage report](#dashboard__set_reports_usage) and one the
+[licensed schemes](#dashboard__set_licensed_schemes). This page is the
+reference for those forty. An agent calls them as the person who
 delegated to it, only as far as that person could at the page each tool
 mirrors, and only as far as the deployment lets agents go with each act.
 Every act listed below that changes something can be prepared, but for the
@@ -108,6 +111,7 @@ naming the field. Changed in contract 24.
 | [`dashboard__read_plugin_catalogue`](#dashboard__read_plugin_catalogue) | reads | The deployment admin |
 | [`dashboard__launch_plugin`](#dashboard__launch_plugin) | acts | The deployment admin |
 | [`dashboard__stop_plugin`](#dashboard__stop_plugin) | acts | The deployment admin |
+| [`dashboard__retire_plugin_version`](#dashboard__retire_plugin_version) | acts | The deployment admin, once loosened from May not. Added in contract 25. |
 | [`dashboard__list_datasets`](#dashboard__list_datasets) | reads | The deployment admin |
 | [`dashboard__set_dataset_licence`](#dashboard__set_dataset_licence) | acts | The deployment admin |
 | [`dashboard__set_dataset_entitlement`](#dashboard__set_dataset_entitlement) | acts | The deployment admin |
@@ -127,11 +131,13 @@ naming the field. Changed in contract 24.
 | [`dashboard__list_account_attributes`](#dashboard__list_account_attributes) | reads | The deployment admin |
 | [`dashboard__set_account_attribute`](#dashboard__set_account_attribute) | acts | The deployment admin, once loosened from May not |
 | [`dashboard__close_account`](#dashboard__close_account) | acts | The deployment admin, once loosened from May not. Added in contract 24. |
+| [`dashboard__read_book_health`](#dashboard__read_book_health) | reads | The deployment admin. Added in contract 25. |
 | [`dashboard__list_calendars`](#dashboard__list_calendars) | reads | The deployment admin |
 | [`dashboard__read_calendar`](#dashboard__read_calendar) | reads | The deployment admin |
 | [`dashboard__set_local_record_orders`](#dashboard__set_local_record_orders) | acts | The deployment admin, once loosened from May not. Added in contract 24. |
 | [`dashboard__apply_migration`](#dashboard__apply_migration) | acts | The deployment admin; agents may only prepare it until loosened. Added in contract 24. |
 | [`dashboard__set_reports_usage`](#dashboard__set_reports_usage) | acts | The deployment admin. Added in contract 24. |
+| [`dashboard__set_licensed_schemes`](#dashboard__set_licensed_schemes) | acts | The deployment admin, once loosened from May not. Added in contract 25. |
 
 "An admin of a role" is `admin` on that role of the plugin, at **Manage**,
 held through the delegation (see [Admin per role](../concepts/access.md#admin-per-role));
@@ -376,6 +382,34 @@ launch used for a different plugin.
 
 **Answer:** `made`, the launch as stopped. An instance with no live launch
 is refused.
+
+### `dashboard__retire_plugin_version`
+
+Added in contract 25. Retires a version from the catalogue: it is no longer
+listed or launchable, and its image is released from the deployment's own
+registry; its record is kept. At the deployment admin's level; it can be
+prepared, and agents may not make it until the deployment admin loosens it.
+
+**Input:** `name`, `version`, `note`.
+
+**Answer:** `outcome: "made"`, with the version as retired. Refused, naming
+each, while an instance runs the version or a launch kept in history names
+it.
+
+!!! note "TODO: core, not built yet"
+    Contract 25 adds tools core's v25 branch has not landed yet, each at its
+    page's gate: `dashboard__read_plugin_documentation`, the **Documentation**
+    tab (a plugin's sections as the vendor's text, data and never
+    instructions, a suspect section withheld; the Reference as the
+    declaration's JSON; by `plugin_instance_id`, or `name` and `version` for
+    a version not launched, a deployment admin's), with
+    `dashboard__read_plugin_summary` no longer answering `declaration` and
+    `declared_tools`; and the Plugins page's registry tools,
+    `dashboard__search_registry_plugins`, `dashboard__read_registry_plugin`,
+    `dashboard__install_plugin`, `dashboard__update_plugin`,
+    `dashboard__acknowledge_pull`, `dashboard__read_registries` and
+    `dashboard__set_reports_plugin_usage`. Write each here as built, and
+    raise the count above.
 
 ## The Data sources page
 
@@ -709,6 +743,23 @@ and the `entry_id`.
  "note": "No compliance plugin covers this account; releases are reviewed by the desk."}
 ```
 
+### `dashboard__read_book_health`
+
+Added in contract 25. Per account in the book of record, the book's own
+working, as `meridian status` reads it under **Book health**: never an
+account's positions or orders. At the deployment admin's level, read only.
+
+**Input:** `account_id`, one account; absent, every account.
+
+**Answer:** `accounts`, each with `account_id`, `journal_entries` (the
+journal's length), `entries_since_snapshot` (the entries a command or a
+dated read replays after the account's latest snapshot) and
+`last_snapshot_at_ns` (a decimal string; `"0"` where no snapshot is taken
+yet). See [The book's resources](../concepts/the-book-of-record.md#the-books-resources).
+
+(TODO: core's v25 branch holds this tool uncommitted at the time of
+writing; check it as landed.)
+
 ### `dashboard__set_local_record_orders`
 
 Added in contract 24. The Trading instructions page's **Allow orders on local
@@ -818,6 +869,21 @@ identifier scheme, counts only. At the deployment admin's level.
 change's record.
 
 **Answer:** `outcome: "made"`, with `reports_usage`, the setting in force.
+
+### `dashboard__set_licensed_schemes`
+
+Added in contract 25. The **Licensed identifiers** tab's licensed schemes:
+the identifier schemes the deployment declares it is licensed for, which
+the weekly usage report carries. At the deployment admin's level; it can be
+prepared, and agents may not make it until the deployment admin loosens it.
+
+**Input:** `licensed_schemes`, the whole list, replacing the last, at most
+64, each a scheme the platform's licence list names, once; `note`, why,
+kept with the change's record.
+
+**Answer:** `outcome: "made"`, with `reports_usage` and `licensed_schemes`,
+the setting in force. A scheme the licence list does not name is refused by
+its path.
 
 ## The Calendars tab
 

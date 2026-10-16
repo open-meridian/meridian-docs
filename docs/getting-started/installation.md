@@ -18,7 +18,9 @@ You need:
 
 - A Kubernetes cluster, with `kubectl` already pointing at it. A laptop cluster (k3s, Rancher
   Desktop, kind, Docker Desktop) is fine for trying Open Meridian.
-- `helm` 3.12 or newer. The CLI drives your own `helm` and `kubectl`; you do not run them yourself.
+- `helm` 3.14 or newer. `meridian doctor` passes 3.12, which installs, and an upgrade needs 3.14
+  (`meridian upgrade-deployment` checks it). The CLI drives your own `helm` and `kubectl`; you do
+  not run them yourself.
 - An account on the platform, in a project where you are an **Owner** or **Admin**. Signing up and
   creating a project is free. In someone else's project, its owner can make you an admin.
 
@@ -213,8 +215,9 @@ namespace is `meridian`; `-n` picks another.
 
 ### What a correct install looks like
 
-If you watch the pods while it comes up (`kubectl --namespace meridian get pods`), some sit in an
-error. That is expected at this point.
+If you watch it come up with `meridian status`, which lists each component with how many of its
+pods are ready, how often they restarted and why, some sit in an error. That is expected at this
+point.
 
 | Pods | Expect |
 |---|---|
