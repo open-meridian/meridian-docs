@@ -16,7 +16,7 @@ such as Homebrew's on macOS (`externally-managed-environment`).
 |---|---|
 | PyPI name | `open-meridian` |
 | Import name | `meridian` |
-| Version | 0.28.0 |
+| Version | 0.29.0 |
 | Python | 3.11 or newer |
 | Dependencies | `grpcio>=1.68,<2`, `protobuf>=5.28,<7`, `jinja2>=3.1,<4` (for [pages](#pages)) |
 | Licence | Apache-2.0 |
@@ -24,7 +24,7 @@ such as Homebrew's on macOS (`externally-managed-environment`).
 !!! warning "Not `meridian-sdk`"
     The PyPI package `meridian-sdk` belongs to an unrelated company. Don't install it.
 
-A plugin pins the SDK exactly, `open-meridian==0.28.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.28.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls (see [Moving a plugin to a new release](#moving-a-plugin-to-a-new-release)). `meridian plugin new` writes a plugin pinned to 0.28.0.
+A plugin pins the SDK exactly, `open-meridian==0.29.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.29.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls (see [Moving a plugin to a new release](#moving-a-plugin-to-a-new-release)). `meridian plugin new` writes a plugin pinned to 0.29.0.
 
 | Optional extra | Installs | For |
 |---|---|---|
@@ -38,11 +38,16 @@ The package includes the wire bindings it speaks to the sidecar with, as `meridi
 import asyncio
 import meridian
 
+# What the version says about itself, named in pyproject.toml's [tool.meridian]
+# as declaration = "my_plugin.declaration:DECLARATION"
+DECLARATION = meridian.Declaration(
+    interface=meridian.Interface(port=8000, title="My plugin"),
+    documentation="docs",   # docs/overview.md and docs/setup.md at least
+)
+
 
 async def main() -> None:
-    async with await meridian.connect(
-        interface=meridian.Interface(port=8000, title="My plugin"),
-    ) as plugin:
+    async with await meridian.connect(declaration=DECLARATION) as plugin:
         print(plugin.identity.instance_id, plugin.identity.roles)
         print(plugin.grants.publish, plugin.grants.subscribe)
         await plugin.report(healthy=True, detail="started")
@@ -52,7 +57,7 @@ async def main() -> None:
 asyncio.run(main())
 ```
 
-A plugin that serves pages declares them with [`meridian.Pages`](#pages) and passes it as `Interface(pages=...)`. `meridian plugin new` writes a complete plugin built this way, with one page under Manage and one under Open and View. See [Your first plugin](../getting-started/first-plugin.md).
+A version registers exactly the declaration it was uploaded with (see [The whole declaration](#the-whole-declaration)). A plugin that serves pages declares them with [`meridian.Pages`](#pages) and passes it as `Interface(pages=...)`. `meridian plugin new` writes a complete plugin built this way, with one page under Manage and one under Open and View. See [Your first plugin](../getting-started/first-plugin.md).
 
 ## What the package exports
 
@@ -61,6 +66,7 @@ A plugin that serves pages declares them with [`meridian.Pages`](#pages) and pas
 | Name | Kind | Described in |
 |---|---|---|
 | `connect` | async function | [`meridian.connect`](#connect) |
+| `Declaration` | frozen dataclass | [The whole declaration](#the-whole-declaration): what a version says about itself |
 | `Plugin` | class | [`Plugin`](#plugin) |
 | `Identity`, `Grants`, `Interface`, `Page`, `Setting`, `Choice`, `AppliesWhen`, `Settings`, `AccountScope`, `LinkedExternalAccount`, `Caller` | frozen dataclasses | [Types](#types) |
 | `Column` | frozen dataclass | [`Column`](#column) |
@@ -97,7 +103,7 @@ A plugin that serves pages declares them with [`meridian.Pages`](#pages) and pas
 | `CallerMiddleware` | ASGI middleware | [`CallerMiddleware`](#callermiddleware) |
 | `MeridianError`, `Refused`, `NoSidecar`, `NotRegistered`, `NotGranted`, `CallFailed`, `NotLinked`, `CommandRefused` | exceptions | [Exceptions](#exceptions) |
 | `DEFAULT_ADDRESS` | `str` | `"127.0.0.1:9191"`, where a sidecar listens |
-| `SCHEMA_VERSION` | `str` | the contract version sent at registration, `"v24"`; each SDK release's is in the [release notes](#release-notes) |
+| `SCHEMA_VERSION` | `str` | the contract version sent at registration, `"v25"`; each SDK release's is in the [release notes](#release-notes) |
 
 The module `meridian.testing` holds [`PageClient`](#testing) and [`heartbeat`](#testing), for a plugin's own tests.
 
@@ -123,10 +129,12 @@ Registers with the sidecar and returns the admitted plugin. A `Plugin` you hold 
 | `address` | `str` or `None` | `None` | The sidecar's address. When `None`, the value of `MERIDIAN_SIDECAR_ADDRESS`, then `127.0.0.1:9191`. No other configuration is read. |
 | `heartbeat` | `bool` | `True` | Send a liveness heartbeat to the sidecar every 5 seconds in the background, carrying the health last reported and the plugin's [figures](#figures). |
 | `wait` | `float` | `60.0` | Seconds to wait for a sidecar that is not answering yet. A plugin and its sidecar start together in one pod, in no promised order. |
-| `interface` | `Interface` or `None` | `None` | The pages the plugin serves on loopback, if any. |
-| `settings` | sequence of `Setting` | `()` | The settings the plugin needs an admin of it to give it, on the dashboard's Settings form, or a table on its own tab beside it. A plugin sets none of them itself. |
-| `reads_external_accounts` | `bool` | `False` | `True` when the plugin reads accounts at an external source and names them by that source's identifiers. An admin of the plugin links those to accounts, and the sidecar translates them on the way in. |
-| `declaration` | `Declaration` or `None` | `None` | The version's declaration, the same one `meridian plugin upload` reads from the image: its secret settings' names, what it does not carry and the storage it asks for. See [Keep what your custody plugin converts](../how-to/keep-what-the-edge-converts.md). Where its storage declares kinds of raw record, `connect` declares each kind's two window settings and the restore route besides; see [The archive](#the-archive). For a data plugin, its catalogue; see [A data plugin's catalogue](#a-data-plugins-catalogue). |
+| `interface` | `Interface` or `None` | `None` | The pages the plugin serves on loopback, if any. Declare it in the `Declaration` instead: given beside a declaration naming one, it must be the same, pages and tools alike. |
+| `settings` | sequence of `Setting` | `()` | The settings the plugin needs an admin of it to give it, on the dashboard's Settings form, or a table on its own tab beside it. A plugin sets none of them itself. Declare them in the `Declaration` instead: given beside a declaration naming some, they must be the same. |
+| `reads_external_accounts` | `bool` | `False` | `True` when the plugin reads accounts at an external source and names them by that source's identifiers. An admin of the plugin links those to accounts, and the sidecar translates them on the way in. Declare it in the `Declaration` instead. |
+| `declaration` | `Declaration` or `None` | `None` | The version's declaration, the same one `meridian plugin upload` reads from the image: its settings, its interface, whether it reads external accounts, its documentation, what it does not carry and the storage it asks for (see [The whole declaration](#the-whole-declaration)). See [Keep what your custody plugin converts](../how-to/keep-what-the-edge-converts.md). Where its storage declares kinds of raw record, `connect` declares each kind's two window settings and the restore route besides; see [The archive](#the-archive). For a data plugin, its catalogue; see [A data plugin's catalogue](#a-data-plugins-catalogue). |
+
+What `connect` is given beside a declaration that the declaration does not name is registered all the same, and warned of (`UserWarning`): the upload reads the declaration alone, so the sidecar refuses the difference.
 
 The contract version it sends is `SCHEMA_VERSION`. A sidecar accepts a range of versions, v2 through the one its runtime serves: a plugin built for an older version it still supports registers, and one built for a newer version than the sidecar knows is refused at registration, naming both, rather than running without what it was built for. After an upgrade, relaunch plugins so they get the newer sidecar (`meridian upgrade-deployment` names the ones that need it).
 
@@ -135,12 +143,54 @@ The contract version it sends is `SCHEMA_VERSION`. A sidecar accepts a range of 
 | Exception | When |
 |---|---|
 | `NoSidecar` | No sidecar answered within `wait` seconds. |
-| `Refused` | The sidecar answered and declined to admit the plugin. Its `reason` says why. Not retried. It refuses a page or setting naming a role the plugin was not launched with, and, on a plugin holding several roles, one naming none, naming it and the plugin's roles. |
+| `Refused` | The sidecar answered and declined to admit the plugin. Its `reason` says why. Not retried. It refuses a page or setting naming a role the plugin was not launched with, and, on a plugin holding several roles, one naming none, naming it and the plugin's roles. It refuses a registration that differs from the declaration the version was uploaded with, naming the first difference, and a plugin whose version was uploaded with no declaration, naming the missing declaration. |
+| `ValueError` (from `connect`) | `interface` or `settings` given beside a declaration naming different ones: name them once, in the `Declaration`. |
 | `TypeError` | A `Setting`'s `kind` is not `str`, `int`, `bool` or `list`; it has `choices` and a `kind` other than `str`; its `default` is not of its `kind`; or its `kind` is `list` without `columns`, or another kind with them. |
 | `ValueError` | A secret `Setting` declares a `default`; a `default` is not one of its `choices`; a table is secret, or declares a `default` or `choices`, names a column twice, or has `most_rows` outside 0 to 500; a `Column`'s `kind` is not one of the seven, it is named `changed_by` or `changed_at`, or it is a choice without `choices`; or a `Page`'s path does not begin with `/`, or it names no level; and, when the declaration is made, a `roles=` naming something no role could be (a role is lower-case letters, such as `custody`), or more roles than there are. |
 | `grpc.aio.AioRpcError` | Any other gRPC failure during registration, unchanged. |
 
 When run by the development runner on a development deployment, `connect` also records the `ready` event once the plugin is admitted. See [`plugin dev` events](plugin-dev-events.md).
+
+## The whole declaration { #the-whole-declaration }
+
+A version's **declaration**, `meridian.Declaration`, is the whole of what it says about itself. `meridian plugin upload` reads it from the built image, as pyproject.toml's `[tool.meridian]` names it (`declaration = "my_plugin.declaration:DECLARATION"`), and the plugin registers with the same one, `meridian.connect(declaration=DECLARATION)`.
+
+```python title="src/my_plugin/declaration.py"
+import meridian
+
+from .page import TITLE, pages
+
+
+@meridian.settings
+class Config:
+    api_key: str = meridian.setting("API key", required=True, secret=True)
+
+
+DECLARATION = meridian.Declaration(
+    settings=Config,
+    interface=meridian.Interface(port=8000, title=TITLE, pages=pages),  # a fixed port
+    reads_external_accounts=True,
+    documentation="docs",   # relative to where the plugin runs: /plugin in its image
+)
+```
+
+`Declaration`, a frozen dataclass, keyword only:
+
+| Field | Type | Default | Meaning |
+|---|---|---|---|
+| `settings` | sequence of `Setting`, or a class decorated `@meridian.settings` | `()` | The settings it declares. See [Typed settings](#typed-settings). |
+| `interface` | `Interface` or `None` | `None` | Its pages, and the tools their typed routes make. Added in SDK 0.29.0. |
+| `reads_external_accounts` | `bool` | `False` | Whether it reads accounts at an external source. Added in SDK 0.29.0. |
+| `documentation` | `str`, path or `None` | `None` | The folder holding its documentation, relative to where the plugin runs: `"docs"`, which is `/plugin/docs` in its image. Each section, `overview.md`, `setup.md`, `troubleshooting.md`, `terms.md` and `pages.md`, is named in the declaration by its `sha256:` digest and its size, 1 to 65,536 bytes, 256 KiB in all. The SDK reads and digests the files and parses no Markdown. See [Write a plugin's documentation](../how-to/write-a-plugins-documentation.md). Added in SDK 0.29.0. |
+| `affirmation_deadline` | `int` | `0` | An operations plugin's deadline, in minutes after midnight in the deployment's time zone, 1 to 1440, by which the firm allocates, confirms and affirms its trades; a held booking's alert falls due then. `0` declares none; refused on a plugin not holding `operations`. Added in SDK 0.29.0. |
+| `not_carried` | sequence | `()` | What it receives and does not carry. See [Keep what your custody plugin converts](../how-to/keep-what-the-edge-converts.md). |
+| `storage` | `Storage` or `None` | `None` | The storage an edge plugin asks for. See [The archive](#the-archive). |
+| `catalogue` | sequence of `DatasetDeclaration` | `()` | A data plugin's datasets. See [A data plugin's catalogue](#a-data-plugins-catalogue). |
+| `algorithms` | sequence of `AlgorithmDeclaration` | `()` | The algorithms its autonomous work may name. See [Algorithms](#algorithms). |
+
+**Registration is held to the version.** Changed in contract 25. A plugin declaring contract 25 registers exactly the declaration its version was uploaded with, or its sidecar refuses it, naming the first difference; a version uploaded with no declaration is refused, naming the missing declaration. So the interface's port is fixed in the declaration, never read from the environment, and the module naming the declaration imports every module that declares a page or a route. The two window settings the SDK declares for each kind of raw record (see [The window settings](#the-window-settings)) are not among the declaration's own and are not compared. On a development deployment, a live instance's difference is a warning on its Summary instead.
+
+**`meridian-declaration`**, installed with the SDK, prints a declaration as JSON for `meridian plugin upload`: `meridian-declaration my_plugin.declaration:DECLARATION`. With `--documentation` it prints the documentation's texts instead, a list of each section's `section` and `markdown`, which the upload sends beside the declaration. Both read the same files, so what is uploaded is what the image holds.
 
 ## `Plugin` { #plugin }
 
@@ -559,6 +609,7 @@ from meridian.declaration import Declaration, RecordKind, Storage
 
 DECLARATION = Declaration(
     settings=SETTINGS,
+    interface=INTERFACE,
     storage=Storage(kinds=[
         RecordKind("activity", "Reported activity", window_days=2555),
         RecordKind("responses", "Raw responses", window_days=30),
@@ -566,7 +617,7 @@ DECLARATION = Declaration(
     ]),
 )
 
-async with await meridian.connect(declaration=DECLARATION, interface=INTERFACE) as plugin:
+async with await meridian.connect(declaration=DECLARATION) as plugin:
     async for settings in plugin.settings():
         window = settings.values["activity_window_days"]   # days, the admin's
         past = settings.values["activity_past_window"]     # archived, kept or deleted
@@ -1332,13 +1383,14 @@ One setting the plugin needs, declared at `connect`.
 | `per_person` | `bool` | `False` | Each person's own, saved for them and read from their requests, never on the Settings form and never in `Settings.values`. Never secret, never required. See [A person's own settings](#own_settings). |
 
 ```python
-plugin = await meridian.connect(
+DECLARATION = meridian.Declaration(
     settings=[
         meridian.Setting("api_token", secret=True, required=True, description="The rail's API token"),
         meridian.Setting("poll_seconds", kind=int, description="How often to poll"),
     ],
     reads_external_accounts=True,
 )
+plugin = await meridian.connect(declaration=DECLARATION)
 ```
 
 A table is rows of typed columns an admin enters in the dashboard on a tab of its own, after Settings and titled with its `label`: an entry grid checked cell by cell, saved through the same checks as the form. It has no `default` and is never secret:
@@ -1552,9 +1604,11 @@ async def statements(request: meridian.Request) -> str:
 async def sync(request: meridian.Request) -> str: ...
 
 
-async with await meridian.connect(
+DECLARATION = meridian.Declaration(
     interface=meridian.Interface(port=8000, title="Statements", pages=pages),
-) as plugin:
+)
+
+async with await meridian.connect(declaration=DECLARATION) as plugin:
     server = pages.serve(plugin, 8000)
 ```
 
@@ -1822,7 +1876,9 @@ class Settings:
     poll_seconds: int = meridian.setting("Read every", default=60, at_least=10)
     sample_data: bool = meridian.sample_data()
 
-plugin = await meridian.connect(settings=Settings)
+DECLARATION = meridian.Declaration(settings=Settings)
+
+plugin = await meridian.connect(declaration=DECLARATION)
 async for current in plugin.settings(Settings):
     ...
 ```
@@ -1957,6 +2013,36 @@ The package installs one command, `meridian-dev run`. On a development deploymen
 ## Release notes { #release-notes }
 
 Each release of the SDK, the contract it declares, the runtime it needs, and the CLI whose `plugin new` writes a plugin on it. What a plugin's author does to move to it is in [Moving a plugin to a new release](#moving-a-plugin-to-a-new-release).
+
+!!! note "0.29.0: contract v25"
+    open-meridian 0.29.0, released on PyPI on TODO (the date), declares
+    contract v25. A version's declaration is the whole of what it says
+    about itself (`Declaration(interface=, reads_external_accounts=,
+    documentation=)`): its settings, its interface and the tools its
+    routes make, and the vendor's documentation, the plugin's `docs/`
+    sections named by digest (see
+    [Write a plugin's documentation](../how-to/write-a-plugins-documentation.md)).
+    `meridian-declaration --documentation` prints the texts the upload
+    sends, and a plugin declaring v25 registers exactly the declaration
+    its version was uploaded with, or is refused naming the first
+    difference. An operations plugin declares its affirmation deadline
+    (`Declaration(affirmation_deadline=)`); a break names an unrecognized
+    security's identifiers (`record_break(unresolved_identifiers=)`); a
+    venue is resolved by its ID (`resolve_venue(venue_id=)`); a
+    connectivity plugin no longer reads whether orders may name a local
+    record; and the give-up's suite case is about `give-ups`. With it,
+    contract v25 brings the platform's [registries](../concepts/registries.md)
+    (Phase 0: Open Meridian's own plugins in community), CLI 0.1.46's
+    `plugin publish`, `plugin key`, `plugin download`, `upload --bundle`,
+    `status` and `logs`, the book's snapshots (`bor.snapshotInterval`), a
+    version retired from the catalogue, the licensed schemes declared,
+    a listing identifier's trading currency, a give-up naming nothing held
+    kept unplaced, and an FX trade after Friday's cut dated Monday.
+    [`meridian plugin migrate`](cli.md#plugin-migrate) rewrites what it
+    can (see [0.28.0 to 0.29.0](#0280-to-0290)). It needs a runtime serving
+    contract v25 (chart `0.1.CHART25` or later), and CLI 0.1.46's
+    `plugin new` writes a plugin on it. Its base image is
+    `ghcr.io/open-meridian/plugin-python:0.29.0` (TODO: its digest).
 
 !!! note "0.28.0: contract v24"
     open-meridian 0.28.0, released on PyPI on 2026-10-15, declares
@@ -2218,6 +2304,7 @@ Move a plugin one release at a time or several at once: [`meridian plugin migrat
 
 | From | To | Contract | Runtime | `plugin new` writes it from | `plugin migrate` rewrites | Then by hand |
 |---|---|---|---|---|---|---|
+| 0.28.0 | 0.29.0 | 25 | chart `0.1.CHART25` or later | CLI 0.1.46 | a connectivity plugin's read of the escape hatch, and its test's mapping of the dropped case | see [0.28.0 to 0.29.0](#0280-to-0290) |
 | 0.27.0 | 0.28.0 | 24 | chart 0.1.305 or later | CLI 0.1.45 | a test of the `LCL-` prefix; a read of the `open_meridian` identifier; the suites' `LCL-suite-n` fixtures | see [0.27.0 to 0.28.0](#0270-to-0280) |
 | 0.26.0 | 0.27.0 | 23 | chart 0.1.303 or later | CLI 0.1.43 | nothing: only the pins move | see [0.26.0 to 0.27.0](#0260-to-0270) |
 | 0.25.0 | 0.26.0 | 22 | chart 0.1.301 or later | CLI 0.1.42 | nothing: only the pins move | see [0.25.0 to 0.26.0](#0250-to-0260) |
@@ -2230,6 +2317,53 @@ Move a plugin one release at a time or several at once: [`meridian plugin migrat
 | 0.18.0 | 0.19.0 | 14 | | CLI 0.1.34 | nothing: only the pins move | see [0.18.0 to 0.19.0](#0180-to-0190) |
 
 Before 0.19.0, `plugin new` pinned 0.18.0 from CLI 0.1.33, 0.17.0 from CLI 0.1.29 to 0.1.32, 0.16.0 from CLI 0.1.28, 0.15.0 from CLI 0.1.27, 0.14.0 from CLI 0.1.26, 0.12.0 from CLI 0.1.24 and 0.1.25, 0.11.0 from CLI 0.1.23, 0.10.1 from CLI 0.1.22, 0.10.0 from CLI 0.1.21, 0.9.0 from CLI 0.1.20, 0.7.1 from CLI 0.1.18 and 0.1.19, and 0.6.1 from CLI 0.1.16 and 0.1.17.
+
+### 0.28.0 to 0.29.0 { #0280-to-0290 }
+
+Released TODO (the date). Breaking: a plugin declaring contract v25
+registers exactly the declaration its version was uploaded with, so a
+plugin whose declaration does not carry its interface is refused at
+registration until it does. `meridian plugin migrate --to 0.29.0` moves the
+pins and rewrites, in a plugin holding `connectivity` and no role that keeps
+the read (`compliance`, `ems`, `oms`, `portfolio`):
+
+- **A read of the escape hatch**, `await plugin.read_local_record_orders()`
+  as a statement of its own, is removed (`escape-hatch-read-dropped`):
+  connectivity's grant of `ReadLocalRecordOrders` is dropped, since a
+  connectivity plugin proposes and accepts nothing on a record.
+- **A test mapping the dropped suite case**
+  `reads-whether-orders-may-name-local-records` is removed
+  (`escape-hatch-case-dropped`): the connectivity suite no longer has it.
+
+Then, by hand where they apply:
+
+- **`connect` given an interface, settings or `reads_external_accounts`**
+  (`connect-names-the-declaration`): name them in the version's declaration,
+  `Declaration(settings=Config, interface=meridian.Interface(port=8000,
+  title=..., pages=pages), reads_external_accounts=True,
+  documentation="docs")`, with the interface's port fixed rather than read
+  from the environment, in a module importing every module that declares a
+  page or a route, and pass `connect(declaration=DECLARATION)`. See
+  [The whole declaration](#the-whole-declaration).
+- **A `[tool.meridian]` naming no declaration** (`declaration-not-named`):
+  add `declaration = "<module>:DECLARATION"`, and write `docs/overview.md`
+  and `docs/setup.md` (`troubleshooting.md` and `terms.md` prompted,
+  `pages.md` optional); `meridian plugin check` checks them. See
+  [Write a plugin's documentation](../how-to/write-a-plugins-documentation.md).
+- **A connectivity plugin's read of the escape hatch the migration cannot
+  remove alone**, its answer used or the read inside another expression
+  (`escape-hatch-read-kept`): remove the read and what depends on its
+  answer; an order on a provisional record is the `oms`'s and the `ems`'s
+  to weigh.
+- **An operations plugin** may declare its affirmation deadline,
+  `Declaration(affirmation_deadline=21 * 60)`, and record an unrecognized
+  security's identifiers on its break (`unresolved_identifiers`), which
+  the book requires on that category from contract v25.
+
+A plugin left on 0.28.0's pins keeps working against a runtime serving
+contract v25: it is admitted as before and not held to a declaration it
+never made, and its Documentation tab shows the Reference from its
+registration.
 
 ### 0.27.0 to 0.28.0 { #0270-to-0280 }
 

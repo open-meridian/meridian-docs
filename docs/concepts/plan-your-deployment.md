@@ -13,10 +13,6 @@ it.
     releases still to come carry no dates. Where a page elsewhere on this site describes something that is
     specified but not built, it says so too.
 
-<!-- DRAFT for the product owner's review (2026-10-05): the wording of
-"Who checks a plugin" and the Registry column. Published 2026-10-05 without a section number; when the Terms' plugins section (meridian-platform branch terms-third-party-plugins) goes live, name it here. Not to be rephrased elsewhere
-until reviewed. -->
-
 ## Who checks a plugin
 
 !!! warning "Naming a plugin here is not an endorsement"
@@ -37,8 +33,8 @@ Every table below marks each plugin with its **registry**:
 
 | Registry | What it is |
 |---|---|
-| **Local** | Your deployment's own registry, which you or your agent upload to. Unsupervised. Every plugin installed today is local, SnapTrade, the sample plugins and the data plugins included |
-| **Community** | The platform's shared registry, for anyone's plugins. Unsupervised. Not open yet |
+| **Local** | Your deployment's own registry, which you or your agent upload to. Unsupervised. The tables below mark Open Meridian's plugins local, as uploaded from their releases |
+| **Community** | The platform's shared registry. Unsupervised. Open to Open Meridian's own plugins first; see [Registries](registries.md) |
 | **Verified** | The platform's registry of plugins checked at best effort, as above. Not open yet |
 | **Planned** | The plugin does not exist yet |
 

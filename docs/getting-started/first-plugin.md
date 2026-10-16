@@ -12,8 +12,8 @@ It works on any deployment. For the faster loop where each save runs at once, se
 
 - A deployment you installed with [Install a deployment](installation.md).
 - You hold **deployment admin** on it. Only a deployment admin brings plugins in.
-- The `meridian` CLI 0.1.45 (`meridian --version`; update with `meridian upgrade`). Its
-  `plugin new` writes a plugin on SDK 0.28.0, so the deployment must serve contract 24.
+- The `meridian` CLI 0.1.46 (`meridian --version`; update with `meridian upgrade`). Its
+  `plugin new` writes a plugin on SDK 0.29.0, so the deployment must serve contract 25.
 - Docker on this machine. `meridian plugin upload` builds the plugin's image here, from its own
   `Dockerfile`.
 
@@ -65,11 +65,13 @@ writes it somewhere other than `./my-plugin`. It never writes over a directory t
 
 | File | What it is |
 |---|---|
-| `src/my_plugin/__main__.py` | Connects to the sidecar, declaring its pages, logs who it was launched as and what it may do, serves the pages, and reports itself healthy. |
+| `src/my_plugin/declaration.py` | The version's declaration: its pages, whether it reads external accounts, and its documentation in `docs/`. `[tool.meridian]` names it, `meridian plugin upload` reads it from the built image, and the plugin registers with exactly this one. |
+| `docs/` | Its documentation, one Markdown file per section, `overview.md`, `setup.md`, `troubleshooting.md`, `terms.md` and `pages.md`, each a short prompt to replace with your own words. A deployment admin reads it before launching the plugin. See [Write a plugin's documentation](../how-to/write-a-plugins-documentation.md). |
+| `src/my_plugin/__main__.py` | Connects to the sidecar with its declaration, logs who it was launched as and what it may do, serves the pages, and reports itself healthy. |
 | `src/my_plugin/page.py` | The pages people see through the dashboard, each a view function declared with the levels it serves: **Setup** (`/setup`), at `admin`, says what the plugin is and what the deployment lets it do, shows no account's data, and is where an admin links the external account the plugin reports to one of the deployment's accounts; **Accounts** (`/`), at `write` and `read`, shows the accounts the person may read and write through the plugin, and under Open an **Open a statement** button, in the page's header (its `head_actions` block) above the table. |
 | `src/my_plugin/templates/` | The pages' Jinja2 templates, `setup.html` and `accounts.html`, each extending the kit's base template. |
-| `pyproject.toml` | The package, pinned exactly to the SDK, `open-meridian==0.28.0`. Its `[tool.meridian]` table declares the plugin's `roles` and whether it serves a page. |
-| `Dockerfile` | Builds on the SDK's base image of the same version, `ghcr.io/open-meridian/plugin-python:0.28.0`. |
+| `pyproject.toml` | The package, pinned exactly to the SDK, `open-meridian==0.29.0`. Its `[tool.meridian]` table declares the plugin's `roles`, whether it serves a page, and names its `declaration`. |
+| `Dockerfile` | Builds on the SDK's base image of the same version, `ghcr.io/open-meridian/plugin-python:0.29.0`. |
 | `tests/test_page.py` | Tests of the pages, run by `meridian plugin check --run-tests`: each page under each level, no account data under Manage, linking on Setup, and the statement button under Open, including what the page says while nothing is linked. |
 | `.github/workflows/check.yaml` | A CI workflow that runs `meridian plugin check --run-tests` on a push to `main`, on each pull request, and when run by hand (`workflow_dispatch`). |
 | `hooks/pre-push` | A pre-push hook, CI-first: a branch's push runs nothing, its pull request's CI being the gate, and a push straight to `main` runs `meridian plugin check --run-tests` first. Turn it on with `git config core.hooksPath hooks`. |
@@ -164,7 +166,8 @@ meridian plugin list
 
 ```text
 Versions:
-  my-plugin 0.1.0  roles: none  page: yes  SDK 0.28.0
+  my-plugin 0.1.0  roles: none  page: yes  SDK 0.29.0
+    documentation: https://meridian.localhost/admin/plugins/versions/my-plugin/0.1.0/documentation
 Launches:
   my-plugin  my-plugin 0.1.0  launched
 ```

@@ -14,7 +14,7 @@ name = "reference-plugin"
 version = "0.1.0"
 description = "A Meridian plugin"
 requires-python = ">=3.11"
-dependencies = ["open-meridian==0.28.0"]
+dependencies = ["open-meridian==0.29.0"]
 
 [project.scripts]
 reference-plugin = "reference_plugin.__main__:main"
@@ -22,16 +22,18 @@ reference-plugin = "reference_plugin.__main__:main"
 [tool.meridian]
 roles = []
 interface = true
+declaration = "reference_plugin.declaration:DECLARATION"
 ```
 
 ## `[tool.meridian]`
 
-The table must be present: an upload without it is refused. The command line reads these two keys, and refuses `tags` (below).
+The table must be present: an upload without it is refused. The command line reads these three keys, and refuses `tags` (below).
 
 | Key | Type | Default when absent | Meaning |
 |---|---|---|---|
 | `roles` | list of strings | `[]` | The roles the plugin asks for, from the deployment's fixed list (below). Its grants on the bus are the union of its roles' grants. Empty is a plugin admitted with no topics, as the reference plugin is. |
 | `interface` | boolean | `false` | Whether the plugin serves a page through its sidecar. It is shown in the catalogue (`page: yes` or `no` in `meridian plugin list`). |
+| `declaration` | string | none | The version's declaration, as `"<module>:<attribute>"`, naming a `meridian.Declaration`: its settings, its interface, whether it reads external accounts and its documentation. `meridian plugin upload` reads it from the built image with `meridian-declaration`, and the texts in `docs/` beside it. A plugin on SDK 0.29.0 (contract 25) names one: a version uploaded without it is refused at registration. `meridian plugin check` fails one naming a module or an attribute the plugin does not have. See [The whole declaration](python-sdk.md#the-whole-declaration). |
 
 ### Rules
 
@@ -82,7 +84,7 @@ The command line also reads these, and refuses an upload without them.
 | `[project.scripts]` | table | On a development deployment, the live runner starts the first entry point named here, as `module:function`. |
 
 !!! note "Settings are not declared here"
-    A plugin's settings, and the pages it serves with the levels each serves, are declared in code when it connects, through `meridian.connect(settings=..., interface=...)`. See the [Python SDK](python-sdk.md#connect). The manifest's `interface` flag and the `interface=` argument are separate: nothing in the command line or the recording checks that they agree.
+    A plugin's settings, and the pages it serves with the levels each serves, are declared in code, in the version's `meridian.Declaration`, which `declaration` names. See the [Python SDK](python-sdk.md#the-whole-declaration). The manifest's `interface` flag and the declaration's `interface` are separate: nothing in the command line or the recording checks that they agree.
 
 ## Changing the manifest
 

@@ -171,10 +171,22 @@ from a terminal. The CLI builds the image on the developer's machine and sends
 it through the dashboard, layer by layer; layers the registry already has are
 skipped, and the shared base image for each SDK version is held once for every
 plugin built on it. The metadata — roles, whether it serves a page — is
-recorded with the version.
+recorded with the version, and so is its **declaration**: its settings, its pages and the tools
+they make, whether it reads external accounts, and its **documentation**, the vendor's sections
+from the plugin's `docs/` folder, each named by its digest. A plugin registers exactly the
+declaration its version was uploaded with, or its sidecar refuses it, so what a deployment admin
+read before launching is what runs. See
+[Write a plugin's documentation](../how-to/write-a-plugins-documentation.md).
 
 **A recorded version is never replaced.** Uploading a name and version that is
-already recorded is refused. To change a plugin, raise its version.
+already recorded is refused. To change a plugin, raise its version. A deployment
+admin may **retire** a version nothing runs or names: it is no longer listed or
+launchable, its image is released from the deployment's registry, and its record is kept.
+
+The deployment's own registry is the **local** one. A plugin may also come from the
+platform's **community** or **verified** registry, listed there as
+`organisation/plugin`, and is then pulled into the local registry by digest and
+verified before it is recorded. See [Registries](registries.md).
 
 ## Launching, and approval
 
@@ -268,7 +280,8 @@ is cut with an ellipsis. See
 [Inside the dashboard's frame](../how-to/build-a-plugin-page.md#inside-the-dashboards-frame).
 
 Under Manage the dashboard draws tabs of its own before the plugin's, and
-Manage opens on the first:
+Manage opens on the first (the **Documentation** tab is beside them at every
+level; see [Where people and agents read it](../how-to/write-a-plugins-documentation.md#where-people-and-agents-read-it)):
 
 - **Summary**: the plugin's status, which is core's to say (its health and
   why, the version running and the contract it registered with), then the
