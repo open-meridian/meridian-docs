@@ -7,27 +7,16 @@ identifiers in several schemes. This page explains how Open Meridian keeps
 instrument identity, where it lives, and what a deployment does when it meets
 an instrument it does not know.
 
-!!! note "TODO: contract v24, built, not released"
-    From contract v24, the one-ID revision, every instrument a deployment
-    holds is named by the platform master's `INS-` ID, minted by the
-    platform from its own source at the deployment's request. A
-    deployment's `LCL-` record is provisional: a local record, never
-    priced, until the platform answers, then resolved to its `INS-` record,
-    its `LCL-` ID accepted forever. See
-    [One ID per instrument](one-id.md). As contract v23's notice said, this
-    changes three stable reads,
-    [`ResolveIdentifier`](../api/typed-operations.md#resolve_identifier),
-    [`ResolveInstrument`](../api/typed-operations.md#resolve_instrument) and
-    [`ReportMissingInstrument`](../api/typed-operations.md#report_missing_instrument):
-    keys become `INS-`, and the `open_meridian` identifier is no longer
-    added to records. To be released in chart `0.1.CHART24` (TODO: the
-    date). Until then this page describes contract v23, where each
-    deployment's records were its own.
-
 ## Identity is the answer; a ticker is an attribute
 
 Each instrument has one canonical identifier, `INS-` followed by a unique
-value, and a position carries that identifier and nothing else about identity.
+value, minted by the platform's security master, and a position carries that
+identifier and nothing else about identity. Two deployments holding one
+security name it by the same ID. A deployment mints no permanent ID of its
+own: while the platform has not answered for a security, the deployment
+keeps a **local record** under an `LCL-` ID, provisional and never priced,
+until the platform's record replaces it (see
+[One ID per instrument](one-id.md)).
 Tickers, symbols and codes such as FIGI, ISIN, CUSIP and SEDOL are
 **identifiers of** an instrument, each true over a window of time and possibly
 reassigned to something else afterwards.
@@ -36,9 +25,11 @@ So resolution happens once, at the boundary where outside data arrives, and
 everything past that point holds a key that cannot go stale.
 
 **An instrument ID is never reused.** A decommissioned instrument, a
-deployment's record mapped onto another, and a record merged into another
+record merged into another, and a local record resolved to the platform's
 all keep their IDs, and no other instrument is ever given one, as no venue
-is ever given another's [venue ID](venues.md). A position, an order or a
+is ever given another's [venue ID](venues.md). A resolved `LCL-` ID stays on
+the record it became, under the deployment-only scheme
+`open_meridian_local`, and is accepted on every write, forever. A position, an order or a
 row in the lake stores the ID and nothing else about identity; everything
 that moves (a ticker, a symbol, a venue's code) is a dated identifier,
 resolved where outside data arrives. The contract says so where an instrument's ID is defined, for
@@ -86,6 +77,16 @@ The **security master** is on the platform. It holds instrument identity,
 symbology — which identifiers, in which schemes, have meant this instrument
 and over which window — and structure. It is administered by Open Meridian
 staff, and every deployment pulls from it.
+
+It mints a record when a deployment asks for a security it does not hold:
+it verifies the security against a source of its own, such as OpenFIGI for
+a security a FIGI identifies, and mints the record from that source's
+values, held to the security's **template**, never from what the request
+said. A request carries only identifiers in the schemes on the platform's
+licence list, the template and what the source states of the security;
+never a holding, an account or who is asking. A security its source cannot
+confirm goes to the platform's staff. See
+[One ID per instrument](one-id.md#an-ins-record-minted-by-the-platform).
 
 Staff may also delegate its administration to an AI agent, over OAuth, for at
 most 90 days at a time. The agent works through the platform's API or its MCP
@@ -173,8 +174,13 @@ publishes, so resolving an identifier never waits on a call to the platform.
 It is a *replica*, not a cache, and the difference matters in an outage. A
 cache expires and stops answering; a replica keeps answering from what it
 holds. When the platform cannot be reached, every instrument the deployment
-already knows keeps resolving. Only an instrument it has never seen has to
-wait.
+already knows keeps resolving. An instrument it has never seen gets a local
+record until the platform answers.
+
+Beside the platform's `INS-` records it keeps the deployment's own local
+`LCL-` records, each marked `provisional` with the reason it is, and the
+templates every record names. Whether a record is still waiting is its
+`provisional` mark, never its prefix.
 
 Records are applied under their version. A record arriving twice, or an older
 one arriving late, changes nothing, so a retried delivery is always safe.
@@ -236,16 +242,15 @@ When a plugin or core names a currency by its ISO 4217 code and no record the de
 it, the instrument store asks the platform's master for it itself, through
 the conductor, with no person asking or approving, keeps the master's
 record as the deployment's, and answers the resolve with it, found, not
-minted. A currency is curated reference data carrying no account's
+minted (`found: true`, `minted: false`). A currency is curated reference data carrying no account's
 information, so fetching it needs no one's decision, and it stops plugins
 leaving local copies beside the master's.
 
-A stub is minted for the code only when the master does not hold it. While
-the platform cannot be reached, the resolve mints a stub, and the store
-asks again at the code's next miss; a stub then met by the master's record
-is listed as a conflict on the Instruments page, for a person to merge.
-Only `iso4217` is fetched so: every other miss waits for a person, as
-below.
+A local record is kept for the code only when the master does not hold
+it. While the master is slow or cannot be reached, the resolve is a miss
+and nothing is kept; the pull goes on, and a later resolve finds the
+master's record. Only `iso4217` is fetched so: every other miss is asked
+of the platform to match or mint, as below.
 
 ### Searching the deployment's records
 
@@ -263,26 +268,41 @@ page names its own route.
 ## When an instrument is missing
 
 The plugin reading the outside data is the one that knows the source's
-symbols, so it resolves each holding before recording it. When resolution
-misses:
+symbols, so it resolves each instrument before recording anything about it,
+stating every identifier it has, a description, a currency, and the class
+and type where the source says them. When nothing in the deployment
+matches:
 
-1. **The plugin reports the miss as a fact** and moves on. It does not block,
-   does not retry in a loop, and never creates an instrument; no plugin can.
-2. **The holding is recorded unresolved**, carrying the identifiers the plugin
-   had. It moves no position, and it is shown beside the positions, so the gap
-   is visible rather than silently dropped.
-3. **The conductor reacts.** It asks the security master for the instrument,
-   sending only global identifiers — a brokerage's symbol means nothing
-   centrally. If the master has it, the record comes back and the instrument
-   store applies it. If not, the conductor may ask the platform to define it,
-   and the platform may decline.
+1. **The plugin never creates an instrument**; no plugin can. Its resolve
+   asks the instrument store, which picks the security's template from the
+   class and type the source stated.
+2. **The conductor asks the platform to match or mint it**, sending only
+   identifiers in the schemes on the platform's licence list. A brokerage's
+   or a vendor's own symbol means nothing centrally, and never leaves the
+   deployment.
+3. **Answered within a short, bounded wait**, the deployment keeps the
+   record under the platform's `INS-` ID from the start, and nobody acts.
+4. **Otherwise the store keeps a local record**, under an `LCL-` ID,
+   provisional, with the reason: the platform not reached, the request with
+   the platform's staff, or nothing on the licence list to look for. The
+   resolve answers it, and the plugin records against it. It resolves to
+   the platform's record on its own once the platform answers.
 
-A miss does not wait for a person: the conductor asks
-the platform to match or mint the security, and the deployment keeps a
-provisional local record until it answers (see
-[One ID per instrument](one-id.md)).
+A source too thin for any record, such as a statement line with a code and
+nothing else, makes none: the holding is kept in the street, outside the
+book, and the `operations` plugin's reconciliation shows it as an
+**unrecognized security** (see
+[One ID per instrument](one-id.md#why-a-thinly-described-security-stays-unrecognised)).
 
-The conductor's reaction is throttled, so a burst of misses for the same
+**A local record is never priced.** A data plugin that names a security
+only by its own vendor symbol, such as a ticker as its vendor spells it,
+gets a local record for it, and the lake never prices a local record: a
+position on it shows as not priced, never as zero. For the security to be
+priced, its record needs an identifier the platform can match, such as a
+FIGI. Usually that is the record your custodian's positions already name,
+which a data plugin's settings can point to.
+
+The conductor's asking is throttled, so a burst of misses for the same
 identifiers is not a burst of requests, and never a burst of new instruments.
 Only the conductor calls the platform, because only it holds the deployment's
 key; the instrument store itself holds no address and no key.
@@ -297,7 +317,10 @@ answer a record's type, its attributes and its identifiers' windows:
 
 - A record answers `binary_event_contract` (`payout` with its `amount` as
   text, its `currency_code` or `instrument_id`, and `closes_at_ns`), and each
-  identifier its `valid_from_ns` and `valid_until_ns` where it has them.
+  identifier its `valid_from_ns` and `valid_until_ns` where it has them; and
+  its `provisional` mark, `template_id`, `template_version` and
+  `missing_fields`, as [One ID per instrument](one-id.md#through-an-agent)
+  describes.
 - `dashboard__list_instruments_to_complete` lists a binary event contract
   lacking its payout and close among the records to complete, and each
   conflict with its `reason` (`MISS_REASON_AMBIGUOUS` where a plugin's
@@ -332,6 +355,8 @@ and [`dashboard__read_calendar`](../api/core-tools.md#dashboard__read_calendar).
 
 - **No bulk distribution.** A deployment pulls the one instrument it just
   missed. There is no snapshot of the whole master to download.
+- **A local record is not valued.** Until it resolves to the platform's
+  record, a position on it has no price.
 
 ## Related
 

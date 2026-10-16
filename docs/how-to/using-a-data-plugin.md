@@ -49,8 +49,10 @@ under `setting-up`.
 On the plugin's **Settings** form, in this order on every data plugin:
 
 1. **Environment**, first, only for a vendor with more than one: **Live**
-   or **Sandbox**, required, Live by default. A credential that differs by
-   environment is shown only for the environment chosen.
+   or **Sandbox**, required, Sandbox by default: a plugin is Live only once
+   a person chooses Live, never because an upgrade added the setting. A
+   credential that differs by environment is shown only for the
+   environment chosen.
 2. **The credentials**, each a secret, labelled in the vendor's own words
    ("API key ID", "Access token") so you find the same words on the
    vendor's page, each saying where at the vendor it is found.
@@ -284,10 +286,11 @@ vendor's terms: a licence records what the admin entered.
     2. Copy your access token.
 
 **Enter the key** on the plugin's **Settings**: Alpaca's **API key ID** and
-**API secret key**; Tradier's **API access token**. Tradier has a developer
-sandbox as well as its live service: the common **Environment** choice,
-shown first, **Live** or **Sandbox**, picks one, and the token, on the
-Settings form as **Access token**, must match it. The sandbox,
+**API secret key**; Tradier's **API access token**. Each has a sandbox as well as its live
+service (Alpaca's paper trading API, Tradier's developer sandbox): the
+common **Environment** choice, shown first, **Live** or **Sandbox**, picks
+one, and starts on **Sandbox** until a person chooses Live; the key must
+match it. Tradier's token is on the Settings form as **Access token**. The sandbox,
 `sandbox.tradier.com`, is delayed 15 minutes and does not stream, its
 quotes marked delayed, and the plugin's pages say which environment the
 data comes from. Then open **Connection**: it says whether each
@@ -321,6 +324,16 @@ prices, such as VIGIX.
 - **Each fund resolved** to the deployment's record: the one its row in the
   **Funds** setting names, or its ticker as Tiingo's symbol, a miss
   reported.
+- **Priced only on the platform's record.** A ticker is Tiingo's own
+  symbol, which the platform cannot match: a fund named by it alone, with
+  no record in the deployment, is at most a local record, which the lake
+  never prices. For its NAV to value a holding, the fund's record needs an
+  identifier the platform can match, such as a FIGI; usually that is the
+  record your custodian's positions already name, which the Funds
+  setting's **Instrument** column picks (see
+  [One ID per instrument](../concepts/one-id.md#an-lcl-record-a-local-record-until-the-platform-answers)).
+- **Its calendar.** The dataset names the platform's US equity venues'
+  calendar, so the lake flags a NAV dated on a day it says is closed.
 - Every response is kept as received, without the token, in the plugin's
   own storage, and named by each row read from it.
 

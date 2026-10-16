@@ -13,29 +13,18 @@ licences and entitlements, and the source priority. Seven work
 accounts a plugin may link to. One reads the
 [service accounts](#service-accounts). Four set and list the
 [trading instructions and account attributes](#trading-instructions-and-account-attributes),
-two read the Instruments page's [Calendars tab](#the-calendars-tab), one
-sets [orders on local records](#dashboard__set_local_record_orders) and one
-the [usage report](#dashboard__set_reports_usage). This page is the
-reference for those thirty-five. An agent calls them as the person who
+one [closes an account](#dashboard__close_account), two read the
+Instruments page's [Calendars tab](#the-calendars-tab), one sets
+[orders on local records](#dashboard__set_local_record_orders), one makes
+the [migration's lines](#dashboard__apply_migration) and one sets the
+[usage report](#dashboard__set_reports_usage). This page is the
+reference for those thirty-seven. An agent calls them as the person who
 delegated to it, only as far as that person could at the page each tool
 mirrors, and only as far as the deployment lets agents go with each act.
 Every act listed below that changes something can be prepared, but for the
 prepared changes' own tools. No core tool reads a price, a trade or a
 quote. A service account never reaches `/mcp`: it holds no delegation, and
 no core tool is reachable as one.
-
-!!! note "TODO: contract v24, built, not released"
-    [`dashboard__set_local_record_orders`](#dashboard__set_local_record_orders)
-    sets orders on local records, a deployment admin's act, preparable and at
-    **May not** for agents until loosened;
-    [`dashboard__set_reports_usage`](#dashboard__set_reports_usage) sets the
-    usage report; `dashboard__set_account_attribute` and
-    `dashboard__list_account_attributes` take and answer the error and
-    allocation account marks; the Instruments tools answer the provisional
-    records and the migration's counts (see
-    [The Instruments page's v24 additions](#the-instruments-pages-v24-additions));
-    and a lock time is a decimal string. To be released in chart
-    `0.1.CHART24` (TODO: the date).
 
 ## What every one of them does
 
@@ -137,9 +126,11 @@ naming the field. Changed in contract 24.
 | [`dashboard__set_trading_instruction`](#dashboard__set_trading_instruction) | acts | The deployment admin, on any target; a plugin's admin, on their plugin or a person, service account or account within it; once an admin loosens it from May not |
 | [`dashboard__list_account_attributes`](#dashboard__list_account_attributes) | reads | The deployment admin |
 | [`dashboard__set_account_attribute`](#dashboard__set_account_attribute) | acts | The deployment admin, once loosened from May not |
+| [`dashboard__close_account`](#dashboard__close_account) | acts | The deployment admin, once loosened from May not. Added in contract 24. |
 | [`dashboard__list_calendars`](#dashboard__list_calendars) | reads | The deployment admin |
 | [`dashboard__read_calendar`](#dashboard__read_calendar) | reads | The deployment admin |
 | [`dashboard__set_local_record_orders`](#dashboard__set_local_record_orders) | acts | The deployment admin, once loosened from May not. Added in contract 24. |
+| [`dashboard__apply_migration`](#dashboard__apply_migration) | acts | The deployment admin; agents may only prepare it until loosened. Added in contract 24. |
 | [`dashboard__set_reports_usage`](#dashboard__set_reports_usage) | acts | The deployment admin. Added in contract 24. |
 
 "An admin of a role" is `admin` on that role of the plugin, at **Manage**,
@@ -740,6 +731,34 @@ across the deployment, naming no account and no order.
  "note": "The platform is reachable again; new orders wait for its records."}
 ```
 
+### `dashboard__close_account`
+
+Added in contract 24. The Accounts tab's **Close**: closes an account,
+never deleting it, its holdings and history still readable (see
+[Closing an account](../concepts/accounts.md#closing-an-account)). A
+deployment admin's; a call by anyone else is refused `not_permitted`. It
+can be prepared, and is at **May not** for agents until the deployment
+admin loosens it.
+
+**Input:** `account_id`; `note`, why, kept with each record the closure
+writes; and `unlink_attached`, optional, `true` to withdraw each grant and
+close in one step, as the dialog's **Unlink all and close** does.
+
+An account with anything still attached (an external account's link, a
+plugin instance's grant, an `ems`'s mapping) is refused, naming
+`account_id` and each thing attached, and nothing is closed. A link or a
+mapping is undone at its plugin's page. No tool sets a grant, so while the
+account still has one, `unlink_attached` is refused too: a person
+withdraws it at the page, or with **Unlink all and close**.
+
+**Answer:** `outcome: "made"`, with the `account`: its `account_id`,
+`name`, `state` (`ACCOUNT_STATE_CLOSED`) and `created_at_ns`.
+
+```json
+{"account_id": "ACC-01JA2Q3R4S5T6V7W8X9Y0Z1A2B",
+ "note": "The 2026 rollover account is empty and its link was removed."}
+```
+
 ## The Instruments page's provisional records { #the-instruments-pages-v24-additions }
 
 Added in contract 24. The Instruments tools take and answer the provisional
@@ -752,7 +771,42 @@ provisional records alone, complete or not, each with its
 the answer carries `migration_counts` (`already_held`, `matched`, `minted`,
 `near_match`, `awaiting_staff`, `kept_local`, `unreachable`, `held_back`
 and `remaining`) and `backfill_counts` (per `scheme`, `matched`,
-`awaiting_person` and `remaining`).
+`awaiting_person` and `remaining`). A provisional record the migration
+sent names its `migration_section` and, where the platform answered, the
+`answered_instrument_id` its line would become.
+
+### `dashboard__apply_migration`
+
+Added in contract 24. The Provisional tab's **Exact lines** and
+**Uncertain lines** dialogs: makes the upgrade's migration lines, or holds
+them back (see
+[Make the lines](../how-to/review-provisional-records.md#make-the-lines)).
+At the deployment admin's level. It can be prepared, and agents may only
+prepare it until the deployment admin loosens it.
+
+**Input:**
+
+| Argument | What it is |
+|---|---|
+| `instrument_ids` | The `LCL-` records whose lines are made, at most 500: each replaced by the `INS-` record its line answered |
+| `held_back_ids` | The `LCL-` records whose lines are held back, at most 500: each keeps its `LCL-` ID, provisional and held back, nothing minted for it, until a later change makes it |
+| `note` | Why, kept on each record's version |
+
+At least one line is named. The exact lines are one change, each
+uncertain line its own; two records answered by one `INS-` ID are a
+duplicate line, made together. More than 500 exact lines are successive
+changes, in order. The change is made whole or refused whole, naming by
+its path each line that is not one the platform answered (with its staff,
+kept local or not reached); a line already made is unchanged.
+
+**Answer:** `outcome: "made"`, with the migration's `migration_counts`
+after.
+
+```json
+{"instrument_ids": ["LCL-01JB8Z3K6Q", "LCL-01JB8Z3K7R"],
+ "held_back_ids": ["LCL-01JB8Z3K8S"],
+ "note": "The exact lines checked against the custodian's statement; one held back to check its share class."}
+```
 
 ### `dashboard__set_reports_usage`
 

@@ -32,16 +32,20 @@ backups set up. See [Back up and restore a deployment](back-up-and-restore.md). 
 changes on the way, release by release, is in the
 [release notes](../api/python-sdk.md#release-notes).
 
-!!! note "TODO: upgrading to contract v24"
-    The upgrade to contract v24 (chart `0.1.CHART24`) also migrates the
+!!! note "Upgrading to contract 24"
+    The upgrade to contract 24 (chart 0.1.305 or later) also migrates the
     deployment's instrument records to the platform's IDs: every `LCL-`
-    record is sent as a matching request, and the answers wait as prepared
-    changes for a deployment admin to apply on the Instruments page. Nothing
-    is rewritten, and nothing is applied without the admin, but what the
-    platform mints is recorded for good, so take the backup first. See
+    record is sent as a matching request, and the answers wait on the
+    Instruments page's **Provisional** tab as lines for a deployment admin
+    to make. Nothing is rewritten, and nothing is applied without the
+    admin, but what the platform mints is recorded for good, so take the
+    backup first. See
     [Review provisional records and the migration](review-provisional-records.md).
     The setting **Allow orders on local records** is on after the upgrade,
-    and so is the usage report.
+    and so is the weekly usage report. The book's pod has resources of its
+    own from this chart, `bor.resources` (a request of 128Mi of memory and
+    a limit of 512Mi), in place of the shared `resources`; see
+    [The book's resources](../concepts/the-book-of-record.md#the-books-resources).
 
 ## To upgrade with the command line
 

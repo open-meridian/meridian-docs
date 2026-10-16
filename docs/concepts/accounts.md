@@ -9,14 +9,6 @@ are **external accounts**, and a plugin that reads one ties it to one of the
 firm's accounts rather than creating an account of its own. This page
 explains both, and how accounts bound what a plugin may read and write.
 
-!!! note "TODO: contract v24, built, not released"
-    From contract v24 an account may be marked an **error account** or an
-    **allocation account** in the book (see [In the book](#in-the-book) and
-    [Booking](booking.md)); the base currency decides which currency has
-    lots; and an account still linked, granted or mapped is closed only once
-    each is undone (see [Closing an account](#closing-an-account)). To be
-    released in chart `0.1.CHART24` (TODO: the date).
-
 ## The firm's accounts
 
 A deployment admin creates accounts on the **Accounts** tab of the dashboard's
@@ -96,6 +88,13 @@ withdrawn as its own record, and then the account is closed. Or choose
 Where a link or an `ems`'s mapping is left, the dialog offers only
 **Cancel**: a link and a mapping are undone at the plugin's own page. Open
 each from the list, undo it, and close the account then.
+
+Through an agent,
+[`dashboard__close_account`](../api/core-tools.md#dashboard__close_account)
+closes an account with a note saying why, and is refused naming each thing
+still attached. It withdraws no grant: a person does, at the page or with
+**Unlink all and close**. It is at **May not** for agents until a
+deployment admin loosens it.
 
 Accounts are given to people through **account groups**: explicit lists of
 accounts, which a permission names, with no nesting. One is built in, **All

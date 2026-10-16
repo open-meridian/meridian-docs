@@ -17,8 +17,13 @@ Manage, and the figures "Last valued" and "Not priced". Each person with
 under Open and View (`read_orders`) lists the orders in the accounts you may
 read, newest first, one line each: account, instrument, side, ordered,
 filled, state, and who decided and who executed it. An order opens to its
-history (`read_order_history`), each step with who took it and when. It
-records nothing. Its suite's two calendar cases are not presented, with
+history (`read_order_history`), each step with who took it and when. A
+**Bookings** tab under Open and View (`read_bookings`) lists each order's
+executions booked to its accounts, in the accounts you may read, an
+allocation a line (account, quantity, average price, net, the day it is
+meant to settle, the booking's state, an error account's part marked), and
+with **Alerts** the book's alerts on them; it keeps itself current as each
+booking and alert changes. It records nothing. Its suite's two calendar cases are not presented, with
 why: it values at a business date's prices as the lake holds them, and
 never reads a settlement calendar or asks for a settlement date.
 

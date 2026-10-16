@@ -70,6 +70,7 @@ never as zero**, and counted in what the total leaves out:
 | no rate into the currency it is shown in | Entitle a source of exchange rates, or choose a later date |
 | its currency's cash instrument is not known here | The deployment holds no record of that currency: complete one on the Instruments page, or show it in another. |
 | the deployment holds no record of it | The deployment admin looks at the Instruments page |
+| a local line: the deployment's own record, never priced | Nothing to do here: the position is under a provisional local record, which is never priced, even where the lake holds a price. It is valued once the record resolves to the platform's, which needs an identifier the platform can match, such as a FIGI. See [Review provisional records](review-provisional-records.md) |
 
 ## Set it up
 

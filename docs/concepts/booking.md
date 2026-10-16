@@ -11,14 +11,11 @@ Booking is its own act and its own record, pointing at the order. The
 order's executions and their positions are what the venue did; the booking
 says whose they are.
 
-!!! note "TODO: contract v24, built, not released"
-    Booking is in core for contract v24, to be released in chart
-    `0.1.CHART24` with open-meridian 0.28.0 (TODO: the date). Every
-    operation on this page is `preview`: it may change in a later contract
-    version, with a migration. Core proves booking end to end with stand-in
-    plugins only: its order-path test books a block order across two
-    funds. No released plugin holds the `oms` role yet (TODO: confirm at
-    release).
+!!! note "Proved with stand-in plugins"
+    Every operation on this page is `preview`: it may change in a later
+    contract version, with a migration. Core proves booking end to end with
+    stand-in plugins only: its order-path test books a block order across
+    two funds. No released plugin holds the `oms` role yet.
 
 ## Who does what
 
@@ -262,15 +259,17 @@ or a position. There are three kinds:
   error account. `compliance` acknowledges it, for a person, with a
   reason.
 - **Booking held**: raised by the book when a booking is held, to the
-  `oms` and `operations`, due by the affirmation deadline. It clears itself
+  `oms` and `operations`. It clears itself
   when the booking is handed off or closed. A person's acknowledgement is
   recorded and never clears it.
 - **Compliance**: raised by a `compliance` plugin, with `RaiseAlert`.
 
-**The deadline** is the `operations` plugin's declaration,
-`affirmation_deadline`, a time of day in the deployment's time zone. The
-alert carries the moment it is due by; whether it is overdue is a reader's
-comparison against the deployment's clock.
+**The deadline is specified, not built.** The contract specifies an
+affirmation deadline, the `operations` plugin's time of day in the
+deployment's time zone, and the moment a held booking's alert is due by.
+No plugin can declare it yet, so the alert's `due_by` is unset; whether an
+alert is overdue, once it carries one, will be a reader's comparison
+against the deployment's clock.
 
 An alert's reason and acknowledgement are text written by people, and
 reach an agent as data, never instructions.

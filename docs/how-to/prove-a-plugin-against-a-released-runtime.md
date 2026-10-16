@@ -197,21 +197,30 @@ venue. The runner's `instrument` command takes `--ask-platform`, asking the plat
 record from its page as a deployment admin's button does, so a `compute_date` for that equity
 gives its settlement date in a harness run (T+1) rather than "rule not held".
 
-!!! note "TODO: the harness for contract v24"
-    Name the runtime and harness commit serving contract v24, its digests,
-    and the chart (`0.1.CHART24`) once released. From contract v24 the
-    harness's stand-in for the platform answers v24's matching, template,
-    licence-list and replacement routes, and its order-path run books a
-    block order across two funds (TODO: the runner's new commands, as
-    built).
-
-Core 50d6f0a's runtime and harness serve contract v23, released 2026-10-14 in chart 0.1.303,
+Core 6eb6887's runtime and harness serve contract v24, released 2026-10-15 in chart 0.1.305,
 pinned by digest as in [step 1](#1-pin-a-runtime-image-and-its-harness):
 
 ```makefile
-RUNTIME_IMAGE ?= ghcr.io/open-meridian/meridian-runtime:50d6f0a@sha256:31752d45e262b4e87978e486f5e3cdd201fe14970bf1e681bfb9241731d0a053
-HARNESS_IMAGE ?= ghcr.io/open-meridian/meridian-harness:50d6f0a@sha256:00c4818b8c67218ecbe237f97e97b78cad3801477520ebbae80fe29332de4115
+RUNTIME_IMAGE ?= ghcr.io/open-meridian/meridian-runtime:6eb6887@sha256:68d54f7b0218e3aec9d2c2aa899533a068c458b253c12ac3da08a6b573a76fab
+HARNESS_IMAGE ?= ghcr.io/open-meridian/meridian-harness:6eb6887@sha256:5eff46fe1ccc08ad380d9fbd27511bfa134f1277332667c50f8d2825c54849d5
 ```
+
+Its stand-in for the platform answers contract v24's one-ID routes: the
+matching and minting request, the template catalogue, the licence list,
+the replacement feed and the usage reports. It mints a record only for a
+FIGI its source confirms, so a record your plugin states with another
+identifier alone stays a provisional local record, as in a deployment. In
+the harness's environment, `HARNESS_LICENCE` names the licence list's
+schemes, `HARNESS_PLATFORM_MINTS` the FIGIs its source confirms, and
+`HARNESS_PLATFORM_V24=0` serves none of the routes, as a platform before
+contract v24, which the deployment treats as not reached. The runner's
+`instrument ID --ask-platform`, with nothing else, asks the platform about
+a record and completes nothing, so a provisional record the platform holds
+resolves; and a new command, `core-form PAGE POST FIELD=VALUE...
+[--expect-refused TEXT]`, posts one of core's own forms as the deployment
+admin, PAGE read for its form token and a FIELD given more than once sent
+once for each: the setting **Allow orders on local records**, the usage
+report's, an account's **Close**, or the migration's lines.
 
 The commands above are its `README.md`'s.
 

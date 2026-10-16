@@ -48,8 +48,8 @@ piece of data lives.
     proposed, released, placed at a venue through a connectivity plugin and
     filled, their state decided by the book, with settlement calendars and
     venue-originated fills; the connectivity plugins a deployment can launch
-    are tested against a simulated brokerage only. Booking (TODO: built, not
-    released) books an order's executions to its accounts, and every
+    are tested against a simulated brokerage only. Booking books an order's
+    executions to its accounts, and every
     instrument is named by the platform's `INS-` ID, a deployment keeping
     local records, never priced, until the platform answers. Where a page
     describes something that is specified but not built, it says so.

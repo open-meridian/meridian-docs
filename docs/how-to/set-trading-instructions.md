@@ -125,10 +125,6 @@ local record continue: to stop them, set a trading instruction. A
 telephoned or outside order the `oms` records is recorded whatever the
 setting.
 
-!!! note "TODO: contract v24, built, not released"
-    The setting and its tool are in core for contract v24, to be released
-    in chart `0.1.CHART24` (TODO: the date).
-
 ## Through an agent
 
 Four of core's tools mirror these. The two that set take a `note`, kept as

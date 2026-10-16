@@ -7,11 +7,6 @@ This page is for a deployment admin: where to see those records and why
 each is waiting, how the upgrade to contract 24 migrates the records you
 already hold, and the usage report's setting.
 
-!!! note "TODO: contract v24, built, not released"
-    The Provisional tab, the migration's counts and the usage report's
-    setting are in core for contract v24, to be released in chart
-    `0.1.CHART24` (TODO: the date).
-
 ## Before you start
 
 - You are a deployment admin. The **Instruments** page is theirs.
@@ -43,8 +38,12 @@ The **Why** column reads one of:
 
 - **the platform not reached; asked again on reconnecting**. Nothing to
   do: the conductor asks again once the platform can be reached.
-- **incomplete against its template**. The **Missing** column says which
-  fields. The record resolves once the platform's own source confirms it.
+- **incomplete or offline: its template's fields, or nothing to look for
+  yet**. Where the **Missing** column names fields, the source has not
+  given them; where it shows a dash, the record carries no identifier on
+  the platform's licence list, such as a vendor's own code alone, so there
+  is nothing to send. It resolves once the platform can match it, for
+  instance when the licence list gains a scheme it carries.
 - **with the platform's staff; asked again daily**. The platform's source
   could not confirm the security, and its staff review it.
 - **class needed: no asset class stated**. Set the record's asset class
@@ -84,48 +83,52 @@ Below them, **Backfills** counts each scheme the licence list added after
 the upgrade: how many records were linked, how many wait for a person, and
 how many are still to send.
 
-### Apply the prepared change
+### Make the lines
 
-The migration prepares its answers for you as
-[prepared changes](../concepts/prepared-changes.md); nothing is applied
-without you.
+A line is a record the platform answered: **Already held**, **Matched**,
+**Minted** or **Near match**. Nothing is applied without you. Records with
+the platform's staff, kept local or not reached are no lines: each stays
+provisional, and resolves on its own once the platform answers.
 
-- **The exact lines** are one prepared change, applied together.
-- **Each uncertain line** is its own prepared change, decided on its own:
-  two `LCL-` records answered by one `INS-` ID (a duplicate, which the book
-  sums once applied); a platform value contradicting one a person set; an
-  identifier meeting two records.
+Beside the counts, two buttons open the lines, each with its count:
 
-To apply one:
+- **Exact lines** opens **The exact lines**: each line's record, the
+  `INS-` record it **Becomes**, and a **Hold back** box. They are made
+  together, as one change, at most 500 at a time; with more, the dialog
+  shows the first 500 and the rest are the next changes, in order.
+- **Uncertain lines** lists each line to decide on its own, with **Why**:
+  a duplicate (two `LCL-` records answered by one `INS-` ID, which become
+  the one record, the book summing them), an identifier meeting another
+  record, or a line you held back. Choose one line at a time.
 
-1. Open your **Inbox**, under **Prepared changes**, or the change from the
-   Instruments page.
-2. Read the lines: each names the `LCL-` record and the `INS-` record it
-   would become.
-3. Choose **Make** to apply it, or discard it.
+To make them:
+
+1. Open **Settings**, then **Instruments**, then the **Provisional** tab,
+   and choose **Exact lines** or **Uncertain lines**.
+2. Read the lines. In the exact lines, tick **Hold back** on any you are
+   unsure of; in the uncertain lines, choose the line.
+3. Say **Why**.
+4. Choose **Make the lines** (or, for an uncertain line, **Make the line**
+   or **Hold back**), or **Prepare** for someone to make it later (see
+   [Prepared changes](../concepts/prepared-changes.md)).
 
 On making, each line's record is replaced by its `INS-` record: its
 positions move, its `LCL-` ID stays on the new record under
-`open_meridian_local`, and its history reads across the link. A line not
-made leaves its record provisional, with its reason.
+`open_meridian_local`, and its history reads across the link. A line
+already made is unchanged. The change is made whole or refused whole,
+naming each line that is not one the platform answered.
 
-An agent may prepare the change for you through
-[`dashboard__prepare_call`](../api/core-tools.md#dashboard__prepare_call).
-It never applies it.
-
-!!! note "TODO: applying the lines, as built"
-    Core as built (contract v24's branch) records each record's section and
-    shows the counts above; the act that applies the prepared change's lines,
-    and the way a line is held back, are not built yet. Name the page's
-    controls once they are, or say here that they wait for a later release.
+An agent may prepare the change for you with
+[`dashboard__apply_migration`](../api/core-tools.md#dashboard__apply_migration),
+which agents may only prepare until a deployment admin loosens it.
 
 ### Hold a line back
 
-You may hold back any line before you make the change. The record keeps
-its existing `LCL-` ID, provisional, with the reason **held back at the
-migration**, until its line is made; nothing is minted for it. A record
-minted after the list was prepared resolves on its own, as any new one
-does.
+You may hold back any line. The record keeps its existing `LCL-` ID,
+provisional, with the reason **held back at the migration**, and nothing
+is minted for it; it moves to the uncertain lines, to be made later on its
+own. A record minted after the lines were listed resolves on its own, as
+any new one does.
 
 Hold a line back when you are unsure the platform's record is the same
 security: an uncertain line is better decided alone than applied with the
@@ -133,7 +136,7 @@ rest.
 
 ### After the migration
 
-- The usage report is sent once (see below).
+- The next weekly usage report carries its effect (see below).
 - Every plugin hears each replacement, and reads what it missed.
 - A plugin's table setting naming a replaced record is re-pointed by core
   as a recorded settings change.
@@ -147,7 +150,7 @@ schemes your records carry, per scheme, kept here and never sent: only how
 many are counted in the usage report.
 
 Below it, **Report identifier usage** is on by default. While on, the
-conductor sends the platform, weekly and once after the migration, per
+conductor sends the platform, weekly, for the last whole week, per
 identifier scheme, how many records carry it, how many resolve only
 through it and how many misses arrived with it alone: counts only, never a
 value, a holding, a quantity or an account.
@@ -167,6 +170,8 @@ sent yet."
 - `dashboard__list_instruments_to_complete` with `provisional: true` lists
   the provisional records, each with its `provisional_reason`, and answers
   `migration_counts` and `backfill_counts`.
+- `dashboard__apply_migration` makes the migration's lines, or holds them
+  back, with a `note`; agents prepare it for you by default.
 - `dashboard__set_reports_usage` sets the usage report, with a `note`.
 - `dashboard__prepare_call` prepares a change for you to make.
 

@@ -2480,11 +2480,6 @@ Added in SDK 0.28.0 (contract 24). Every one is `preview`. A command acting for
 a person takes `acting_for`, as the order path's do. See [Booking](../concepts/booking.md) and
 [One ID per instrument](../concepts/one-id.md).
 
-!!! note "TODO: as built in open-meridian 0.28.0"
-    The method names and result types here follow the generator's
-    convention and the contract's names. Check each signature against
-    open-meridian 0.28.0 once it is built.
-
 ### `set_allocation_instruction` { #set_allocation_instruction }
 
 `portfolio`, or `operations` for a client's instruction, amends an order's
@@ -2595,8 +2590,10 @@ both.
 
 ### `list_templates` { #list_templates }
 
-Every role. The template catalogue the deployment holds, paged: each
-template's `template_id`, `template_version`, `name`, `asset_class`,
+Every role. The template catalogue the deployment holds, each template
+at its latest version, or with `asset_class` that class's templates, its
+base template among them: each template's `template_id`,
+`template_version`, `name`, `asset_class`,
 `instrument_type` (unspecified for a class's base template), `base`, its
 `fields` (each with its path, type and whether it is required) and its
 `match_rule`.

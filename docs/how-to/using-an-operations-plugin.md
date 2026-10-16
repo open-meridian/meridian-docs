@@ -27,7 +27,15 @@ order, with why; a late fact is acknowledged with a reason
 fill's value date is a business day on its
 [settlement calendars](../concepts/settlement-calendars.md), and where it is
 not, offers that as a break's first candidate cause, linked to the check;
-the book never moves the date.
+the book never moves the date. It reads [booking](../concepts/booking.md)
+too: see [Bookings](#bookings).
+
+The sample operations plugin records only on change. A custodian sending
+the same statement again writes nothing: figures are recorded only where a
+value moved, and a break is brought up to date only where its differences
+or its candidate causes changed. A break found again unchanged keeps the
+date it was first seen, so a correction proposed for it takes effect from
+when the difference arose. Every change is still its own entry.
 
 ## The first-use path
 
@@ -134,8 +142,49 @@ sources:
   (`list_outcomes`), the one thing an operations plugin reads from the lake.
 
 The operations suite's `names-an-unmatched-fill-as-a-breaks-cause` and
-`hears-and-reads-an-outcome` hold them. The sample operations plugin does
-neither yet.
+`hears-and-reads-an-outcome` hold them. The sample operations plugin names
+an unmatched fill: a security's quantity differing by exactly one such
+fill, traded on or before the statement's date, is offered an unbooked
+trade first, the fill's book entry linked. It holds no event contract, so
+it marks `hears-and-reads-an-outcome` not presented.
+
+## An unrecognized security
+
+A statement line too thin for any instrument record, such as a code and a
+quantity with nothing else, is kept in the street, outside the book (see
+[One ID per instrument](../concepts/one-id.md#why-a-thinly-described-security-stays-unrecognised)).
+It is never silent: the sample operations plugin reads it with the
+statement and records it as a break of its own category, **Unrecognized
+security** (`BREAK_CATEGORY_UNRECOGNIZED_SECURITY`), naming no position:
+the street record, the identifiers it carries and the quantity it states,
+its cause unknown, brought up to date while it persists. Once the source,
+or a person, gives what an instrument record needs, the next statement
+records the position on it.
+
+## Bookings
+
+Once the `oms` [books](../concepts/booking.md) an order's executions and
+hands the booking off, `operations` owns each allocation. The sample
+operations plugin:
+
+- **Names an unsettled allocation as a break's cause.** Each run reads the
+  bookings handed off (`list_bookings`); a quantity or settled quantity
+  short by exactly an allocation to the account whose intended settlement
+  date has come is offered a fail, the booking's book entry linked.
+- **Compares again when a booking is handed off** (`booking_updated`), for
+  each account it allocates to.
+- **Lists each held booking on Flags.** A held booking's alert
+  (`alert_changed`, read on start with `list_alerts`) is a flag, and turns
+  the status dot amber until the book clears it. A booking's ID opens it
+  and its parts.
+- **Replaces a booking's parts**, once handed off: **Replace the parts**
+  (`correct_booking`, checked by `check_correct_booking`), each part an
+  account and its quantity at the booking's average price, with why, such
+  as a client having reneged. At `write`.
+- **Sets a client's allocation**, where the firm is the client's
+  custodian: an order's view, **Set the client's allocation**
+  (`set_allocation_instruction`, checked by
+  `check_set_allocation_instruction`). At `write`.
 
 ## Its figures
 

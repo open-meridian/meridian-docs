@@ -11,14 +11,6 @@ keeps a **local record** of its own, under an `LCL-` ID, until the
 platform answers. This page explains both, what a person sees of each, and
 what a plugin needs to know.
 
-!!! note "TODO: contract v24, built, not released"
-    The one-ID model is in core for contract v24, to be released in chart
-    `0.1.CHART24` with open-meridian 0.28.0 (TODO: the date). The platform
-    serves matching, minting, the templates, the licence list and the
-    replacement feed already. Until contract v24 each deployment's records
-    were its own, under `LCL-` IDs kept for life (see
-    [Instruments](instruments.md)).
-
 ## An `INS-` record: minted by the platform
 
 When a plugin reports a security nothing in the deployment matches, the
@@ -69,6 +61,11 @@ The instrument store mints a **provisional** record of its own, under an
 - the platform's staff must review the request;
 - the security has no identifier the platform may be sent, such as a
   vendor's own code alone.
+
+So a data plugin that names a security only by its vendor's own symbol
+gets a local record for it, and the lake never prices a local record. For
+the security to be priced, its record needs an identifier the platform can
+match, such as a FIGI.
 
 The local record carries the vendor's identifiers, which never leave the
 deployment, names its template, and lists any fields it lacks. The prefix
@@ -121,7 +118,8 @@ its tools:
 
 - **The platform not reached**: asked again on reconnecting
   (`PROVISIONAL_REASON_UNREACHABLE`).
-- **Incomplete against its template**: the fields it lacks are listed
+- **Incomplete or offline**: the fields its template wants that it lacks
+  are listed, or it carries nothing on the licence list to look for yet
   (`PROVISIONAL_REASON_INCOMPLETE`).
 - **With the platform's staff**: asked again daily
   (`PROVISIONAL_REASON_AWAITING_STAFF`).
@@ -130,14 +128,6 @@ its tools:
 - **Held back at the migration**: a deployment admin held its line back
   at the upgrade (`PROVISIONAL_REASON_HELD_BACK`; see
   [Review provisional records and the migration](../how-to/review-provisional-records.md)).
-
-A record with no reason recorded is shown as **kept local: nothing on the
-licence list to look for**.
-
-!!! note "TODO: the sixth line, as built"
-    Core's page as built shows "kept local" for a record with no reason
-    recorded; the contract names five reasons. Confirm at release whether
-    the line stays.
 
 ## When the platform answers
 
@@ -219,16 +209,19 @@ platform accepts.
 
 ## Usage reporting
 
-Weekly, and once after the upgrade's migration, the conductor sends the
-platform the deployment's **identifier usage**: per identifier scheme,
+Weekly, the conductor sends the platform the deployment's **identifier
+usage** for the last whole week, Monday to Sunday: per identifier scheme,
 
 - how many records carry it;
 - how many resolve only through it;
 - how many misses arrived with it as their only identifier;
 
-with the period, and the schemes the deployment declares it is licensed
-for. **Counts only**: never an identifier's value, a holding, a quantity or
-an account.
+with the period. **Counts only**: never an identifier's value, a holding, a
+quantity or an account. The report has room for the schemes the deployment
+declares it is licensed for, but a deployment cannot declare them yet, so
+that list is sent empty. The first weekly report after the upgrade's
+migration carries its effect; a report the platform did not receive is not
+sent again, the next week's replacing it.
 
 It is **on by default**. A deployment admin turns it off at the
 Instruments page's **Licensed identifiers** tab, **Report identifier
@@ -246,6 +239,9 @@ The Instruments tools take and answer the one-ID model's fields (see
   record answers `provisional`, `template_id`, `template_version` and
   `missing_fields`; and the answer carries `migration_counts` and
   `backfill_counts`.
+- `dashboard__apply_migration` makes the upgrade's migration lines, or
+  holds lines back, with a note; agents may only prepare it until a
+  deployment admin loosens it.
 - `dashboard__set_reports_usage` turns the usage report on or off, with a
   note.
 - `dashboard__set_local_record_orders` turns orders on local records on or
@@ -265,8 +261,9 @@ The Instruments tools take and answer the one-ID model's fields (see
   plugin that keeps instrument IDs in its own storage. Every role also
   reads the templates (`list_templates`, `read_template`).
 - [`meridian plugin migrate`](../api/cli.md#plugin-migrate) rewrites the
-  first two for you, and `meridian plugin check` warns a plugin that writes
-  a replaced ID.
+  first two for you, and `meridian plugin check` warns
+  (`replaced-ids-followed`), failing nothing, on an `INS-` or `LCL-` ID kept
+  as a string in the plugin's code outside its tests.
 
 ## Known limits
 

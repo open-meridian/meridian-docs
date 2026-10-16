@@ -20,14 +20,11 @@ one entry at a time, and stored nowhere as a fact.
     Tradier, are each tested against a simulated brokerage only (see
     [Trading through SnapTrade](../how-to/using-a-custody-plugin.md#trading-through-snaptrade)).
 
-!!! note "TODO: contract v24, built, not released"
-    Contract v24 adds, in core and open-meridian 0.28.0, to be released in
-    chart `0.1.CHART24` (TODO: the date): [booking](booking.md), by which
-    the `oms` books an order's executions to its accounts, with the block
-    order, the error account, the hand-off, corrections, sleeve crosses,
-    give-ups and alerts; and [orders on local records](#orders-on-local-records),
-    a deployment setting. Every operation it adds is `preview`. Core proves
-    booking against a simulated venue and stand-in plugins only.
+After the fills, the `oms` [books](booking.md) an order's executions to its
+accounts, its operations `preview` too, and proved by core against a
+simulated venue and stand-in plugins only. Whether an order may name a
+local instrument record is a deployment setting (see
+[Orders on local records](#orders-on-local-records)).
 
 ## Who does what
 

@@ -769,10 +769,11 @@ DECLARATION = Declaration(
 | `day_time_zone` | `str` | The IANA zone its business dates are in; empty for a dataset that is not daily. |
 | `day_end_minute` | `int` | Minutes after local midnight the day ends, 0 to 1,439. See [Dates and time](../concepts/dates-and-time.md). |
 | `venue_id` | `str` | The venue the dataset is, a venue master ID (`VEN-`); empty for a consolidated dataset. |
+| `calendar_id` | `str` | The settlement calendar its business dates follow, its `CAL-` ID; empty for none. The lake flags a daily value dated on a day the calendar says is closed, and refuses nothing by it. Added in SDK 0.28.0. |
 
 `DatasetLicence`, keyword only, every field optional: `kept` (`False`: served, not kept), `retention_days` (0 to 36,500; 0 for no limit set), `derived_use`, `display`, `default_fields` (at most 64 dictionary entries; none for every field) and `personal_use`. It records what the vendor's terms say, which a deployment admin confirms or replaces (see [Licences and entitlements](../concepts/licences-and-entitlements.md)), never whether a deployment meets them.
 
-**Raises** `ValueError` when the declaration is built, naming the dataset: a key out of form, a vendor or aggregator too long, a data type or field no dictionary entry names, one named twice, no mode or a mode twice, a negative cadence or history, a zone that is no IANA zone, a day end out of range, a venue that is no `VEN-` ID, and a catalogue on a version not holding `data`. The upload's JSON carries the catalogue only where one is declared, its modes as words. The sidecar holds a catalogue to the same rules at registration, and refuses the plugin naming the field.
+**Raises** `ValueError` when the declaration is built, naming the dataset: a key out of form, a vendor or aggregator too long, a data type or field no dictionary entry names, one named twice, no mode or a mode twice, a negative cadence or history, a zone that is no IANA zone, a day end out of range, a venue that is no `VEN-` ID, a calendar that is no `CAL-` ID, and a catalogue on a version not holding `data`. The upload's JSON carries the catalogue only where one is declared, its modes as words. The sidecar holds a catalogue to the same rules at registration, and refuses the plugin naming the field.
 
 ### Recording
 
@@ -1823,7 +1824,7 @@ async for current in plugin.settings(Settings):
 ```
 
 - **`meridian.setting(label, ...)`** takes `Setting`'s fields by keyword, and `at_least` and `at_most` to bound an integer.
-- **`meridian.environment()`**: the setting `environment`, a required choice labelled "Environment", **Live** (`live`, the default) or **Sandbox** (`sandbox`), declared first, for a vendor with more than one environment; a credential differing by it is gated with `applies_when=("environment", "sandbox")`.
+- **`meridian.environment()`**: the setting `environment`, a required choice labelled "Environment", **Live** (`live`) or **Sandbox** (`sandbox`, the default), declared first, for a vendor with more than one environment; a credential differing by it is gated with `applies_when=("environment", "sandbox")`. A plugin is Live only where a person chose Live, or where its own code says `environment(default="live")`; a plugin reading the value treats anything but `live` as the sandbox. Changed in SDK 0.28.0, where the default became Sandbox.
 - **`meridian.sample_data()`**: the setting `sample_data`, "Sample data", off, a developer setting, last; the one convention for a plugin answering from made-up data on a development deployment, in place of each plugin's own `synthetic`.
 - **`meridian.account_currency()`**, added in SDK 0.27.0: the setting `account_currency`, a table labelled "Account currency", each row a linked account, or none for every linked account without a row of its own, and its currency, an ISO 4217 code. A plugin whose source states no currency for an account's securities declares it, and `meridian.edge.supplied_currency(rows, external_account_id, field)` answers the account's code with its provenance, supplied by the person who set the row (`PROVENANCE_KIND_SUPPLIED`), or `None` while no row covers it; until then the plugin reports nothing that needs the currency, never a guess.
 - The class is a frozen dataclass of the values, with `declared()`, `label(name)` and `.missing`; `plugin.settings(Settings)` delivers an instance at each change, `plugin.first_settings(Settings)` the first.
@@ -1953,8 +1954,9 @@ The package installs one command, `meridian-dev run`. On a development deploymen
 
 Each release of the SDK, the contract it declares, the runtime it needs, and the CLI whose `plugin new` writes a plugin on it. What a plugin's author does to move to it is in [Moving a plugin to a new release](#moving-a-plugin-to-a-new-release).
 
-!!! note "TODO: 0.28.0: contract v24, built, not released"
-    open-meridian 0.28.0 declares contract v24.
+!!! note "0.28.0: contract v24"
+    open-meridian 0.28.0, released on PyPI on 2026-10-15, declares
+    contract v24.
     The `oms` [books](../concepts/booking.md) an order's executions to its
     accounts (`book_order`, `hand_off_booking`, `correct_booking`), with
     the block order, the error account, sleeve crosses
@@ -1973,14 +1975,18 @@ Each release of the SDK, the contract it declares, the runtime it needs, and the
     (`offer_template_fields`); and the order path's roles read whether an
     order may name a local record (`read_local_record_orders`). An
     account's base currency is a balance and every other currency opens
-    lots. `meridian.environment()` defaults to **Sandbox**, **Live** only
-    where the plugin's code says so (TODO: as built). The suites gain v24's
-    cases. Every operation it adds is `preview`.
-    [`meridian plugin migrate`](cli.md#plugin-migrate) rewrites what changed
-    (see [0.27.0 to 0.28.0](#0270-to-0280)). It needs a runtime serving
-    contract v24 (chart `0.1.CHART24` or later), and CLI 0.1.45's
-    `plugin new` writes a plugin on it. TODO: released on PyPI on
-    `<date>`; whether the role helpers are in 0.28.0 or 0.29.0.
+    lots. A data plugin's dataset names the settlement calendar its
+    business dates follow (`DatasetDeclaration.calendar_id`).
+    `meridian.environment()` defaults to **Sandbox**, **Live** only where a
+    person chose it or the plugin's code says `environment(default="live")`.
+    The suites gain v24's cases, the SDK answering every suite's two new
+    ones for a plugin that maps neither. Every operation it adds is
+    `preview`. [`meridian plugin migrate`](cli.md#plugin-migrate) rewrites
+    what changed (see [0.27.0 to 0.28.0](#0270-to-0280)). It needs a
+    runtime serving contract v24 (chart 0.1.305 or later), and CLI 0.1.45's
+    `plugin new` writes a plugin on it. Its base image is
+    `ghcr.io/open-meridian/plugin-python:0.28.0`
+    (`sha256:ea7720e34c11d40fded19254448317685351b3668eab3bb318e505770f997f5b`).
 
 !!! note "0.27.0: contract v23"
     open-meridian 0.27.0 declares contract v23.
@@ -2208,7 +2214,7 @@ Move a plugin one release at a time or several at once: [`meridian plugin migrat
 
 | From | To | Contract | Runtime | `plugin new` writes it from | `plugin migrate` rewrites | Then by hand |
 |---|---|---|---|---|---|---|
-| 0.27.0 | 0.28.0 | 24 | chart `0.1.CHART24` or later | CLI 0.1.45 | a test of the `LCL-` prefix; a read of the `open_meridian` identifier; the suites' `LCL-suite-n` fixtures | see [0.27.0 to 0.28.0](#0270-to-0280) |
+| 0.27.0 | 0.28.0 | 24 | chart 0.1.305 or later | CLI 0.1.45 | a test of the `LCL-` prefix; a read of the `open_meridian` identifier; the suites' `LCL-suite-n` fixtures | see [0.27.0 to 0.28.0](#0270-to-0280) |
 | 0.26.0 | 0.27.0 | 23 | chart 0.1.303 or later | CLI 0.1.43 | nothing: only the pins move | see [0.26.0 to 0.27.0](#0260-to-0270) |
 | 0.25.0 | 0.26.0 | 22 | chart 0.1.301 or later | CLI 0.1.42 | nothing: only the pins move | see [0.25.0 to 0.26.0](#0250-to-0260) |
 | 0.24.0 | 0.25.0 | 21 | chart 0.1.299 or later | CLI 0.1.41 | nothing: only the pins move | see [0.24.0 to 0.25.0](#0240-to-0250) |
@@ -2223,37 +2229,54 @@ Before 0.19.0, `plugin new` pinned 0.18.0 from CLI 0.1.33, 0.17.0 from CLI 0.1.2
 
 ### 0.27.0 to 0.28.0 { #0270-to-0280 }
 
-TODO: released `<date>`. `meridian plugin migrate --to 0.28.0` moves the
+Released 2026-10-15. `meridian plugin migrate --to 0.28.0` moves the
 pins and rewrites what the one-ID revision changed (see
 [One ID per instrument](../concepts/one-id.md#for-a-plugins-author)):
 
-- **A test of the `LCL-` prefix** on an instrument ID, such as
-  `instrument_id.startswith("LCL-")`, is rewritten to read the record's
-  `provisional`. The prefix only says the deployment minted the ID: a
-  resolved `LCL-` ID stays `LCL-`.
+- **A test of the `LCL-` prefix** on a record's instrument ID, such as
+  `record.instrument_id.startswith("LCL-")`, is rewritten to read the
+  record's `provisional` (`lcl-prefix-provisional`). The prefix only says
+  the deployment minted the ID: a resolved `LCL-` ID stays `LCL-`.
 - **A read of the `open_meridian` identifier** for the platform's ID is
   rewritten to the record's `instrument_id`, which is the platform's ID
-  from contract v24. The `open_meridian` identifier is no longer added to
-  records.
-- **The suites' `LCL-suite-n` fixtures** become `INS-` IDs, with
-  provisional cases beside them.
+  from contract v24, or the read's default where the record is provisional
+  (`open-meridian-instrument-id`). The `open_meridian` identifier is no
+  longer added to records.
+- **The suites' `LCL-suite-n` fixtures** become `INS-suite-n`
+  (`suite-fixture-ins`); a provisional record's stays `LCL-suite-n`,
+  answered by a `Recorder(provisional=True)`.
 
 Then, by hand where they apply:
 
+- **An ID tested for the prefix `LCL-`** with no record at hand
+  (`lcl-prefix-tested`), or **the `open_meridian` identifier read or
+  written another way** (`open-meridian-read`): read the record's
+  `provisional` and its `instrument_id` instead.
 - **A plugin that keeps instrument IDs** in its own storage or state
-  follows each replacement to the record it became: the SDK's current-ID
-  map does it from `list_replacements` and the deliveries. One that keeps
-  none needs nothing. `meridian plugin check` warns a plugin that writes a
-  replaced ID.
-- **A suite test** meets v24's cases: every role's
-  `hears-and-reads-a-replacement` and `reads-the-template-catalogue`, and
-  booking's cases for `oms`, `operations`, `compliance`, `connectivity`,
-  `confirmation`, `portfolio` and `reporting` (TODO: the case list, and
-  which may be marked not presented, as built).
-- **A plugin declaring `meridian.environment()`** that meant Live by
-  default says so in its code (TODO: as built).
-- **An `operations` plugin** may declare its `affirmation_deadline`, the
-  time of day a held booking's alert is due by (TODO: as built).
+  follows each replacement to the record it became: `meridian.CurrentIdMap`
+  does it from `list_replacements` and the deliveries. One that keeps none
+  needs nothing. `meridian plugin check` warns (`replaced-ids-followed`),
+  failing nothing, on an `INS-` or `LCL-` ID kept as a string in the
+  plugin's code outside its tests.
+- **A suite test** meets v24's cases. Every suite's
+  `hears-and-reads-a-replacement` and `reads-the-template-catalogue` the
+  SDK answers for a plugin that maps neither. The rest are booking's and
+  the one-ID model's, mapped by a plugin holding the role: `oms`'s eleven
+  booking cases and `reads-whether-orders-may-name-local-records`;
+  `operations`' `corrects-a-handed-off-booking`,
+  `names-an-unsettled-allocation-as-a-breaks-cause`,
+  `sets-a-clients-allocation-instruction`, `hears-a-booking-handed-off` and
+  `hears-and-reads-a-held-bookings-alert`; `compliance`'s alert, booking
+  and local-record cases; `portfolio`'s `amends-an-allocation-instruction`,
+  `hears-and-reads-bookings` and `reads-whether-orders-may-name-local-records`;
+  `connectivity`'s and `confirmation`'s `reports-a-give-up-rejected`;
+  `ems`'s and `connectivity`'s `reads-whether-orders-may-name-local-records`;
+  `custody`'s `records-a-thinly-described-holding-unresolved`; and
+  `reporting`'s `hears-and-reads-bookings` and `hears-and-reads-alerts`.
+  None carries an `about` marker, so none may be named in `not_presented`.
+- **A plugin declaring `meridian.environment()`** that was Live by default
+  says `environment(default="live")` only where Live is meant; otherwise
+  its admin chooses.
 
 A plugin that does none of these keeps working on 0.27.0's pins against a
 runtime serving contract v24: IDs are opaque, and a resolved `LCL-` ID is

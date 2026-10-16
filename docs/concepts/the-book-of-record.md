@@ -13,18 +13,6 @@ The rule is short. **The street is what custodians say. The book is verified
 against it, and never overwritten by it.** No statement is ever applied to the
 book.
 
-!!! note "TODO: contract v24, built, not released"
-    From contract v24 the `oms` books an order's executions to its accounts,
-    with the block order, the error account and alerts (see
-    [Booking](booking.md)); an account's base currency is a balance and
-    every other currency opens lots (see
-    [What the book requires](#what-the-book-requires)); a position under a
-    provisional instrument record is a **local line**, recorded and
-    reconciled, never priced; and a statement line too thin to make an
-    instrument record is a break of its own category, an unrecognized
-    security (see [One ID per instrument](one-id.md)). To be released in
-    chart `0.1.CHART24` (TODO: the date).
-
 ## The edge, the street and the book
 
 What is held is recorded in three places, by three owners, and no one of them
@@ -55,7 +43,7 @@ value a source did not state is unset, never zero.
 
 | Record | What it is |
 |---|---|
-| **Position** | An instrument and a side in one account, and a **sleeve**, a part of the account, empty for its unsleeved part. Its trade-date quantity is its settled quantity plus what is pending on each value date, by construction. A position held under a placeholder instrument is flagged. |
+| **Position** | An instrument and a side in one account, and a **sleeve**, a part of the account, empty for its unsleeved part. Its trade-date quantity is its settled quantity plus what is pending on each value date, by construction. A position held under a placeholder instrument is flagged. A position under a provisional instrument record is a **local line**: recorded and reconciled, never priced (see [One ID per instrument](one-id.md#a-local-line-is-never-priced)). |
 | **Lot** | The book's own record of how a position was acquired: its open and original quantity, its cost and currency, its acquisition date, and where it came from. A position's open lots sum to its trade-date quantity; cash in the base currency has none. Every lot the book opens carries its cost and its acquisition date. |
 | **Pending settlement** | Quantity pending on a value date, which may be years out, with whether it is failing and its new expected date where the source reports a fail. |
 | **Encumbrance** | What of a position cannot move, as the latest statement states it: its kind (pledged, posted, on loan, blocked, restricted, in transit, or other with the source's own code), its quantity, to whom and where, and the margin agreement where the source names one. An attribute of the position, never a movement: its quantities do not change. |
@@ -64,6 +52,7 @@ value a source did not state is unset, never zero.
 | **Figures** | The account's figures for a business date, one set per margin agreement, as the street recorded them, with the collateral held under it and the custodian's own value and margin requirement for each position, labelled as the custodian's. A series, never a figure the book computed. |
 | **Attributes** | The account's base currency, its default method of relieving lots when a sale names none, and its standing opening balance; and whether its releases wait for compliance. |
 | **Orders and executions** | Each order, its placements, executions and charges, the facts the book could not place, the locates, and the trading instructions, an order's state derived from its journal. Reported fills move the account's trade-date position at once; a fill the venue originated waits unmatched, moving no position until the `ems` accepts it, and then as of its trade date; a venue's daily roll of a spot FX position moves its pending lines to the next value date by an entry of its own, the trade-date position unchanged. See [The order lifecycle](the-order-lifecycle.md). |
+| **Bookings and alerts** | Each booking of an order's executions to its accounts, its allocations and its state, and the alerts the book and `compliance` raise on them. See [Booking](booking.md). |
 
 The book records; it does not police. It computes no margin, no projection, no
 scenario and no return, and converts nothing with the base currency. Plugins
@@ -302,6 +291,23 @@ The tab shows no position, lot or break. The dashboard reads every account's
 attributes and no account's data, as a deployment admin reaches no account's
 data: positions and breaks are for the plugins that read them, shown on their
 own pages to the people granted access to them.
+
+## The book's resources { #the-books-resources }
+
+The book replays an account's journal for each command and each dated
+read, so its pod is given more room than core's other components. The
+chart sets it apart, under `bor` in its values:
+
+| Value | Default | What it does |
+|---|---|---|
+| `bor.resources` | a request of 50m CPU and 128Mi of memory, a limit of 512Mi of memory | The book's own requests and limits, in place of the shared `resources` |
+| `bor.mallocArenaMax` | `2` | Sets `MALLOC_ARENA_MAX` in the book's container: at most this many of the allocator's arenas, so a burst of requests answered on many threads does not keep an arena's memory per thread |
+
+Each of core's components answers at most 16 requests at once; the rest
+wait their turn. A component's environment variable
+`MERIDIAN_HANDLERS_AT_ONCE`, a positive whole number, sets another bound
+for that component alone, so a deployment can lower one component's
+without a new release.
 
 ## Related
 
