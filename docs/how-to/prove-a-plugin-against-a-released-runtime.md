@@ -8,8 +8,9 @@ target, with [plugin-snaptrade](https://github.com/open-meridian/plugin-snaptrad
 the worked example.
 
 !!! warning "A development deployment, for a test"
-    The harness is never a way to run a deployment. It has no platform, so no instrument resolves
-    and every row your plugin records names the deployment's placeholder. Its dashboard runs as a
+    The harness is never a way to run a deployment. Its platform is a stand-in that knows only the
+    instruments you seed it with, so anything else your plugin records stays a provisional local
+    record. Its dashboard runs as a
     [development deployment](../concepts/development-deployments.md), so developer settings are
     shown and accepted. It publishes no port, and nothing outlives `down -v`. To run a deployment,
     [install one](../getting-started/installation.md).

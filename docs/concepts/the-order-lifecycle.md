@@ -16,8 +16,8 @@ one entry at a time, and stored nowhere as a fact.
     path end to end against a simulated venue only, which takes the FIX
     acknowledgements, with stand-in plugins for each role; no broker,
     brokerage, paper account or trading API is reached by those tests. The
-    connectivity plugins a deployment can launch, SnapTrade, Alpaca and
-    Tradier, are each tested against a simulated brokerage only (see
+    connectivity plugins a deployment can launch, SnapTrade, Alpaca,
+    Tradier and OANDA, are each tested against a simulated brokerage only (see
     [Trading through SnapTrade](../how-to/using-a-custody-plugin.md#trading-through-snaptrade)).
 
 After the fills, the `oms` [books](booking.md) an order's executions to its
