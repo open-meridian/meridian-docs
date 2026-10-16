@@ -11,29 +11,14 @@ reference implementation of valuing a book at a business date's prices, not
 a firm's valuation policy. You can run it as it is, or read it and build
 your own from the template below.
 
-!!! note "Contract v20"
-    plugin-sample-reporting 0.3.0, released 2026-10-12, is built on
-    open-meridian 0.24.0 (contract v20), runs on chart 0.1.298 or later,
-    and adds the reporting role's Datasets page and figures, and each
-    person's own [Board](watch-the-board.md#your-own-board).
-
-!!! note "Contract v19"
-    meridian-sample-reporting 0.2.0, released 2026-10-10, is built on
-    open-meridian 0.23.0 (contract v19), runs on chart 0.1.294 or later, and
-    adds the [Board](watch-the-board.md) and any reporting currency.
-    meridian-sample-reporting 0.1.0 is built on open-meridian 0.22.0
-    (contract v18), and runs on chart 0.1.292 or later. From v20 the plugin
-    repositories are named `plugin-<name>`: this one is
-    plugin-sample-reporting; the plugin keeps its name.
-
 How to set up any reporting plugin, its common Datasets page and figures,
-and each person's own views, from contract v20, is
+and each person's own views, is
 [Using a reporting plugin](using-a-reporting-plugin.md).
 
 ## What the sample reporting plugin shows
 
-Two pages, under **Open** and **View**, each fitting one screen, its rows
-paged, and from 0.2.0 a third, the [Board](watch-the-board.md):
+Three pages, under **Open** and **View**, each fitting one screen, its rows
+paged, the third the [Board](watch-the-board.md):
 
 - **Consolidated**: every account you may read, valued at the prices of the
   date you choose (the weekday before today unless you choose another), in
@@ -83,8 +68,9 @@ never as zero**, and counted in what the total leaves out:
 | its source is silent | Its admin looks at the source's Connection page |
 | this plugin is not entitled to the dataset that covers it | A deployment admin entitles the plugin on the Data sources page |
 | no rate into the currency it is shown in | Entitle a source of exchange rates, or choose a later date |
-| its currency's cash instrument is not known here | The deployment holds no record of that currency: complete one on the Instruments page, or show it in another. Before 0.2.0, only a currency the book held was known |
+| its currency's cash instrument is not known here | The deployment holds no record of that currency: complete one on the Instruments page, or show it in another. |
 | the deployment holds no record of it | The deployment admin looks at the Instruments page |
+| a local line: the deployment's own record, never priced | Nothing to do here: the position is under a provisional local record, which is never priced, even where the lake holds a price. It is valued once the record resolves to the platform's, which needs an identifier the platform can match, such as a FIGI. See [Review provisional records](review-provisional-records.md) |
 
 ## Set it up
 
@@ -107,16 +93,13 @@ never as zero**, and counted in what the total leaves out:
 4. **Its setting**, on **Manage**, **Settings**, by an admin of the plugin:
    **Reporting currency** (`reporting_currency`), the ISO 4217 code
    Consolidated shows every account in, USD unless set. By account always
-   shows an account in its own base currency. From 0.2.0 (contract v19)
-   the plugin resolves the code to the deployment's cash instrument itself,
-   as it does each account's base currency and a stable-NAV fund's
-   currency, so **any currency works**, held in the book or not. In 0.1.0
-   (contract v18) the code resolved only to a currency the book held; any
-   other left converted values unvalued, its cash instrument not known
-   here. A value that is not an ISO 4217 code is not used: Consolidated
+   shows an account in its own base currency. The plugin resolves the code
+   to the deployment's cash instrument itself, as it does each account's
+   base currency and a stable-NAV fund's currency, so **any currency
+   works**, held in the book or not. A value that is not an ISO 4217 code is not used: Consolidated
    shows USD, and the plugin is unhealthy on Manage until the setting is
    corrected.
-   From 0.2.0, **Watchlist** (`watchlist`) too: the instruments the Board
+   **Watchlist** (`watchlist`) too: the instruments the Board
    shows.
 5. **Read on the plugin**, granted by a deployment admin to the people who
    will look at valuations. Each person sees only the accounts they may
@@ -126,8 +109,8 @@ never as zero**, and counted in what the total leaves out:
 
 Each page is also a read tool on the deployment's MCP surface, answering
 exactly what the page shows the same person: `read_valuation` for
-Consolidated and `read_account_valuation` for By account, and from 0.2.0
-`read_board` for the Board. An agent you have
+Consolidated, `read_account_valuation` for By account, and `read_board`
+for the Board. An agent you have
 delegated to reads valuations as you would, and only the accounts you may
 read. A tool's answer includes the prices the page shows; an agent client
 may pass what it reads to its model's host, and whether a source's terms
@@ -139,8 +122,8 @@ and nothing it reads leaves the deployment.
 
 ## Build your own
 
-A reporting plugin of your own uses what the sample does (contract v20,
-open-meridian 0.24.0, CLI 0.1.39):
+A reporting plugin of your own uses what the sample does. You need CLI
+0.1.45 and SDK 0.28.0 (contract 24):
 
 - **The reads.** A `reporting` plugin reads positions with
   [`list_positions`](../api/typed-operations.md#list_positions) and prices
@@ -150,8 +133,7 @@ open-meridian 0.24.0, CLI 0.1.39):
   with `receive(prices_recorded=..., subjects=...)`. See
   [The lake in the Python SDK](../api/python-sdk.md#the-lake). A
   `reporting` plugin reads prices and bars, never trades or quotes.
-- **Its currency, by its code.** From contract v19 a `reporting` plugin
-  names its reporting currency by its ISO 4217 code and has core resolve
+- **Its currency, by its code.** A `reporting` plugin names its reporting currency by its ISO 4217 code and has core resolve
   it, read-only, with
   [`resolve_identifier`](../api/typed-operations.md#resolve_identifier):
 
@@ -162,26 +144,24 @@ open-meridian 0.24.0, CLI 0.1.39):
     ```
 
   The `reporting` suite's `resolves-its-reporting-currency` case holds a
-  plugin to it from open-meridian 0.23.0. In v19 core did not yet make a
-  `reporting` plugin's resolve read-only, so a code nothing matched could
-  record a miss, a local record minted for it; from contract v20 core enforces it, and a currency the deployment does not
-  hold is fetched from the platform's master: see
+  plugin to it. Core holds a `reporting` plugin's resolve read-only, and a
+  currency the deployment does not hold is fetched from the platform's master: see
   [Instruments](../concepts/instruments.md#resolving-an-identifier).
 - **A template.** `meridian plugin new my-report --role reporting` writes a
   `reporting` plugin that shows the positions in its account scope at the
   last close from the lake: each position, its close, the dataset it came
   from, the value it makes and the change over the week, on a **Closes**
   page under Open and View, which is also a read tool, `read_report`, for
-  an agent the person delegated to. From CLI 0.1.38 it resolves its
-  reporting currency by its ISO 4217 code. Its tests run the `reporting`
-  suite the SDK carries; `meridian plugin check --verified` does not hold
-  that suite, only the `custody` and `data` suites, so keep the test. From
-  CLI 0.1.39 the template is built on the role's
+  an agent the person delegated to. It resolves its reporting currency by
+  its ISO 4217 code. Its tests run the `reporting` suite the SDK carries;
+  `meridian plugin check --verified` does not hold that suite, only the
+  `custody`, `data` and `connectivity` suites, so keep the test. The
+  template is built on the role's
   common part, `meridian.roles.reporting`: a **Datasets** page under Manage
   (`read_datasets`), the figures "Last valued" and "Not priced", and the
   **Reporting currency** setting; `role-pages` holds it under `--verified`.
   See [`plugin new`](../api/cli.md#meridian-plugin-new).
-- **Each person's own views** (contract v20). Declare
+- **Each person's own views.** Declare
   a setting `per_person=True`, save a person's values for them with
   `plugin.set_own_settings(...)` from a page under Open, and read them from
   each of their requests as `request.own_settings`. See

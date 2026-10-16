@@ -1,16 +1,14 @@
 # Read trades and quotes in a `signal` or `ems` plugin
 
-From contract v19 the [lake](../concepts/the-lake.md) holds every trade and
+The [lake](../concepts/the-lake.md) holds every trade and
 the best bid and offer that its data plugins record. Only two roles read
 them: `signal`, which triggers orders on live data, and `ems`, which sends
 orders in real time. This page writes a plugin holding one of them that
 reads a day's trades, hears each new one, catches up what it missed, and
 reads the latest quotes, then holds it to its role's suite.
 
-!!! note "Contract v19"
-    This page describes open-meridian 0.23.0 (contract v19) and CLI 0.1.38,
-    for a runtime serving contract v19, chart 0.1.294 or later, all
-    released 2026-10-10. The lake's 1b operations are `preview` in v19.
+You need CLI 0.1.45 and SDK 0.28.0 (contract 24). The lake's trades and
+quotes operations are `preview`.
 
 ## Which role
 
@@ -37,16 +35,9 @@ meridian plugin new my-desk
 cd my-desk
 ```
 
-CLI 0.1.38 writes the plugin on open-meridian 0.23.0, CLI 0.1.39 on
-0.24.0 (contract v20), whose move from 0.23.0 rewrites only the renamed
-roles, neither `signal` nor `ems` among them, CLI 0.1.41 on 0.25.0
-(contract v21), whose move from 0.24.0 changes only the pins, CLI
-0.1.42 on 0.26.0 (contract v22), whose move from 0.25.0 changes only the
-pins and whose suites hold the cases below, and CLI 0.1.43 on 0.27.0
-(contract v23), whose move from 0.26.0 changes only the pins. A plugin CLI 0.1.37
-wrote is on 0.22.0: commit it, and `meridian plugin migrate --to 0.23.0`,
-which works only on what git holds, moves its pins and changes no code.
-Then, in `pyproject.toml`:
+It writes the plugin on open-meridian 0.28.0. A plugin an older CLI wrote
+moves with [`meridian plugin migrate`](../api/cli.md#plugin-migrate), which
+works only on what git holds: commit it first. Then, in `pyproject.toml`:
 
 ```toml
 [tool.meridian]
@@ -137,9 +128,8 @@ keeps current from its stream.
 ## Hold it to its suite
 
 `signal` and `ems` each have a suite in the SDK. Map each case to your
-plugin's own read or handler, run against the recorder. On open-meridian
-0.26.0 (contract v22) the `ems` suite holds twenty cases, fourteen of
-them new, and this test passes it, naming one case not presented:
+plugin's own read or handler, run against the recorder. This test passes
+the `ems` suite's cases below, naming one case not presented:
 
 ```python
 from datetime import date
@@ -184,7 +174,7 @@ async def datasets(recorder):
 async def quotes(recorder):
     await recorder.list_quotes(subjects=[BTC])
 
-# The order path (contract v22): what the desk does with each order it works.
+# The order path: what the desk does with each order it works.
 async def maps_an_account(recorder):       # from the ems's own page, at admin
     await recorder.map_venue_account(connectivity_instance_id=BROKER, venue_account_code=CODE,
                                      account_id=ACCOUNT, acting_for=caller_header("admin"))
@@ -238,7 +228,7 @@ PRODUCERS = {
     "catches-up-trades-after-a-watermark": catches_up,
     "reads-the-latest-quotes": quotes,
     "hears-a-quote-recorded": hearing(("QuotesRecorded", ops.QuotesRecordedEvent(quote=ops.Quote()), "quotes_recorded")),
-    # contract v22
+    # the order path
     "maps-an-account-to-a-venue-account-code": maps_an_account,
     "hears-and-reads-a-venues-catalogue": then(
         hearing(("ReportVenueCatalogue", ops.VenueCatalogueEvent(), "report_venue_catalogue")), reads_the_catalogue),
@@ -269,30 +259,29 @@ def test_the_ems_suite_passes() -> None:
 | Case | `ems` | `signal` | The plugin |
 |---|---|---|---|
 | `reads-the-datasets-it-may-read` | yes | yes | reads the datasets it may read |
-| `reads-a-business-dates-closes`, `reads-daily-bars-over-a-range`, `hears-a-price-recorded`, `hears-a-bar-recorded` | | yes | reads and hears prices and bars, as since v18 |
+| `reads-a-business-dates-closes`, `reads-daily-bars-over-a-range`, `hears-a-price-recorded`, `hears-a-bar-recorded` | | yes | reads and hears prices and bars |
 | `reads-trades-over-a-range` | yes | yes | reads trades over a range within a day |
 | `hears-a-trade-recorded` | yes | yes | hears a trade for a subject it named |
 | `catches-up-trades-after-a-watermark` | yes | yes | reads the trades after the watermark it last saw |
 | `reads-the-latest-quotes` | yes | yes | reads the latest quotes |
 | `hears-a-quote-recorded` | yes | yes | hears a quote for a subject it named |
-| `maps-an-account-to-a-venue-account-code` | from v22 | | maps a book account to its code at a linked connectivity plugin, from its page at `admin`, acting for the admin |
-| `hears-and-reads-a-venues-catalogue` | from v22 | | hears a linked connectivity plugin's catalogue, and reads it for a code |
-| `claims-a-released-order` | from v22 | | hears an order released in its scope, and claims it |
-| `places-at-a-linked-connectivity-plugin` | from v22 | | resolves the instrument and the venue, and places at one of its linked connectivity plugins |
-| `proposes-a-child-order` | from v22 | | works a released order in house as child orders |
-| `hears-a-placement-and-an-execution` | from v22 | | hears its placement acknowledged and filled |
-| `cancels-a-placement`, `asks-to-cancel-an-order` | from v22 | | asks to cancel a placement, and an order, for a person |
-| `enters-a-manual-execution-for-a-person` | from v22 | | enters a fill the venue did not report electronically, with its settlement date |
-| `reads-its-orders-and-catches-up` | from v22 | | reads its orders on start, and those changed since after a loss |
-| `reads-and-hears-the-trading-instructions`, `reads-and-hears-whether-releases-wait-for-compliance` | from v22 | | reads and hears the trading instructions, and each account's attributes |
-| `reads-a-calendar`, `asks-for-a-settlement-date` | from v22 | from v22 | reads a settlement calendar's days, and asks core for a settlement date; about `calendars` and `settlement dates`, so either may be named not presented, with why |
+| `maps-an-account-to-a-venue-account-code` | yes | | maps a book account to its code at a linked connectivity plugin, from its page at `admin`, acting for the admin |
+| `hears-and-reads-a-venues-catalogue` | yes | | hears a linked connectivity plugin's catalogue, and reads it for a code |
+| `claims-a-released-order` | yes | | hears an order released in its scope, and claims it |
+| `places-at-a-linked-connectivity-plugin` | yes | | resolves the instrument and the venue, and places at one of its linked connectivity plugins |
+| `proposes-a-child-order` | yes | | works a released order in house as child orders |
+| `hears-a-placement-and-an-execution` | yes | | hears its placement acknowledged and filled |
+| `cancels-a-placement`, `asks-to-cancel-an-order` | yes | | asks to cancel a placement, and an order, for a person |
+| `enters-a-manual-execution-for-a-person` | yes | | enters a fill the venue did not report electronically, with its settlement date |
+| `reads-its-orders-and-catches-up` | yes | | reads its orders on start, and those changed since after a loss |
+| `reads-and-hears-the-trading-instructions`, `reads-and-hears-whether-releases-wait-for-compliance` | yes | | reads and hears the trading instructions, and each account's attributes |
+| `reads-a-calendar`, `asks-for-a-settlement-date` | yes | yes | reads a settlement calendar's days, and asks core for a settlement date; about `calendars` and `settlement dates`, so either may be named not presented, with why |
 
 A plugin catching up by range alone fails
 `catches-up-trades-after-a-watermark`. Neither role records anything in the
 lake.
 
-From open-meridian 0.26.0 (contract v22) both suites
-also hold `reads-a-calendar` and `asks-for-a-settlement-date`, about
+Both suites also hold `reads-a-calendar` and `asks-for-a-settlement-date`, about
 `calendars` and `settlement dates`: map each, or, where your plugin's work
 never uses them, name it in `not_presented`, with why (see
 [A case not presented](../api/python-sdk.md#a-case-not-presented)). The
@@ -303,17 +292,14 @@ maps `asks-for-a-settlement-date`, and names `reads-a-calendar`. The
 `signal` alone meets none of them.
 
 `meridian plugin check --verified` does not hold the `signal` or `ems`
-suite: it checks the `custody` and `data` suites, and from CLI 0.1.42
-`connectivity`'s. Run your role's suite in your own tests, as above, and in
+suite: it checks the `custody`, `data` and `connectivity` suites. Run your role's suite in your own tests, as above, and in
 your CI.
 
 **Gaps upstream.** Within a running data plugin, a dropped connection is
 refilled from the venue's history by Alpaca, Coinbase and Kraken; Tradier
-cannot refill it. In v19 a trade printed while a data plugin restarted was
-recorded by none of them. From contract v20 a data
-plugin starting again reads its last recorded trade from the lake and fills
-the gap from the venue's history where the vendor allows: Alpaca 0.4.0,
-Coinbase 0.3.0 and Kraken 0.3.0, not Tradier. Catching up by watermark gives
+cannot refill it. A data plugin starting again reads its last recorded
+trade from the lake and fills the gap from the venue's history where the
+vendor allows: Alpaca, Coinbase and Kraken, not Tradier. Catching up by watermark gives
 you every trade the lake has, and none it never had: see
 [the lake](../concepts/the-lake.md#a-restarted-data-plugin-resumes).
 

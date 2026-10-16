@@ -6,20 +6,9 @@ every data source the plugin may read, side by side, read again every few
 seconds. It is a reference implementation, not a trading screen: it shows
 conflated prices and bars, never the tape.
 
-!!! note "Contract v19"
-    meridian-sample-reporting 0.2.0, released 2026-10-10, is built on
-    open-meridian 0.23.0 (contract v19), and runs on chart 0.1.294 or later.
-
-!!! note "Contract v20"
-    plugin-sample-reporting 0.3.0, released 2026-10-12, is built on
-    open-meridian 0.24.0 (contract v20), and runs on chart 0.1.298 or
-    later. From contract v20 a reporting plugin may let each person keep
-    their own views, saved for them alone, beside the admin's shared ones
-    (see
-    [Each person's own views](using-a-reporting-plugin.md#each-persons-own-views)),
-    and from 0.3.0 a person with `write` keeps their own Board (see
-    [Your own Board](#your-own-board)). In 0.2.0 the **Watchlist** is one
-    setting for the whole deployment, set by the plugin's admin.
+A person with `write` keeps their own Board, saved for them alone, beside
+the admin's shared one (see [Your own Board](#your-own-board) and
+[Each person's own views](using-a-reporting-plugin.md#each-persons-own-views)).
 
 ## What it shows
 
@@ -42,7 +31,7 @@ account, and fits one screen:
 - **The stream's state**, beside the plugin's name: live, waiting for its
   sources (closes shown), a source silent, closes only, or failed, with when
   it last read.
-- **Every watched instrument**, from 0.3.0, one no source prices saying so
+- **Every watched instrument**, one no source prices saying so
   ("no source prices it"); a fund at its NAV, marked NAV, daily; and a
   stable money market fund at 1.00, marked stable.
 
@@ -70,14 +59,14 @@ panel at a time, and a tap on a row opens its whole.
    [valuing the book](value-the-book.md#set-it-up), holding `reporting`.
 3. **The watchlist** (`watchlist`), on **Manage**, **Settings**, by an admin
    of the plugin: the instruments the Board shows, one a row, each found
-   among the deployment's instrument records, at most 40. From 0.3.0 the
-   admin also chooses each row's **Panel**. The Board itself never changes
+   among the deployment's instrument records, at most 40. The admin also
+   chooses each row's **Panel**. The Board itself never changes
    it: this is the shared Board.
 4. **Read on the plugin**, for the people who will look at it.
 
 ## Your own Board
 
-From 0.3.0, a person with `write` on the plugin builds and saves their own
+A person with `write` on the plugin builds and saves their own
 Board, a watchlist and charts of their own (`own_watchlist` and
 `own_charts`, declared `per_person`), on the Board under **Open**, choosing
 **Shared** or **Mine**. **Save** keeps it for them alone, with **Prepare**
@@ -92,8 +81,7 @@ The Board is also a read tool on the deployment's MCP surface, `read_board`,
 answering what the page shows the same person: each panel's rows (the
 instrument, its price, dataset, venue and time, in its dataset's own zone,
 live or the close, and an event contract's implied probability) and the
-stream's state, with the view it shows (from 0.3.0, shared or the
-person's own). An agent saves a person's own Board with `save_own_board`,
+stream's state, with the view it shows (shared or the person's own). An agent saves a person's own Board with `save_own_board`,
 checked by `check_own_board`. An agent sets the shared watchlist through the
 deployment's settings tools, `dashboard__set_plugin_settings`, as an admin of the plugin
 would on the form: see [Core's tools](../api/core-tools.md#dashboard__set_plugin_settings).

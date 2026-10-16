@@ -1,17 +1,15 @@
 # Keep what your custody plugin converts
 
 A plugin at the edge speaks to a vendor and converts what the vendor says into the contract's words.
-From contract v11 ("the edge keeps its own") the contract asks it to keep what it converted from,
+The contract asks it to keep what it converted from ("the edge keeps its own"),
 say how it came by every value the vendor did not send, and count each asset once, so that a reader
 written from the contract alone reconciles any custodian the same way. This page shows what a
 custody plugin does for each, with [plugin-snaptrade](https://github.com/open-meridian/plugin-snaptrade)
-0.9.0 as the worked example.
+as the worked example.
 
-!!! note "Released 2026-10-05"
-    This page describes the Python SDK 0.19.0 (contract v14), on PyPI, and CLI 0.1.34, saying
-    where a part arrived in an earlier version.
+You need CLI 0.1.45 and SDK 0.28.0 (contract 24).
 
-From contract v14 a custody plugin also reports each activity on an account, each with a raw
+A custody plugin also reports each activity on an account, each with a raw
 record of its own: see [Report the custodian's activity](report-the-custodians-activity.md).
 
 ## Declare what the version is
@@ -76,8 +74,7 @@ reference naming another's. A person follows it on your plugin's own page.
 
 ## Declare its kinds, and move them past their window
 
-From contract v16 a version declares the kinds of raw record it keeps, each with its default
-window, rather than one retention for all of them, and the deployment's admins decide what is done
+A version declares the kinds of raw record it keeps, each with its default window, and the deployment's admins decide what is done
 past each window (see [The archive](../concepts/the-archive.md)):
 
 ```python
@@ -109,29 +106,6 @@ DECLARATION = Declaration(
 
 Each call, argument by argument, is in [The archive](../api/python-sdk.md#the-archive).
 
-### Move a plugin to 0.21.0 { #move-a-plugin-to-0210 }
-
-`meridian plugin migrate` moves only the pins: `open-meridian==0.21.0` and
-`plugin-python:0.21.0`. Nothing a plugin calls changed, and a plugin keeping one retention,
-`Storage(retention_days=...)`, keeps its records under it as before. A plugin adopting kinds drops
-any setting of its own that held a window, and its release notes name that setting and the
-window setting it maps to, for the admin to set once at upgrade, as SnapTrade 0.13.0's do (see
-[Upgrade SnapTrade to 0.13.0](keep-older-records-in-the-archive.md#upgrade-snaptrade-to-0130)). A
-plugin built on 0.21.0 declares contract v16, and a runtime serving v15 refuses it at
-registration, naming both versions.
-
-### Move a plugin to 0.22.0 { #move-a-plugin-to-0220 }
-
-`meridian plugin migrate` moves only the pins: `open-meridian==0.22.0` and
-`plugin-python:0.22.0`. A `Money` naming its currency by its ISO 4217
-code keeps its shape, and core resolves the code to the currency's cash instrument; a date sent as
-valid ISO text is sent as before. Left for you: a test comparing a `Money` read back with one it
-made, which now carries `instrument_id` (compare `amount` and `currency_code`), and a date sent as
-text that is no date, now refused. A plugin built on 0.22.0 declares contract v18, and a runtime
-serving v16 refuses it at registration, naming both versions. SnapTrade 0.13.1 and the sample
-operations plugin 0.9.1 are this move and nothing else. See
-[Money and instruments](../concepts/money-and-instruments.md).
-
 ## Say how you came by what the vendor did not send
 
 A value your vendor did not send, and you closed, carries its **provenance**:
@@ -157,9 +131,7 @@ cash, margin nor retirement is reported with `account_kind` unset and
 
 **A currency your source never states.** Core requires a security's
 currency, and the plugin gives it, always saying how: as the source states
-it, derived by a named rule (`edge.derived`), or supplied by a person. From
-open-meridian 0.27.0 (contract v23) a plugin whose
-source states none declares the common setting
+it, derived by a named rule (`edge.derived`), or supplied by a person. A plugin whose source states none declares the common setting
 `meridian.account_currency()`, **Account currency**: a linked account's
 currency, with a plugin-wide default, which its admin sets.
 `edge.supplied_currency(rows, external_account_id, field)` answers the
@@ -208,8 +180,7 @@ def test_every_case_of_the_custody_suite_passes() -> None:
 ```
 
 A case asserting one value of a closed list your vendor never presents may be named in
-`not_presented`, with why; so, from open-meridian 0.26.0 (contract v22), may
-`reads-a-calendar` and `asks-for-a-settlement-date`, about `calendars` and `settlement dates`, where
+`not_presented`, with why; so may `reads-a-calendar` and `asks-for-a-settlement-date`, about `calendars` and `settlement dates`, where
 your plugin's work never uses them:
 
 ```python
@@ -219,8 +190,7 @@ NOT_PRESENTED = {
 }
 ```
 
-From open-meridian 0.27.0 (contract v23) so may the
-cases about things a custodian may never state, each marked `about`: the
+So may the cases about things a custodian may never state, each marked `about`: the
 three activity plan-code cases (`plan fund codes`),
 `cash-net-of-a-fund-counted-in-cash` and `fund-larger-than-cash` (`sweep
 funds`), `activity-moves-no-cash` (`splits`), and `currency-not-stated`
@@ -228,10 +198,8 @@ funds`), `activity-moves-no-cash` (`splits`), and `currency-not-stated`
 currency. A broker with no plan fund codes and no cash sweep marks those,
 with why.
 
-Every other case needs a producer. From CLI 0.1.43 the test running the
-suite may not skip or expect a failure, and asserts `report.passed` in the
+Every other case needs a producer. The test running the suite may not skip or expect a failure, and asserts `report.passed` in the
 next statement. `meridian plugin check --verified`
-fails a custody plugin with no such test (`role-suite`), and `--run-tests` runs it. From CLI
-0.1.37 the rule is held only under `--verified`; CLI 0.1.36 and earlier hold every
-custody plugin to it. A data plugin passes its own suite the same way: see
+fails a custody plugin with no such test (`role-suite`), and `--run-tests` runs it; without
+`--verified` the rule is reported skipped. A data plugin passes its own suite the same way: see
 [Write a data plugin against its suite](write-a-data-plugin.md#hold-it-to-the-suite).

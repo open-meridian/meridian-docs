@@ -16,12 +16,9 @@ people set it up, each in their own place:
 Until all three are done, the plugin's work is refused, saying which is
 missing, and changes nothing.
 
-!!! note "Contract v21"
-    Service accounts are built in core for contract v21, with
-    open-meridian 0.25.0, released 2026-10-12 in chart 0.1.299. The first
-    plugin to use one is the sample operations plugin 0.11.0, whose sweep
-    closes cleared breaks as its service account (see
-    [Using an operations plugin](using-an-operations-plugin.md#close-cleared-breaks-automatically)).
+The sample operations plugin's sweep, which closes cleared breaks, is one
+plugin's work that runs as a service account (see
+[Using an operations plugin](using-an-operations-plugin.md#close-cleared-breaks-automatically)).
 
 ## 1. Create the service account
 
@@ -94,11 +91,6 @@ Where the account is later disabled or removed, or its grant withdrawn, the
 choice stands and the line says so, **Disabled**, **Removed**, **Not
 granted** or **Granted read**, and every call is refused until the grant
 returns or the admin chooses again.
-
-!!! note "The Access tab's dialogs"
-    From contract v21 (chart 0.1.299) the Access tab's dialogs open with
-    the admin portal's own script, **What agents may do**'s **Edit** among
-    them, which on chart 0.1.298 opened no dialog.
 
 ## 4. Watch it, and stop it
 

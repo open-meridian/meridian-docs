@@ -9,23 +9,6 @@ are **external accounts**, and a plugin that reads one ties it to one of the
 firm's accounts rather than creating an account of its own. This page
 explains both, and how accounts bound what a plugin may read and write.
 
-!!! note "Contract v20"
-    From contract v20 a deployment admin grants each plugin the accounts it
-    may link to, nothing by default (see
-    [Accounts a plugin may link to](#accounts-a-plugin-may-link-to)), and an
-    account's attributes in the book sit on the account's own row (see
-    [In the book](#in-the-book)), in place of the dashboard's Books tab.
-    Released 2026-10-12 in chart 0.1.298.
-
-!!! note "Contract v22"
-    From contract v22 an account's attributes in the book also say whether
-    its releases wait for compliance (see [In the book](#in-the-book)); a
-    deployment admin grants an `ems` the accounts it may map to venue
-    account codes; and a connectivity plugin reaches the accounts its `ems`
-    mapped on it (see
-    [Accounts a plugin may link to](#accounts-a-plugin-may-link-to)).
-    Released 2026-10-13 in chart 0.1.301.
-
 ## The firm's accounts
 
 A deployment admin creates accounts on the **Accounts** tab of the dashboard's
@@ -46,8 +29,7 @@ business, never its owner's.
 
 ### In the book
 
-From contract v20 the Accounts tab also shows each
-account's attributes in the [book of record](the-book-of-record.md), one
+The Accounts tab also shows each account's attributes in the [book of record](the-book-of-record.md), one
 book per deployment, so they sit with the account they belong to: its
 **Base currency** and its **Lot relief**, the lots a sale relieves when it
 names none, are columns of its row. An account's **Edit** has two
@@ -56,19 +38,22 @@ sections, each saved on its own:
 - **Account**: its name, custodian, type, owner and note, as above.
 - **In the book**: its base currency (an ISO 4217 code) and its lot relief
   (first in, first out; last in, first out; highest cost; lowest cost;
-  average cost), and from contract v22 whether its
+  average cost), and whether its
   **Releases** wait for compliance (**Wait for compliance** or **Do not
   wait**, shown in the row's **Compliance** column as **Waits** or **Does
-  not wait**), each change saved to the book with a **Reason**, its own
+  not wait**), each change saved to the book with a **Why**, its own
   act, journalled in the account's partition. A new account waits; see
-  [The release gate](the-order-lifecycle.md#the-release-gate-and-waiting-for-compliance). Beside the title it says
+  [The release gate](the-order-lifecycle.md#the-release-gate-and-waiting-for-compliance).
+  It also says whether the account is **Marked**:
+  **Neither**, **An error account**, where a booking's overfills and errors
+  go, or **An allocation account**, where a block order's executions wait
+  until they are booked out (see [Booking](booking.md)). Beside the title it says
   since when the book holds the account, the date its opening balance
   stands for, or "not yet". That date is set only by the book, when a
   person confirms the opening balance, never here.
 
 "In the book" is shown only for an account that exists: create the account
-first, then edit it. Before v20 the same attributes were on a tab of their
-own, **Books**.
+first, then edit it.
 
 **An account is closed, never deleted.** Closing keeps it and its history:
 
@@ -77,6 +62,39 @@ own, **Books**.
 - it is never writable, by anybody, whatever their permissions say;
 - nothing new is recorded against it, and an external account cannot be
   linked to it.
+
+### Closing an account
+
+Each account's row on the Accounts tab has **Close**. With nothing attached
+to the account, the dashboard asks you to confirm: "A closed account is
+kept, and nobody works in it."
+
+An account still attached to a plugin is not closed
+until each attachment is undone, so nothing is left pointing at a closed
+account. **Close** opens a dialog headed **Close** and the account's name,
+listing what is **Still attached to it**, each linking to the plugin's
+page:
+
+- a plugin's link of its external account to it ("snaptrade-1 links its
+  external account FID-401K-1 to it");
+- a plugin granted it ("snaptrade-1 is granted it");
+- an `ems`'s map of a venue account code to it ("ems-1 maps ACCT-0001 at
+  fix-1 to it").
+
+Where only grants are left, choose **Unlink all and close**: each grant is
+withdrawn as its own record, and then the account is closed. Or choose
+**Cancel**.
+
+Where a link or an `ems`'s mapping is left, the dialog offers only
+**Cancel**: a link and a mapping are undone at the plugin's own page. Open
+each from the list, undo it, and close the account then.
+
+Through an agent,
+[`dashboard__close_account`](../api/core-tools.md#dashboard__close_account)
+closes an account with a note saying why, and is refused naming each thing
+still attached. It withdraws no grant: a person does, at the page or with
+**Unlink all and close**. It is at **May not** for agents until a
+deployment admin loosens it.
 
 Accounts are given to people through **account groups**: explicit lists of
 accounts, which a permission names, with no nesting. One is built in, **All
@@ -94,14 +112,13 @@ A plugin that brings data from outside — a brokerage connector reading
 holdings, say — sees the source's own name for each account. An admin of the
 plugin links each external account to one of the firm's accounts, on the
 plugin's own pages at `admin`, under Manage: the plugin offers the firm's
-accounts, by their identities alone, and sends the link acting for the admin.
-Before contract v20 a plugin admin could link to any existing account; from
-v20 only to an account the deployment admin granted the plugin (below).
+accounts, by their identities alone, and sends the link acting for the admin,
+only to an account the deployment admin granted the plugin (below).
 **A plugin creates an account only that way**, when a deployment admin
 names a new account to link to; it may pre-fill the new account's
 custodian, type, owner and note from what the source reported, for the
-admin to change. From v20 an account made by linking is granted to the
-plugin that made it.
+admin to change. An account made by linking is granted to the plugin that
+made it.
 
 **An account has one external account.** At most one external account is
 linked to an account, through whichever plugin, and the account's statements
@@ -134,13 +151,13 @@ accounts are linked, and to what, without an admin viewing it. They arrive
 when the plugin starts and again whenever one changes, including when a linked
 account is renamed or closed, so the plugin keeps no copy of its own. It sees
 its own links and no other plugin's. In the Python SDK they are
-`AccountScope.links`, from 0.7.0; see
+`AccountScope.links`; see
 [`account_scope()`](../api/python-sdk.md#account_scope).
 
 ### Accounts a plugin may link to
 
-From contract v20 **the deployment admin grants each
-plugin instance the accounts it may link to**, and its admins link its
+**The deployment admin grants each plugin instance the accounts it may link
+to**, and its admins link its
 external accounts only within them. The two decisions are layered: the
 deployment admin decides which of the firm's accounts a custodian's data
 may ever be tied to; the plugin's admin, who sees the custodian's own
@@ -167,15 +184,12 @@ accounts, chooses which of those each one is.
   links.
 - **A connectivity plugin needs no grant.** It links no external accounts:
   it reaches accounts only through the `ems` it serves, which names the
-  venue's account. From contract v22 its read and
-  write scope is the accounts its `ems` mapped venue account codes to on
+  venue's account. Its read and write scope is the accounts its `ems` mapped venue account codes to on
   it, while it is available and linked, and nothing otherwise.
-- **An `ems` is granted the accounts it may map**, from contract v22: on its **Accounts** tab, as a linking plugin is, nothing
+- **An `ems` is granted the accounts it may map**, on its **Accounts** tab, as a linking plugin is, nothing
   by default. Its admins map only those to venue account codes; a mapping
   naming another account is refused `REFUSAL_REASON_ACCOUNT_NOT_LINKABLE`.
   See [Route orders through a connectivity plugin](../how-to/route-orders-through-a-connectivity-plugin.md).
-- **At the upgrade to contract v20**, each account a plugin already linked
-  is granted to it, recorded as made then, so nothing that worked stops.
 
 An agent reads the grant with
 [`dashboard__read_linkable_accounts`](../api/core-tools.md#dashboard__read_linkable_accounts);
@@ -193,8 +207,7 @@ from two things: the permissions that name it, and its own links.
 | **Read scope** | Every account some person may read through this plugin, and every account one of its external accounts is linked to |
 | **Write scope** | Every open account some person may write through this plugin, and every open account one of its external accounts is linked to |
 
-A person's account access on a plugin, from contract v15 on each of its
-roles, is `read` or `write`, the same for every plugin, and `write` includes
+A person's account access on each of a plugin's roles is `read` or `write`, the same for every plugin, and `write` includes
 `read`. A
 plugin's scopes are the union over its roles. A permission gives it on the accounts of
 an account group; see [Access](access.md). `admin` on a plugin reaches no
@@ -254,7 +267,7 @@ within its read scope. Three rules govern it.
   a `Decimal` and an amount a `meridian.Money`, and a value that cannot be
   carried exactly is refused rather than rounded.
 
-What the firm says is held is in the **book of record**, from contract v8:
+What the firm says is held is in the **book of record**:
 the account's positions, lots, pending settlements, what of each position
 cannot move, breaks and figures, from an opening balance a person confirms and
 the book's own entries since. An `operations` plugin writes it, and reconciles

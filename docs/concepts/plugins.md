@@ -44,20 +44,18 @@ configuration — lives in the deployment's own stores.
 A plugin at the edge, one holding `connectivity`, `custody`, `servicing`, `confirmation`,
 `settlement`, `data` or `reporting`, may also own storage the deployment
 grants its instance alone, for the raw records its vendor sent it, and
-rebuild from it; no other plugin reads it. From contract v16
-its older records may move to an archive the deployment provides:
+rebuild from it; no other plugin reads it. Its older records may move to an archive the deployment provides:
 see [The archive](the-archive.md).
 
 ## Roles: what a plugin is for
 
 A **role** says what a plugin is for, and it is the only thing that decides
 what the plugin may publish and subscribe to on the bus. Roles come from a
-fixed list of thirteen, and a plugin declares a *set* of them. An order and
+fixed list of fourteen, and a plugin declares a *set* of them. An order and
 execution management system is `oms` and `ems`; a fully automated trading
 system might be `signal`, `portfolio`, `oms` and `ems`. A plugin holding
 several roles still has one sidecar and one credential, and holds the union of
-their grants. From contract v15 a person is granted a level on each of its
-roles apart; see [Access per role](access.md#access-per-role).
+their grants. A person is granted a level on each of its roles apart; see [Access per role](access.md#access-per-role).
 
 | Role | What a plugin with it is for |
 |---|---|
@@ -70,35 +68,31 @@ roles apart; see [Access per role](access.md#access-per-role).
 | `oms` | Order management, including tax-lot selection |
 | `operations` | The post-trade pipeline: matching, servicing, reconciliation, settlement |
 | `portfolio` | Portfolio construction |
+| `reference` | Reference and terms data: a security's terms gathered from sources, reconciled, and offered to the instrument store with their provenance |
 | `reporting` | Reporting, analytics and valuation |
 | `servicing` | Non-trading transactions: corporate actions, lifecycle events, coupons |
 | `settlement` | External settlement rails |
 | `signal` | Signal generation |
 
-From contract v20 three roles are renamed: `dgm` is
-`data`, `ccm` is `connectivity` and `match` is `confirmation`, so that
-order matching, at an `ems` or a connectivity plugin's crossing venue, has
-no namesake. In words, a plugin holding a role is a **data plugin**, a
-**custody plugin**, an **operations plugin**, a **reporting plugin** and so
-on, the code name beside it where a person configures access. A plugin's
-metadata, its grants and a deployment's access entries naming an old name
-are rewritten: the plugin's by `meridian plugin migrate`, the deployment's
-once by core at its upgrade.
+In words, a plugin holding a role is a **data plugin**, a **custody
+plugin**, an **operations plugin**, a **reporting plugin** and so on, the
+code name beside it where a person configures access. Order matching, at an
+`ems` or a connectivity plugin's crossing venue, has no role of its name.
 
-Every plugin of a role, from contract v20, has the same first-use path and
+Every plugin of a role has the same first-use path and
 the same pages in the same order, so someone who knows the role knows the
 plugin: see [Using a data plugin](../how-to/using-a-data-plugin.md),
 [a custody plugin](../how-to/using-a-custody-plugin.md),
 [an operations plugin](../how-to/using-an-operations-plugin.md) and
 [a reporting plugin](../how-to/using-a-reporting-plugin.md).
 
-From contract v22 `portfolio`, `oms`, `ems`,
-`connectivity` and `compliance` have the order path's operations, each
+`portfolio`, `oms`, `ems`, `connectivity` and `compliance` have the order
+path's operations, each
 role's duties kept apart in the records whichever plugins hold them; see
 [The order lifecycle](the-order-lifecycle.md#who-does-what).
 
 Each role's entry, with its persona, its duties, what it leaves to which other
-role and what it holds today, is on [Roles](roles.md), with the principles a
+role and what it holds at the current contract, is on [Roles](roles.md), with the principles a
 plugin must fit and the method that maps an idea for a plugin to the least
 roles it needs. Because nobody can change a role's grants, an idea that needs
 a grant no role has is reshaped to fit, never given one.
@@ -110,24 +104,13 @@ role: administering a deployment is the dashboard's, and no plugin can
 administer the deployment it was installed into. The `admin` level below is a
 person's, on a plugin, and has nothing to do with roles.
 
-!!! note "Most roles hold nothing yet"
+!!! note "What each role holds"
     A role holds exactly the topics a workflow in Open Meridian's contract
-    names it for. Today nine do. `custody` is for holdings ingestion: recording
-    a statement and its holdings, reporting sync status, resolving an
-    instrument and reporting a missing one. `operations`, from contract v7,
-    reads the statements and custodial positions custody plugins record, and
-    hears them change, within its read scope; from contract v8 it writes the
-    [book of record](the-book-of-record.md). `portfolio`, `reporting`,
-    `compliance` and `oms`, from contract v8, read the book and hear it
-    change. From contract v18 `data` records market data in
-    [the lake](the-lake.md), and `reporting`, `portfolio`, `compliance` and
-    `signal` read its prices and bars; from contract v19 `signal` and `ems` read its trades and quotes, and `reporting`
-    resolves an identifier, read-only; from contract v20 `data` also reads its own last recorded trades and its own
-    datasets' licences. The other four are reserved names
-    that hold no topics until their workflows are built; order routing and
-    execution, on the roadmap, will give `ems` and `oms` more. A plugin holding only such roles, or
-    naming no role at all, is admitted with no topics rather than refused. It
-    can still serve a page.
+    names it for, listed on [Roles](roles.md), generated from the contract.
+    `servicing` and `settlement` hold only the reads every role has until
+    their workflows are built. A plugin holding only such roles, or naming
+    no role at all, is admitted rather than refused. It can still serve a
+    page.
 
 ### Grants are generated, never written
 
@@ -155,13 +138,11 @@ plugin:
 
 A person may hold `admin` and, beside it, `read` or `write`. A deployment
 admin grants these in the deployment's access groups: an entry names a plugin
-and a level, and from contract v15 one of the plugin's roles, so on a plugin
-holding `custody` and `operations` a person may write in one and only read
-the other. A plugin holding one role, which is every plugin today, is
-granted as before. How that is granted is described in [Access](access.md).
+and a level, and one of the plugin's roles, so on a plugin holding `custody` and
+`operations` a person may write in one and only read the other. How that is
+granted is described in [Access](access.md).
 
-A plugin names no parts of itself for people. Earlier versions let a plugin
-declare **tags** for that; they were retired, so that every plugin is
+A plugin names no parts of itself for people, so that every plugin is
 administered the same way and nobody meets a new vocabulary with each one.
 
 ## Declaring them
@@ -171,13 +152,13 @@ A plugin declares its roles in its own `pyproject.toml`, where
 
 ```toml
 [tool.meridian]
-roles = []          # a set, from the thirteen above
+roles = []          # a set, from the fourteen above
 interface = true    # it serves a page
 ```
 
 `meridian plugin upload` refuses a role outside the list, or a component's
-name, before anything is sent. From CLI 0.1.14 it also refuses a
-`[tool.meridian]` that declares `tags`, even an empty list. The full format is in
+name, before anything is sent. It also refuses a `[tool.meridian]` that
+declares `tags`, even an empty list. The full format is in
 [the plugin manifest reference](../api/plugin-manifest.md).
 
 ## The catalogue: each deployment's own registry
@@ -242,7 +223,7 @@ from ends. On every request after that:
 2. It signs an assertion: who the person is, the session's level, and what
    that level reaches on this plugin — none of their accounts under `admin`,
    the accounts they may read and the accounts they may write under `write`,
-   the accounts they may read under `read` — and from contract v15 their
+   the accounts they may read under `read` — and their
    level and accounts on each of the plugin's roles within it, for this
    instance only, valid for 60 seconds.
 3. The plugin's sidecar verifies the assertion and hands the plugin the
@@ -268,8 +249,8 @@ level on, `admin` included, with a button for each level held:
 A button opens the plugin's **area**, at `/plugins/<instance>?level=admin`,
 `write` or `read`: one head, and one tab row holding the pages the plugin
 declared at that level, in the order declared, with the page asked for in a
-seamless frame below. On a plugin holding several roles, from contract v15,
-a page is in the tab row when the person's level on one of the roles it
+seamless frame below. On a plugin holding several roles, a page is in the
+tab row when the person's level on one of the roles it
 serves is one of its levels, and each button's title on the home names the
 roles it reaches. A plugin that declares no page at `write` or `read` has
 one there, its `/`.
@@ -303,11 +284,11 @@ Manage opens on the first:
   of it sets them here, the one place a setting is set: a plugin reads its
   settings and never sets one. Its settings are grouped in tabs (Required,
   Optional, and Developer on a development deployment), and its head says on
-  one line who last changed them. From contract v14 each change is its own
-  record naming who made it. From contract v15 a setting serving several of
+  one line who last changed them. Each change is its own record naming who
+  made it. A setting serving several of
   the plugin's roles is set only by an admin of every one, and shown
   read-only to an admin of some of them.
-- **A tab for each table setting**, from contract v14, after Settings and
+- **A tab for each table setting**, after Settings and
   titled with the setting's label, such as SnapTrade's **Plan-code links**
   and **Cash links**: the table's entry grid alone, typed columns checked
   cell by cell, saved through the same checks as the form. See
@@ -339,8 +320,8 @@ its own and is as tall as the page. See
 What every plugin has, whatever its pages, is in the dashboard's admin view of
 it, at `/admin/plugins/<instance>`: **Overview** (its health, what its
 settings still need and its external accounts' sync state), **Settings** (its
-form, for its admins) and **Access** (who holds which level on it, from
-contract v15 on which of its roles). Its own
+form, for its admins) and **Access** (who holds which level on which of its
+roles). Its own
 pages are not there: they are in its area, reached from the home, its
 configuration pages under Manage.
 
@@ -355,8 +336,8 @@ the same plugin, never an account outside it.
 Writes do not rest on the plugin. A command a plugin sends for a person
 carries that person's assertion, and the sidecar admits it only when the
 person may write the account it names and the account is in the plugin's
-*write scope*; from contract v15, only when they hold `write` on a role of
-the plugin whose grants include the command, and otherwise it refuses,
+*write scope*, and they hold `write` on a role of the plugin whose grants
+include the command, and otherwise it refuses,
 naming the role. The person is stamped on the change, so it is recorded as
 theirs. The plugin's own grants remain the ceiling throughout. Scopes are
 explained in [Accounts](accounts.md).

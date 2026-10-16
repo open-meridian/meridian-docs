@@ -1,6 +1,6 @@
 # Set trading instructions and whether releases wait
 
-From contract v22 two settings bear on every order a deployment works:
+Two settings bear on every order a deployment works:
 
 - **Trading instructions**: **active**, **pause** or **stop**, on an
   account, every account, a plugin, a person or a service account. Each
@@ -12,11 +12,6 @@ From contract v22 two settings bear on every order a deployment works:
 Both are recorded in the [book of record](../concepts/the-book-of-record.md),
 each change its own entry with who made it and why. See
 [The order lifecycle](../concepts/the-order-lifecycle.md) for what each does.
-
-!!! note "Contract v22"
-    The **Trading instructions** page, the Accounts tab's **Compliance**
-    column and their four tools are in core for contract v22, released
-    2026-10-13 in chart 0.1.301.
 
 ## What an instruction does, and does not
 
@@ -73,15 +68,14 @@ it says no instruction is set, and every plugin trades as usual.
 **To lift one**, choose **Change** on its line, shown where you set at its
 level, and set it to **Active**, with a reason.
 
-**A user group is not a target in v22.** An instruction naming one is
+**A user group is not a target yet.** An instruction naming one is
 refused, naming `target.user_group_id`: aim a stop at an account, **All
 accounts** or a plugin instead.
 
 ## Whether an account's releases wait for compliance
 
 The Accounts tab's **Compliance** column says, for each account, **Waits**
-or **Does not wait**. A new account waits, and at the upgrade to contract
-v22 every account the book holds is recorded as waiting.
+or **Does not wait**. A new account waits.
 
 - **Waits**: an order in the account is released only once every
   `compliance` plugin covering the account has recorded a verdict on the
@@ -101,6 +95,36 @@ waits. To change it:
 Each attribute you change is its own entry in the account's journal (see
 [To set an account's attributes in the book](administer-access.md#to-set-an-accounts-attributes-in-the-book)).
 
+## Allow orders on local records
+
+The **Trading instructions** page also holds a
+deployment-wide setting, **Allow orders on local records**: whether an
+order may name an instrument whose record is still a local record, one the
+platform has not answered for yet (see
+[One ID per instrument](../concepts/one-id.md)). It is a deployment
+admin's.
+
+It is **On** by default, in every deployment and after the upgrade that
+brings it.
+While on, such an order is marked "local record: not priced". Beside the
+setting the page says how many live orders name a local record, such as "3
+live orders on local records, not priced."; the home page shows the same
+count, linking here.
+
+To turn it off, or back on:
+
+1. Open **Trading instructions** from **Settings**.
+2. Under **Allow orders on local records**, say **Why**.
+3. Choose **Turn off** (or **Turn on**), or **Prepare**, for someone to
+   make it later.
+
+Off, from the change on, a new order naming a local record, and an accept
+of a venue-originated fill on one, are refused
+(`REFUSAL_REASON_LOCAL_RECORD_NOT_ALLOWED`). Orders already working on a
+local record continue: to stop them, set a trading instruction. A
+telephoned or outside order the `oms` records is recorded whatever the
+setting.
+
 ## Through an agent
 
 Four of core's tools mirror these. The two that set take a `note`, kept as
@@ -113,7 +137,13 @@ the book entry's reason, and the two that list answer `outcome:
 - [`dashboard__list_account_attributes`](../api/core-tools.md#dashboard__list_account_attributes)
   and [`dashboard__set_account_attribute`](../api/core-tools.md#dashboard__set_account_attribute),
   which sets one attribute at a time: the base currency, the lot-relief
-  default, or `waits_for_compliance`.
+  default, `waits_for_compliance`, `error_account` or
+  `allocation_account`.
+
+A fifth,
+[`dashboard__set_local_record_orders`](../api/core-tools.md#dashboard__set_local_record_orders),
+turns orders on local records on or off, at the deployment admin's level,
+and at **May not** for agents until the deployment admin loosens it.
 
 ## Related
 

@@ -6,23 +6,17 @@ archive, and launch or stop it. It acts as you, on a delegation you make,
 and only as far as you could at the same page. This page shows the steps;
 each tool is in [Core's tools](../api/core-tools.md).
 
-!!! note "Contract v17"
-    This page describes core's plugin-area tools, contract v17, from chart
-    0.1.288.
-
-!!! note "Contract v20"
-    From contract v20 your agent may **prepare** any of these changes for
-    you, or someone else, to make, instead of making it, and your firm sets,
-    per act, whether agents may make it, only prepare it, or not reach it
-    (see [Prepare instead of make](#prepare-instead-of-make)). Released 2026-10-12 in chart 0.1.298.
+Your agent may also **prepare** any of these changes for you, or someone
+else, to make, instead of making it, and your firm sets, per act, whether
+agents may make it, only prepare it, or not reach it (see
+[Prepare instead of make](#prepare-instead-of-make)).
 
 Two things it never does: read or type a secret setting's value (you enter
 a secret at the plugin's **Settings** form; the agent may clear one), and
 change who holds access.
 
 Your agent acts for you, while your delegation lasts. Work with no person
-behind it, such as an agent inside a plugin or a nightly sweep, runs from
-contract v21 as a
+behind it, such as an agent inside a plugin or a nightly sweep, runs as a
 [service account](../concepts/service-accounts.md), never on your
 delegation.
 
@@ -37,8 +31,8 @@ dashboard's address followed by `/mcp`. Sign in when it asks, and on
 | Read a plugin's Summary and settings, and set them | The plugin's role at **Manage**, for each role whose settings it sets |
 | Allow or withdraw an archive, set holds, launch and stop | **Deployment admin** |
 
-A narrowed delegation never grows; to widen it, connect again. From contract
-v20 each row also offers **Make** or **Prepare
+A narrowed delegation never grows; to widen it, connect again. Each row
+also offers **Make** or **Prepare
 only**: Prepare only lets the agent prepare that row's changes for you and
 make none of them, whatever the deployment allows. It can only make the
 agent stricter than the deployment's own levels, never looser.
@@ -94,8 +88,7 @@ launches a version, naming exactly the roles the version declares, as
 
 ## Prepare instead of make
 
-From contract v20, every change on this page can be
-prepared instead: the agent calls `dashboard__prepare_call` with the act's
+Every change on this page can be prepared instead: the agent calls `dashboard__prepare_call` with the act's
 tool, its arguments as above, and why. The dashboard checks it as the act
 would and keeps it, changing nothing, and answers its `PC-` ID:
 
@@ -128,8 +121,8 @@ act it reaches. See [Prepared changes](../concepts/prepared-changes.md).
 ## See what it did
 
 Every call is listed in your **Connected clients**: when, which client,
-which tool and the gate it was admitted under, and from contract v20 what
-each client prepared and what became of it. Each change is its own record
+which tool and the gate it was admitted under, and what each client
+prepared and what became of it. Each change is its own record
 naming you, the delegation and the client; see
 [Where a change is recorded](../api/core-tools.md#where-a-change-is-recorded).
 **Revoke** there stops the agent at its next call.

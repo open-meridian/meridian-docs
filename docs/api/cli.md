@@ -4,7 +4,7 @@
 
 Nothing in a cloud install depends on it. A marketplace listing's form and the deployment's own wizard are the whole path there; `meridian` makes the same things convenient from a terminal.
 
-This page describes release 0.1.43 of the command line. `meridian --version` says which one you have. For installing it, see [Install a deployment](../getting-started/installation.md).
+This page describes release 0.1.45 of the command line. `meridian --version` says which one you have. For installing it, see [Install a deployment](../getting-started/installation.md).
 
 ## Synopsis
 
@@ -69,8 +69,8 @@ Every command exits 0 when it succeeds. What a non-zero code means depends on th
 A `plugin` command exits 3 in three cases:
 
 - when this computer is not connected to the deployment, or is connected to several and `--deployment` does not pick one;
-- when the deployment answers `401 Unauthorized`: the delegation was revoked or has lapsed, its directory groups are older than the deployment allows, or it is one the deployment does not know; or, for a session an earlier CLI kept, the session lapsed or was ended. That includes the deployment's registry, which `plugin upload` pushes through. The message says which, and ends with the `meridian connect` to run, for example ``your delegation to this computer at https://meridian.localhost was revoked: `meridian connect` to sign in again``. Before CLI 0.1.15, `plugin upload` reported a lapsed session met at the registry as `the registry did not start an upload: 401 Unauthorized: invalid_token` and exited 1;
-- from CLI 0.1.25, when refreshing the access token is refused: the delegation was revoked or has lapsed, its directory groups are too old, or a refresh token was presented twice, which revokes it (see [The delegation](#the-delegation)).
+- when the deployment answers `401 Unauthorized`: the delegation was revoked or has lapsed, its directory groups are older than the deployment allows, or it is one the deployment does not know. That includes the deployment's registry, which `plugin upload` pushes through. The message says which, and ends with the `meridian connect` to run, for example ``your delegation to this computer at https://meridian.localhost was revoked: `meridian connect` to sign in again``;
+- when refreshing the access token is refused: the delegation was revoked or has lapsed, its directory groups are too old, or a refresh token was presented twice, which revokes it (see [The delegation](#the-delegation)).
 
 An access token that has only expired never exits 3: the command refreshes it and asks again.
 
@@ -106,13 +106,13 @@ Each result is one of:
 | `worth` | Worth knowing, and not in the way. |
 | `unknown` | Could not be checked from here. This does not mean it passed. |
 
-The disk check is new in CLI 0.1.17. A node under disk pressure is `stops`: its `DiskPressure` condition is `True`, or it carries the `node.kubernetes.io/disk-pressure` taint. Kubernetes evicts that node's pods and schedules none onto it until it has disk again, so a deployment there stops and its pods wait as `Pending`. The fix is to free disk on the node and wait a few minutes for the taint to lift; the pods come back by themselves. On a local VM such as Rancher Desktop's, Docker's build cache is often most of it (`docker builder prune -a`).
+A node under disk pressure is `stops`: its `DiskPressure` condition is `True`, or it carries the `node.kubernetes.io/disk-pressure` taint. Kubernetes evicts that node's pods and schedules none onto it until it has disk again, so a deployment there stops and its pods wait as `Pending`. The fix is to free disk on the node and wait a few minutes for the taint to lift; the pods come back by themselves. On a local VM such as Rancher Desktop's, Docker's build cache is often most of it (`docker builder prune -a`).
 
 Before that, low free disk is `worth`. The line is 20% of the disk free, or 10 GiB where that is more. Kubernetes' default is to start evicting at 10% free for the node's own disk and 15% for images, and on one shared disk, as a local VM has, the 15% comes first. Warning at 20% leaves room for an image pull or a build before then, and the 10 GiB floor keeps that room on a small disk. Where images have a disk of their own, each disk is read on its own.
 
 The free disk is what each node's kubelet reports, read through the API server (`kubectl get --raw /api/v1/nodes/<node>/proxy/stats/summary`). That needs the cluster-wide right to get `nodes/proxy`. Without it, free disk is `unknown` and says which right is missing. Disk pressure needs only the right to list nodes, and is still read. Neither needs anything run on the node.
 
-A right the cluster refuses is `stops`, naming the right to ask for. `kubectl auth can-i` answers "no" by exiting 1, and from CLI 0.1.15 that is read as the refusal it is rather than as `unknown`; `unknown` is left for a question `kubectl` could not answer.
+A right the cluster refuses is `stops`, naming the right to ask for. `kubectl auth can-i` answers "no" by exiting 1, and that is read as the refusal it is rather than as `unknown`; `unknown` is left for a question `kubectl` could not answer.
 
 **Exit codes:** `0` when nothing would stop an install, `1` when at least one check says `stops`.
 
@@ -140,15 +140,12 @@ Installs the deployment's Helm chart into the cluster, waits for the dashboard, 
 | `--port` | `<n>` | `8443` | The local port a port-forward uses. |
 | `--timeout` | `<d>` | `10m` | How long Helm is given. |
 | `--no-doctor` | | off | Skip the `doctor` checks. |
-| `--archive` | `<path>` | asked | From CLI 0.1.36. Where edge plugins' older records go: a directory on the cluster's node, such as a NAS export or a second disk mounted there, by its absolute path. It becomes the chart's `pluginArchive.path`. See [Where older records go](#where-older-records-go). |
-| `--no-archive` | | asked | From CLI 0.1.36. No archive: records past their window stay in each plugin's storage. |
+| `--archive` | `<path>` | asked | Where edge plugins' older records go: a directory on the cluster's node, such as a NAS export or a second disk mounted there, by its absolute path. It becomes the chart's `pluginArchive.path`. See [Where older records go](#where-older-records-go). |
+| `--no-archive` | | asked | No archive: records past their window stay in each plugin's storage. |
 
 Plus the [global options](#global-options) `-n`, `--platform` and `--image`.
 
 ### Where older records go
-
-!!! note "CLI 0.1.36"
-    `--archive` and `--no-archive` are in CLI 0.1.36, for a runtime serving contract v16.
 
 A plugin at the edge keeps what its vendor sent it, and past the window its admin sets it archives the older records, keeps them or deletes them (see [The archive](../concepts/the-archive.md)). Before it installs, `up` asks where the archive is, unless something has said:
 
@@ -228,7 +225,7 @@ It works in four steps, and stops at the step that fails.
 1. **Check.** It changes nothing if any of these fails, and says which and what to do:
     - `helm` is 3.14 or newer, for `--reset-then-reuse-values`;
     - the cluster is reachable, and you may patch Deployments and create and delete Jobs in the namespace;
-    - no node is under disk pressure, read as [`doctor`](#meridian-doctor) reads it. An upgrade pulls the new version's images onto the node, which would take more of the disk it is short of, and its new pods would be scheduled nowhere. This check is new in CLI 0.1.17. Low free disk is printed as `worth` and does not stop it;
+    - no node is under disk pressure, read as [`doctor`](#meridian-doctor) reads it. An upgrade pulls the new version's images onto the node, which would take more of the disk it is short of, and its new pods would be scheduled nowhere. Low free disk is printed as `worth` and does not stop it;
     - the release exists and Helm holds it as `deployed`. A `failed` or `pending-…` release is refused with how to recover it;
     - the chart version is published, and it is the chart the release was installed from;
     - it is not older than the installed version. If it is the same, it says so and exits 0.
@@ -245,7 +242,7 @@ It works in four steps, and stops at the step that fails.
 
     Last, it names each launched plugin still on a sidecar that is not the one the components now run, since a plugin keeps the sidecar it was launched with until it is relaunched, and each plugin whose pod started during the upgrade before the new launcher was ready, since the old launcher may have launched it. For each it prints `meridian plugin stop <instance>` and `meridian plugin launch <name> <version> --instance <instance>` (`meridian plugin dev --instance <instance>` for a live one). The name comes from the plugin's image; the version is left as `<version>`, which `meridian plugin list` gives. It relaunches nothing itself.
 
-It never prints the deployment's values, which hold its enrolment code. What it reads from them is `image`, where the deployment is reached, and, from CLI 0.1.36, where its edge plugins' archive is (`pluginArchive`), which `--reset-then-reuse-values` keeps as it keeps every value the deployment was given. The plan says so: `Its archive, /mnt/nas/meridian-archive on the cluster's node, is kept: the deployment's own values carry it.`
+It never prints the deployment's values, which hold its enrolment code. What it reads from them is `image`, where the deployment is reached, and where its edge plugins' archive is (`pluginArchive`), which `--reset-then-reuse-values` keeps as it keeps every value the deployment was given. The plan says so: `Its archive, /mnt/nas/meridian-archive on the cluster's node, is kept: the deployment's own values carry it.`
 
 | Flag | Argument | Default | Meaning |
 |---|---|---|---|
@@ -253,7 +250,7 @@ It never prints the deployment's values, which hold its enrolment code. What it 
 | `--chart` | `<ref>` | `oci://ghcr.io/open-meridian/charts/meridian-runtime` | The chart the release was installed from. |
 | `--chart-version` | `<v>` | the latest published | The version to move to. It is resolved once, and that version is what is checked and applied. |
 | `--timeout` | `<d>` | `10m` | How long to wait for the migration and every component, and what Helm is given. Written as Helm writes a duration: `10m`, `90s`, `1h30m`. |
-| `-f`, `--values` | `<file>` | none | From CLI 0.1.42: chart values to change in the same approved upgrade, each file given to Helm after `--reset-then-reuse-values`, so it is merged over the deployment's own values as Helm merges them (mappings key by key, a key set to null removed), each file over the last. May be repeated. The files are read before anything changes, and one that cannot be read or is not a mapping stops it, as does a deployment whose own values cannot be read. The plan lists each path they set, change or remove, never a value. At the version it is on already, files that change something are an upgrade at that version, and files that change nothing leave nothing to do. |
+| `-f`, `--values` | `<file>` | none | Chart values to change in the same approved upgrade, each file given to Helm after `--reset-then-reuse-values`, so it is merged over the deployment's own values as Helm merges them (mappings key by key, a key set to null removed), each file over the last. May be repeated. The files are read before anything changes, and one that cannot be read or is not a mapping stops it, as does a deployment whose own values cannot be read. The plan lists each path they set, change or remove, never a value. At the version it is on already, files that change something are an upgrade at that version, and files that change nothing leave nothing to do. |
 | `--yes` | | off | Upgrade without being asked. For a script that has already read the plan. |
 | `-n`, `--namespace` | `<name>` | `meridian` | The namespace. |
 
@@ -271,12 +268,9 @@ It never prints the deployment's values, which hold its enrolment code. What it 
 meridian backup [--release <name>] [-n <name>] [--to <dir>] [--timeout <d>]
 ```
 
-!!! note "CLI 0.1.39"
-    `meridian backup` is in CLI 0.1.39 and later, against chart 0.1.298 or later.
-
 Backs the deployment up once, now. It runs the chart's backup CronJob, `<release>-meridian-runtime-backup`, as a Job, whether or not a schedule is set, waits for it, and prints what the Job said it wrote: names, counts, sizes and the file's SHA-256, never a value. The file, `<release>-<UTC time>.meridian-backup`, is written to the deployment's backup volume, sealed to `backup.recipient`. With `--to` it is also copied to a directory on this machine, and its size and SHA-256 checked against what the Job wrote. For what a backup holds and how to set the CronJob up, see [Back up and restore a deployment](../how-to/back-up-and-restore.md).
 
-It needs backups set up in the chart's values: `backup.recipient`, and `backup.path` or `backup.existingClaim`. Without them there is no CronJob, and it says which values to set and, from CLI 0.1.42, the `meridian upgrade-deployment -f <file>` that sets them.
+It needs backups set up in the chart's values: `backup.recipient`, and `backup.path` or `backup.existingClaim`. Without them there is no CronJob, and it says which values to set and the `meridian upgrade-deployment -f <file>` that sets them.
 
 | Flag | Argument | Default | Meaning |
 |---|---|---|---|
@@ -299,9 +293,6 @@ It needs backups set up in the chart's values: `backup.recipient`, and `backup.p
 meridian backup key [--to <file>]
 ```
 
-!!! note "CLI 0.1.39"
-    `meridian backup key` is in CLI 0.1.39 and later.
-
 Makes the identity backups are sealed to, an age X25519 key pair, and prints its public half (`age1…`) to set as `backup.recipient`. It needs no deployment. The identity file is written readable by you alone, and never over a file already there, since a backup sealed to the old identity would be lost with it. Keep it off the cluster: a backup opens with it and nothing else.
 
 | Flag | Argument | Default | Meaning |
@@ -315,16 +306,6 @@ Makes the identity backups are sealed to, an age X25519 key pair, and prints its
 ```text
 meridian restore <file> --identity <file> [-n <name>] [--release <name>] [--chart <ref>] [--chart-version <v>] [--timeout <d>] [--yes]
 ```
-
-!!! warning "Restore needs CLI 0.1.40 or later"
-    CLI 0.1.39 has `meridian restore`, but its restore leaves the conductor without its database: it gives the components the database's URL without restarting the conductor and the dashboard, which read it only when they start, and first run keeps waiting with its rights. CLI 0.1.40 restarts them and has first run stand down.
-
-!!! note "CLI 0.1.42"
-    From CLI 0.1.42 restore checks everything before it changes anything, the namespace's creation
-    among the changes, shows what it will do and asks first; refuses a namespace a deployment kept
-    anything in; never installs a chart older than the backup's; and loads a dump of a database
-    somebody else runs itself. CLI 0.1.41 and earlier did not ask, checked only the release and the
-    backup's Secrets, and left such a dump to the provider's tools.
 
 Restores a backup with your own cluster rights, through `kubectl` and `helm`, into a namespace holding no deployment. It checks first, and changes nothing if a check fails:
 
@@ -349,9 +330,9 @@ Each step is printed on stderr as it is done; on stdout, what was restored, its 
 | `-n`, `--namespace` | `<name>` | the backup's | Where to restore it. |
 | `--release` | `<name>` | the backup's | Must be the backup's own release: every object it restores is named for it. |
 | `--chart` | `<ref>` | `oci://ghcr.io/open-meridian/charts/meridian-runtime` | The chart to install. |
-| `--chart-version` | `<v>` | the backup's | Which version of it. Without this, the version the backup was taken on, from whatever `--chart` names (CLI 0.1.41 and earlier: only when `--chart` is the published chart). Never older than the backup's. |
+| `--chart-version` | `<v>` | the backup's | Which version of it. Without this, the version the backup was taken on, from whatever `--chart` names. Never older than the backup's. |
 | `--timeout` | `<d>` | `15m` | How long to wait for each step. Written as Helm writes a duration. |
-| `--yes` | | off | From CLI 0.1.42: restore without being asked. For a script that has already read what it will do. |
+| `--yes` | | off | Restore without being asked. For a script that has already read what it will do. |
 
 **Exit codes:**
 
@@ -367,7 +348,7 @@ Each step is printed on stderr as it is done; on stdout, what was restored, its 
 meridian connect [<address>]
 ```
 
-Signs you in to a deployment's dashboard in your browser, however that deployment signs people in, and asks you to let the CLI on this computer act as you there: a delegation, for up to 90 days. It never takes a password. From CLI 0.1.25; an earlier CLI kept a session of 12 hours at most (see [With an older dashboard or an older CLI](#with-an-older-dashboard-or-an-older-cli)).
+Signs you in to a deployment's dashboard in your browser, however that deployment signs people in, and asks you to let the CLI on this computer act as you there: a delegation, for up to 90 days. It never takes a password.
 
 With no address it signs in to `https://meridian.localhost`, the deployment `meridian up` installs on this machine by default. Give an address for any other.
 
@@ -408,13 +389,7 @@ The dashboard's home says so too. Connecting again renews it: this computer keep
 
 It ends when you run `meridian sign-out`, when you or a deployment admin revoke it from Connected clients, when it lapses, or when the account's password is reset. The next command then exits 3, saying why and naming the `meridian connect` to run.
 
-This computer holds one delegation per deployment. Each is kept in a file readable only by you, in `$XDG_CONFIG_HOME/meridian/sessions`, `%APPDATA%\meridian\sessions`, or `~/.config/meridian/sessions`, whichever is found first. Connecting again replaces what the file holds; a session an earlier CLI left there is ended at the deployment.
-
-### With an older dashboard or an older CLI
-
-- **CLI 0.1.25 needs a dashboard that takes delegations,** chart 0.1.223 or later. An older dashboard answers the registration with `404 Not Found`, and `connect` says so and exits 1: upgrade the deployment ([Upgrade a deployment](../how-to/upgrade-a-deployment.md)), or connect with 0.1.24, the last release that signs in the old way (`meridian upgrade --to 0.1.24`).
-- **A session an earlier CLI kept keeps working** after you upgrade the CLI, until it lapses: 30 minutes unused, 12 hours at most. Then `meridian connect` makes a delegation in its place. Chart 0.1.223 still accepts such sessions; a runtime at contract v15 accepts none.
-- **A runtime at contract v15 serves CLI 0.1.25 or later.** It keeps no session for a terminal, takes nothing on the CLI's paths but an access token on a delegation, and answers a CLI naming an older version with `400`, saying it serves 0.1.25 or later. Upgrade the CLI (`meridian upgrade`) and connect again.
+This computer holds one delegation per deployment. Each is kept in a file readable only by you, in `$XDG_CONFIG_HOME/meridian/sessions`, `%APPDATA%\meridian\sessions`, or `~/.config/meridian/sessions`, whichever is found first. Connecting again replaces what the file holds.
 
 **Exit codes:** `0` connected; `1` the sign-in was declined, timed out, or failed, the dashboard does not take delegations, or the delegation could not be kept, in which case it is revoked; `2` no address, or an address of the wrong form.
 
@@ -426,7 +401,7 @@ meridian sign-out [<address>]
 
 Revokes this computer's delegation at the deployment and forgets it here. With no address, it signs out of the one deployment you are connected to. If you are connected to more than one, it lists the commands to run and exits 2.
 
-If the deployment can't be reached, the delegation is still forgotten here. It says so, with when the delegation lapses: revoke it from Connected clients on the dashboard, or it lapses then. A session an earlier CLI kept is ended at the deployment instead, and if the deployment can't be reached, lapses there within 30 minutes.
+If the deployment can't be reached, the delegation is still forgotten here. It says so, with when the delegation lapses: revoke it from Connected clients on the dashboard, or it lapses then.
 
 **Exit codes:** `0` signed out, or not connected to begin with; `1` the sessions file could not be removed; `2` a malformed address, more than one address, or no address when connected to several.
 
@@ -436,52 +411,27 @@ If the deployment can't be reached, the delegation is still forgotten here. It s
 meridian plugin new <name> [--into <dir>] [--role data|custody|operations|reporting]
 ```
 
-!!! note "CLI 0.1.43"
-    CLI 0.1.43, released 2026-10-14, pins SDK 0.27.0 (contract v23), whose
-    plugins need a runtime serving contract v23 (chart 0.1.303 or later);
-    the move from 0.26.0 changes only the pins.
+!!! note "CLI 0.1.45"
+    CLI 0.1.45, released 2026-10-15, pins SDK 0.28.0 (contract v24), whose
+    plugins need a runtime serving contract v24 (chart 0.1.305 or later).
+    Every template carries a CI-first `hooks/pre-push`; the custody suite's
+    test also runs on provisional records, and the custody and reporting
+    suites' tests answer their v24 cases.
 
-!!! note "CLI 0.1.42"
-    CLI 0.1.42, released 2026-10-13, pins SDK 0.26.0 (contract v22), whose
-    plugins need a runtime serving contract v22 (chart 0.1.301 or
-    later). Each template's `AGENTS.md` says how work running one of the
-    version's declared algorithms names it
-    (`meridian.runs_as(role, algorithm_id=...)`), and that a date is worked
-    out in core (`compute_date`, `read_calendar`), never by hand. The
-    `custody`, `data` and `reporting` templates' suite tests map the
-    settlement calendars' two cases their roles' suites hold,
-    `reads-a-calendar` and `asks-for-a-settlement-date`, and the
-    `reporting` template's maps its suite's three order-path cases too. It
-    adds no rule: `role-suite` holds `connectivity` too, and `role-pages`
-    requires a tool that replaces an act to name its check tool.
-
-!!! note "CLI 0.1.41"
-    CLI 0.1.41, released 2026-10-12, pins SDK 0.25.0 (contract v21), whose
-    plugins need a runtime serving contract v21 (chart 0.1.299 or later),
-    and each template's `AGENTS.md` says how a plugin acts on its own: as
-    its role's [service account](../concepts/service-accounts.md), through
-    `meridian.runs_as(role)`. It adds the rule `runs-as-checked`.
-
-!!! note "CLI 0.1.39"
-    CLI 0.1.39, released 2026-10-11, pins SDK 0.24.0 (contract v20), writes
-    the four role templates `data`, `custody`, `operations` and `reporting`
-    on the role's common part, and adds the rule `role-pages`. CLI 0.1.38
-    and earlier take `--role dgm|reporting`.
-
-Writes a working plugin to start from: the Python SDK's reference plugin, renamed to `<name>`, or with `--role` that role's template. It needs no network, because the template is compiled into the binary. It writes the plugin's code and its pages, each a view function and a Jinja2 template declared with the levels it serves (a **Setup** page under Manage, at `admin`, and an **Accounts** page under Open and View, at `write` and `read`), its tests (`tests/test_page.py`), a `Dockerfile`, `pyproject.toml`, `.dockerignore`, `.gitignore`, `README.md`, `AGENTS.md`, `CLAUDE.md`, a `develop-live` skill for Claude Code, and a CI workflow that runs `meridian plugin check --run-tests` (`.github/workflows/check.yaml`), then prints the next steps. From CLI 0.1.43 the plugin pins SDK 0.27.0, and needs a deployment whose sidecar accepts contract v23 (chart 0.1.303 or later). From CLI 0.1.42 the plugin pins SDK 0.26.0, and needs a deployment whose sidecar accepts contract v22 (chart 0.1.301 or later); its `AGENTS.md` teaches a coding agent to name the declared algorithm a plugin's work runs (`meridian.runs_as(role, algorithm_id=...)`) and to work out a date in core (`compute_date`, `read_calendar`), never by hand. From CLI 0.1.41 the plugin pins SDK 0.25.0, and needs a deployment whose sidecar accepts contract v21 (chart 0.1.299 or later); its `AGENTS.md` teaches a coding agent that work the plugin does on its own changes something only by calling one of its acts as its role's service account (`meridian.runs_as`), each such act naming its check tool. From CLI 0.1.39 the plugin pins SDK 0.24.0, and needs a deployment whose sidecar accepts contract v20 (chart 0.1.298 or later). CLI 0.1.38 pins SDK 0.23.0, and needs a deployment whose sidecar accepts contract v19 (chart 0.1.294 or later); its `AGENTS.md` teaches a coding agent how a data plugin records trades and quotes. CLI 0.1.37 pins SDK 0.22.0, and needs a deployment whose sidecar accepts contract v18 (chart 0.1.292 or later). CLI 0.1.36 pins SDK 0.21.0, and needs a deployment whose sidecar accepts contract v16 (0.1.35 pinned 0.20.0, 0.1.34 pinned 0.19.0, 0.1.33 pinned 0.18.0, 0.1.29 to 0.1.32 pinned 0.17.0, 0.1.28 pinned 0.16.0, 0.1.27 pinned 0.15.0, 0.1.26 pinned 0.14.0, 0.1.24 and 0.1.25 pinned 0.12.0, 0.1.23 pinned 0.11.0, 0.1.22 pinned 0.10.1, 0.1.21 pinned 0.10.0, 0.1.20 pinned 0.9.0, 0.1.18 and 0.1.19 pinned 0.7.1, and 0.1.16 and 0.1.17 pinned 0.6.1). From the same release its `AGENTS.md` teaches a coding agent the kinds of raw record a plugin at the edge declares and their windows, and that a custody plugin keeps each activity's raw record at least as long as the history it reported. See [Your first plugin](../getting-started/first-plugin.md).
+Writes a working plugin to start from: the Python SDK's reference plugin, renamed to `<name>`, or with `--role` that role's template. It needs no network, because the template is compiled into the binary. It writes the plugin's code and its pages, each a view function and a Jinja2 template declared with the levels it serves (a **Setup** page under Manage, at `admin`, and an **Accounts** page under Open and View, at `write` and `read`), its tests (`tests/test_page.py`), a `Dockerfile`, `pyproject.toml`, `.dockerignore`, `.gitignore`, `README.md`, `AGENTS.md`, `CLAUDE.md`, a `develop-live` skill for Claude Code, a CI workflow that runs `meridian plugin check --run-tests` (`.github/workflows/check.yaml`), and a pre-push hook, `hooks/pre-push`, then prints the next steps. The hook is CI-first: a branch's push runs nothing, its pull request's CI being the gate, and a push straight to `main` runs `meridian plugin check --run-tests` first. Turn it on in a fresh clone with `git config core.hooksPath hooks`. The plugin pins SDK 0.28.0, and needs a deployment whose sidecar accepts contract 24 (chart 0.1.305 or later). Its `AGENTS.md` teaches a coding agent the kinds of raw record a plugin at the edge declares and their windows, and that a custody plugin keeps each activity's raw record at least as long as the history it reported; how a data plugin records trades and quotes; that work the plugin does on its own changes something only by calling one of its acts as its role's service account (`meridian.runs_as`), each such act naming its check tool, and names the declared algorithm it runs (`meridian.runs_as(role, algorithm_id=...)`); and that a date is worked out in core (`compute_date`, `read_calendar`), never by hand. Which SDK each earlier CLI pinned is in [Moving a plugin to a new release](python-sdk.md#moving-a-plugin-to-a-new-release). See [Your first plugin](../getting-started/first-plugin.md).
 
 `<name>` must be lowercase letters, digits and single hyphens, starting with a letter. It becomes the package name, and, with hyphens as underscores, the module name.
 
 | Flag | Argument | Default | Meaning |
 |---|---|---|---|
 | `--into` | `<dir>` | `./<name>` | Where to write it. Never somewhere that already exists. |
-| `--role` | `data`, `custody`, `operations` or `reporting` | none | From CLI 0.1.37: write that role's template instead, from the SDK's `templates/`, a whole plugin holding the role, with its tests running the role's suite where it has one. CLI 0.1.37 and 0.1.38 take `dgm` or `reporting`; from CLI 0.1.39 `data` (the role `dgm` renamed), `custody`, `operations` and `reporting`, each on the role's common part (`meridian.roles`), passing `role-pages`. A role with no template of its own is refused, naming those that have one; the reference plugin takes any role in its `pyproject.toml`. |
+| `--role` | `data`, `custody`, `operations` or `reporting` | none | Write that role's template instead, from the SDK's `templates/`, a whole plugin holding the role on the role's common part (`meridian.roles`), passing `role-pages`, with its tests running the role's suite where it has one; the `custody`, `data` and `reporting` templates' suite tests map the settlement calendars' two cases, and the `reporting` template's its suite's three order-path cases too. A role with no template of its own is refused, naming those that have one; the reference plugin takes any role in its `pyproject.toml`. |
 
-**`--role data`** (`--role dgm` before CLI 0.1.39) writes a plugin that puts a stand-in vendor's daily closes and bars into the [lake](../concepts/the-lake.md): its catalogue declared from code, every price parsed from the vendor's text as a `Decimal`, every subject and venue resolved before a row names it, wants answered, and its **Connection** and **Datasets** pages under Manage, each with its read tool, `read_connection` and `read_datasets`. Replace the vendor (`vendor.py`) with your own. Its tests run the data suite; from CLI 0.1.38 they mark the suite's cases about trades and quotes, which its daily dataset never publishes, not presented, with why. From CLI 0.1.39 its pages are the data role's common pages (`meridian.roles.data`), and it reads its datasets' licences, so Datasets says whether each is licensed. See [Write a data plugin against its suite](../how-to/write-a-data-plugin.md).
+**`--role data`** writes a plugin that puts a stand-in vendor's daily closes and bars into the [lake](../concepts/the-lake.md): its catalogue declared from code, every price parsed from the vendor's text as a `Decimal`, every subject and venue resolved before a row names it, wants answered, and its **Connection** and **Datasets** pages under Manage, each with its read tool, `read_connection` and `read_datasets`. Replace the vendor (`vendor.py`) with your own. Its tests run the data suite, marking the suite's cases about trades and quotes, which its daily dataset never publishes, not presented, with why. Its pages are the data role's common pages (`meridian.roles.data`), and it reads its datasets' licences, so Datasets says whether each is licensed. See [Write a data plugin against its suite](../how-to/write-a-data-plugin.md).
 
-**`--role custody`** and **`--role operations`**, from CLI 0.1.39, write a plugin holding that role with its common pages: for custody, Connections and Account links under Manage and Statements under Open and View, a stand-in custodian to replace; for operations, Breaks, Reconciliations and Opening balances under Open and View, its opening balance's confirm naming its check (`checked_by=`), so it can be prepared. See [Using a custody plugin](../how-to/using-a-custody-plugin.md) and [Using an operations plugin](../how-to/using-an-operations-plugin.md).
+**`--role custody`** and **`--role operations`** write a plugin holding that role with its common pages: for custody, Connections and Account links under Manage and Statements under Open and View, a stand-in custodian to replace; for operations, Breaks, Reconciliations and Opening balances under Open and View, its opening balance's confirm naming its check (`checked_by=`), so it can be prepared. See [Using a custody plugin](../how-to/using-a-custody-plugin.md) and [Using an operations plugin](../how-to/using-an-operations-plugin.md).
 
-**`--role reporting`** writes a plugin that shows the positions in its account scope valued at the last close from the lake, on a **Closes** page under Open and View and a **Datasets** page under Manage, and records nothing. From CLI 0.1.38 it resolves its reporting currency by its ISO 4217 code; from CLI 0.1.39 its Datasets page and figures are the reporting role's common ones. Its tests run the `reporting` suite. See [Value the book](../how-to/value-the-book.md).
+**`--role reporting`** writes a plugin that shows the positions in its account scope valued at the last close from the lake, on a **Closes** page under Open and View and a **Datasets** page under Manage, and records nothing. It resolves its reporting currency by its ISO 4217 code, and its Datasets page and figures are the reporting role's common ones. Its tests run the `reporting` suite. See [Value the book](../how-to/value-the-book.md).
 
 **Exit codes:** `0` written, `1` refused (bad name, the directory exists, or a role with no template), `2` asked wrongly.
 
@@ -491,15 +441,16 @@ Writes a working plugin to start from: the Python SDK's reference plugin, rename
 meridian plugin check [--dir <dir>] [--run-tests] [--verified] [--json]
 ```
 
-!!! note "CLI 0.1.43"
-    CLI 0.1.43, released 2026-10-14 with contract v23, holds a role's
-    suite test to its outcome (`role-suite`, under `--verified`): a suite
-    test may not be skipped or expected to fail, and must assert its report
-    passed. Its `role-suite` and `roles-declared` read contract v23's roles
-    and suites, their `about` markers and `any_of`. Its `plugin new` pins
-    SDK 0.27.0 (contract v23), whose plugins need chart 0.1.303 or later.
+!!! note "CLI 0.1.45"
+    CLI 0.1.45, released 2026-10-15 with contract v24, warns on an
+    instrument ID kept in a plugin's code (`replaced-ids-followed`), and
+    fails nothing for it (see
+    [One ID per instrument](../concepts/one-id.md#for-a-plugins-author)).
+    Its `role-suite` and `roles-declared` read contract v24's roles and
+    suites; `tool-meridian` admits `reference`, which `--verified` does not
+    hold to a suite while its suite is in preview.
 
-From CLI 0.1.15. Holds the plugin in `--dir` to the framework's rules: the rules every plugin is built to, so that plugins written by different people and different coding agents look and behave alike, and a change to what plugins call can be applied to all of them. It needs no deployment and no session, changes nothing, and reads nothing outside the directory. Run it while you work, and in the plugin's own CI.
+Holds the plugin in `--dir` to the framework's rules: the rules every plugin is built to, so that plugins written by different people and different coding agents look and behave alike, and a change to what plugins call can be applied to all of them. It needs no deployment and no session, changes nothing, and reads nothing outside the directory. Run it while you work, and in the plugin's own CI.
 
 Each failure names the rule, the file and line, and what to write instead, so that a coding agent can fix it without asking. The rules are compiled into the binary: the check a plugin meets is the one of the `meridian` that runs it.
 
@@ -507,7 +458,7 @@ Each failure names the rule, the file and line, and what to write instead, so th
 |---|---|---|---|
 | `--dir` | `<dir>` | `.` | The plugin's directory. |
 | `--run-tests` | | off | Also run the plugin's tests with pytest: `.venv/bin/python -m pytest` when the plugin has a `.venv`, otherwise `python3 -m pytest`, which must have the plugin and pytest installed. No cache or bytecode is written. |
-| `--verified` | | off | Hold it as a verified plugin is: every route that changes something a tool for agents, none kept from them (`tools-cover-routes`), from CLI 0.1.37 each role it holds with a suite run in its tests (`role-suite`: `custody` and `data`, and `connectivity` from CLI 0.1.42), and from CLI 0.1.39 each role's common part kept and every act naming its check tool (`role-pages`). |
+| `--verified` | | off | Hold it as a verified plugin is: every route that changes something a tool for agents, none kept from them (`tools-cover-routes`), each role it holds with a suite run in its tests (`role-suite`: `custody`, `data` and `connectivity`), and each role's common part kept and every act naming its check tool (`role-pages`). |
 | `--json` | | off | One JSON object on stdout instead of the report. |
 
 ### The rules
@@ -515,26 +466,27 @@ Each failure names the rule, the file and line, and what to write instead, so th
 | Rule | Holds | Fails on |
 |---|---|---|
 | `template-shape` | The project keeps the template's shape. | No `pyproject.toml`, or one with no plugin name or version; the SDK not pinned exactly (`open-meridian==<version>`); no `Dockerfile`, or one not built on `ghcr.io/open-meridian/plugin-python:<the pinned version>`; no `src/<module>/__main__.py`; nothing calling `meridian.connect()`; no `AGENTS.md`; a `CLAUDE.md` that does not begin from `@AGENTS.md`; a `.dockerignore` that does not name `AGENTS.md` and `.meridian`. |
-| `tool-meridian` | `[tool.meridian]` names roles from the fixed list, and no tags. | No `[tool.meridian]`; a role not in the deployment's list (`compliance`, `confirmation`, `connectivity`, `custody`, `data`, `ems`, `oms`, `operations`, `portfolio`, `reporting`, `servicing`, `settlement`, `signal`; before CLI 0.1.39, `ccm`, `dgm` and `match` in place of `connectivity`, `data` and `confirmation`); `tags`, empty or not; an `interface` that is not true or false. |
+| `tool-meridian` | `[tool.meridian]` names roles from the fixed list, and no tags. | No `[tool.meridian]`; a role not in the deployment's list (`compliance`, `confirmation`, `connectivity`, `custody`, `data`, `ems`, `oms`, `operations`, `portfolio`, `reference`, `reporting`, `servicing`, `settlement`, `signal`); `tags`, empty or not; an `interface` that is not true or false. |
 | `edge-storage` | Only a plugin at the edge asks for storage in its declaration. | A plugin holding no edge role asking for storage. See [Keep what your custody plugin converts](../how-to/keep-what-the-edge-converts.md). |
-| `role-suite` | A verified plugin holding a role with a suite runs the suite in its tests. | With `--verified`: a plugin holding `custody`, from CLI 0.1.37 `data`, or from CLI 0.1.42 `connectivity`, with no test running that role's suite, which `--run-tests` then runs. Without `--verified` it is reported skipped, from CLI 0.1.37: a plugin not passing its role's suite is not verified for it, and breaks no rule, so the reference plugin given `custody` keeps every rule. CLI 0.1.36 and earlier hold every custody plugin to it. Only the `custody`, `data` and, from CLI 0.1.42, `connectivity` suites are held: a plugin holding `reporting`, `signal`, `oms`, `ems`, `portfolio`, `operations` or `compliance` is not checked for its role's suite, which its own tests may still run. The connectivity suite's cases include sending nothing new on a pause and cancelling at the venue on a stop, which no connectivity plugin may name not presented. From CLI 0.1.43 it also holds the test to the outcome `--run-tests` then trusts. Any skip or expected failure where a suite is run fails it at its line: a marker (`pytest.mark.xfail`, strict or not, `skip`, `skipif`, unittest's `skip` and `expectedFailure`), a call (`pytest.xfail()`, `pytest.skip()`, `importorskip`) or a `pytestmark`, in the module running it or a `conftest.py` over it, since only the contract's `closed_list`, `about` and `about_field` excuse a case. And, since the SDK's runner reports rather than raises, a collected test (`test_*` in a `test_*.py`) binds the run and asserts it passed in the very next statement, `report = run("<role>", producers, ...)` then `assert report.passed, report.failures`, under no `try`, `with`, `if` or loop: a test asserting a count or one case, catching the failure, or changing the report first fails it at the suite's first run. Tests that expect the suite to fail may stand beside that one. See [Keep what your custody plugin converts](../how-to/keep-what-the-edge-converts.md) and [Write a data plugin against its suite](../how-to/write-a-data-plugin.md#hold-it-to-the-suite). |
-| `role-pages` | A plugin holding a role with a common part keeps its common pages, tools and settings, in the role's order, and every act names its check tool. | From CLI 0.1.39, with `--verified`, for each of `data`, `custody`, `operations` and `reporting` the plugin holds: a common page missing, retitled, at another path or level, or after a page of the plugin's own; a common page's read tool missing or renamed, or its record (`meridian.roles.<role>`'s `<Page>Read`, or the plugin's own) lacking a common field; a common setting missing or out of order (`environment` first, `sample_data` last); a page, setting or figure of the plugin's own taking a common title or label; and an act, a route that changes something and is a tool, naming no check tool (`checked_by=`), or one no read route declares; from CLI 0.1.42, where a tool replaces the route (`@pages.tool(replaces=...)`), the tool is held to it instead, unless it or the route it replaces reads. Without `--verified` each is said as advice and fails nothing. Candidates (custody's, operations' and reporting's items from one plugin) are not held. See [Using a data plugin](../how-to/using-a-data-plugin.md) and [The role's common pages](../how-to/write-a-data-plugin.md#the-roles-common-pages). |
-| `runs-as-checked` | Every act the plugin's own work calls through `runs_as` names its check tool. | From CLI 0.1.41, with or without `--verified`: in the plugin's Python, its tests not, a call in the block of `async with meridian.runs_as(...) as act:` (`runs_as` however it is reached: `meridian.runs_as`, imported, imported as another name, or a name the module binds to it) to one of the plugin's acts, by its tool's name as written or through a constant bound at the top of a module, that declares no check tool (`checked_by=`), at the call's file and line, naming the act and where it is declared, since a service account set to prepare only is refused such an act at run time. A tool named some way the text cannot read, or none of the plugin's acts, is passed over. See [A service account runs the plugin's autonomous work](python-sdk.md#runs_as). |
+| `role-suite` | A verified plugin holding a role with a suite runs the suite in its tests. | With `--verified`: a plugin holding `custody`, `data` or `connectivity` with no test running that role's suite, which `--run-tests` then runs. Without `--verified` it is reported skipped: a plugin not passing its role's suite is not verified for it, and breaks no rule, so the reference plugin given `custody` keeps every rule. Only the `custody`, `data` and `connectivity` suites are held: a plugin holding `reporting`, `signal`, `oms`, `ems`, `portfolio`, `operations` or `compliance` is not checked for its role's suite, which its own tests may still run. The connectivity suite's cases include sending nothing new on a pause and cancelling at the venue on a stop, which no connectivity plugin may name not presented. It also holds the test to the outcome `--run-tests` then trusts (changed in CLI 0.1.43). Any skip or expected failure where a suite is run fails it at its line: a marker (`pytest.mark.xfail`, strict or not, `skip`, `skipif`, unittest's `skip` and `expectedFailure`), a call (`pytest.xfail()`, `pytest.skip()`, `importorskip`) or a `pytestmark`, in the module running it or a `conftest.py` over it, since only the contract's `closed_list`, `about` and `about_field` excuse a case. And, since the SDK's runner reports rather than raises, a collected test (`test_*` in a `test_*.py`) binds the run and asserts it passed in the very next statement, `report = run("<role>", producers, ...)` then `assert report.passed, report.failures`, under no `try`, `with`, `if` or loop: a test asserting a count or one case, catching the failure, or changing the report first fails it at the suite's first run. Tests that expect the suite to fail may stand beside that one. See [Keep what your custody plugin converts](../how-to/keep-what-the-edge-converts.md) and [Write a data plugin against its suite](../how-to/write-a-data-plugin.md#hold-it-to-the-suite). |
+| `role-pages` | A plugin holding a role with a common part keeps its common pages, tools and settings, in the role's order, and every act names its check tool. | With `--verified`, for each of `data`, `custody`, `operations` and `reporting` the plugin holds: a common page missing, retitled, at another path or level, or after a page of the plugin's own; a common page's read tool missing or renamed, or its record (`meridian.roles.<role>`'s `<Page>Read`, or the plugin's own) lacking a common field; a common setting missing or out of order (`environment` first, `sample_data` last); a page, setting or figure of the plugin's own taking a common title or label; and an act, a route that changes something and is a tool, naming no check tool (`checked_by=`), or one no read route declares; where a tool replaces the route (`@pages.tool(replaces=...)`), the tool is held to it instead, unless it or the route it replaces reads. Without `--verified` each is said as advice and fails nothing. Candidates (custody's, operations' and reporting's items from one plugin) are not held. See [Using a data plugin](../how-to/using-a-data-plugin.md) and [The role's common pages](../how-to/write-a-data-plugin.md#the-roles-common-pages). |
+| `runs-as-checked` | Every act the plugin's own work calls through `runs_as` names its check tool. | With or without `--verified`: in the plugin's Python, its tests not, a call in the block of `async with meridian.runs_as(...) as act:` (`runs_as` however it is reached: `meridian.runs_as`, imported, imported as another name, or a name the module binds to it) to one of the plugin's acts, by its tool's name as written or through a constant bound at the top of a module, that declares no check tool (`checked_by=`), at the call's file and line, naming the act and where it is declared, since a service account set to prepare only is refused such an act at run time. A tool named some way the text cannot read, or none of the plugin's acts, is passed over. See [A service account runs the plugin's autonomous work](python-sdk.md#runs_as). |
 | `kit-linked` | Every page links the kit from `/.meridian/ui/`, and the plugin holds no copy of it. | A file that writes a document (`<!doctype html>`, `<html>` or `<head>`) with no link to `/.meridian/ui/…/meridian.css`; a file named `meridian.css` or `meridian.js` in the plugin. |
 | `no-raw-colour` | No raw colour in a page or its styles. | A hex colour where a colour goes, `rgb()`, `rgba()`, `hsl()`, `hsla()`, `hwb()`, `oklch()` or `oklab()`, or a CSS colour name as the value of a colour property (`color`, `background`, `border`, `fill`, `stroke` and the like), a colour attribute (`fill="…"`) or a script's `.style.…Color`. A fallback in `var(--x, #fff)` is a raw colour too. |
 | `own-origin` | A page loads nothing from another origin. | An absolute or protocol-relative address (`https://…`, `//…`, `wss://…`) as a script's, stylesheet's, image's or frame's source, in `@import` or `url()`, or given to `fetch`, `EventSource`, `WebSocket` or `import`. A link people follow (`<a href>`) is not loading. |
 | `tools-cover-routes` | Every route that changes something is a tool for agents, or says why not. | A route that changes something with no `params=` record and no `tool=False` with `why=`. See [Offer your plugin's pages to agents](../how-to/offer-your-pages-to-agents.md). |
-| `roles-declared` | On a plugin holding several roles, every page, route and setting names its roles, and a changing route sends only its roles' commands. | From CLI 0.1.35, only on a plugin whose `[tool.meridian]` names several roles: a page, route or setting naming no `roles=`, or a role the plugin does not hold, a tool held to its route's roles unless it names its own; a route that changes something (any method but GET and HEAD) whose view sends a command none of its roles holds, by meridian-schema's published `roles.json`, at the line of the call, naming the roles that hold it. `roles=` is read as written or through a constant bound at the top of a module. A plugin holding one role, or none, names none, and the rule holds. See [Roles](python-sdk.md#roles). |
-| `window-settings` | No setting of the plugin's own takes a declared kind's window setting's name. | From CLI 0.1.36: a setting named `<kind>_window_days` or `<kind>_past_window` for a kind the plugin declares with `RecordKind(...)`, at its line, as written or through a constant bound at the top of a module. The SDK declares both settings for every kind, and refuses a plugin declaring either itself. See [The window settings](python-sdk.md#the-window-settings). |
+| `roles-declared` | On a plugin holding several roles, every page, route and setting names its roles, and a changing route sends only its roles' commands. | Only on a plugin whose `[tool.meridian]` names several roles: a page, route or setting naming no `roles=`, or a role the plugin does not hold, a tool held to its route's roles unless it names its own; a route that changes something (any method but GET and HEAD) whose view sends a command none of its roles holds, by meridian-schema's published `roles.json`, at the line of the call, naming the roles that hold it. `roles=` is read as written or through a constant bound at the top of a module. A plugin holding one role, or none, names none, and the rule holds. See [Roles](python-sdk.md#roles). |
+| `window-settings` | No setting of the plugin's own takes a declared kind's window setting's name. | A setting named `<kind>_window_days` or `<kind>_past_window` for a kind the plugin declares with `RecordKind(...)`, at its line, as written or through a constant bound at the top of a module. The SDK declares both settings for every kind, and refuses a plugin declaring either itself. See [The window settings](python-sdk.md#the-window-settings). |
 | `settings-declared` | Settings are declared to the SDK, not read from the environment. | `os.environ`, `os.getenv`, `getenv(` or `environ[…]`. One name is allowed: a variable ending `_PAGE_PORT`, where the page listens on loopback for its sidecar, as the template's does. That is the plugin's own wiring, which nobody configures. |
 | `secrets-kept` | No secret setting's value is logged or put in a page. | For each `meridian.Setting(…, secret=True)`, by its name or the constant that names it: its value (`values[NAME]`, `.get(NAME)`, `.name`, `{name}`) in a logging call, `print`, a `raise`, or a statement that writes HTML. Its name alone, as in "waiting for broker_api_key", is not its value. |
 | `through-the-sdk` | The deployment is reached only through the SDK. | Importing `nats`, `psycopg`, `psycopg2`, `asyncpg`, `sqlalchemy`, `pg8000`, `aiopg`, `grpc`, `kubernetes`, or the sidecar's raw `*_pb2_grpc` stubs; naming `nats://`, `postgres://`, a cluster service (`*.svc`, `*.svc.cluster.local`), `meridian.localhost`, a dashboard `/terminal/` path, or `MERIDIAN_SIDECAR_ADDRESS`. |
+| `replaced-ids-followed` | No instrument ID kept in the code is written after its record is replaced. A warning: it fails nothing, since the deployment accepts a replaced ID on every write, forever. Added in CLI 0.1.45. | Warns, with or without `--verified`, on a string in the plugin's Python, its tests not, holding an `INS-` or `LCL-` ID and nothing else, at its file and line: a provisional `LCL-` record is replaced once the platform answers, and an `INS-` record when the platform merges it. Resolve the instrument from an identifier it states (`resolve_identifier`), or follow the kept ID to the record it became before writing it, `ids.current("<id>")` with `meridian.CurrentIdMap`. An ID followed where it is written is not kept. With `--json`, each is in `warnings`. |
 | `tests-exist` | The plugin has tests. | No `test_*.py` or `*_test.py` with a `def test_…` in it. |
 | `tests-pass` | Its tests pass. | With `--run-tests`: pytest exits non-zero, collects nothing, or is not installed. Without it the rule is reported as not run, and does not fail. |
 
 The page rules read HTML, CSS, SVG, script and templates, and the Python that renders a page, so they hold for a plugin in any language. The rules about the plugin's code read Python, the one SDK there is. Tests (`tests/`, `test_*.py`, `conftest.py`) are not held to the page and code rules: a test may name a colour to assert it is absent. Comments are not read, so a colour in a comment is on no page.
 
-Nothing a checkout, a build, a virtual environment or an agent leaves beside the plugin is read, such as `.git`, `.venv`, `build`, `dist` and `.claude`. From CLI 0.1.24 neither is `.e2e`, where [a plugin's e2e](../how-to/prove-a-plugin-against-a-released-runtime.md) copies core's plugin harness out of its image: core's code, not the plugin's, which reads its own environment.
+Nothing a checkout, a build, a virtual environment or an agent leaves beside the plugin is read, such as `.git`, `.venv`, `build`, `dist` and `.claude`. Nor is `.e2e`, where [a plugin's e2e](../how-to/prove-a-plugin-against-a-released-runtime.md) copies core's plugin harness out of its image: core's code, not the plugin's, which reads its own environment.
 
 The rules match what can be decided from the text: the obvious forms, not every form. A secret copied into another variable before it is logged, or a colour built from parts in a script, gets past them. They are the floor, not the review.
 
@@ -588,10 +540,10 @@ With `--json`, one object. `line` is `null` when the failure is a whole file, or
 }
 ```
 
-`outcome` is `passed`, `failed`, or `skipped` for `tests-pass` without `--run-tests`, and from CLI 0.1.37 for `role-suite` without `--verified`, its line saying `--verified holds it`.
+`outcome` is `passed`, `failed`, or `skipped` for `tests-pass` without `--run-tests`, and for `role-suite` without `--verified`, its line saying `--verified holds it`.
 
 !!! note "A freshly scaffolded plugin"
-    From CLI 0.1.16, the plugin `meridian plugin new` writes keeps every rule, with its own tests and a CI workflow (`.github/workflows/check.yaml`) that runs `meridian plugin check --run-tests`. At 0.1.15 it failed `tests-exist` until you added a test.
+    The plugin `meridian plugin new` writes keeps every rule, with its own tests and a CI workflow (`.github/workflows/check.yaml`) that runs `meridian plugin check --run-tests`.
 
 **Exit codes:** `0` every rule holds; `1` at least one does not; `2` asked wrongly, or `--dir` is not a directory.
 
@@ -601,7 +553,7 @@ With `--json`, one object. `line` is `null` when the failure is a whole file, or
 meridian plugin migrate [--to <version>] [--dir <dir>] [--image <ref>] [--force] [--run-tests] [--json]
 ```
 
-From CLI 0.1.18. Moves the plugin in `--dir` to a newer release of the Python SDK, `open-meridian`. Every release of the SDK that changes what a plugin calls carries a migration from the release before it: code that rewrites the plugin to the new form, and a record of what it cannot rewrite and what a person or a coding agent must then do. Every other release carries one that only moves the pins. So the steps from any recorded release to the newest exist, and `plugin migrate` runs them in order. The first recorded step is from 0.5.0.
+Moves the plugin in `--dir` to a newer release of the Python SDK, `open-meridian`. Every release of the SDK that changes what a plugin calls carries a migration from the release before it: code that rewrites the plugin to the new form, and a record of what it cannot rewrite and what a person or a coding agent must then do. Every other release carries one that only moves the pins. So the steps from any recorded release to the newest exist, and `plugin migrate` runs them in order. The first recorded step is from 0.5.0.
 
 It needs no deployment and no session. It needs `docker`, and, unless you name both `--to` and `--image`, the Python package index, which it asks for the SDK's releases. It needs no Python on your machine.
 
@@ -657,15 +609,16 @@ The rewrites keep a file's formatting and comments wherever they change nothing.
 | 0.15.0 to 0.16.0: the SDK declares contract v11, the edge keeps its own: the version's declaration, a row's raw record and provenance, values as reported, each asset counted once. See [Keep what your custody plugin converts](../how-to/keep-what-the-edge-converts.md) | Nothing | an external account's `venue_account_type=` (`account-kind`), a holding's `also_counted_in_cash=` (`counted-once`) and `currency_assumed=` (`currency-provenance`), each replaced by the plugin's own conversion |
 | 0.16.0 to 0.17.0: the SDK declares contract v12, the deployment serves its MCP: a route's one typed record of inputs, and tools derived from typed routes. See [Offer your pages to agents](../how-to/offer-your-pages-to-agents.md) | Nothing | a page or route that changes something and declares no `params=`: give it its record, or `tool=False` with `why=` (`typed-route`) |
 | 0.17.0 to 0.18.0: the SDK declares contract v13; a plugin files a ticket for a person and reads what it filed | Nothing: only the pins move | |
-| 0.18.0 to 0.19.0: the SDK declares contract v14; a custody plugin reports the custodian's activity, and operations reads, hears and links it, and each sync status the street keeps; a setting may be a table of typed columns. See [Report the custodian's activity](../how-to/report-the-custodians-activity.md#move-a-plugin-to-0190) and [Set a plugin's settings](../how-to/set-a-plugins-settings.md#declare-a-table-setting-and-read-its-rows) | Nothing: only the pins move | |
-| 0.20.0 to 0.21.0: the SDK declares contract v16; a plugin at the edge declares the kinds of raw record it keeps, and past each kind's window archives, keeps or deletes them as its admin chose, each move reported. See [The archive](python-sdk.md#the-archive) and [Move a plugin to 0.21.0](../how-to/keep-what-the-edge-converts.md#move-a-plugin-to-0210) | Nothing: only the pins move. A plugin keeping one retention (`Storage(retention_days=...)`) keeps it. One adopting kinds drops any setting of its own that held a window, and its release notes name it and the window it maps to, for the admin to set once at upgrade; a setting of its own named as a declared kind's window setting is reported by `plugin check` (`window-settings`) | |
-| 0.19.0 to 0.20.0: the SDK declares contract v15; a person's access to a plugin is granted per role, and a page, route, tool and setting names the roles it serves; a custody plugin re-resolves an activity once its instrument resolves, which operations reads and hears. See [Roles](python-sdk.md#roles) and [Report the custodian's activity](../how-to/report-the-custodians-activity.md#move-a-plugin-to-0200) | Nothing: only the pins move. A plugin holding one role, or none, names no role anywhere; one that comes to hold a second names `roles=` on every page, route, tool and setting, which `plugin check` reports (`roles-declared`) | |
+| 0.18.0 to 0.19.0: the SDK declares contract v14; a custody plugin reports the custodian's activity, and operations reads, hears and links it, and each sync status the street keeps; a setting may be a table of typed columns. See [0.18.0 to 0.19.0](python-sdk.md#0180-to-0190) and [Set a plugin's settings](../how-to/set-a-plugins-settings.md#declare-a-table-setting-and-read-its-rows) | Nothing: only the pins move | |
+| 0.20.0 to 0.21.0: the SDK declares contract v16; a plugin at the edge declares the kinds of raw record it keeps, and past each kind's window archives, keeps or deletes them as its admin chose, each move reported. See [The archive](python-sdk.md#the-archive) and [0.20.0 to 0.21.0](python-sdk.md#0200-to-0210) | Nothing: only the pins move. A plugin keeping one retention (`Storage(retention_days=...)`) keeps it. One adopting kinds drops any setting of its own that held a window, and its release notes name it and the window it maps to, for the admin to set once at upgrade; a setting of its own named as a declared kind's window setting is reported by `plugin check` (`window-settings`) | |
+| 0.19.0 to 0.20.0: the SDK declares contract v15; a person's access to a plugin is granted per role, and a page, route, tool and setting names the roles it serves; a custody plugin re-resolves an activity once its instrument resolves, which operations reads and hears. See [Roles](python-sdk.md#roles) and [0.19.0 to 0.20.0](python-sdk.md#0190-to-0200) | Nothing: only the pins move. A plugin holding one role, or none, names no role anywhere; one that comes to hold a second names `roles=` on every page, route, tool and setting, which `plugin check` reports (`roles-declared`) | |
 | 0.21.0 to 0.22.0: the SDK declares contract v18, the lake: a data plugin's catalogue, prices and bars recorded in batches, wants, the lake's reads by business date, as of and side by side, venues resolved, the data suite; a `Money` names its cash instrument, and every date field takes a `datetime.date`. See [The lake](python-sdk.md#the-lake) | Nothing: only the pins move. `Money(amount, code)` keeps its shape | a test comparing a Money read back with one it made, which now carries `instrument_id`: compare `amount` and `currency_code`; a date sent as text that is no date, now refused |
 | 0.22.0 to 0.23.0: the SDK declares contract v19, the lake's trades and quotes: a data plugin records them in batches, `signal` and `ems` read and hear them, every trade in full and caught up after a watermark, the latest quote per asset; a price heard is conflated per its asset too; `reporting` resolves an identifier; the data suite's eight 1b cases, a case about a kind of data the plugin never publishes not presented with why, `signal`'s 1b cases, the `ems` suite and `reporting`'s `resolves-its-reporting-currency`. It needs chart 0.1.294 or later. See [Trades and quotes](python-sdk.md#trades-and-quotes) | Nothing: only the pins move | a data plugin whose suite test runs the data suite meets the eight new cases unmapped: map each, or, where it publishes no trades or quotes, name them in `not_presented` with why (see [Write a data plugin](../how-to/write-a-data-plugin.md#hold-it-to-the-suite)) |
 | 0.23.0 to 0.24.0: the SDK declares contract v20: an act can be prepared rather than made (`checked_by=`, `accounts=`, `made_on=`, `request.prepared()`); a setting may be each person's own (`per_person`); a plugin links only to the accounts a deployment admin granted it; a data plugin reads its own datasets' licences and backfills a restart's gap; the data suite's three new cases; each role's common part in `meridian.roles`, typed settings and `meridian.environment()`; and the roles `dgm`, `ccm` and `match` renamed `data`, `connectivity` and `confirmation`. It needs chart 0.1.298 or later. See [0.23.0 to 0.24.0](python-sdk.md#0230-to-0240) | the role `dgm`, `ccm` or `match` named where a plugin names a role (a `roles=` argument, the role `meridian.suites.run`, `run_async`, `suite` or `names` is given, or `Caller.level_for`, `read_for` or `write_for` asks) to `data`, `connectivity` or `confirmation` (`role-renamed`); and the same in `pyproject.toml`'s `[tool.meridian] roles` (`metadata-role-renamed`) | a form field named `prepare`, which the SDK refuses; each act a verified plugin offers naming its check tool, which `role-pages` requires from CLI 0.1.39; a data plugin's three new suite cases, each mapped or, where its source never presents it, named in `not_presented` with why (see [Write a data plugin](../how-to/write-a-data-plugin.md#hold-it-to-the-suite)) |
 | 0.24.0 to 0.25.0: the SDK declares contract v21, a service account runs a plugin's autonomous work: an act called as the role's service account (`meridian.runs_as(role)`), answered made or prepared, a refusal naming its field (`NotGranted.fields`, `CallFailed.fields`); a caller who is a service account (`Caller.subject_kind`, `Caller.owner_subject`, `meridian.SubjectKind`); and a tool called as one in a plugin's own test (`PageClient.call_tool(subject_kind=, owner_subject=)`). It needs chart 0.1.299 or later. See [0.24.0 to 0.25.0](python-sdk.md#0240-to-0250) | Nothing: only the pins move | |
 | 0.25.0 to 0.26.0: the SDK declares contract v22, the order path's slice A and settlement calendars: the order path's typed operations and deliveries, its refusal codes and the transition table (`meridian/transitions.json`); `read_calendar` and `compute_date`; a version's algorithms (`Declaration(algorithms=)`, `AlgorithmDeclaration`, `runs_as(role, algorithm_id=)`, `Caller.algorithm_id`); the connectivity plugins a caller may route through (`Caller.connectivity_instance_ids`); a sleeve on positions, lots and movement lines; the suites' v22 cases. It needs chart 0.1.301 or later. See [0.25.0 to 0.26.0](python-sdk.md#0250-to-0260) | Nothing: only the pins move | a suite test meeting the settlement calendars' cases (`reads-a-calendar`, every role's; `asks-for-a-settlement-date`, every role's but `connectivity`'s and `operations`'): map each, or, where the plugin's work never uses calendars or settlement dates, name it in `not_presented` with why (see [A case not presented](python-sdk.md#a-case-not-presented)) |
 | 0.26.0 to 0.27.0: the SDK declares contract v23, venue-originated fills and the lake's outcomes: a fill on no placement (`report_execution`'s `instrument_id`, `side`, `venue_order_id`, `venue_client_order_id`), waiting unmatched (`Execution.state`); the `ems`'s accept and DK (`accept_execution`, `dont_know_execution`) and their refusal codes; a connectivity plugin hearing the executions it reported; `VenueCatalogue.execution_acknowledgement`; `list_orders(execution_state=)`; a value-date roll (`report_value_date_roll`), financing and commission fees, an order's `quote_currency`; an event contract's outcomes (`record_outcomes`, `receive(outcomes_recorded=)`, `list_outcomes`); the closed-day flag and counts; `meridian.account_currency()`; the suites' v23 cases, their `about` markers and `any_of`. See [0.26.0 to 0.27.0](python-sdk.md#0260-to-0270) | Nothing: only the pins move | |
+| 0.27.0 to 0.28.0: the SDK declares contract v24: booking (`book_order`, `hand_off_booking`, `correct_booking`, `set_allocation_instruction`, `record_sleeve_cross`, `report_give_up`, `raise_alert`, `acknowledge_alert`, `list_bookings`, `list_alerts`); every instrument named by the platform's `INS-` ID, a local `LCL-` record provisional (`ResolveIdentifierResult.provisional`); `list_replacements` and the current-ID map, `list_templates`, `read_template`, `offer_template_fields`; `read_local_record_orders`; the suites' v24 cases; `DatasetDeclaration.calendar_id`; `meridian.environment()` defaulting to `sandbox`. It needs chart 0.1.305 or later. See [0.27.0 to 0.28.0](python-sdk.md#0270-to-0280) | a record's `instrument_id.startswith("LCL-")` to its `provisional` (`lcl-prefix-provisional`); the platform's ID read from the `open_meridian` identifier to the record's `instrument_id`, or the read's default where the record is provisional (`open-meridian-instrument-id`); a test's `LCL-suite-n` to `INS-suite-n` (`suite-fixture-ins`) | an ID tested for the prefix `LCL-` with no record at hand (`lcl-prefix-tested`); the `open_meridian` identifier read or written another way (`open-meridian-read`); a plugin keeping instrument IDs in its own storage, which follows each replacement with `meridian.CurrentIdMap`; a plugin that was Live by default, which says `environment(default="live")` only where Live is meant; a suite test meeting v24's cases |
 
 `plugin migrate` adds two rules of its own: `pin-elsewhere`, for the old release still named in another file (a Makefile's base image, a workflow, a README), which it reports rather than moves because some of those are history; and `unreadable`, for a file that is not UTF-8, or that a step could not read as Python, which it leaves as it was.
 
@@ -722,7 +675,7 @@ With `--json`, one object. `image` is `null` when the plugin was on its target a
 
 ## Plugin commands on a deployment
 
-`plugin upload`, `list`, `launch`, `stop`, `dev`, `logs`, `events` and `open` act on the delegation `meridian connect` made, or, on a runtime before contract v15, a session an earlier CLI kept. The deployment answers `upload`, `list`, `launch`, `stop`, `dev`, `logs` and `events` for a deployment admin only. It answers `open` for anybody who holds a level on that plugin, at a level they hold. See [Access](../concepts/access.md).
+`plugin upload`, `list`, `launch`, `stop`, `dev`, `logs`, `events` and `open` act on the delegation `meridian connect` made. The deployment answers `upload`, `list`, `launch`, `stop`, `dev`, `logs` and `events` for a deployment admin only. It answers `open` for anybody who holds a level on that plugin, at a level they hold. See [Access](../concepts/access.md).
 
 These flags are shared among them:
 
@@ -737,7 +690,7 @@ These flags are shared among them:
 | `--since` | `<revision>` | none | `logs`, `events` | Only what came after that revision, a whole number. |
 | `--follow` | | off | `events` | Keep reporting events as they happen, until interrupted. |
 | `--print` | `<path>` | none | `open` | The page at that path on the plugin's host, as you are served it, instead of a link. |
-| `--level` | `manage`, `open` or `view` | the first level you hold | `open` | The level the session is opened at, as the dashboard's buttons: `manage` (`admin`), `open` (`write`) or `view` (`read`). From CLI 0.1.21. |
+| `--level` | `manage`, `open` or `view` | the first level you hold | `open` | The level the session is opened at, as the dashboard's buttons: `manage` (`admin`), `open` (`write`) or `view` (`read`). |
 
 **Exit codes** for all of them: `0` done, `1` refused or failed, `2` asked wrongly, `3` not connected, or the delegation was revoked or has lapsed.
 
@@ -749,7 +702,7 @@ meridian plugin upload [--dir <dir>] [--deployment <addr>]
 
 Builds the plugin's image on this machine and puts it in the deployment's catalogue as a version. The steps:
 
-1. Read `pyproject.toml` and check its [plugin manifest](plugin-manifest.md). From CLI 0.1.14, a `[tool.meridian]` that declares `tags` is refused here, before anything is built: a plugin declares none, since a person's level on a plugin is `admin`, `read` or `write`, in the deployment's access groups.
+1. Read `pyproject.toml` and check its [plugin manifest](plugin-manifest.md). A `[tool.meridian]` that declares `tags` is refused here, before anything is built: a plugin declares none, since a person's level on a plugin is `admin`, `read` or `write`, in the deployment's access groups.
 2. Build the image with `docker build`, tagged `meridian-plugin/<name>:<version>`.
 3. Read the image back with `docker save`.
 4. Push it into the deployment's registry through the dashboard. A layer the registry already holds is not sent again, and one another plugin's repository holds is mounted from there.
@@ -802,7 +755,7 @@ Without `--release`, it does the following:
 The directory is scanned four times a second, and events are polled twice a second. Some files are never sent:
 
 - `.git`, `__pycache__`, `.venv`, `venv`, `.mypy_cache`, `.pytest_cache`, `.ruff_cache`, `build`, `dist`, `.meridian`, `.DS_Store`, `*.egg-info` and `*.pyc`;
-- from CLI 0.1.24, `.e2e`, where a plugin's e2e copies core's plugin harness out of its image, which `plugin check` does not read either;
+- `.e2e`, where a plugin's e2e copies core's plugin harness out of its image, which `plugin check` does not read either;
 - whatever the plugin's `.dockerignore` names. Negations and patterns with wildcards other than a leading `*` are not read, and a pattern that can't be read is sent rather than guessed at.
 
 One change may carry at most 11 MiB before encoding.
@@ -871,7 +824,7 @@ meridian plugin open --instance <id> [--level manage|open|view] [--print <path>]
 
 A session on a plugin carries one level, as the dashboard home's buttons do: **Manage** at `admin`, **Open** at `write`, **View** at `read`. See [Manage, Open and View](../concepts/plugins.md#manage-open-and-view).
 
-`--level` names it: `manage`, `open` or `view`, or the level's own name, `admin`, `write` or `read`, in any case. Anything else is refused before anything is asked, and so is a level you do not hold, by the deployment, naming the levels you do. Without `--level`, the session is opened at the first level you hold, Manage before Open before View, as the home's first button is. From CLI 0.1.21; an earlier CLI names no level, and the dashboard opens at the first held.
+`--level` names it: `manage`, `open` or `view`, or the level's own name, `admin`, `write` or `read`, in any case. Anything else is refused before anything is asked, and so is a level you do not hold, by the deployment, naming the levels you do. Without `--level`, the session is opened at the first level you hold, Manage before Open before View, as the home's first button is.
 
 A page serves only the levels it is declared with. So the first level you hold may well be refused the page you ask for: as a plugin's admin, which a deployment admin is on every plugin through All plugins (admin), the scaffold's Accounts page at `/` is refused at Manage. Name the level the page is for:
 
@@ -904,7 +857,7 @@ With `--json`, one object:
 {"instance_id": "my-plugin", "status": 200, "level": "write", "content_type": "text/html; charset=utf-8", "body": "…"}
 ```
 
-A body that is not UTF-8 text comes as `body_base64` instead of `body`. `level` is left out by a dashboard older than levels.
+A body that is not UTF-8 text comes as `body_base64` instead of `body`.
 
 ## `meridian upgrade`
 
@@ -930,7 +883,7 @@ meridian uninstall [--yes]
 
 Removes the command line. It lists what it will remove and asks first:
 
-1. Every delegation it holds, revoked at each deployment, and any session an earlier CLI kept, ended there. One with a deployment it can't reach is forgotten here: it says when the delegation lapses, which you can bring forward by revoking it from Connected clients, and a session lapses there within 30 minutes.
+1. Every delegation it holds, revoked at each deployment. One with a deployment it can't reach is forgotten here: it says when the delegation lapses, which you can bring forward by revoking it from Connected clients.
 2. The sessions directory.
 3. The binary.
 

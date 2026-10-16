@@ -4,34 +4,14 @@ Two data plugins (each holding `data`) put prediction markets' public market
 data into the deployment's [lake](../concepts/the-lake.md), with no key and
 no account: **Kalshi**, from
 [plugin-kalshi](https://github.com/open-meridian/plugin-kalshi), and
-**Polymarket**, from
+**Polymarket**, Polymarket's international venue, from
 [plugin-polymarket](https://github.com/open-meridian/plugin-polymarket).
 They pass one data suite between them. Each contract they price is a
 [binary event contract](../concepts/instruments.md#binary-event-contracts)
-in the deployment's instrument store. From contract v23 each also records
-its contracts' [outcomes](#outcomes), and a third, **Polymarket US**, from
+in the deployment's instrument store, and each records its contracts'
+[outcomes](#outcomes). A third, [**Polymarket US**](#polymarket-us), from
 [plugin-polymarket-us](https://github.com/open-meridian/plugin-polymarket-us),
-joins them.
-
-!!! note "Contract v23"
-    plugin-kalshi 0.5.0 and plugin-polymarket 0.5.0 (Polymarket's
-    international venue) record their contracts' outcomes, and
-    plugin-polymarket-us 0.1.0 is a new data plugin for Polymarket US,
-    each released 2026-10-14, built on open-meridian 0.27.0 (contract v23),
-    and running on chart 0.1.303 or later.
-
-!!! note "Contract v20"
-    plugin-kalshi 0.2.0 and plugin-polymarket 0.2.0, released 2026-10-12,
-    are built on open-meridian 0.24.0 (contract v20), and run on chart
-    0.1.298 or later: each takes the data role's common pages and
-    figures, reads its dataset's licence, and has its `synthetic` setting
-    renamed `sample_data` (see [Using a data plugin](using-a-data-plugin.md)).
-
-!!! note "Contract v19"
-    plugin-kalshi 0.1.0 and plugin-polymarket 0.1.0, released 2026-10-10,
-    are built on open-meridian 0.23.0 (contract v19), proven against core's
-    runtime and plugin harness at chart 0.1.293, and run on chart 0.1.294
-    or later.
+does the same for Polymarket US.
 
 ## What each serves
 
@@ -86,7 +66,7 @@ from the venue's text, never through a float.
 
 ## Outcomes
 
-From contract v23 each plugin serves a second dataset, `<instance>:outcomes`,
+Each plugin serves a second dataset, `<instance>:outcomes`,
 pushed and kept by default: once its venue resolves a contract it serves, it
 records the [outcome](../concepts/the-lake.md#an-event-contracts-outcome)
 unasked, one row key per contract, each change a new version, and stops
@@ -104,12 +84,11 @@ pay-out time stays 0. The data suite's `records-an-outcome` and
 `records-a-partial-payout` pass on each; Polymarket and Polymarket US mark
 `restates-a-disputed-outcome` not presented, with why, since neither states
 a dispute. A reading plugin entitled to the `outcomes` dataset hears and
-reads them; the payout itself is not in the book in v23.
+reads them; the payout itself is not in the book yet.
 
 ## Polymarket US
 
-From contract v23: **plugin-polymarket-us** 0.1.0, a
-data plugin for Polymarket US, apart from the international Polymarket,
+**plugin-polymarket-us** is a data plugin for Polymarket US, apart from the international Polymarket,
 which plugin-polymarket keeps serving. It reads Polymarket US's keyless
 public gateway, polled at most five calls a second, with no key and no
 account, and never trades.
@@ -168,8 +147,8 @@ every other case.
 1. On **Settings**, **Data sources**, set the `live` dataset's licence, and
    entitle the plugins that read it: a `reporting` plugin such as the
    sample reporting plugin's Board reads its prices; only a `signal` or
-   `ems` plugin reads its quotes. From contract v23 license and entitle
-   its `outcomes` dataset too, for the `reporting`, `portfolio`,
+   `ems` plugin reads its quotes. License and entitle its `outcomes`
+   dataset too, for the `reporting`, `portfolio`,
    `compliance`, `signal` or `operations` plugins that read outcomes. See
    [License and entitle a dataset](license-and-entitle-a-dataset.md).
 2. On **Instruments**, complete each contract's record. Where a record

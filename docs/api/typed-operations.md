@@ -15,21 +15,9 @@ The operations are generated, not written by hand. One generator reads the contr
 - the sidecar's side of it;
 - the Python methods on [`Plugin`](python-sdk.md#plugin).
 
-This page lists every operation in SDK 0.14.0, which declares contract v9. It has the operations of 0.13.0, which added the [book of record](../concepts/the-book-of-record.md)'s seven commands and four reads, and `resolve_instrument`, to those of 0.12.0, and what of a holding cannot move to the commands that record holdings. What 0.14.0 adds is the book's refusal of an entry missing what it requires, `REFUSAL_REASON_INCOMPLETE`, naming each missing field (see [What the book requires](#what-the-book-requires)). A plugin built on 0.12.0 or 0.13.0 keeps working, and the book refuses an incomplete entry from it all the same. There is no order-routing or execution operation.
+This page lists every operation in SDK 0.28.0, which declares contract 24: holdings ingestion and [the custodian's activity](../concepts/the-custodians-activity.md), the [book of record](../concepts/the-book-of-record.md)'s commands and reads, instrument and venue resolution, [the lake](../concepts/the-lake.md)'s records and reads, [the order path](#the-order-path), [booking](../concepts/booking.md), the [settlement calendars' reads](#settlement-calendars-reads), and the [one-ID model](../concepts/one-id.md)'s reads, [`list_replacements`](#list_replacements), [`list_templates`](#list_templates) and [`read_template`](#read_template), with `reference`'s [`offer_template_fields`](#offer_template_fields). A resolve answers whether its record is provisional. The book refuses an entry missing what it requires, `REFUSAL_REASON_INCOMPLETE`, naming each missing field (see [What the book requires](#what-the-book-requires)). A command naming an order, a placement, a change request or a locate by its ID is admitted on the role's grant and held by the book to the plugin's write scope (see [The order lifecycle](../concepts/the-order-lifecycle.md#a-command-naming-a-record-by-its-id)).
 
-From 0.19.0, contract v14, it also lists three operations of [the custodian's activity](../concepts/the-custodians-activity.md): [`record_activity`](#record_activity), by which a `custody` plugin reports each activity on an account as the custodian states it, and [`list_activities`](#list_activities) and [`list_sync_statuses`](#list_sync_statuses), by which an `operations` plugin reads it and each sync status the street keeps. Their rows are `preview` in v14. A sync status says from when the source can read the account's history ([`history_from`](#report_sync_status)), and a break's cause may link the activity that explains it ([`BreakCause`](#breakcause)).
-
-From 0.20.0, contract v15, it also lists [`re_resolve_activity`](#re_resolve_activity), by which a `custody` plugin re-resolves an activity it recorded before its instrument resolved, and `list_activities` answers each re-resolution beside the activities, which `operations` hears with `receive(activity_re_resolved=...)`. Both rows are `preview` in v15.
-
-From 0.22.0, contract v18, it also lists eight operations of [the lake](../concepts/the-lake.md) and [the venue master](../concepts/venues.md): [`record_prices`](#record_prices), [`record_bars`](#record_bars) and [`decline_want`](#decline_want), by which a data plugin records its vendor's prices and bars and answers what the lake wants; [`resolve_venue`](#resolve_venue) and [`report_missing_venue`](#report_missing_venue), by which it names a venue by its venue ID; and [`list_prices`](#list_prices), [`list_bars`](#list_bars) and [`list_datasets`](#list_datasets), by which `reporting`, `portfolio`, `compliance` and `signal` read them. Each of the eight is `preview` in v18. A data plugin may also call [`resolve_identifier`](#resolve_identifier), [`report_missing_instrument`](#report_missing_instrument) and [`resolve_instrument`](#resolve_instrument), the last to name to its vendor an instrument another source resolved. A [`Money`](#money) names its cash instrument, and every date field takes a `datetime.date` (see [Times and dates](#times-and-dates)).
-
-From 0.23.0, contract v19 (chart 0.1.293 or later), it also lists four operations of the lake's trades and quotes: [`record_trades`](#record_trades) and [`record_quotes`](#record_quotes), by which a data plugin records them, and [`list_trades`](#list_trades) and [`list_quotes`](#list_quotes), by which `signal` and `ems` read them. `ems` also reads [`list_datasets`](#list_datasets), and `reporting` may call [`resolve_identifier`](#resolve_identifier), read-only. Each of the four is `preview` in v19. `reporting` reads no trade and no quote: it is for slower consumers (see [Who reads what](../concepts/the-lake.md#who-reads-what)).
-
-From 0.24.0, contract v20, no operation is added. The role `dgm` is named `data` (a data plugin), and this page names it so throughout, for every release; `ccm` is `connectivity` and `match` `confirmation`, holding no operation. A data plugin also reads [`list_trades`](#list_trades), its own last recorded trades (`latest_recorded`), and [`list_datasets`](#list_datasets), its own datasets' licences; [`read_accounts_for_linking`](#read_accounts_for_linking) answers only the accounts granted to the plugin's instance; and a resolve of a currency the deployment does not hold is answered from the platform's master. Two calls every plugin may make are in the Python SDK: reading the [prepared change](python-sdk.md#prepared) a page was opened from (`ReadPreparedCall`), and saving [a person's own settings](python-sdk.md#own_settings) (`SetOwnSettings`).
-
-From 0.25.0, contract v21, no operation is added. A plugin's autonomous work calls one of its own acts as the [service account](../concepts/service-accounts.md) its role runs as, through the sidecar's `CallAsServiceAccount`, which the SDK offers as [`meridian.runs_as`](python-sdk.md#runs_as). Where the dashboard makes the act, the act's route is reached with a service account's claims and sends what it sends for a person, `acting_for` the header it received (see [Acting for a person](#acting-for-a-person)); the book records the service account and its owner as the entry's actor.
-
-From 0.26.0, contract v22, it also lists [the order path](#the-order-path)'s twenty-two operations, by which `portfolio`, `oms`, `ems`, `compliance` and `operations` plugins and connectivity plugins propose, release, check, claim, place, report and read orders, and an `ems` maps its accounts to venue account codes; and the [settlement calendars' reads](#settlement-calendars-reads), [`read_calendar`](#read_calendar) and [`compute_date`](#compute_date), which every role may call. `connectivity` also gains [`resolve_identifier`](#resolve_identifier), [`report_missing_instrument`](#report_missing_instrument), [`resolve_instrument`](#resolve_instrument), [`resolve_venue`](#resolve_venue), [`report_missing_venue`](#report_missing_venue) and [`list_account_attributes`](#list_account_attributes); `ems` gains `resolve_instrument`, `resolve_venue` and `list_account_attributes`. Each new operation is `preview` in v22. A command naming an order, a placement, a change request or a locate by its ID is admitted on the role's grant and held by the book to the plugin's write scope (see [The order lifecycle](../concepts/the-order-lifecycle.md#a-command-naming-a-record-by-its-id)).
+Three calls every plugin may make are in the Python SDK rather than here: reading the [prepared change](python-sdk.md#prepared) a page was opened from (`ReadPreparedCall`), saving [a person's own settings](python-sdk.md#own_settings) (`SetOwnSettings`), and calling one of the plugin's own acts as the [service account](../concepts/service-accounts.md) its role runs as (`CallAsServiceAccount`, offered as [`meridian.runs_as`](python-sdk.md#runs_as)). Where the dashboard makes such an act, its route is reached with a service account's claims and sends what it sends for a person, `acting_for` the header it received (see [Acting for a person](#acting-for-a-person)); the book records the service account and its owner as the entry's actor.
 
 ## Summary
 
@@ -45,11 +33,11 @@ From 0.26.0, contract v22, it also lists [the order path](#the-order-path)'s twe
 | [`list_activities`](#list_activities) | `ListActivities` | W2.11 List an account's activity | query | `operations` | `ListActivitiesResult` |
 | [`re_resolve_activity`](#re_resolve_activity) | `ReResolveActivity` | W2.15 Re-resolve a recorded activity | command | `custody` | `ReResolveActivityResult` |
 | [`list_sync_statuses`](#list_sync_statuses) | `ListSyncStatuses` | W2.14 Read an account's sync status | query | `operations` | `ListSyncStatusesResult` |
-| [`resolve_identifier`](#resolve_identifier) | `ResolveIdentifier` | W3.1 Resolve an identifier set | query | `custody`, `data` from v18, `reporting` from v19, `connectivity` from v22 | `ResolveIdentifierResult` |
-| [`report_missing_instrument`](#report_missing_instrument) | `ReportMissingInstrument` | W3.2 Report that a resolution missed | event | `custody`, `data` from v18, `connectivity` from v22 | `Published` |
+| [`resolve_identifier`](#resolve_identifier) | `ResolveIdentifier` | W3.1 Resolve an identifier set | query | `custody`, `data`, `reporting`, `connectivity` | `ResolveIdentifierResult` |
+| [`report_missing_instrument`](#report_missing_instrument) | `ReportMissingInstrument` | W3.2 Report that a resolution missed | event | `custody`, `data`, `connectivity` | `Published` |
 | [`read_accounts_for_linking`](#read_accounts_for_linking) | `ReadAccountsForLinking` | W6.4 Link a plugin's external account | query | `custody` | `ReadAccountsForLinkingResult` |
 | [`link_external_account`](#link_external_account) | `LinkExternalAccount` | W6.4 Link a plugin's external account | command | `custody` | `LinkExternalAccountResult` |
-| [`resolve_instrument`](#resolve_instrument) | `ResolveInstrument` | W3.6 Resolve an instrument for display | query | `portfolio`, `reporting`, `compliance`, `oms`, `operations`, `data` from v18, `ems` and `connectivity` from v22 | `ResolveInstrumentResult` |
+| [`resolve_instrument`](#resolve_instrument) | `ResolveInstrument` | W3.6 Resolve an instrument for display | query | `portfolio`, `reporting`, `compliance`, `oms`, `operations`, `data`, `ems`, `connectivity` | `ResolveInstrumentResult` |
 | [`record_opening_balance`](#record_opening_balance) | `RecordOpeningBalance` | W9.1 Record an account's opening balance | command | `operations` | `RecordOpeningBalanceResult` |
 | [`record_break`](#record_break) | `RecordBreak` | W9.4 Record a break | command | `operations` | `RecordBreakResult` |
 | [`record_account_figures`](#record_account_figures) | `RecordAccountFigures` | W9.5 Record the account's figures | command | `operations` | `RecordAccountFiguresResult` |
@@ -60,48 +48,63 @@ From 0.26.0, contract v22, it also lists [the order path](#the-order-path)'s twe
 | [`list_positions`](#list_positions) | `ListPositions` | W9.10 Read positions | query | `portfolio`, `reporting`, `compliance`, `oms`, `operations` | `ListPositionsResult` |
 | [`list_breaks`](#list_breaks) | `ListBreaks` | W9.11 Read breaks | query | `operations`, `oms`, `compliance`, `portfolio`, `reporting` | `ListBreaksResult` |
 | [`list_account_figures`](#list_account_figures) | `ListAccountFigures` | W9.12 Read the account's figures | query | `operations`, `portfolio`, `compliance`, `reporting` | `ListAccountFiguresResult` |
-| [`list_account_attributes`](#list_account_attributes) | `ListAccountAttributes` | W9.14 Read an account's attributes | query | `portfolio`, `reporting`, `compliance`, `oms`, `operations`, `ems` and `connectivity` from v22 | `ListAccountAttributesResult` |
+| [`list_account_attributes`](#list_account_attributes) | `ListAccountAttributes` | W9.14 Read an account's attributes | query | `portfolio`, `reporting`, `compliance`, `oms`, `operations`, `ems`, `connectivity` | `ListAccountAttributesResult` |
 | [`record_prices`](#record_prices) | `RecordPrices` | W10.4 Record prices and bars in batches | command | `data` | `RecordPricesResult` |
 | [`record_bars`](#record_bars) | `RecordBars` | W10.4 Record prices and bars in batches | command | `data` | `RecordBarsResult` |
-| [`record_trades`](#record_trades) | `RecordTrades` | W10.4 Record prices, bars, trades and quotes in batches | command | `data`, from v19 | `RecordTradesResult` |
-| [`record_quotes`](#record_quotes) | `RecordQuotes` | W10.4 Record prices, bars, trades and quotes in batches | command | `data`, from v19 | `RecordQuotesResult` |
+| [`record_trades`](#record_trades) | `RecordTrades` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` | `RecordTradesResult` |
+| [`record_quotes`](#record_quotes) | `RecordQuotes` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` | `RecordQuotesResult` |
 | [`decline_want`](#decline_want) | `DeclineWant` | W10.7 Want what a read could not answer | command | `data` | `DeclineWantResult` |
-| [`resolve_venue`](#resolve_venue) | `ResolveVenue` | W3.14 Resolve a venue | query | `data`, `connectivity` and `ems` from v22 | `ResolveVenueResult` |
-| [`report_missing_venue`](#report_missing_venue) | `ReportMissingVenue` | W3.15 Report a venue the deployment does not hold | event | `data`, `connectivity` from v22 | `Published` |
+| [`resolve_venue`](#resolve_venue) | `ResolveVenue` | W3.14 Resolve a venue | query | `data`, `connectivity`, `ems` | `ResolveVenueResult` |
+| [`report_missing_venue`](#report_missing_venue) | `ReportMissingVenue` | W3.15 Report a venue the deployment does not hold | event | `data`, `connectivity` | `Published` |
 | [`list_prices`](#list_prices) | `ListPrices` | W10.6 Read prices and bars, point in time, by source | query | `reporting`, `portfolio`, `compliance`, `signal` | `ListPricesResult` |
 | [`list_bars`](#list_bars) | `ListBars` | W10.6 Read prices and bars, point in time, by source | query | `reporting`, `portfolio`, `compliance`, `signal` | `ListBarsResult` |
-| [`list_trades`](#list_trades) | `ListTrades` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `signal`, `ems`, from v19 | `ListTradesResult` |
-| [`list_quotes`](#list_quotes) | `ListQuotes` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `signal`, `ems`, from v19 | `ListQuotesResult` |
-| [`record_outcomes`](#record_outcomes) | `RecordOutcomes` | W10.4 Record prices, bars, trades and quotes in batches | command | `data`, from v23 | `RecordOutcomesResult` |
-| [`list_outcomes`](#list_outcomes) | `ListOutcomes` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `reporting`, `portfolio`, `compliance`, `signal`, `operations`, from v23 | `ListOutcomesResult` |
-| [`list_datasets`](#list_datasets) | `ListDatasets` | W10.9 Read the datasets | query | `reporting`, `portfolio`, `compliance`, `signal`, `ems` from v19 | `ListDatasetsResult` |
-| [`propose_order`](#propose_order) | `ProposeOrder` | W11.1 Propose an order | command | `portfolio`, `oms`, `ems`, from v22 | `ProposeOrderResult` |
-| [`record_order`](#record_order) | `RecordOrder` | W11.2 Record an order the book did not create | command | `oms`, from v22 | `RecordOrderResult` |
-| [`request_order_change`](#request_order_change) | `RequestOrderChange` | W11.3 Ask for a change to an order | command | `portfolio`, `oms`, `ems`, from v22 | `RequestOrderChangeResult` |
-| [`record_check`](#record_check) | `RecordCheck` | W11.4 Record a check | command | `compliance`, from v22 | `RecordCheckResult` |
-| [`decide_approval`](#decide_approval) | `DecideApproval` | W11.5 Require, give or override approval, or reject an order | command | `compliance`, `oms`, from v22 | `DecideApprovalResult` |
-| [`release_order`](#release_order) | `ReleaseOrder` | W11.6 Release an order | command | `oms`, from v22 | `ReleaseOrderResult` |
-| [`set_working_condition`](#set_working_condition) | `SetWorkingCondition` | W11.7 Claim, hold or pause an order | command | `ems`, `oms`, from v22 | `SetWorkingConditionResult` |
-| [`create_placement`](#create_placement) | `CreatePlacement` | W11.8 Create a placement | command | `ems`, from v22 | `CreatePlacementResult` |
-| [`request_placement_change`](#request_placement_change) | `RequestPlacementChange` | W11.9 Ask for a change to a placement | command | `ems`, `oms`, `connectivity`, from v22 | `RequestPlacementChangeResult` |
-| [`report_placement`](#report_placement) | `ReportPlacement` | W11.10 Report a placement's progress | command | `connectivity`, from v22 | `ReportPlacementResult` |
-| [`report_execution`](#report_execution) | `ReportExecution` | W11.11 Report an execution | command | `connectivity`, `ems`, `oms`, from v22 | `ReportExecutionResult` |
-| [`report_charge`](#report_charge) | `ReportCharge` | W11.12 Report a charge | command | `connectivity`, from v22 | `ReportChargeResult` |
-| [`acknowledge_flag`](#acknowledge_flag) | `AcknowledgeFlag` | W11.14 Acknowledge a flag | command | `oms`, `operations`, from v22 | `AcknowledgeFlagResult` |
-| [`list_trading_instructions`](#list_trading_instructions) | `ListTradingInstructions` | W11.16 Hear and read the trading instructions in force | query | `oms`, `ems`, `connectivity`, `portfolio`, `compliance`, from v22 | `ListTradingInstructionsResult` |
-| [`list_orders`](#list_orders) | `ListOrders` | W11.17 Read orders, and an order's history | query | `oms`, `ems`, `compliance`, `portfolio`, `operations`, `reporting`, `connectivity`, from v22 | `ListOrdersResult` |
-| [`read_order_history`](#read_order_history) | `ReadOrderHistory` | W11.17 Read orders, and an order's history | query | `compliance`, `reporting`, `operations`, `oms`, from v22 | `ReadOrderHistoryResult` |
-| [`record_locate`](#record_locate) | `RecordLocate` | W11.18 Record a locate and the prime's answer | command | `connectivity`, from v22 | `RecordLocateResult` |
-| [`list_locates`](#list_locates) | `ListLocates` | W11.18 Record a locate and the prime's answer | query | `compliance`, `oms`, `portfolio`, from v22 | `ListLocatesResult` |
-| [`record_locate_use`](#record_locate_use) | `RecordLocateUse` | W11.19 Reserve, give back or consume a locate | command | `compliance`, `oms`, from v22 | `RecordLocateUseResult` |
-| [`report_venue_catalogue`](#report_venue_catalogue) | `ReportVenueCatalogue` | W11.20 Publish the venue's catalogue | event | `connectivity`, from v22 | `Published` |
-| [`read_venue_catalogue`](#read_venue_catalogue) | `ReadVenueCatalogue` | W11.20 Publish the venue's catalogue | query | `ems`, `oms`, from v22 | `ReadVenueCatalogueResult` |
-| [`map_venue_account`](#map_venue_account) | `MapVenueAccount` | W11.22 Map an account to a venue account code | command | `ems`, from v22 | `MapVenueAccountResult` |
-| [`accept_execution`](#accept_execution) | `AcceptExecution` | W11.23 Accept an unmatched execution to an order | command | `ems`, from v23 | `AcceptExecutionResult` |
-| [`dont_know_execution`](#dont_know_execution) | `DontKnowExecution` | W11.24 Answer an unmatched execution DK | command | `ems`, from v23 | `DontKnowExecutionResult` |
-| [`report_value_date_roll`](#report_value_date_roll) | `ReportValueDateRoll` | W11.25 Report a value-date roll | command | `connectivity`, from v23 | `ReportValueDateRollResult` |
-| [`read_calendar`](#read_calendar) | `ReadCalendar` | W3.19 Read a calendar | query | every role, from v22 | `ReadCalendarResult` |
-| [`compute_date`](#compute_date) | `ComputeDate` | W3.20 Work out a date | query | every role, from v22 | `ComputeDateResult` |
+| [`list_trades`](#list_trades) | `ListTrades` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `signal`, `ems` | `ListTradesResult` |
+| [`list_quotes`](#list_quotes) | `ListQuotes` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `signal`, `ems` | `ListQuotesResult` |
+| [`record_outcomes`](#record_outcomes) | `RecordOutcomes` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` (added in contract 23) | `RecordOutcomesResult` |
+| [`list_outcomes`](#list_outcomes) | `ListOutcomes` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `reporting`, `portfolio`, `compliance`, `signal`, `operations` (added in contract 23) | `ListOutcomesResult` |
+| [`list_datasets`](#list_datasets) | `ListDatasets` | W10.9 Read the datasets | query | `reporting`, `portfolio`, `compliance`, `signal`, `ems` | `ListDatasetsResult` |
+| [`propose_order`](#propose_order) | `ProposeOrder` | W11.1 Propose an order | command | `portfolio`, `oms`, `ems` | `ProposeOrderResult` |
+| [`record_order`](#record_order) | `RecordOrder` | W11.2 Record an order the book did not create | command | `oms` | `RecordOrderResult` |
+| [`request_order_change`](#request_order_change) | `RequestOrderChange` | W11.3 Ask for a change to an order | command | `portfolio`, `oms`, `ems` | `RequestOrderChangeResult` |
+| [`record_check`](#record_check) | `RecordCheck` | W11.4 Record a check | command | `compliance` | `RecordCheckResult` |
+| [`decide_approval`](#decide_approval) | `DecideApproval` | W11.5 Require, give or override approval, or reject an order | command | `compliance`, `oms` | `DecideApprovalResult` |
+| [`release_order`](#release_order) | `ReleaseOrder` | W11.6 Release an order | command | `oms` | `ReleaseOrderResult` |
+| [`set_working_condition`](#set_working_condition) | `SetWorkingCondition` | W11.7 Claim, hold or pause an order | command | `ems`, `oms` | `SetWorkingConditionResult` |
+| [`create_placement`](#create_placement) | `CreatePlacement` | W11.8 Create a placement | command | `ems` | `CreatePlacementResult` |
+| [`request_placement_change`](#request_placement_change) | `RequestPlacementChange` | W11.9 Ask for a change to a placement | command | `ems`, `oms`, `connectivity` | `RequestPlacementChangeResult` |
+| [`report_placement`](#report_placement) | `ReportPlacement` | W11.10 Report a placement's progress | command | `connectivity` | `ReportPlacementResult` |
+| [`report_execution`](#report_execution) | `ReportExecution` | W11.11 Report an execution | command | `connectivity`, `ems`, `oms` | `ReportExecutionResult` |
+| [`report_charge`](#report_charge) | `ReportCharge` | W11.12 Report a charge | command | `connectivity` | `ReportChargeResult` |
+| [`acknowledge_flag`](#acknowledge_flag) | `AcknowledgeFlag` | W11.14 Acknowledge a flag | command | `oms`, `operations` | `AcknowledgeFlagResult` |
+| [`list_trading_instructions`](#list_trading_instructions) | `ListTradingInstructions` | W11.16 Hear and read the trading instructions in force | query | `oms`, `ems`, `connectivity`, `portfolio`, `compliance` | `ListTradingInstructionsResult` |
+| [`list_orders`](#list_orders) | `ListOrders` | W11.17 Read orders, and an order's history | query | `oms`, `ems`, `compliance`, `portfolio`, `operations`, `reporting`, `connectivity` | `ListOrdersResult` |
+| [`read_order_history`](#read_order_history) | `ReadOrderHistory` | W11.17 Read orders, and an order's history | query | `compliance`, `reporting`, `operations`, `oms` | `ReadOrderHistoryResult` |
+| [`record_locate`](#record_locate) | `RecordLocate` | W11.18 Record a locate and the prime's answer | command | `connectivity` | `RecordLocateResult` |
+| [`list_locates`](#list_locates) | `ListLocates` | W11.18 Record a locate and the prime's answer | query | `compliance`, `oms`, `portfolio` | `ListLocatesResult` |
+| [`record_locate_use`](#record_locate_use) | `RecordLocateUse` | W11.19 Reserve, give back or consume a locate | command | `compliance`, `oms` | `RecordLocateUseResult` |
+| [`report_venue_catalogue`](#report_venue_catalogue) | `ReportVenueCatalogue` | W11.20 Publish the venue's catalogue | event | `connectivity` | `Published` |
+| [`read_venue_catalogue`](#read_venue_catalogue) | `ReadVenueCatalogue` | W11.20 Publish the venue's catalogue | query | `ems`, `oms` | `ReadVenueCatalogueResult` |
+| [`map_venue_account`](#map_venue_account) | `MapVenueAccount` | W11.22 Map an account to a venue account code | command | `ems` | `MapVenueAccountResult` |
+| [`accept_execution`](#accept_execution) | `AcceptExecution` | W11.23 Accept an unmatched execution to an order | command | `ems` (added in contract 23) | `AcceptExecutionResult` |
+| [`dont_know_execution`](#dont_know_execution) | `DontKnowExecution` | W11.24 Answer an unmatched execution DK | command | `ems` (added in contract 23) | `DontKnowExecutionResult` |
+| [`report_value_date_roll`](#report_value_date_roll) | `ReportValueDateRoll` | W11.25 Report a value-date roll | command | `connectivity` (added in contract 23) | `ReportValueDateRollResult` |
+| [`set_allocation_instruction`](#set_allocation_instruction) | `SetAllocationInstruction` | W11.26 Set an order's allocation instruction | command | `portfolio`, `operations` (added in contract 24) | `SetAllocationInstructionResult` |
+| [`book_order`](#book_order) | `BookOrder` | W11.27 Book an order's executions to its accounts | command | `oms` (added in contract 24) | `BookOrderResult` |
+| [`hand_off_booking`](#hand_off_booking) | `HandOffBooking` | W11.28 Hand off or close a booking | command | `oms` (added in contract 24) | `HandOffBookingResult` |
+| [`correct_booking`](#correct_booking) | `CorrectBooking` | W11.29 Correct a booking | command | `oms`, `operations` (added in contract 24) | `CorrectBookingResult` |
+| [`list_bookings`](#list_bookings) | `ListBookings` | W11.31 Read bookings | query | `oms`, `operations`, `compliance`, `portfolio`, `reporting` (added in contract 24) | `ListBookingsResult` |
+| [`report_give_up`](#report_give_up) | `ReportGiveUp` | W11.32 Report a give-up's answer | command | `connectivity`, `confirmation` (added in contract 24) | `ReportGiveUpResult` |
+| [`record_sleeve_cross`](#record_sleeve_cross) | `RecordSleeveCross` | W11.33 Record a sleeve cross | command | `oms` (added in contract 24) | `RecordSleeveCrossResult` |
+| [`raise_alert`](#raise_alert) | `RaiseAlert` | W11.34 Raise, acknowledge and clear an alert | command | `compliance` (added in contract 24) | `RaiseAlertResult` |
+| [`acknowledge_alert`](#acknowledge_alert) | `AcknowledgeAlert` | W11.34 Raise, acknowledge and clear an alert | command | `compliance` (added in contract 24) | `AcknowledgeAlertResult` |
+| [`list_alerts`](#list_alerts) | `ListAlerts` | W11.35 Hear and read alerts | query | `compliance`, `reporting`, `oms`, `operations` (added in contract 24) | `ListAlertsResult` |
+| [`read_local_record_orders`](#read_local_record_orders) | `ReadLocalRecordOrders` | W11.37 Read whether an order may name a local record | query | `oms`, `ems`, `connectivity`, `portfolio`, `compliance` (added in contract 24) | `ReadLocalRecordOrdersResult` |
+| [`list_replacements`](#list_replacements) | `ListReplacements` | W3.22 Catch up on replacements | query | every role (added in contract 24) | `ListReplacementsResult` |
+| [`list_templates`](#list_templates) | `ListTemplates` | W3.24 Read the template catalogue | query | every role (added in contract 24) | `ListTemplatesResult` |
+| [`read_template`](#read_template) | `ReadTemplate` | W3.24 Read the template catalogue | query | every role (added in contract 24) | `ReadTemplateResult` |
+| [`offer_template_fields`](#offer_template_fields) | `OfferTemplateFields` | W3.23 Offer a template's fields | command | `reference` (added in contract 24) | `OfferTemplateFieldsResult` |
+| [`read_calendar`](#read_calendar) | `ReadCalendar` | W3.19 Read a calendar | query | every role | `ReadCalendarResult` |
+| [`compute_date`](#compute_date) | `ComputeDate` | W3.20 Work out a date | query | every role | `ComputeDateResult` |
 
 **Role** is the plugin role that publishes the step, or the roles that may ask the query, from the contract's matrix. A plugin can call an operation only if it holds one of them, approved when it was launched. Otherwise the call raises `NotGranted`. See [Plugins, roles and grants](../concepts/plugins.md) and [Plugin manifest](plugin-manifest.md).
 
@@ -110,9 +113,9 @@ From 0.26.0, contract v22, it also lists [the order path](#the-order-path)'s twe
 - An **event** returns `Published`, the message's identifier on the bus.
 - A **command** or a **query** returns the answer of whatever serves it.
 
-W2 is holdings ingestion from a brokerage. It is read-only throughout: nothing in it places an order. A `custody` plugin records what the custodian says is held, and from 0.19.0 each activity on the account as the custodian states it, and an `operations` plugin reads it, within its read scope, and hears it change with [`receive`](python-sdk.md#receive), the stream of what a plugin's roles hear (W4.3, `rpc Receive`). W3 is instrument resolution. W6.4 is linking the accounts a source reaches to the firm's own, which a plugin does on its own page at `admin`, for the admin of the plugin viewing it under Manage. The tutorial [Record a holdings statement](../tutorials/record-a-holdings-statement.md) walks through W2 and W6.4.
+W2 is holdings ingestion from a brokerage. It is read-only throughout: nothing in it places an order. A `custody` plugin records what the custodian says is held, and each activity on the account as the custodian states it, and an `operations` plugin reads it, within its read scope, and hears it change with [`receive`](python-sdk.md#receive), the stream of what a plugin's roles hear (W4.3, `rpc Receive`). W3 is instrument resolution. W6.4 is linking the accounts a source reaches to the firm's own, which a plugin does on its own page at `admin`, for the admin of the plugin viewing it under Manage. The tutorial [Record a holdings statement](../tutorials/record-a-holdings-statement.md) walks through W2 and W6.4.
 
-W9, from 0.13.0, is the [book of record](../concepts/the-book-of-record.md): the firm's own record of what each account holds, which an `operations` plugin opens with an opening balance a person confirms, reconciles with the street on each statement, and corrects only by entries that resolve its breaks. `portfolio`, `reporting`, `compliance` and `oms` read it, and hear it change with `receive`. W3.6 is forward resolution, by which those roles join a book position to its instrument. From 0.14.0, contract v9, the book refuses an entry missing what tax tracking, valuation, confirmation or settlement need, and names each field it lacks.
+W9 is the [book of record](../concepts/the-book-of-record.md): the firm's own record of what each account holds, which an `operations` plugin opens with an opening balance a person confirms, reconciles with the street on each statement, and corrects only by entries that resolve its breaks. `portfolio`, `reporting`, `compliance` and `oms` read it, and hear it change with `receive`. W3.6 is forward resolution, by which those roles join a book position to its instrument. The book refuses an entry missing what tax tracking, valuation, confirmation or settlement need, and names each field it lacks.
 
 ## Conventions
 
@@ -132,7 +135,7 @@ async with await meridian.connect() as plugin:
 ### Numbers and amounts
 
 !!! important "Numbers are `Decimal` in Python, and exact integers that carry their own scale on the wire"
-    A quantity takes a `decimal.Decimal` or an `int`. An amount of currency takes a [`meridian.Money`](#money): an amount and its ISO 4217 currency code, together, so an amount is never separated from its currency. From 0.22.0 a Money names its cash instrument, the code resolved by core, a token by its instrument alone.
+    A quantity takes a `decimal.Decimal` or an `int`. An amount of currency takes a [`meridian.Money`](#money): an amount and its ISO 4217 currency code, together, so an amount is never separated from its currency. A Money names its cash instrument, the code resolved by core, a token by its instrument alone.
 
     On the wire a number is its integer, in two 64-bit halves, and the scale it was stated with. `Decimal("1.50")` crosses as 150 at scale 2 and reads back as `1.50`. Nothing on either side is a float, and nothing normalises the scale.
 
@@ -171,7 +174,7 @@ A parameter whose type is an enum, such as [`AssetClass`](#assetclass) or [`Hold
 
 A parameter ending `_ns` is a time in nanoseconds, as an `int`. `time.time_ns()` gives one. `as_of_date` is an ISO 8601 date string, such as `"2026-09-25"`.
 
-From 0.22.0, contract v18, every field the data dictionary types `date` (a business date, an as-of date, a trade date, a value date) takes a `datetime.date`, or its ISO 8601 text as before, and crosses the wire as the text. Text that is no day that exists (`"2026-02-30"`), text in another form (`"20261009"`) and a `datetime`, which is a moment, raise `ValueError` naming the field before anything is sent; the sidecar refuses an invalid date from a plugin that builds its params by hand. A date read back is the text: `date.fromisoformat(price.meta.business_date)`. See [Dates and time](../concepts/dates-and-time.md).
+Every field the data dictionary types `date` (a business date, an as-of date, a trade date, a value date) takes a `datetime.date`, or its ISO 8601 text, and crosses the wire as the text. Text that is no day that exists (`"2026-02-30"`), text in another form (`"20261009"`) and a `datetime`, which is a moment, raise `ValueError` naming the field before anything is sent; the sidecar refuses an invalid date from a plugin that builds its params by hand. A date read back is the text: `date.fromisoformat(price.meta.business_date)`. See [Dates and time](../concepts/dates-and-time.md).
 
 !!! note
     The contract names the unit of `_ns` fields but not their epoch. The examples on this page assume the Unix epoch, which is what `time.time_ns()` returns.
@@ -186,7 +189,7 @@ Some fields describe the publisher rather than the event, and only the sidecar k
 
 | Field | On | Set by the sidecar from |
 |---|---|---|
-| `account_id` | `RecordHoldingsStatement`, `RecordHolding`, `RecordActivity`, `ReResolveActivity` | The link an admin of the plugin made from the plugin's `external_account_id` to an account. Refused when there is none, as [`NotLinked`](#an-unlinked-external-account). On a statement from 0.12.0; on an activity from 0.19.0; on a re-resolution from 0.20.0. |
+| `account_id` | `RecordHoldingsStatement`, `RecordHolding`, `RecordActivity`, `ReResolveActivity` | The link an admin of the plugin made from the plugin's `external_account_id` to an account. Refused when there is none, as [`NotLinked`](#an-unlinked-external-account). |
 | `account_id` | `ReportSyncStatus` | The same link, or empty when there is none. Never refused. |
 | `publisher_instance_id` | `ReportMissingInstrument` | The instance the plugin was launched as. |
 | `placeholder_instrument_id` | `ReportMissingInstrument` | Nothing: always empty from a plugin. Only the instrument store sets it. |
@@ -196,34 +199,34 @@ The sidecar also puts the plugin's own instance in place of `{instance}` in a to
 
 ### Reads are within the read scope { #reads }
 
-From 0.12.0. The sidecar stamps the plugin's [read scope](../concepts/accounts.md#how-accounts-bound-a-plugin) on every read, and the store answers only within it: a read naming an account outside it is refused with `NotGranted`, one naming none answers every account in it, and a plugin whose read scope is empty reads nothing. A plugin reads its whole scope as itself, and serves each person from it with `caller.read`. What it hears with [`receive`](python-sdk.md#receive) is held to the same scope.
+The sidecar stamps the plugin's [read scope](../concepts/accounts.md#how-accounts-bound-a-plugin) on every read, and the store answers only within it: a read naming an account outside it is refused with `NotGranted`, one naming none answers every account in it, and a plugin whose read scope is empty reads nothing. A plugin reads its whole scope as itself, and serves each person from it with `caller.read`. What it hears with [`receive`](python-sdk.md#receive) is held to the same scope.
 
 Each read answers a page, the next page's `cursor` in `next_cursor`, empty on the last, and `as_of`, the [`Watermark`](#watermark) it was read at. Given a watermark as `since`, a read answers only what changed after it. `receive` reads this way to seed and to catch up, so a plugin hearing a row seldom reads it itself.
 
 ### Acting for a person
 
-Thirteen operations take `acting_for`: the two commands that record holdings, from 0.19.0 the one that records an activity, and from 0.20.0 the one that re-resolves it; the seven commands of the book; and the two that link accounts. Pass the `Meridian-Caller` header of the page request you are serving: in a view on [`meridian.Pages`](python-sdk.md#pages), `request.caller.header`; with [`CallerMiddleware`](python-sdk.md#callermiddleware), `request.state.caller.header`.
+Thirteen operations take `acting_for`: the two commands that record holdings, the one that records an activity and the one that re-resolves it; the seven commands of the book; and the two that link accounts. Pass the `Meridian-Caller` header of the page request you are serving: in a view on [`meridian.Pages`](python-sdk.md#pages), `request.caller.header`; with [`CallerMiddleware`](python-sdk.md#callermiddleware), `request.state.caller.header`.
 
 For `record_holdings_statement`, `record_holding`, `record_activity`, `re_resolve_activity` and the book's commands, the sidecar applies the same rule:
 
 - **Unset:** the plugin acts as itself.
-- **Set:** the sidecar checks the assertion, admits the command only in a session opened by **Open**, at `write`, and only when that person may write the account it names, and stamps the person on it. For a command that names no account, the person must be able to write something through the plugin. A command sent for a person in a session opened by Manage or View is refused with `NotGranted`, naming the session. From contract v15 the person must hold `write` on a role of the plugin whose grants include the command, the account among that role's write accounts: otherwise it is refused with `NotGranted`, naming each role that holds the command and what the person holds on it, such as *RecordHoldingsStatement is custody's, and Ada Park holds read on custody*. On a plugin holding one role this is the rule above. See [Access per role](../concepts/access.md#access-per-role).
+- **Set:** the sidecar checks the assertion, admits the command only in a session opened by **Open**, at `write`, and only when that person may write the account it names, and stamps the person on it. For a command that names no account, the person must be able to write something through the plugin. A command sent for a person in a session opened by Manage or View is refused with `NotGranted`, naming the session. The person must hold `write` on a role of the plugin whose grants include the command, the account among that role's write accounts: otherwise it is refused with `NotGranted`, naming each role that holds the command and what the person holds on it, such as *RecordHoldingsStatement is custody's, and Ada Park holds read on custody*. On a plugin holding one role this is the rule above. See [Access per role](../concepts/access.md#access-per-role).
 
 A person narrows what a plugin may do and never widens it.
 
-**A service account's header** (contract v21). An act's route reached for a call the dashboard admitted for the role's [service account](../concepts/service-accounts.md) reads a caller whose `subject_kind` is a service account, naming its owner (see [`Caller`](python-sdk.md#caller)). Pass its header as `acting_for`, as for a person: the sidecar admits the command as it admits a person's under Open, by the account's `write` on the role and its accounts there, and stamps the service account, its kind and its owner beside it (`acting_for_kind`, `owner_subject`). Such claims are good for that one call, for at most 60 seconds, and reach no read or command of the deployment's configuration but filing a ticket and reading back what was filed: `read_accounts_for_linking`, `link_external_account`, reading a prepared change and saving a person's own settings are refused.
+**A service account's header.** An act's route reached for a call the dashboard admitted for the role's [service account](../concepts/service-accounts.md) reads a caller whose `subject_kind` is a service account, naming its owner (see [`Caller`](python-sdk.md#caller)). Pass its header as `acting_for`, as for a person: the sidecar admits the command as it admits a person's under Open, by the account's `write` on the role and its accounts there, and stamps the service account, its kind and its owner beside it (`acting_for_kind`, `owner_subject`). Such claims are good for that one call, for at most 60 seconds, and reach no read or command of the deployment's configuration but filing a ticket and reading back what was filed: `read_accounts_for_linking`, `link_external_account`, reading a prepared change and saving a person's own settings are refused.
 
-Of the book's commands, the findings (`record_break`, `record_account_figures` and `record_encumbrances`) are a plugin's to send as itself. The rest are justified acts, which the book refuses without a person, from contract v21 a person or a service account, and a reason: see [The book's commands](#the-books-commands).
+Of the book's commands, the findings (`record_break`, `record_account_figures` and `record_encumbrances`) are a plugin's to send as itself. The rest are justified acts, which the book refuses without a person or a service account, and a reason: see [The book's commands](#the-books-commands).
 
 For `read_accounts_for_linking` and `link_external_account`, it is required. They touch the deployment's configuration, which a plugin reaches only acting for an admin of the plugin in a session opened by **Manage**, at `admin`, and never as itself. Without an assertion, or with one from a session at any other level, the sidecar refuses the call with `NotGranted`. They are the only reads and commands the sidecar admits for a person in a Manage session: that session reaches no account's data.
 
 ### The book's commands { #the-books-commands }
 
-From 0.13.0. Every command of the book answers after its entry commits, with every record it changed: see [Book entry result](#book-entry-result).
+Every command of the book answers after its entry commits, with every record it changed: see [Book entry result](#book-entry-result).
 
-- **A finding or a person's act.** A break, the figures and the encumbrances are findings, which the plugin may send as itself, acting for nobody. An opening balance, a break's cause and handling, its resolution and closing it as cleared are a person's: send them `acting_for` that person, with their `reason`, or the book refuses them with `REFUSAL_REASON_ACTOR_REQUIRED` or `REFUSAL_REASON_REASON_REQUIRED`. The book records the person, or the plugin's instance, as the entry's actor. From contract v21 they are a user's, a person's or a [service account](../concepts/service-accounts.md)'s: a route reached for the role's service account sends them `acting_for` its header, the reason still required, and the book records the service account and its owner.
+- **A finding or a person's act.** A break, the figures and the encumbrances are findings, which the plugin may send as itself, acting for nobody. An opening balance, a break's cause and handling, its resolution and closing it as cleared are a person's: send them `acting_for` that person, with their `reason`, or the book refuses them with `REFUSAL_REASON_ACTOR_REQUIRED` or `REFUSAL_REASON_REASON_REQUIRED`. The book records the person, or the plugin's instance, as the entry's actor. They are a user's, a person's or a [service account](../concepts/service-accounts.md)'s: a route reached for the role's service account sends them `acting_for` its header, the reason still required, and the book records the service account and its owner.
 - **One arm of a oneof, by keyword.** Where a message holds one of several things, the method takes each as a keyword: a break's `position=` or `figure=`, a resolution's `adjustment=`, `reversal=`, `entries=` or `explanation=`, a basis adjustment's `cost_change=` or `stated_cost=`, a cause's item. Two at once raise `ValueError` naming the oneof, before anything is sent.
-- **The book's own refusals** carry a code, and the SDK raises them as [`CommandRefused`](#the-books-refusals). From 0.14.0 an incomplete entry's refusal also names each field it lacks: see [What the book requires](#what-the-book-requires).
+- **The book's own refusals** carry a code, and the SDK raises them as [`CommandRefused`](#the-books-refusals). An incomplete entry's refusal also names each field it lacks: see [What the book requires](#what-the-book-requires).
 
 ### Idempotency keys { #idempotency-keys }
 
@@ -243,11 +246,11 @@ A refusal is the call's gRPC status, chosen by what the caller should do about i
 | `CallFailed`, `kind="invalid"` | `INVALID_ARGUMENT` | A required field is empty, such as `external_account_id`; or a number outside what the wire carries, in params built by hand. | Fix the call. |
 | `CallFailed`, `kind="no handler"` | `UNAVAILABLE` | Nothing serves the topic right now. | Retry later. |
 | `CallFailed`, `kind="timeout"` | `DEADLINE_EXCEEDED` | What serves it did not answer in time. | Retry. |
-| `CommandRefused`, `kind="refused"` | `ABORTED`, with a code | From 0.13.0: the book refused the command with a code of its own, such as `REFUSAL_REASON_BREAK_STATE`; from 0.14.0, `REFUSAL_REASON_INCOMPLETE` with each missing field in `fields`. See [The book's refusals](#the-books-refusals). | Act on the code: read the book again and say what stands, or ask the person for what was missing, which `fields` names. Not retried. |
+| `CommandRefused`, `kind="refused"` | `ABORTED`, with a code | The book refused the command with a code of its own, such as `REFUSAL_REASON_BREAK_STATE`, or `REFUSAL_REASON_INCOMPLETE` with each missing field in `fields`. See [The book's refusals](#the-books-refusals). | Act on the code: read the book again and say what stands, or ask the person for what was missing, which `fields` names. Not retried. |
 | `CallFailed`, `kind="handler error"` | `ABORTED`, with no code | What serves it answered with a refusal. `detail` is its reason. | Report it. |
 | `CallFailed`, `kind="not vouched for"` | `UNAUTHENTICATED` | The `acting_for` assertion was not accepted: expired, replayed, for another instance, or the sidecar holds none of the dashboard's keys. | Ask the person to reload the page. |
 | `NotRegistered` | none (raised by the SDK) | The plugin has called `leave()`. | Don't use it after leaving. |
-| `TypeError`, `ValueError` | none (raised by the SDK) | A number that is not a `Decimal` or an `int`, an amount that is not a `Money`, or a number that would have to be rounded; from 0.12.0, a statement whose figures the sidecar would refuse. | Fix the call. |
+| `TypeError`, `ValueError` | none (raised by the SDK) | A number that is not a `Decimal` or an `int`, an amount that is not a `Money`, or a number that would have to be rounded; a statement whose figures the sidecar would refuse. | Fix the call. |
 | `grpc.aio.AioRpcError` | any other, such as `INTERNAL` | Raised unchanged. | |
 
 On `NotGranted` and `CallFailed`, `topic` holds the operation's name, such as `"RecordHolding"`. The exception's text is the operation's name, then the kind, then the sidecar's own words. For a row naming an external account nobody has linked:
@@ -263,7 +266,7 @@ Match on the exception's class, and on `kind`, never on these words: they are fo
 
 ### An unlinked external account { #an-unlinked-external-account }
 
-A row naming an external account that nobody has linked is refused, and nothing is recorded for it. From SDK 0.7.0 that refusal carries a code, so a plugin can tell it apart from the other refusal with the same status, a plugin that is not registered.
+A row naming an external account that nobody has linked is refused, and nothing is recorded for it. That refusal carries a code, so a plugin can tell it apart from the other refusal with the same status, a plugin that is not registered.
 
 The sidecar sends the code beside the status: a `meridian.v1.Refusal`, encoded, in the call's trailing metadata `meridian-refusal-bin`. Its `reason` comes from the refusal catalogue, the `RefusalReason` enum in `meridian/v1/sidecar.proto`:
 
@@ -271,9 +274,9 @@ The sidecar sends the code beside the status: a `meridian.v1.Refusal`, encoded, 
 |---|---|---|---|
 | `REFUSAL_REASON_UNSPECIFIED` | 0 | | Never sent. A refusal the status already says everything about carries no code. |
 | `REFUSAL_REASON_EXTERNAL_ACCOUNT_NOT_LINKED` | 1 | `FAILED_PRECONDITION` | The operation named an external account nobody has linked to an account. Nothing was recorded, and the next statement after a link records it. |
-| `REFUSAL_REASON_ACTOR_REQUIRED` … `REFUSAL_REASON_INCOMPLETE` | 2 to 11 | `ABORTED` | The book's refusals: 2 to 10 from 0.13.0, and 11 from 0.14.0. See [The book's refusals](#the-books-refusals). |
+| `REFUSAL_REASON_ACTOR_REQUIRED` … `REFUSAL_REASON_INCOMPLETE` | 2 to 11 | `ABORTED` | The book's refusals. See [The book's refusals](#the-books-refusals). |
 
-A reason is never reused for another cause, and a retired one's number stays reserved. [`record_holding`](#record_holding) can be refused this way, from 0.12.0 [`record_holdings_statement`](#record_holdings_statement), which names its external account too, and from 0.19.0 [`record_activity`](#record_activity); `report_sync_status` for an unlinked account is not refused.
+A reason is never reused for another cause, and a retired one's number stays reserved. [`record_holding`](#record_holding) can be refused this way, as can [`record_holdings_statement`](#record_holdings_statement), which names its external account too, and [`record_activity`](#record_activity); `report_sync_status` for an unlinked account is not refused.
 
 The SDK reads the code and raises **`meridian.NotLinked`**. It is a `CallFailed` whose `kind` is `"refused"`, as this refusal always was, so a plugin that caught `CallFailed` still catches it. It is raised by the code alone: a refusal that carries no code is a plain `CallFailed`, whatever its words say. A sidecar from before the catalogue sends none, so on such a deployment the same refusal arrives as `CallFailed` with `kind="refused"`, which catching `CallFailed` still covers.
 
@@ -292,11 +295,11 @@ A plugin written in another language reads the same trailer: decode the `Refusal
 
 ### The book's refusals { #the-books-refusals }
 
-From 0.13.0. The book of record refuses with a code, which the sidecar carries beside `ABORTED` in the same trailer, `meridian-refusal-bin`. The SDK raises **`meridian.CommandRefused`**: a `CallFailed` whose `kind` is `"refused"`, with `reason`, the code's number, and `reason_name`, its name. From 0.14.0 it also has `fields`, a tuple of each field the command left out, by its path in the call, read from the same `Refusal`'s `fields`; only `REFUSAL_REASON_INCOMPLETE` carries any, and every other refusal has none. Match the code and the paths, never the words.
+The book of record refuses with a code, which the sidecar carries beside `ABORTED` in the same trailer, `meridian-refusal-bin`. The SDK raises **`meridian.CommandRefused`**: a `CallFailed` whose `kind` is `"refused"`, with `reason`, the code's number, and `reason_name`, its name. It also has `fields`, a tuple of each field the command left out, by its path in the call, read from the same `Refusal`'s `fields`; only `REFUSAL_REASON_INCOMPLETE` carries any, and every other refusal has none. Match the code and the paths, never the words.
 
 | Reason | Number | Sent when |
 |---|---|---|
-| `REFUSAL_REASON_ACTOR_REQUIRED` | 2 | A person's act sent for nobody: an opening balance, a break's handling, its resolution or closing, or an account's attribute. From contract v21 a user's act, a person's or a service account's. |
+| `REFUSAL_REASON_ACTOR_REQUIRED` | 2 | A person's act sent for nobody: an opening balance, a break's handling, its resolution or closing, or an account's attribute: a user's act, a person's or a service account's. |
 | `REFUSAL_REASON_REASON_REQUIRED` | 3 | A justified act sent without its reason or explanation. |
 | `REFUSAL_REASON_OPENING_BALANCE_RECORDED` | 4 | A second opening balance while one stands. |
 | `REFUSAL_REASON_NO_OPENING_BALANCE` | 5 | A break, figures, encumbrances or an entry for an account with no opening balance. |
@@ -305,7 +308,7 @@ From 0.13.0. The book of record refuses with a code, which the sidecar carries b
 | `REFUSAL_REASON_BREAK_STATE` | 8 | Updating, handling, resolving or closing a break that is not open. |
 | `REFUSAL_REASON_LATER_ENTRIES_STAND` | 9 | A reversal of an opening balance while a later entry moving the account's positions stands. |
 | `REFUSAL_REASON_IDEMPOTENCY_CONFLICT` | 10 | A key the account's book holds for a different command. |
-| `REFUSAL_REASON_INCOMPLETE` | 11 | From 0.14.0: an opening balance, or an adjustment opening a lot, missing a field the book requires, nothing applied. Each missing field is in `fields`. See [What the book requires](#what-the-book-requires). |
+| `REFUSAL_REASON_INCOMPLETE` | 11 | An opening balance, or an adjustment opening a lot, missing a field the book requires, nothing applied. Each missing field is in `fields`. See [What the book requires](#what-the-book-requires). |
 
 ```python
 try:
@@ -317,11 +320,10 @@ except meridian.CommandRefused as refused:
         ...  # show the person what to supply: ("positions[0].settled_quantity", ...)
 ```
 
-A plugin built on 0.13.0 meets the same refusal from a book at contract v9 as a `CommandRefused` whose `reason` is 11 and whose `reason_name` is `"11"`, since its SDK does not know the name, and it does not read the fields.
 
 ### What the book requires { #what-the-book-requires }
 
-From 0.14.0, contract v9. The book refuses an entry missing what its downstream activities need, tax tracking, valuation, confirmation and settlement, with `REFUSAL_REASON_INCOMPLETE`, nothing applied, and names every missing field in `CommandRefused.fields` by its path in the call's parameters. The refusal applies to every plugin, whatever SDK it was built on. See [What the book requires](../concepts/the-book-of-record.md#what-the-book-requires) for why.
+The book refuses an entry missing what its downstream activities need, tax tracking, valuation, confirmation and settlement, with `REFUSAL_REASON_INCOMPLETE`, nothing applied, and names every missing field in `CommandRefused.fields` by its path in the call's parameters. The refusal applies to every plugin, whatever SDK it was built on. See [What the book requires](../concepts/the-book-of-record.md#what-the-book-requires) for why.
 
 Of an opening balance ([`record_opening_balance`](#record_opening_balance)):
 
@@ -341,7 +343,7 @@ Of an adjustment ([`resolve_break`](#resolve_break)): `adjustment.lines[n].opens
 
 The book reads whether an instrument is cash from its record: its asset class, or a currency identifier. Cash has no lots. Where the record cannot say, because the position is held under a placeholder, the record names no asset class and no currency identifier, or the instrument store does not answer in time, the book does not require its lots, for now, and still refuses any lot sent incomplete. An `operations` plugin flags such a position, and it does not hold the confirmation back.
 
-A lot of unknown cost and the settlement bucket "not stated" are no longer admitted. They stay on the wire for what a book at contract v8 recorded: `BookPosition.not_stated_quantity` is zero on every position v9 records, and its `settled_quantity` is set.
+A lot of unknown cost and the settlement bucket "not stated" are not admitted. They stay on the wire for what older records hold: `BookPosition.not_stated_quantity` is zero on every position the book records now, and its `settled_quantity` is set.
 
 ### Refusals on a development deployment
 
@@ -411,7 +413,7 @@ async def report_sync_status(
 | Workflow step | W2.1, Observe the brokerage sync state |
 | Kind | event, on `platform.custody.{instance}.event.sync-status` |
 | Role | `custody` |
-| Heard by | the dashboard, which shows it on the **Overview** tab of the plugin's view in Settings; from contract v14, the street store, which keeps each one for `operations` to read and hear (W2.13, see [`list_sync_statuses`](#list_sync_statuses)) |
+| Heard by | the dashboard, which shows it on the **Overview** tab of the plugin's view in Settings; and the street store, which keeps each one for `operations` to read and hear (W2.13, see [`list_sync_statuses`](#list_sync_statuses)) |
 
 | Name | Type | Required | Meaning |
 |---|---|---|---|
@@ -424,7 +426,7 @@ async def report_sync_status(
 | `state` | [`SyncState`](#syncstate) or `None` | no | Whether the data is current, and if not, why. `None` leaves it unset, which reads as `SYNC_STATE_UNSPECIFIED`, shown as what `connection_healthy` says. |
 | `holdings_as_of_ns` | `int` | no | When the holdings the rail serves are as of. `0` where the rail does not say. |
 | `history_as_of_ns` | `int` | no | When the history (transactions) is as of. Apart from holdings, because a connection can have one current and the other not. |
-| `history_from` | `str` | no | From 0.19.0. The first date, ISO 8601, the source can read the account's activity from: how far back a backfill of [`record_activity`](#record_activity) reaches, beside how fresh the history is. Empty where the source does not say. |
+| `history_from` | `str` | no | The first date, ISO 8601, the source can read the account's activity from: how far back a backfill of [`record_activity`](#record_activity) reaches, beside how fresh the history is. Empty where the source does not say. |
 
 **Returns** `Published`, with `message_id`, the message's identifier on the bus.
 
@@ -441,7 +443,7 @@ await plugin.report_sync_status(
     state=meridian.SyncState.SYNC_STATE_CURRENT,
     last_synced_at_ns=last_sync_ns,
     holdings_as_of_ns=last_sync_ns,
-    history_from="2024-06-03",          # from 0.19.0: the first day of the history it can read
+    history_from="2024-06-03",          # the first day of the history it can read
     observed_at_ns=time.time_ns(),
 )
 ```
@@ -450,7 +452,7 @@ await plugin.report_sync_status(
 
 Opens one statement: the plugin's snapshot of one account, at one moment. Every holding row then attaches to it.
 
-From 0.12.0 the statement names that account, as the source knows it, and the sidecar records it against the account the external account is linked to, as it does a row. A statement is one account's: a row naming another account is refused.
+The statement names that account, as the source knows it, and the sidecar records it against the account the external account is linked to, as it does a row. A statement is one account's: a row naming another account is refused.
 
 It carries two dates, and they are not the same thing:
 
@@ -485,12 +487,12 @@ async def record_holdings_statement(
 | `as_of_date` | `str` | no | The ISO 8601 date the positions are as of. |
 | `read_at_ns` | `int` | no | When the plugin read them. |
 | `expected_rows` | `int` | yes, by the workflow | How many holding rows will follow. It is the only thing that marks the end of a statement. The street store closes the statement when this many rows have landed. A statement whose rows never all arrive stays open rather than publishing counts that are wrong. Hold the whole list before recording any of it. |
-| `external_account_id` | `str` | yes, by the sidecar | The account as the rail knows it, the one the statement's rows name. The sidecar translates it through its link, and refuses it when empty or not linked. From 0.12.0. |
-| `institution` | `str` | no | The institution holding the external account, as the plugin names it: the brokerage behind an aggregator, as SnapTrade names it, or the venue itself for a plugin that reads the venue directly. Empty where the source does not say. From 0.12.0. |
-| `figures` | sequence of [`StatementFigures`](#statementfigures) | no | The account's figures, one set per margin segment the venue reports, each naming its segment as the venue does; the set with no segment is the account's as a whole. No two sets name the same segment. Every figure is as the venue reported it, and never derived from the holdings. From 0.12.0. |
-| `currency_assumed` | `bool` | no | `True` when the venue stated no currency for these figures, and the one given is the plugin's own assumption. Of every set in `figures`. Deprecated in contract v11 for the figures' provenance ([keep what your custody plugin converts](../how-to/keep-what-the-edge-converts.md)). |
-| `security_interest` | `bool` or `None` | no | `True` when the account servicer holds a lien or a right of set-off over the account, as the statement reports it; `None` where it does not say. Not an encumbrance: it reduces no holding's available quantity. From 0.13.0. |
-| `buying_power`, `margin_requirement`, `maintenance_excess` | [`Money`](#money) or `None` | no | Superseded by `figures` from 0.12.0. Sent alone, they are read as the set with no segment; sent beside `figures`, they are refused. [`meridian plugin migrate`](cli.md#plugin-migrate) rewrites them into `figures`. |
+| `external_account_id` | `str` | yes, by the sidecar | The account as the rail knows it, the one the statement's rows name. The sidecar translates it through its link, and refuses it when empty or not linked. |
+| `institution` | `str` | no | The institution holding the external account, as the plugin names it: the brokerage behind an aggregator, as SnapTrade names it, or the venue itself for a plugin that reads the venue directly. Empty where the source does not say. |
+| `figures` | sequence of [`StatementFigures`](#statementfigures) | no | The account's figures, one set per margin segment the venue reports, each naming its segment as the venue does; the set with no segment is the account's as a whole. No two sets name the same segment. Every figure is as the venue reported it, and never derived from the holdings. |
+| `currency_assumed` | `bool` | no | `True` when the venue stated no currency for these figures, and the one given is the plugin's own assumption. Of every set in `figures`. Deprecated for the figures' provenance ([keep what your custody plugin converts](../how-to/keep-what-the-edge-converts.md)). |
+| `security_interest` | `bool` or `None` | no | `True` when the account servicer holds a lien or a right of set-off over the account, as the statement reports it; `None` where it does not say. Not an encumbrance: it reduces no holding's available quantity. |
+| `buying_power`, `margin_requirement`, `maintenance_excess` | [`Money`](#money) or `None` | no | Superseded by `figures`. Sent alone, they are read as the set with no segment; sent beside `figures`, they are refused. [`meridian plugin migrate`](cli.md#plugin-migrate) rewrites them into `figures`. |
 | `acting_for` | `str` or `None` | no | The `Meridian-Caller` header of the person this is sent for. See [Acting for a person](#acting-for-a-person). |
 
 A brokerage's own total account value goes in `net_liquidation`, in the set with no segment, as the brokerage reports it: never a sum the plugin makes of the holdings.
@@ -535,7 +537,6 @@ statement = await plugin.record_holdings_statement(
 )
 ```
 
-A plugin built on SDK 0.11.0 or earlier names no external account, and sends its figures flat. While the sidecar accepts its contract version, it admits such a statement with no account, which takes its rows' account when the first lands, and reads the flat figures as the set with no segment.
 
 ## `record_holding` { #record_holding }
 
@@ -584,15 +585,15 @@ async def record_holding(
 | `external_account_id` | `str` | yes, by the sidecar | The account as the rail knows it. The sidecar translates it through its link, and refuses it when empty or not linked. |
 | `side` | [`HoldingSide`](#holdingside) or `None` | yes, by the street store | Long or short, stated rather than read off the sign. `None` leaves it unset, and the street store refuses the row. A venue that reports an account's long and short of one instrument apart sends two rows, one on each side. |
 | `settle_date_quantity` | `Decimal`, `int` or `None` | no | The settle-date quantity: what is held counting only settled trades, where the venue reports it. For cash, the settled cash. |
-| `currency_assumed` | `bool` | no | `True` when the venue stated no currency, and the one given is the plugin's own assumption: the market value's currency, and for cash the currency whose cash instrument the row names. Deprecated in contract v11 for the row's provenance. |
-| `also_counted_in_cash` | `bool` | no | `True` when this position's value is also included in the account's cash holding as the venue reports it. Deprecated in contract v11: the street counts each asset once, and a custody plugin sends the cash net of the fund ([keep what your custody plugin converts](../how-to/keep-what-the-edge-converts.md)). |
-| `cost_basis` | [`Money`](#money) or `None` | no | The holding's total cost, as the venue reports it. From 0.12.0. |
-| `average_cost` | [`Money`](#money) or `None` | no | The venue's average cost per unit, in the venue's own unit: SnapTrade's is per share, even for an option whose quantity counts contracts. Never multiplied out by the quantity or a multiplier into a cost basis, nor a cost basis divided into it: give whichever the venue reports, or both. From 0.12.0. |
-| `lots` | sequence of [`ReportedLot`](#reportedlot) | no | The holding's lots as the venue lists them. None is not one lot, and lots whose quantities do not sum to the holding's are recorded as reported. From 0.12.0. |
-| `margin_requirement` | [`Money`](#money) or `None` | no | The margin requirement on the holding, as the venue reports it. From 0.12.0. |
-| `available_quantity`, `not_available_quantity` | `Decimal`, `int` or `None` | no | What of the holding is available and what is not, each as the source reports it, never derived from the other or from the quantity: available is never the quantity less what is encumbered. `None` where the source gives none. From 0.13.0. |
-| `available_basis` | [`AvailableBasis`](#availablebasis), `str` or `None` | no | What the available quantity is on, as the source says. From 0.13.0. |
-| `encumbrances` | sequence of [`ReportedEncumbrance`](#reportedencumbrance) | no | Each sub-balance the source reports as encumbered, one per kind, location and pledgee. Empty means none reported, not none held. From 0.13.0. |
+| `currency_assumed` | `bool` | no | `True` when the venue stated no currency, and the one given is the plugin's own assumption: the market value's currency, and for cash the currency whose cash instrument the row names. Deprecated for the row's provenance. |
+| `also_counted_in_cash` | `bool` | no | `True` when this position's value is also included in the account's cash holding as the venue reports it. Deprecated: the street counts each asset once, and a custody plugin sends the cash net of the fund ([keep what your custody plugin converts](../how-to/keep-what-the-edge-converts.md)). |
+| `cost_basis` | [`Money`](#money) or `None` | no | The holding's total cost, as the venue reports it. |
+| `average_cost` | [`Money`](#money) or `None` | no | The venue's average cost per unit, in the venue's own unit: SnapTrade's is per share, even for an option whose quantity counts contracts. Never multiplied out by the quantity or a multiplier into a cost basis, nor a cost basis divided into it: give whichever the venue reports, or both. |
+| `lots` | sequence of [`ReportedLot`](#reportedlot) | no | The holding's lots as the venue lists them. None is not one lot, and lots whose quantities do not sum to the holding's are recorded as reported. |
+| `margin_requirement` | [`Money`](#money) or `None` | no | The margin requirement on the holding, as the venue reports it. |
+| `available_quantity`, `not_available_quantity` | `Decimal`, `int` or `None` | no | What of the holding is available and what is not, each as the source reports it, never derived from the other or from the quantity: available is never the quantity less what is encumbered. `None` where the source gives none. |
+| `available_basis` | [`AvailableBasis`](#availablebasis), `str` or `None` | no | What the available quantity is on, as the source says. |
+| `encumbrances` | sequence of [`ReportedEncumbrance`](#reportedencumbrance) | no | Each sub-balance the source reports as encumbered, one per kind, location and pledgee. Empty means none reported, not none held. |
 | `acting_for` | `str` or `None` | no | The `Meridian-Caller` header of the person this is sent for. |
 
 **Returns** `RecordHoldingResult`:
@@ -608,7 +609,7 @@ async def record_holding(
 - `invalid` for an empty `external_account_id`, and [`NotLinked`](#an-unlinked-external-account), a `CallFailed` of kind `refused`, for one not linked. The sidecar counts the unlinked account in its report of the plugin, and the next statement after it is linked records it.
 - `NotGranted` when the linked account is outside the plugin's write scope, as a closed account is, or when the person in `acting_for` may not write it.
 - `not vouched for` for an `acting_for` that is not accepted.
-- `handler error` from the street store for a row it refuses, with its reason. It refuses a row that states no side, a quantity whose sign contradicts its side, both or neither of `instrument_id` and `unresolved_identifiers`, a statement it has not opened, or, from 0.12.0, an account other than its statement's.
+- `handler error` from the street store for a row it refuses, with its reason. It refuses a row that states no side, a quantity whose sign contradicts its side, both or neither of `instrument_id` and `unresolved_identifiers`, a statement it has not opened, or an account other than its statement's.
 - `no handler` or `timeout` from the street store.
 
 ```python
@@ -644,7 +645,7 @@ await plugin.record_holding(
 
 ## `list_custodial_positions` { #list_custodial_positions }
 
-From 0.12.0. Reads what the custodian says the accounts in the plugin's read scope hold, and, beside it, the holdings that could not be named, so one read answers both what is held and what could not be accounted for. See [Reads are within the read scope](#reads).
+Reads what the custodian says the accounts in the plugin's read scope hold, and, beside it, the holdings that could not be named, so one read answers both what is held and what could not be accounted for. See [Reads are within the read scope](#reads).
 
 ```python
 async def list_custodial_positions(
@@ -688,7 +689,7 @@ for position in page.positions:
 
 ## `list_statements` { #list_statements }
 
-From 0.12.0. Reads the completed statements of the accounts in the plugin's read scope, each as the street store announced it when its last row landed. A statement's figures are on it and on no position, so this is how a plugin reads them without having heard the statement. An open statement is not listed: until all its rows have landed, it is not the custodian's whole word on the account. See [Reads are within the read scope](#reads).
+Reads the completed statements of the accounts in the plugin's read scope, each as the street store announced it when its last row landed. A statement's figures are on it and on no position, so this is how a plugin reads them without having heard the statement. An open statement is not listed: until all its rows have landed, it is not the custodian's whole word on the account. See [Reads are within the read scope](#reads).
 
 ```python
 async def list_statements(
@@ -733,7 +734,7 @@ for statement in page.statements:
 
 ## `record_activity` { #record_activity }
 
-From 0.19.0, contract v14. Records one activity on an account as the custodian states it: a purchase, a sale, a reinvested dividend, a dividend or interest, a fee or a tax, a split or another corporate action, a transfer, a contribution, a withdrawal or a journal. It is evidence that explains a break, never a source: the street store keeps it as reported and derives no position, lot or figure from it, and nothing moves the book until a person confirms. See [The custodian's activity](../concepts/the-custodians-activity.md), and [Report the custodian's activity](../how-to/report-the-custodians-activity.md) for a custody plugin's side.
+Records one activity on an account as the custodian states it: a purchase, a sale, a reinvested dividend, a dividend or interest, a fee or a tax, a split or another corporate action, a transfer, a contribution, a withdrawal or a journal. It is evidence that explains a break, never a source: the street store keeps it as reported and derives no position, lot or figure from it, and nothing moves the book until a person confirms. See [The custodian's activity](../concepts/the-custodians-activity.md), and [Report the custodian's activity](../how-to/report-the-custodians-activity.md) for a custody plugin's side.
 
 ```python
 async def record_activity(
@@ -749,7 +750,7 @@ async def record_activity(
 | Kind | command, on `platform.street.command.record-activity` |
 | Role | `custody` |
 | Served by | the street store, which announces each new one as `ActivityRecorded` (W2.12) to `operations` |
-| Stability | `preview` in contract v14 |
+| Stability | `preview` |
 
 | Name | Type | Required | Meaning |
 |---|---|---|---|
@@ -794,7 +795,7 @@ reply.activity_id, reply.already_recorded   # "ACT-…", False
 
 ## `list_activities` { #list_activities }
 
-From 0.19.0, contract v14. Reads the activity of the accounts in the plugin's read scope, as the street store announced each, by trade date. The reply says from when the account's source can read history, so an operations plugin can say an opening balance is older than the history that would explain it. See [Reads are within the read scope](#reads).
+Reads the activity of the accounts in the plugin's read scope, as the street store announced each, by trade date. The reply says from when the account's source can read history, so an operations plugin can say an opening balance is older than the history that would explain it. See [Reads are within the read scope](#reads).
 
 ```python
 async def list_activities(
@@ -810,7 +811,7 @@ async def list_activities(
 | Kind | query, on `platform.street.query.list-activities` |
 | Role | `operations` |
 | Served by | the street store |
-| Stability | `preview` in contract v14 |
+| Stability | `preview` |
 
 | Name | Type | Required | Meaning |
 |---|---|---|---|
@@ -828,7 +829,7 @@ async def list_activities(
 | `next_cursor` | `str` | The next page's cursor, empty on the last. |
 | `as_of` | [`Watermark`](#watermark) | The point in the store's record the page was read at. |
 | `history_from` | `str` | The first date the named account's source can read activity from, as its latest sync status said. Empty where the read names no account, or the source has not said. |
-| `re_resolutions` | sequence of [`ActivityReResolution`](#activityreresolution) | From 0.20.0, contract v15. Every re-resolution of the activities on the page, each naming its activity and account; on a read `since` a watermark, every re-resolution recorded after it, whether or not its activity was, merged with the activities in the order recorded, the page's size counting both. The activities stay as first recorded: an activity's instrument is its latest re-resolution's. Empty where none was re-resolved. |
+| `re_resolutions` | sequence of [`ActivityReResolution`](#activityreresolution) | Every re-resolution of the activities on the page, each naming its activity and account; on a read `since` a watermark, every re-resolution recorded after it, whether or not its activity was, merged with the activities in the order recorded, the page's size counting both. The activities stay as first recorded: an activity's instrument is its latest re-resolution's. Empty where none was re-resolved. |
 
 **Errors:** `NotGranted` for an `account_id` outside the read scope, and without the `operations` role. `no handler`, `timeout` or `handler error` from the street store.
 
@@ -843,7 +844,7 @@ page.history_from   # "2024-06-03", or "" where the source has not said
 
 ## `re_resolve_activity` { #re_resolve_activity }
 
-From 0.20.0, contract v15. Re-resolves an activity the plugin recorded before its instrument resolved: a retirement plan's own fund code linked to an instrument later, or a symbol the deployment's instrument records complete later. Sending the activity again would change nothing, since the street answers it as already recorded; a re-resolution is a record of its own, kept beside the activity, which stays as first recorded. See [The custodian's activity](../concepts/the-custodians-activity.md#an-activity-re-resolved).
+Re-resolves an activity the plugin recorded before its instrument resolved: a retirement plan's own fund code linked to an instrument later, or a symbol the deployment's instrument records complete later. Sending the activity again would change nothing, since the street answers it as already recorded; a re-resolution is a record of its own, kept beside the activity, which stays as first recorded. See [The custodian's activity](../concepts/the-custodians-activity.md#an-activity-re-resolved).
 
 ```python
 async def re_resolve_activity(
@@ -860,7 +861,7 @@ async def re_resolve_activity(
 | Kind | command, on `platform.street.command.re-resolve-activity` |
 | Role | `custody` |
 | Served by | the street store, which announces each one it records as `ActivityReResolved` (W2.16) to `operations` |
-| Stability | `preview` in contract v15 |
+| Stability | `preview` |
 
 | Name | Type | Required | Meaning |
 |---|---|---|---|
@@ -898,7 +899,7 @@ reply.activity_id, reply.already_recorded
 
 ## `list_sync_statuses` { #list_sync_statuses }
 
-From 0.19.0, contract v14. Reads the sync statuses the street store kept, for the accounts in the plugin's read scope: the latest of each connection, or every one recorded since a watermark. The street hears each sync status a custody plugin reports ([`report_sync_status`](#report_sync_status)) and keeps it, so an operations plugin tells a connection that needs a person to sign in again apart from data that is merely old. See [Reads are within the read scope](#reads).
+Reads the sync statuses the street store kept, for the accounts in the plugin's read scope: the latest of each connection, or every one recorded since a watermark. The street hears each sync status a custody plugin reports ([`report_sync_status`](#report_sync_status)) and keeps it, so an operations plugin tells a connection that needs a person to sign in again apart from data that is merely old. See [Reads are within the read scope](#reads).
 
 ```python
 async def list_sync_statuses(
@@ -914,7 +915,7 @@ async def list_sync_statuses(
 | Kind | query, on `platform.street.query.list-sync-statuses` |
 | Role | `operations` |
 | Served by | the street store, which announces each one it keeps as `SyncStatusRecorded` (W2.13) to `operations` |
-| Stability | `preview` in contract v14 |
+| Stability | `preview` |
 
 | Name | Type | Required | Meaning |
 |---|---|---|---|
@@ -942,7 +943,7 @@ Reverse resolution: asks which instrument a set of identifiers maps to, as of a 
 
 There are two outcomes other than a match:
 
-- **Nothing matched.** From contract v10 the deployment mints its own record for the set, an `LCL-` identifier, and answers it: `found` is `True`, and `minted` is `True` on the resolve that minted it. A later resolve of the same identifiers matches that record, with `minted` `False`. An `LCL-` record is the deployment's own, a record like any other, not one waiting to be replaced; a deployment admin completes what it lacks on the dashboard's **Instruments** page. Record the holding against it; the instrument store reports the miss itself. Until contract v10 the field was `placeholder`, and `meridian plugin migrate` rewrites it (`resolve-minted`).
+- **Nothing matched.** The store asks the platform to match or mint the security, and answers its record, or a provisional local record of the deployment's own (see **Provisional** below): `found` is `True`, and `minted` is `True` on the resolve that minted the deployment's record. A later resolve of the same identifiers matches that record, with `minted` `False`. Record the holding against it; the instrument store reports the miss itself.
 - **More than one matched.** The result is a miss rather than a pick: `found` is `False` and `miss_reason` is `MISS_REASON_AMBIGUOUS`. Record the holding with `unresolved_identifiers`, and [report the miss](#report_missing_instrument).
 
 ```python
@@ -959,14 +960,16 @@ async def resolve_identifier(
 | gRPC | `rpc ResolveIdentifier(ResolveIdentifierParams) returns (ResolveIdentifierResult)` |
 | Workflow step | W3.1, Resolve an identifier set |
 | Kind | query, on `platform.reference.query.resolve-identifier` |
-| Role | `custody`; from contract v18 also `data`, resolving its vendor's codes to the instruments its rows name; from contract v19 also `reporting`, read-only |
+| Role | `custody`; `data`, resolving its vendor's codes to the instruments its rows name; `reporting`, read-only; `connectivity` |
 | Served by | the instrument store, the deployment's replica of the security master |
 
-**Read-only, for `reporting`** (contract v19). A `reporting` plugin names an instrument by an identifier, such as its reporting currency by its ISO 4217 code (`Identifier(scheme="iso4217", value="EUR")`), and the store answers the record it holds for the date. Asked by `reporting`, nothing is minted, joined, offered or listed: nothing matched is `MISS_REASON_NOT_FOUND`, several matched `MISS_REASON_AMBIGUOUS`. From contract v20 core enforces it, from the asking instance's launched roles; in v19 it did not, so a code nothing matched could record a miss, a local record minted for it as for any plugin's resolve (see [Instruments](../concepts/instruments.md#resolving-an-identifier)).
+**Provisional.** Changed in contract 24. Nothing matched, the store asks the platform to match or mint the security, within a short bounded wait; answered, the record is the platform's, under its `INS-` ID. Otherwise the store mints a provisional local record, under an `LCL-` ID, and the result's `provisional` is `True`; `minted` keeps its meaning, this resolve created the deployment's record. Test `provisional`, never the `LCL-` prefix: a resolved `LCL-` ID stays `LCL-` and answers as the `INS-` record it became. A source stating less than an identifier, a description and a currency mints nothing: `found` is `False`, `miss_reason` `MISS_REASON_NOT_FOUND`, and the holding is recorded unresolved. No `open_meridian` identifier is added to records. See [One ID per instrument](../concepts/one-id.md).
 
-**A currency is fetched, not minted** (contract v20). A resolve naming a currency by its ISO 4217 code (`iso4217`) that no record the deployment holds carries is answered with the platform master's record, which the instrument store fetches itself, with no person; a local record is minted for the code only when the master does not hold it, or while the platform cannot be reached (see [A currency is fetched from the master](../concepts/instruments.md#a-currency-is-fetched-from-the-master)).
+**Read-only, for `reporting`.** A `reporting` plugin names an instrument by an identifier, such as its reporting currency by its ISO 4217 code (`Identifier(scheme="iso4217", value="EUR")`), and the store answers the record it holds for the date. Asked by `reporting`, nothing is minted, joined, offered or listed: nothing matched is `MISS_REASON_NOT_FOUND`, several matched `MISS_REASON_AMBIGUOUS`. Core enforces it, from the asking instance's launched roles (see [Instruments](../concepts/instruments.md#resolving-an-identifier)).
 
-**As of any date the store holds** (contract v19). The store keeps each identifier's window on a record, so an identifier that has since left a record still answers, as of a date it was on it, the record that held it then.
+**A currency is fetched, not minted.** A resolve naming a currency by its ISO 4217 code (`iso4217`) that no record the deployment holds carries is answered with the platform master's record, which the instrument store fetches itself, with no person; a local record is minted for the code only when the master does not hold it, or while the platform cannot be reached (see [A currency is fetched from the master](../concepts/instruments.md#a-currency-is-fetched-from-the-master)).
+
+**As of any date the store holds.** The store keeps each identifier's window on a record, so an identifier that has since left a record still answers, as of a date it was on it, the record that held it then.
 
 | Name | Type | Required | Meaning |
 |---|---|---|---|
@@ -974,8 +977,8 @@ async def resolve_identifier(
 | `as_of_ns` | `int` | no | The reference time: the date the mapping is being asked about. An identifier maps to different instruments over time. |
 | `exchange_mic` | `str` | no | Narrows a symbol match. Empty means unconstrained. |
 | `currency` | `str` | no | Narrows a symbol match. |
-| `stated_asset_class`, `stated_currency`, `stated_description` | `AssetClass`, `str`, `str` | no | What the plugin's source states of the security, where it states it, and nothing it would have to guess (contract v10). Kept on the record as offers from this instance, in force only when a person accepts them. Not stated is unspecified or empty. `stated_currency` is an ISO 4217 code. |
-| `stated_instrument_type` | `InstrumentType` | no | Its type within the stated class, where the source says it (contract v11): a custodian's sweep fund is a money market fund. |
+| `stated_asset_class`, `stated_currency`, `stated_description` | `AssetClass`, `str`, `str` | no | What the plugin's source states of the security, where it states it, and nothing it would have to guess. Kept on the record as offers from this instance, in force only when a person accepts them. Not stated is unspecified or empty. `stated_currency` is an ISO 4217 code. |
+| `stated_instrument_type` | `InstrumentType` | no | Its type within the stated class, where the source says it: a custodian's sweep fund is a money market fund. |
 
 **Returns** `ResolveIdentifierResult`:
 
@@ -1022,7 +1025,7 @@ async def report_missing_instrument(
 | gRPC | `rpc ReportMissingInstrument(ReportMissingInstrumentParams) returns (Published)` |
 | Workflow step | W3.2, Report that a resolution missed |
 | Kind | event, on `platform.reference.event.instrument-missing` |
-| Role | `custody`; from contract v18 also `data` |
+| Role | `custody`, `data`, `connectivity` |
 | Heard by | the conductor, which asks the platform whether it already knows the instrument (W3.3) |
 
 | Name | Type | Required | Meaning |
@@ -1055,7 +1058,7 @@ await plugin.report_missing_instrument(
 
 ## `read_accounts_for_linking` { #read_accounts_for_linking }
 
-Reads the deployment's accounts, so the plugin's own page at `admin` can offer the ones an external account may be linked to. It is read only for an admin of the plugin, the one viewing the page under Manage, and is answered each account's identity. From contract v20 it is answered only the accounts a deployment admin granted the plugin's instance, nothing by default (see [Accounts a plugin may link to](../concepts/accounts.md#accounts-a-plugin-may-link-to)); before v20, every account in the deployment, a plugin admin being account agnostic.
+Reads the deployment's accounts, so the plugin's own page at `admin` can offer the ones an external account may be linked to. It is read only for an admin of the plugin, the one viewing the page under Manage, and is answered each account's identity: only the accounts a deployment admin granted the plugin's instance, nothing by default (see [Accounts a plugin may link to](../concepts/accounts.md#accounts-a-plugin-may-link-to)).
 
 ```python
 async def read_accounts_for_linking(
@@ -1079,7 +1082,7 @@ async def read_accounts_for_linking(
 
 | Field | Type | Meaning |
 |---|---|---|
-| `accounts` | sequence of [`AccountRecord`](#accountrecord) | From contract v20 every account granted to the instance, before it every account in the deployment, open and closed: each one's identifier, name, state, custodian, type, owner and note. No holdings. Empty until a deployment admin grants some. |
+| `accounts` | sequence of [`AccountRecord`](#accountrecord) | Every account granted to the instance, open and closed: each one's identifier, name, state, custodian, type, owner and note. No holdings. Empty until a deployment admin grants some. |
 
 Offer only open accounts. A link to a closed account is refused.
 
@@ -1149,7 +1152,7 @@ The four `new_account_*` attributes are free text, which a page may pre-fill fro
 - `NotGranted` without an `acting_for`, or with one from a session not opened by Manage; for a `new_account_name` from an admin who is not a deployment admin; or for an external account this plugin did not report, an empty one included.
 - `not vouched for` for an `acting_for` that is not accepted.
 - `handler error` from the conductor for a link it refuses, with its reason: both `account_id` and `new_account_name`, an account that does not exist or is closed, an account that already has an external account linked, or an attribute that is too long.
-- From contract v20, `CommandRefused` with `REFUSAL_REASON_ACCOUNT_NOT_LINKABLE` for an `account_id` a deployment admin has not granted the plugin's instance. A new account made by linking is granted to the instance that made it.
+- `CommandRefused` with `REFUSAL_REASON_ACCOUNT_NOT_LINKABLE` for an `account_id` a deployment admin has not granted the plugin's instance. A new account made by linking is granted to the instance that made it.
 - `no handler` or `timeout` from the conductor.
 - `NotGranted` without the `custody` role.
 
@@ -1176,7 +1179,7 @@ await plugin.link_external_account(external_account_id="acct-2", acting_for=call
 
 ## `resolve_instrument` { #resolve_instrument }
 
-From 0.13.0. Forward resolution: an instrument identifier to its record, so a position can be shown with a name rather than an opaque key, and a plugin that reads the book can join a position to its instrument by its ID. Reference data, so it is answered whatever the plugin's read scope.
+Forward resolution: an instrument identifier to its record, so a position can be shown with a name rather than an opaque key, and a plugin that reads the book can join a position to its instrument by its ID. Reference data, so it is answered whatever the plugin's read scope.
 
 ```python
 async def resolve_instrument(
@@ -1189,7 +1192,7 @@ async def resolve_instrument(
 | gRPC | `rpc ResolveInstrument(ResolveInstrumentParams) returns (ResolveInstrumentResult)` |
 | Workflow step | W3.6, Resolve an instrument for display |
 | Kind | query, on `platform.reference.query.resolve-instrument` |
-| Role | `portfolio`, `reporting`, `compliance`, `oms`, `operations`; from contract v18 also `data`, reading the record of an instrument another source resolved to name it to its vendor |
+| Role | `portfolio`, `reporting`, `compliance`, `oms`, `operations`; `data`, reading the record of an instrument another source resolved to name it to its vendor; `ems` and `connectivity` |
 | Served by | the instrument store |
 
 | Name | Type | Required | Meaning |
@@ -1214,7 +1217,7 @@ if answer.found:
 
 ## `record_opening_balance` { #record_opening_balance }
 
-From 0.13.0. Records what an account holds when it enters the [book of record](../concepts/the-book-of-record.md), once, as of a business date: its positions, each with its trade-date quantity, its settled quantity, its pending settlements by value date and its lots, each lot with its quantity, cost and acquisition date, as the custodian or the prior system reports them and a person completes them, naming that source. An account holding nothing enters with no positions. From contract v9 the book refuses one missing any of what it requires, naming each missing field: see [What the book requires](#what-the-book-requires).
+Records what an account holds when it enters the [book of record](../concepts/the-book-of-record.md), once, as of a business date: its positions, each with its trade-date quantity, its settled quantity, its pending settlements by value date and its lots, each lot with its quantity, cost and acquisition date, as the custodian or the prior system reports them and a person completes them, naming that source. An account holding nothing enters with no positions. The book refuses one missing any of what it requires, naming each missing field: see [What the book requires](#what-the-book-requires).
 
 It is a person's act, the fact every later break inherits: send it `acting_for` the person confirming it, with their reason. See [The book's commands](#the-books-commands).
 
@@ -1238,7 +1241,7 @@ async def record_opening_balance(
 |---|---|---|---|
 | `account_id` | `str` | yes | The account. It must be in the plugin's write scope, and one the person may write. |
 | `as_of_date` | `str` | yes | The ISO 8601 business date it stands for. |
-| `sources` | sequence of [`OpeningSource`](#openingsource) | yes, by the book from contract v9 | One per custodian or system it was composed from, each naming it and the street records it was composed from. |
+| `sources` | sequence of [`OpeningSource`](#openingsource) | yes, by the book | One per custodian or system it was composed from, each naming it and the street records it was composed from. |
 | `positions` | sequence of [`OpeningPosition`](#openingposition) | no | What the account holds. Empty: it enters holding nothing. |
 | `reason` | `str` | yes, by the book | The person's own words. |
 | `replaces_entry_id` | `str` | no | The reversed opening balance this one replaces. Empty for the first. |
@@ -1251,7 +1254,7 @@ A position held under a placeholder instrument enters under the placeholder, fla
 
 **Errors:**
 
-- [`CommandRefused`](#the-books-refusals): `REFUSAL_REASON_ACTOR_REQUIRED` with no person, `REFUSAL_REASON_REASON_REQUIRED` with no reason, `REFUSAL_REASON_OPENING_BALANCE_RECORDED` while one stands, `REFUSAL_REASON_INCOMPLETE` from 0.14.0 for a field the book requires left out, each in `fields` (`positions[0].settled_quantity`, `positions[1].lots[0].terms.cost`), `REFUSAL_REASON_LOTS_UNBALANCED` for lots that do not sum to their position, `REFUSAL_REASON_IDEMPOTENCY_CONFLICT` for a key used by a different command.
+- [`CommandRefused`](#the-books-refusals): `REFUSAL_REASON_ACTOR_REQUIRED` with no person, `REFUSAL_REASON_REASON_REQUIRED` with no reason, `REFUSAL_REASON_OPENING_BALANCE_RECORDED` while one stands, `REFUSAL_REASON_INCOMPLETE` for a field the book requires left out, each in `fields` (`positions[0].settled_quantity`, `positions[1].lots[0].terms.cost`), `REFUSAL_REASON_LOTS_UNBALANCED` for lots that do not sum to their position, `REFUSAL_REASON_IDEMPOTENCY_CONFLICT` for a key used by a different command.
 - `TypeError` or `ValueError` for a number, an amount or an enum, named by its path (`positions[0].lots[1].terms.cost`).
 - `NotGranted` for an account outside the write scope, a person who may not write it, or a session not opened by Open. `not vouched for` for an `acting_for` that is not accepted.
 - `handler error` from the book for anything else it refuses, such as a position that states no side, with its reason. `no handler` or `timeout` from the book.
@@ -1274,7 +1277,7 @@ reply = await plugin.record_opening_balance(
 
 ## `record_break` { #record_break }
 
-From 0.13.0. Records a difference between the book and the street as a break, or brings an open one up to date: the account, the position or account-level figure it concerns, its category, each differing field with the book's value and the street's, what was compared, the business date it was seen, and the candidate causes the plugin's matching found. A finding, so the plugin may send it as itself.
+Records a difference between the book and the street as a break, or brings an open one up to date: the account, the position or account-level figure it concerns, its category, each differing field with the book's value and the street's, what was compared, the business date it was seen, and the candidate causes the plugin's matching found. A finding, so the plugin may send it as itself.
 
 ```python
 async def record_break(
@@ -1336,7 +1339,7 @@ await plugin.record_break(
 
 ## `record_account_figures` { #record_account_figures }
 
-From 0.13.0. Records the account's figures for a business date, one set per margin agreement, each as the street recorded it, with the collateral held under it and the custodian's own value and margin requirement for each position, labelled as the custodian's. A record of what was reported, never a figure the book computed. A finding, so the plugin may send it as itself.
+Records the account's figures for a business date, one set per margin agreement, each as the street recorded it, with the collateral held under it and the custodian's own value and margin requirement for each position, labelled as the custodian's. A record of what was reported, never a figure the book computed. A finding, so the plugin may send it as itself.
 
 ```python
 async def record_account_figures(
@@ -1369,7 +1372,7 @@ async def record_account_figures(
 
 ## `record_encumbrances` { #record_encumbrances }
 
-From 0.13.0. Records what of each position cannot move, as a completed statement states it: for each position, its encumbrances, the whole set, empty when the statement reports none. An attribute of the position, never a movement: its quantities do not change, and the book derives its free quantity from them. A finding, so the plugin may send it as itself.
+Records what of each position cannot move, as a completed statement states it: for each position, its encumbrances, the whole set, empty when the statement reports none. An attribute of the position, never a movement: its quantities do not change, and the book derives its free quantity from them. A finding, so the plugin may send it as itself.
 
 ```python
 async def record_encumbrances(
@@ -1404,7 +1407,7 @@ The book holds the kinds `PLEDGED`, `POSTED`, `ON_LOAN`, `BLOCKED`, `RESTRICTED`
 
 ## `handle_break` { #handle_break }
 
-From 0.13.0. For a person: confirms one of a break's candidate causes, or records another, and sets who owns the break, its escalation level and its due date. Cause and handling are recorded attributes, not states: a break stays open until it is resolved or closed.
+For a person: confirms one of a break's candidate causes, or records another, and sets who owns the break, its escalation level and its due date. Cause and handling are recorded attributes, not states: a break stays open until it is resolved or closed.
 
 ```python
 async def handle_break(
@@ -1438,7 +1441,7 @@ async def handle_break(
 
 ## `resolve_break` { #resolve_break }
 
-From 0.13.0. For a person: resolves one or more open breaks by the entry that corrects the book, in the same act, or by naming entries already recorded; or closes them with an explanation and no entry. The book moves only by the resolving entry, which names the breaks, never by an overwrite.
+For a person: resolves one or more open breaks by the entry that corrects the book, in the same act, or by naming entries already recorded; or closes them with an explanation and no entry. The book moves only by the resolving entry, which names the breaks, never by an overwrite.
 
 ```python
 async def resolve_break(
@@ -1473,7 +1476,7 @@ async def resolve_break(
 
 **Errors:**
 
-- `CommandRefused`: `REFUSAL_REASON_ACTOR_REQUIRED`, `REFUSAL_REASON_REASON_REQUIRED`, `REFUSAL_REASON_BREAK_STATE` for a break that is not open, `REFUSAL_REASON_INCOMPLETE` from 0.14.0 for an adjustment's line opening a lot without its cost or acquisition date (`adjustment.lines[0].opens_lot.cost`, `adjustment.lines[0].opens_lot.acquired_date`), `REFUSAL_REASON_BEFORE_OPENING_BALANCE` for an entry effective on or before the opening balance's date, `REFUSAL_REASON_LOTS_UNBALANCED` for an entry that would leave a position's open lots not summing to it, `REFUSAL_REASON_LATER_ENTRIES_STAND` for a reversal of the opening balance while a later entry moves the account's positions, `REFUSAL_REASON_IDEMPOTENCY_CONFLICT`.
+- `CommandRefused`: `REFUSAL_REASON_ACTOR_REQUIRED`, `REFUSAL_REASON_REASON_REQUIRED`, `REFUSAL_REASON_BREAK_STATE` for a break that is not open, `REFUSAL_REASON_INCOMPLETE` for an adjustment's line opening a lot without its cost or acquisition date (`adjustment.lines[0].opens_lot.cost`, `adjustment.lines[0].opens_lot.acquired_date`), `REFUSAL_REASON_BEFORE_OPENING_BALANCE` for an entry effective on or before the opening balance's date, `REFUSAL_REASON_LOTS_UNBALANCED` for an entry that would leave a position's open lots not summing to it, `REFUSAL_REASON_LATER_ENTRIES_STAND` for a reversal of the opening balance while a later entry moves the account's positions, `REFUSAL_REASON_IDEMPOTENCY_CONFLICT`.
 - `ValueError` for more than one of the four, and `TypeError` or `ValueError` for a number or an amount, named by its path.
 - `NotGranted` for an account outside the write scope, a person who may not write it, a session not opened by Open, or without the `operations` role. `not vouched for`, `handler error`, `no handler` or `timeout`.
 
@@ -1496,7 +1499,7 @@ await plugin.resolve_break(
 
 ## `close_breaks_as_cleared` { #close_breaks_as_cleared }
 
-From 0.13.0. For a person, or from contract v21 the role's [service account](../concepts/service-accounts.md): closes breaks whose difference has gone, a settlement landing or the custodian catching up, citing the statement where it was gone, and moves nothing. A break is never closed by silence.
+For a person, or the role's [service account](../concepts/service-accounts.md): closes breaks whose difference has gone, a settlement landing or the custodian catching up, citing the statement where it was gone, and moves nothing. A break is never closed by silence.
 
 ```python
 async def close_breaks_as_cleared(
@@ -1529,7 +1532,7 @@ async def close_breaks_as_cleared(
 
 ## `list_positions` { #list_positions }
 
-From 0.13.0. Reads the book's positions within the plugin's read scope, or one account's, each with its lots, pending settlements, encumbrances and free quantity, and its opening balance's sources; or those changed since a watermark; or the positions at the end of a business date, as known at a watermark or now. See [Reads are within the read scope](#reads).
+Reads the book's positions within the plugin's read scope, or one account's, each with its lots, pending settlements, encumbrances and free quantity, and its opening balance's sources; or those changed since a watermark; or the positions at the end of a business date, as known at a watermark or now. See [Reads are within the read scope](#reads).
 
 ```python
 async def list_positions(
@@ -1570,7 +1573,7 @@ for position in page.positions:
 
 ## `list_breaks` { #list_breaks }
 
-From 0.13.0. Reads breaks within the plugin's read scope, or one account's, open, resolved, closed or any of them, each with its cause, handling and resolution; or those changed since a watermark. See [Reads are within the read scope](#reads).
+Reads breaks within the plugin's read scope, or one account's, open, resolved, closed or any of them, each with its cause, handling and resolution; or those changed since a watermark. See [Reads are within the read scope](#reads).
 
 ```python
 async def list_breaks(
@@ -1600,7 +1603,7 @@ async def list_breaks(
 
 ## `list_account_figures` { #list_account_figures }
 
-From 0.13.0. Reads the accounts' figures within the plugin's read scope, by account and margin agreement, for a business date or a range of them; or those recorded since a watermark. Margin movement is a series per agreement: the book adds nothing up across agreements, and a reader that wants a total adds them. See [Reads are within the read scope](#reads).
+Reads the accounts' figures within the plugin's read scope, by account and margin agreement, for a business date or a range of them; or those recorded since a watermark. Margin movement is a series per agreement: the book adds nothing up across agreements, and a reader that wants a total adds them. See [Reads are within the read scope](#reads).
 
 ```python
 async def list_account_figures(
@@ -1633,7 +1636,7 @@ async def list_account_figures(
 
 ## `list_account_attributes` { #list_account_attributes }
 
-From 0.13.0. Reads the book's attributes of the accounts within the plugin's read scope, or one account's: the base currency, the default method of relieving lots, and the standing opening balance, with its entry, its date and its sources; or those changed since a watermark. A plugin learns from it that an account is in the book, and from which date it reconciles, without proposing an opening balance again. A deployment admin sets the first two on the dashboard's [Accounts tab](../concepts/the-book-of-record.md#the-accounts-tab), in an account's **In the book** (the **Books** tab before contract v20). See [Reads are within the read scope](#reads).
+Reads the book's attributes of the accounts within the plugin's read scope, or one account's: the base currency, the default method of relieving lots, and the standing opening balance, with its entry, its date and its sources; or those changed since a watermark. A plugin learns from it that an account is in the book, and from which date it reconciles, without proposing an opening balance again. A deployment admin sets the first two on the dashboard's [Accounts tab](../concepts/the-book-of-record.md#the-accounts-tab), in an account's **In the book**. See [Reads are within the read scope](#reads).
 
 ```python
 async def list_account_attributes(
@@ -1668,7 +1671,7 @@ if page.attributes and page.attributes[0].HasField("opening_balance"):
 
 ## `record_prices` { #record_prices }
 
-From 0.22.0, contract v18, `preview`. Records a batch of 1 to 500 [`Price`](#price)s into [the lake](../concepts/the-lake.md), whole or refused naming the row and the field. A data plugin's.
+This operation is `preview`. Records a batch of 1 to 500 [`Price`](#price)s into [the lake](../concepts/the-lake.md), whole or refused naming the row and the field. A data plugin's.
 
 ```python
 async def record_prices(
@@ -1723,7 +1726,7 @@ done.recorded, done.restated, done.unchanged
 
 ## `record_bars` { #record_bars }
 
-From 0.22.0, contract v18, `preview`. Records a batch of 1 to 500 [`Bar`](#bar)s, as [`record_prices`](#record_prices) records prices.
+This operation is `preview`. Records a batch of 1 to 500 [`Bar`](#bar)s, as [`record_prices`](#record_prices) records prices.
 
 ```python
 async def record_bars(
@@ -1743,7 +1746,7 @@ Each bar's open, high, low, close and VWAP are in one asset, refused otherwise; 
 
 ## `record_trades` { #record_trades }
 
-From 0.23.0, contract v19, `preview`. Records a batch of 1 to 500 [`Trade`](#trade)s into [the lake](../concepts/the-lake.md), as [`record_prices`](#record_prices) records prices. A data plugin's, from a dataset declaring `meridian.v1.Trade`.
+This operation is `preview`. Records a batch of 1 to 500 [`Trade`](#trade)s into [the lake](../concepts/the-lake.md), as [`record_prices`](#record_prices) records prices. A data plugin's, from a dataset declaring `meridian.v1.Trade`.
 
 ```python
 async def record_trades(
@@ -1789,7 +1792,7 @@ await plugin.record_trades(trades=[
 
 ## `record_quotes` { #record_quotes }
 
-From 0.23.0, contract v19, `preview`. Records a batch of 1 to 500 [`Quote`](#quote)s, as [`record_prices`](#record_prices) records prices. A data plugin's, from a dataset declaring `meridian.v1.Quote`.
+This operation is `preview`. Records a batch of 1 to 500 [`Quote`](#quote)s, as [`record_prices`](#record_prices) records prices. A data plugin's, from a dataset declaring `meridian.v1.Quote`.
 
 ```python
 async def record_quotes(
@@ -1817,7 +1820,7 @@ await plugin.record_quotes(quotes=[
 
 ## `decline_want` { #decline_want }
 
-From 0.22.0, contract v18, `preview`. Says what a data plugin cannot serve of a want, per subject, with a reason.
+This operation is `preview`. Says what a data plugin cannot serve of a want, per subject, with a reason.
 
 A read the lake cannot answer from what it holds becomes a want, heard only by the instance serving its dataset, with `receive(observations_wanted=...)`: an `ObservationsWantedEvent` with its `want_id`, `dataset`, `data_type`, `subjects`, `kinds` (for prices), `interval_ns` (for bars), a `business_date` or a valid range, and `standing`. The plugin fetches what it covers and records it with `want_id=`; what it cannot, it declines. A standing want asks that its subjects be kept current until a `WantWithdrawnEvent` (`want_id`, `dataset`), heard with `receive(want_withdrawn=...)`, withdraws it.
 
@@ -1844,7 +1847,7 @@ async def decline_want(
 
 **Returns** `DeclineWantResult`, empty. **Errors:** `CallFailed` for a want this instance does not serve. `NotGranted` without `data`.
 
-From contract v19 a decline stands for the business date or range its want asked, or for the latest where it asked the latest, and for no other date of that dataset and subject: a later want of another date is asked again. In v18 it stood for a day across every date.
+A decline stands for the business date or range its want asked, or for the latest where it asked the latest, and for no other date of that dataset and subject: a later want of another date is asked again.
 
 ```python
 async def wanted(heard: meridian.Heard) -> None:
@@ -1858,7 +1861,7 @@ await plugin.receive(observations_wanted=wanted, want_withdrawn=stop_keeping_cur
 
 ## `resolve_venue` { #resolve_venue }
 
-From 0.22.0, contract v18, `preview`. Asks which [venue](../concepts/venues.md) a set of codes names on a date, among the venues the deployment holds. Never mints one: a deployment pulls venues from the platform's venue master.
+This operation is `preview`. Asks which [venue](../concepts/venues.md) a set of codes names on a date, among the venues the deployment holds. Never mints one: a deployment pulls venues from the platform's venue master.
 
 ```python
 async def resolve_venue(
@@ -1892,7 +1895,7 @@ venue_id = answer.venue.venue_id if answer.found else ""   # not held: report it
 
 ## `report_missing_venue` { #report_missing_venue }
 
-From 0.22.0, contract v18, `preview`. Reports that a venue the plugin's source named resolved to none the deployment holds. A fact, not a request: the plugin carries on, its row naming no venue and keeping the code as the source reported it.
+This operation is `preview`. Reports that a venue the plugin's source named resolved to none the deployment holds. A fact, not a request: the plugin carries on, its row naming no venue and keeping the code as the source reported it.
 
 ```python
 async def report_missing_venue(
@@ -1921,7 +1924,7 @@ async def report_missing_venue(
 
 ## `list_prices` { #list_prices }
 
-From 0.22.0, contract v18, `preview`. Reads prices for up to 500 subjects at one of the latest in force at a valid time, a business date or a valid range; as the lake knew them at a recorded time; from the deployment's default sources, named datasets or every dataset side by side. Only what the plugin is entitled to is answered, and each field it may not read is stripped and named.
+This operation is `preview`. Reads prices for up to 500 subjects at one of the latest in force at a valid time, a business date or a valid range; as the lake knew them at a recorded time; from the deployment's default sources, named datasets or every dataset side by side. Only what the plugin is entitled to is answered, and each field it may not read is stripped and named.
 
 ```python
 async def list_prices(
@@ -1951,7 +1954,7 @@ async def list_prices(
 | `as_of_ns` | `int` | no | The recorded-time cut: what the lake knew then; 0 for now. |
 | `page_size`, `cursor` | `int`, `str` | no | At most 500 a page, 100 when `0`; the previous page's `next_cursor`. |
 
-Give one of `at_ns`, `business_date` or the range. A read the lake cannot answer from what it holds is wanted of the data plugin serving the dataset, and answered `asked_source` in `unanswered`; the rows follow, heard with `receive(prices_recorded=...)`. From contract v19 the latest is chosen per subject, dataset, kind, venue and the price's asset, so BTC priced in USD and in USDC on one venue answers both; v18 answered one.
+Give one of `at_ns`, `business_date` or the range. A read the lake cannot answer from what it holds is wanted of the data plugin serving the dataset, and answered `asked_source` in `unanswered`; the rows follow, heard with `receive(prices_recorded=...)`. The latest is chosen per subject, dataset, kind, venue and the price's asset, so BTC priced in USD and in USDC on one venue answers both.
 
 **Returns** `ListPricesResult`: `prices`, each a [`Price`](#price) with its envelope as recorded; `unanswered`, each an [`Unanswered`](#unanswered) naming the subject, dataset, field and reason; `datasets`, each [`DatasetRef`](#datasetref) in the answer, once; the `watermark` it was read at; and `next_cursor`. A default read that fell through to a lower dataset says why the first did not answer.
 
@@ -1970,7 +1973,7 @@ then = await plugin.list_prices(subjects=held, business_date=date(2026, 10, 8), 
 
 ## `list_bars` { #list_bars }
 
-From 0.22.0, contract v18, `preview`. Reads bars as [`list_prices`](#list_prices) reads prices, with `interval_ns` (the bar's length, such as `86_400 * 10**9` for a day; 0 for every interval) in place of `kinds`.
+This operation is `preview`. Reads bars as [`list_prices`](#list_prices) reads prices, with `interval_ns` (the bar's length, such as `86_400 * 10**9` for a day; 0 for every interval) in place of `kinds`.
 
 ```python
 async def list_bars(
@@ -1993,7 +1996,7 @@ async def list_bars(
 
 ## `list_trades` { #list_trades }
 
-From 0.23.0, contract v19, `preview`. Reads trades for up to 500 subjects over a valid-time range within one day of each dataset, or **after a watermark**: the trades each dataset recorded after the sequence the reader last saw there, whatever their valid time, a late or out-of-sequence print among them. From the deployment's default sources, named datasets, or side by side; as of a recorded time.
+This operation is `preview`. Reads trades for up to 500 subjects over a valid-time range within one day of each dataset, or **after a watermark**: the trades each dataset recorded after the sequence the reader last saw there, whatever their valid time, a late or out-of-sequence print among them. From the deployment's default sources, named datasets, or side by side; as of a recorded time.
 
 ```python
 async def list_trades(
@@ -2008,7 +2011,7 @@ async def list_trades(
 | gRPC | `rpc ListTrades(ListTradesParams) returns (ListTradesResult)` |
 | Workflow step | W10.6, Read prices, bars, trades and quotes, point in time, by source |
 | Kind | query, on `platform.lake.query.list-trades` |
-| Role | `signal`, `ems`; from contract v20 also `data`, for its own rows |
+| Role | `signal`, `ems`; `data`, for its own rows |
 | Served by | the lake |
 
 | Name | Type | Required | Meaning |
@@ -2019,11 +2022,11 @@ async def list_trades(
 | `after_watermark` | [`Watermark`](#watermark) or `None` | one of the two ways | The watermark the reader last saw: a previous answer's `watermark`, or one built from what it heard. Older than the lake keeps is answered `beyond_history`. |
 | `as_of_ns` | `int` | no | The recorded-time cut: nothing recorded after it answers. |
 | `page_size`, `cursor` | `int`, `str` | no | At most 500 a page; the previous page's `next_cursor`. |
-| `latest_recorded` | `bool` | no | From contract v20, a data plugin's: the last trade **its own instance** recorded of each subject, per dataset and venue, from its own datasets alone, in place of a range or a watermark. What it reads on start to backfill a restart's gap from the venue's history. A subject it never recorded answers nothing. |
+| `latest_recorded` | `bool` | no | A data plugin's: the last trade **its own instance** recorded of each subject, per dataset and venue, from its own datasets alone, in place of a range or a watermark. What it reads on start to backfill a restart's gap from the venue's history. A subject it never recorded answers nothing. |
 
 **Returns** `ListTradesResult`: `trades`, each a [`Trade`](#trade) with its envelope as recorded; `unanswered` (not entitled, not kept and beyond history said per dataset); `datasets`; the `watermark` it was answered at, which a later catch-up names; and `next_cursor`.
 
-**Errors:** `CallFailed` with `kind="invalid"` for no subject or more than 500, or a range wider than one day of a dataset. `NotGranted` without `signal` or `ems`, or from contract v20 `data` (which reads only its own rows, with `latest_recorded`).
+**Errors:** `CallFailed` with `kind="invalid"` for no subject or more than 500, or a range wider than one day of a dataset. `NotGranted` without `signal` or `ems`, or `data` (which reads only its own rows, with `latest_recorded`).
 
 ```python
 day = await plugin.list_trades(subjects=held, valid_from_ns=open_ns, valid_until_ns=now_ns)
@@ -2032,7 +2035,7 @@ late = await plugin.list_trades(subjects=held, after_watermark=day.watermark)   
 
 A plugin hearing trades with [`receive`](python-sdk.md#receive) has the SDK make the catch-up read for it.
 
-A data plugin starting again (contract v20):
+A data plugin starting again:
 
 ```python
 last = await plugin.list_trades(subjects=streamed, latest_recorded=True)
@@ -2042,7 +2045,7 @@ or `meridian.roles.data.backfill_restart`, which reads it and records what the v
 
 ## `list_quotes` { #list_quotes }
 
-From 0.23.0, contract v19, `preview`. Reads quotes for up to 500 subjects at the latest in force at a valid time, chosen per subject, dataset, venue and the quote's asset, or over a valid-time range within one day of each dataset.
+This operation is `preview`. Reads quotes for up to 500 subjects at the latest in force at a valid time, chosen per subject, dataset, venue and the quote's asset, or over a valid-time range within one day of each dataset.
 
 ```python
 async def list_quotes(
@@ -2068,7 +2071,7 @@ latest = await plugin.list_quotes(subjects=held)      # BTC in USD and in USDC o
 
 ## An event contract's outcomes { #outcomes }
 
-From 0.27.0, contract v23, `preview`. A data plugin
+Added in SDK 0.27.0 (contract 23). This operation is `preview`. A data plugin
 records an event contract's outcome, and prices' readers and `operations`
 read it. See
 [An event contract's outcome](../concepts/the-lake.md#an-event-contracts-outcome).
@@ -2122,7 +2125,7 @@ An outcome has no business date, so none is asked. **Returns**
 
 ## `list_datasets` { #list_datasets }
 
-From 0.22.0, contract v18, `preview`. Reads the datasets the plugin may read, each with its instance, vendor, aggregator and catalogue entry, the licence of each, and the plugin's own entitlements. The SDK reads it once to join each heard row's dataset (`Heard.dataset`).
+This operation is `preview`. Reads the datasets the plugin may read, each with its instance, vendor, aggregator and catalogue entry, the licence of each, and the plugin's own entitlements. The SDK reads it once to join each heard row's dataset (`Heard.dataset`).
 
 ```python
 async def list_datasets(self) -> ListDatasetsResult
@@ -2133,19 +2136,19 @@ async def list_datasets(self) -> ListDatasetsResult
 | gRPC | `rpc ListDatasets(ListDatasetsParams) returns (ListDatasetsResult)` |
 | Workflow step | W10.9, Read the datasets |
 | Kind | query, on `platform.lake.query.list-datasets` |
-| Role | `reporting`, `portfolio`, `compliance`, `signal`; from contract v19 also `ems`; from contract v20 also `data` |
+| Role | `reporting`, `portfolio`, `compliance`, `signal`, `ems`; `data`, for its own datasets |
 | Served by | the lake |
 
 **Returns** `ListDatasetsResult`: `datasets`, each a [`DatasetRef`](#datasetref); `licences`, each dataset's licence enforced; and `entitlements`, the plugin's own.
 
-Each `DatasetRef` carries, from contract v23, `closed_day_count` and
-`outside_coverage_count`.
+Each `DatasetRef` carries `closed_day_count` and `outside_coverage_count`
+(added in contract 23).
 
-**A data plugin's own datasets** (contract v20). Asked by a data plugin, it answers only the datasets its own catalogue declares, each with the licence a deployment admin set on it, so its Datasets page says "Licensed" or "Not licensed yet" exactly; a dataset still on its catalogue's default answers no licence set by the deployment.
+**A data plugin's own datasets.** Asked by a data plugin, it answers only the datasets its own catalogue declares, each with the licence a deployment admin set on it, so its Datasets page says "Licensed" or "Not licensed yet" exactly; a dataset still on its catalogue's default answers no licence set by the deployment.
 
 ## The order path { #the-order-path }
 
-From 0.26.0, contract v22. Every operation here is
+Every operation here is
 `preview`. What each role does on the path, the states and the transition
 table are on [The order lifecycle](../concepts/the-order-lifecycle.md); the
 Python SDK's overview is [The order path](python-sdk.md#the-order-path).
@@ -2165,12 +2168,11 @@ Python SDK's overview is [The order path](python-sdk.md#the-order-path).
 - **Orders are `portfolio`'s and the `oms`'s, placements the `ems`'s, fills
   the connectivity plugin's.** A connectivity plugin's `record_order` or
   `create_placement` is refused by its sidecar, `NotGranted`
-  (`PERMISSION_DENIED`), as any operation its role does not hold. From
-  contract v23 it reports a fill the venue originated on no placement
+  (`PERMISSION_DENIED`), as any operation its role does not hold. It
+  reports a fill the venue originated on no placement
   ([`report_execution`](#report_execution) naming no placement), which the
   `ems` accepts ([`accept_execution`](#accept_execution)) or answers DK
-  ([`dont_know_execution`](#dont_know_execution)), in open-meridian
-  0.27.0.
+  ([`dont_know_execution`](#dont_know_execution)).
 - **Idempotency.** A command naming an `idempotency_key` is applied once for
   it; the same key on another command is refused
   `REFUSAL_REASON_IDEMPOTENCY_CONFLICT`. A venue fact repeated with the same
@@ -2201,7 +2203,7 @@ Answers the order at proposed, or for a child at released.
 | `time_in_force`, `expire_date`, `expire_time_ns` | Its time in force, and a good-till-date's date or a good-till-time's time |
 | `sleeve` | The part of the account it is for; empty for the unsleeved part |
 | `dealt_currency`, `legs` | On a pair, the dealt currency's cash instrument; legs, each an instrument, a side and a ratio |
-| `quote_currency` | From contract v23, on a pair: the quote currency's cash instrument, the pair's second currency as quoted. One naming the order's own instrument is refused `invalid` naming it; a limit or stop in another currency, naming `limit_price` or `stop_price` |
+| `quote_currency` | Added in contract 23. On a pair: the quote currency's cash instrument, the pair's second currency as quoted. One naming the order's own instrument is refused `invalid` naming it; a limit or stop in another currency, naming `limit_price` or `stop_price` |
 | `allocation_instruction` | The accounts and amounts or weights it is for; none for the whole in its own account. A child carries none |
 | `execution_instructions`, `lot_relief_method`, `relieve_lot_ids`, `capacity` | The `oms`'s: the standard execution instructions, how a sale relieves lots or the lots it names, and capacity |
 | `direction`, `parties`, `decided_by` | A client's order received, the parties as delivered, and who decided it where that differs from who enters it |
@@ -2329,16 +2331,16 @@ A connectivity plugin reports an execution of a placement; the `ems` or the
 | `supersedes`, `effective_date` | For a bust or correction: the execution it supersedes, and the date it takes effect |
 | `counterparty`, `liquidity_indicator`, `venue_id` | The counterparty where known, maker or taker, and the place of execution |
 | `uti`, `uti_generated_by`, `prior_uti`, `upi`, `given_up_to`, `trade_chain_reference`, `settlement_counterparty` | Fields recorded for reporting, as the venue states them |
-| `instrument_id`, `side`, `venue_order_id`, `venue_client_order_id` | From contract v23, a fill on no placement the venue originated: its instrument, side and the venue's order ID, each required on such a fill and refused `invalid` naming it without, and the venue's client order ID where sent. Recorded unmatched |
+| `instrument_id`, `side`, `venue_order_id`, `venue_client_order_id` | Added in contract 23. A fill on no placement the venue originated: its instrument, side and the venue's order ID, each required on such a fill and refused `invalid` naming it without, and the venue's client order ID where sent. Recorded unmatched |
 | `raw_record`, `idempotency_key`, `acting_for` | As above |
 
-A fee's `kind` is `exchange`, `cancel`, `network`, and from contract v23
-`financing` or `commission`.
+A fee's `kind` is `exchange`, `cancel`, `network`, `financing` or
+`commission` (the last two added in contract 23).
 
 ### `report_charge` { #report_charge }
 
 A fee with no fill on a placement (`fee`), such as a venue's cancel fee, or
-from contract v23 a rolling position's financing at a roll, with its
+a rolling position's financing at a roll (added in contract 23), with its
 `trade_date`, `settlement_date` and `raw_record`: it moves cash and counts
 toward no quantity. One naming no placement the book holds, or none, is
 kept unplaced (`UNPLACED_REASON_UNKNOWN_PLACEMENT`).
@@ -2362,7 +2364,7 @@ The orders in the plugin's read scope (`account_id` narrows to one), as of
 now or changed `since` a watermark, answered `as_of`: `orders`,
 `placements`, `executions` and `unplaced_facts`, each in its own list. A
 connectivity plugin reads only the placements naming it, and the orders
-behind them. From contract v23 `execution_state` (`unmatched`, `matched`,
+behind them. `execution_state` (added in contract 23; `unmatched`, `matched`,
 `dont_know`) answers only the executions in that state; `unmatched` leaves
 out a fill superseded by a bust or a correction, and the bust.
 
@@ -2396,8 +2398,8 @@ A connectivity plugin publishes its venue's catalogue for one venue account
 code (`catalogue`, a `VenueCatalogue`): order types with their time-in-force
 values, the broker's strategies with their parameters (each a name, a type,
 whether it is required, its range or allowed values and its default), and
-eligibility for the instruments it states; and from contract v23
-`execution_acknowledgement`, what its venue takes of an accept or a DK
+eligibility for the instruments it states; and
+`execution_acknowledgement` (added in contract 23), what its venue takes of an accept or a DK
 (`none`, `bn` or `dont_know_trade`; unset reads as `none`). Delivered latest
 per plugin and code; heard by the `ems` and the `oms`.
 
@@ -2420,7 +2422,7 @@ mapped on that plugin for another account is refused.
 
 ### `accept_execution` { #accept_execution }
 
-From 0.27.0, contract v23. The `ems` accepts 1 to 500
+Added in SDK 0.27.0 (contract 23). The `ems` accepts 1 to 500
 unmatched executions of one account, instrument, side, connectivity plugin
 and trade date to an order, for a person or its service account. See
 [Venue-originated fills](../concepts/the-order-lifecycle.md#venue-originated-fills).
@@ -2439,7 +2441,7 @@ Refused `REFUSAL_REASON_EXECUTION_STATE`, `_EXECUTIONS_DIFFER`,
 
 ### `dont_know_execution` { #dont_know_execution }
 
-From 0.27.0, contract v23. The `ems` answers 1 to 500
+Added in SDK 0.27.0 (contract 23). The `ems` answers 1 to 500
 unmatched executions DK (`execution_ids`), with a `reason`, a `DkReason`
 (`unknown_instrument`, `wrong_side`, `quantity_exceeds_order`,
 `no_matching_order`, `price_exceeds_limit`, `calculation_difference`,
@@ -2450,7 +2452,7 @@ keeping `dk_reason` and `dk_text`, and the `journal` reference. Refused
 
 ### `report_value_date_roll` { #report_value_date_roll }
 
-From 0.27.0, contract v23. A connectivity plugin
+Added in SDK 0.27.0 (contract 23). A connectivity plugin
 reports its venue's roll of an account's spot position in a pair to the
 next value date. See
 [A venue's value-date roll](../concepts/the-order-lifecycle.md#a-venues-value-date-roll).
@@ -2472,9 +2474,149 @@ next value date. See
 from date (`UNPLACED_REASON_NOTHING_PENDING`). A missing date or basis, or
 a new date not after the old, is refused `invalid`, naming the field.
 
+## Booking and the one-ID model's operations { #contract-v24s-operations }
+
+Added in SDK 0.28.0 (contract 24). Every one is `preview`. A command acting for
+a person takes `acting_for`, as the order path's do. See [Booking](../concepts/booking.md) and
+[One ID per instrument](../concepts/one-id.md).
+
+### `set_allocation_instruction` { #set_allocation_instruction }
+
+`portfolio`, or `operations` for a client's instruction, amends an order's
+allocation instruction: `order_id`, `allocation_instruction` (its lines,
+each an account with its amount or weight and its sleeve) and `reason`.
+**Returns** the order. Refused `REFUSAL_REASON_ORDER_STATE` where an
+account would fall below what its live bookings already allocate;
+`_REASON_REQUIRED`, `_ACTOR_REQUIRED`.
+
+### `book_order` { #book_order }
+
+The `oms` books an explicit list of executions on one order, a block
+included: `order_id`, `execution_ids`, `allocations` (each an
+`Allocation`: `account_id`, `sleeve`, `quantity`, `average_price`,
+`gross_amount`, `fees` each with its kind and `capitalised`, `net_amount`,
+`intended_settlement_date`, `average_priced`, `relieve_lot_ids`, and on an
+error account `error_cause`, `reason` and `error_text`) and `hand_off`, to
+hand off in the same act where the check passes. **Returns** the
+`booking` (its `BKG-` ID, state and allocations, each with its `ALC-` ID),
+its `entry` and `journal`. Refused `REFUSAL_REASON_BOOKING_UNBALANCED`,
+`_ACCOUNT_NOT_INSTRUCTED`, `_ORDER_STATE` (naming the execution),
+`_REASON_REQUIRED` or `_ACTOR_REQUIRED`; `ERROR_CAUSE_OTHER` with no text
+`invalid`, naming the field.
+
+### `hand_off_booking` { #hand_off_booking }
+
+The `oms` hands a booked booking off to `operations` (`booking_id`), or
+closes a client's booking the firm does not settle (`close`). **Returns**
+the booking handed off or closed, or held with its `held_reason` where
+executed no longer equals allocated, a held-booking alert raised. Refused
+`REFUSAL_REASON_ORDER_STATE` for a booking handed off, closed or
+cancelled; `_ACTOR_REQUIRED`.
+
+### `correct_booking` { #correct_booking }
+
+`booking_id`, `kind` (`BOOKING_CORRECTION_KIND_CANCEL`, the `oms`'s before
+the hand-off; `BOOKING_CORRECTION_KIND_REPLACE`, `operations`' after it),
+the whole new `allocations`, `effective_date` (a replace's, the trade date
+by default) and `reason`. **Returns** the booking cancelled, or its new
+version, the movement lines journalled as their own entry. Refused as
+`book_order` is, and `_ORDER_STATE` for the wrong kind for the state or
+the actor.
+
+### `list_bookings` { #list_bookings }
+
+The bookings in the plugin's read scope: `account_id`, `since` (a
+watermark), `state`, `page_size` and `cursor`. **Returns** `bookings`, each
+with its allocations, `as_of` and `next_cursor`. A reader also hears each booking change, BookingUpdated.
+
+### `report_give_up` { #report_give_up }
+
+A `connectivity` or `confirmation` plugin reports a prime broker's answer
+to a give-up: `execution_id`, `allocation_id` where one is booked,
+`answer` (`GIVE_UP_ANSWER_ACCEPTED` or `GIVE_UP_ANSWER_REJECTED`),
+`prime_reference`, `reason` and `raw_record`. A fact, never refused for its
+state. **Returns** the book's fact reply; a report naming nothing the book
+holds is an unplaced fact.
+
+### `record_sleeve_cross` { #record_sleeve_cross }
+
+The `oms` records a cross between two sleeves of one account, at
+`portfolio`'s decision: a `SleeveCross` naming the instrument, the giving
+and receiving sleeves, the quantity, the cross price and its source, who
+decided and why, and `order_ids`, the two opposite orders it stands in for.
+**Returns** the `sleeve_cross` (its `SXC-` ID) and `journal`. Refused
+`invalid` naming `order_ids` for an order of another account or
+instrument, or two of one side; `_ORDER_STATE` for an order ended;
+`_ACTOR_REQUIRED`, `_REASON_REQUIRED`.
+
+### `raise_alert` { #raise_alert }
+
+`compliance` raises an alert of its own on an account: `account_id`,
+`kind` (`ALERT_KIND_COMPLIANCE`), `reason` and `subject` (an order, a
+booking, an allocation or a position). **Returns** the `alert` (its `ALR-`
+ID) and `journal`.
+
+### `acknowledge_alert` { #acknowledge_alert }
+
+`compliance` acknowledges an alert for a person: `alert_id` and `reason`.
+An error-account alert is acknowledged so; a held-booking alert records
+the acknowledgement and stays until the booking hands off or closes.
+Refused `_ACTOR_REQUIRED` with no person, `_REASON_REQUIRED`.
+
+### `list_alerts` { #list_alerts }
+
+The alerts in the plugin's read scope: `account_id`, `since`, `state`,
+`kind`, `page_size` and `cursor`. **Returns** `alerts`, `as_of` and
+`next_cursor`. A reader also hears each alert change, AlertChanged.
+
+### `read_local_record_orders` { #read_local_record_orders }
+
+Takes nothing. **Returns** `allows_local_record_orders`, the setting in
+force, and `open_order_count`, the live orders on local records across the
+deployment, naming no account and no order. A plugin that proposes or
+accepts reads it, so it can tell a person before sending that an order on a
+local record would be refused (`REFUSAL_REASON_LOCAL_RECORD_NOT_ALLOWED`).
+
+### `list_replacements` { #list_replacements }
+
+Every role. The replacements the instrument store recorded after
+`after_sequence`: **returns** `replacements`, each as its
+instrument-replaced event carried it (the record replaced, the record it
+became, its `cause`, `REPLACEMENT_CAUSE_MERGED`, `_RESOLVED` or
+`_PLATFORM_MERGED`, and its `sequence`), and the `sequence` read to.
+Reference data, answered whatever the plugin's accounts. Every role also
+hears each replacement as it happens; the SDK keeps a current-ID map from
+both.
+
+### `list_templates` { #list_templates }
+
+Every role. The template catalogue the deployment holds, each template
+at its latest version, or with `asset_class` that class's templates, its
+base template among them: each template's `template_id`,
+`template_version`, `name`, `asset_class`,
+`instrument_type` (unspecified for a class's base template), `base`, its
+`fields` (each with its path, type and whether it is required) and its
+`match_rule`.
+
+### `read_template` { #read_template }
+
+Every role. One template at a version, `template_id` and
+`template_version`, as `list_templates` answers each; or not held.
+
+### `offer_template_fields` { #offer_template_fields }
+
+A `reference` plugin offers a record's template fields, each value with
+its provenance, the plugin itself the source: `instrument_id`,
+`template_id`, `template_version` and `fields`. The values are kept as
+offers, never decisions: one is in force only once a person accepts it,
+and never overwrites a person's. The plugin never asks for a mint.
+**Returns** the record at its new version. Refused, naming the field, for
+a field the template does not have, a value not of its type, or a template
+or version the catalogue does not hold.
+
 ## Settlement calendars' reads { #settlement-calendars-reads }
 
-From 0.26.0, contract v22. Every role reads both,
+Every role reads both,
 whatever its accounts. See
 [Settlement calendars](../concepts/settlement-calendars.md) and, in the
 Python SDK, [Settlement calendars](python-sdk.md#settlement-calendars).
@@ -2512,7 +2654,7 @@ naming `spot.at_ns`.
 
 ## Types { #types }
 
-The plugin-facing types these operations take and return. [`Identifier`](python-sdk.md#identifier) and [`MissReason`](python-sdk.md#missreason) are described with the Python SDK. `Money`, `StatementFigures`, `ReportedCollateral`, `ReportedLot` and, from 0.13.0, `ReportedEncumbrance` and the book's `OpeningSource`, `OpeningPosition`, `OpeningLot`, `PendingSettlement`, `LotTerms`, `PositionKey`, `BreakDifference`, `BreakValue`, `BreakCause`, `PendingSettlementRef`, `AgreementFigures`, `ReportedPositionValue`, `PositionEncumbrances`, `Encumbrance`, `Adjustment`, `MovementLine` and `BasisAdjustment` are the SDK's frozen dataclasses, exported from `meridian`, which take their numbers as `Decimal` and their amounts as `Money`, and are converted and refused as a call's own parameters are. Every other type below is a generated protobuf message or enum in `meridian.plugin.v1.operations_pb2`, and `AssetClass`, `CollateralDirection`, `ExternalAccount`, `HoldingSide` and `SyncState` are also exported from `meridian`. What a read answers is all generated messages, `StatementFigures` among them: read a number or an amount off one with [`as_decimal` and `as_money`](#numbers-and-amounts).
+The plugin-facing types these operations take and return. [`Identifier`](python-sdk.md#identifier) and [`MissReason`](python-sdk.md#missreason) are described with the Python SDK. `Money`, `StatementFigures`, `ReportedCollateral`, `ReportedLot`, `ReportedEncumbrance` and the book's `OpeningSource`, `OpeningPosition`, `OpeningLot`, `PendingSettlement`, `LotTerms`, `PositionKey`, `BreakDifference`, `BreakValue`, `BreakCause`, `PendingSettlementRef`, `AgreementFigures`, `ReportedPositionValue`, `PositionEncumbrances`, `Encumbrance`, `Adjustment`, `MovementLine` and `BasisAdjustment` are the SDK's frozen dataclasses, exported from `meridian`, which take their numbers as `Decimal` and their amounts as `Money`, and are converted and refused as a call's own parameters are. Every other type below is a generated protobuf message or enum in `meridian.plugin.v1.operations_pb2`, and `AssetClass`, `CollateralDirection`, `ExternalAccount`, `HoldingSide` and `SyncState` are also exported from `meridian`. What a read answers is all generated messages, `StatementFigures` among them: read a number or an amount off one with [`as_decimal` and `as_money`](#numbers-and-amounts).
 
 ### `Money` { #money }
 
@@ -2521,10 +2663,10 @@ An amount of currency, `meridian.Money(amount, currency_code)`: a frozen datacla
 | Field | Type | Meaning |
 |---|---|---|
 | `amount` | `Decimal` or `int` | In the currency's major unit. |
-| `currency_code` | `str` | ISO 4217, such as `"USD"`. From 0.22.0 empty for an asset with no ISO 4217 code. |
-| `instrument_id` | `str` | From 0.22.0, contract v18: the cash instrument the amount is in, fiat and tokens alike. Empty from a plugin naming a fiat currency by its code, which core resolves, dated; never empty on what core keeps and answers. |
+| `currency_code` | `str` | ISO 4217, such as `"USD"`. Empty for an asset with no ISO 4217 code. |
+| `instrument_id` | `str` | The cash instrument the amount is in, fiat and tokens alike. Empty from a plugin naming a fiat currency by its code, which core resolves, dated; never empty on what core keeps and answers. |
 
-From contract v18 a Money always names an instrument (see [Money and instruments](../concepts/money-and-instruments.md)). `Money(Decimal("12.50"), "USD")` keeps its shape; a token is named by its instrument alone, `Money(Decimal("2410.5"), instrument_id=usdc)`, as [`resolve_identifier`](#resolve_identifier) resolved it. A Money naming neither raises `ValueError` before anything is sent; a token's code in `currency_code`, and a code and an instrument naming two assets, are refused naming the field. A Money read back with [`as_money`](#numbers-and-amounts) carries `instrument_id` beside the code: a test comparing one with a Money it made compares `amount` and `currency_code`.
+A Money always names an instrument (see [Money and instruments](../concepts/money-and-instruments.md)). `Money(Decimal("12.50"), "USD")` keeps its shape; a token is named by its instrument alone, `Money(Decimal("2410.5"), instrument_id=usdc)`, as [`resolve_identifier`](#resolve_identifier) resolved it. A Money naming neither raises `ValueError` before anything is sent; a token's code in `currency_code`, and a code and an instrument naming two assets, are refused naming the field. A Money read back with [`as_money`](#numbers-and-amounts) carries `instrument_id` beside the code: a test comparing one with a Money it made compares `amount` and `currency_code`.
 
 ### `ExternalAccount` { #externalaccount }
 
@@ -2534,7 +2676,7 @@ One account a connection reaches, as the custodian presents it.
 |---|---|---|
 | `external_account_id` | `str` | Stable: the plugin makes it so where the venue does not. It is the `external_account_id` the account's rows name. A handle the venue wants on each call stays inside the plugin. |
 | `name` | `str` | The custodian's own name for it, as a person there would recognise it. |
-| `venue_account_type` | `str` | The venue's own word for the kind of account, verbatim and for display only. Deprecated in contract v11 for the account kind, and the venue's word as reported where it does not convert. |
+| `venue_account_type` | `str` | The venue's own word for the kind of account, verbatim and for display only. Deprecated for the account kind, and the venue's word as reported where it does not convert. |
 
 ### `AssetClass` { #assetclass }
 
@@ -2579,7 +2721,7 @@ Why a connection's data is, or is not, current. Each asks something different of
 
 ### `StatementFigures` { #statementfigures }
 
-A statement's figures for one margin segment, `meridian.StatementFigures(...)`, keyword only. Each is as the venue reported it and `None` where it reported none, which is not zero; none is derived. From 0.12.0.
+A statement's figures for one margin segment, `meridian.StatementFigures(...)`, keyword only. Each is as the venue reported it and `None` where it reported none, which is not zero; none is derived.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -2594,7 +2736,7 @@ A statement's figures for one margin segment, `meridian.StatementFigures(...)`, 
 
 ### `ReportedCollateral` { #reportedcollateral }
 
-One collateral balance under a margin segment, `meridian.ReportedCollateral(...)`, keyword only, each field as the venue reports it and unset where it does not. A balance moves nothing: posted collateral the custodian also lists as a holding is a holding row as well, and collateral received under a security interest is never a holding. From 0.12.0.
+One collateral balance under a margin segment, `meridian.ReportedCollateral(...)`, keyword only, each field as the venue reports it and unset where it does not. A balance moves nothing: posted collateral the custodian also lists as a holding is a holding row as well, and collateral received under a security interest is never a holding.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -2606,7 +2748,7 @@ One collateral balance under a margin segment, `meridian.ReportedCollateral(...)
 | `haircut` | `Decimal`, `int` or `None` | A fraction of the value: `Decimal("0.15")` is 15%, a venue's percentage written as its fraction. |
 | `value_after_haircut` | [`Money`](#money) or `None` | Its value after the haircut. |
 | `held_at` | `str` | Where it is held, as the venue names it: the FCM, the dealer, a third-party custodian. Empty where it does not say. |
-| `reusable` | `bool` or `None` | Whether the receiver may reuse it, as the agreement states and the venue reports it; `None` where it does not say. Received collateral is never a holding, reusable or not. From 0.13.0. |
+| `reusable` | `bool` or `None` | Whether the receiver may reuse it, as the agreement states and the venue reports it; `None` where it does not say. Received collateral is never a holding, reusable or not. |
 
 ### `CollateralDirection` { #collateraldirection }
 
@@ -2618,7 +2760,7 @@ One collateral balance under a margin segment, `meridian.ReportedCollateral(...)
 
 ### `ReportedLot` { #reportedlot }
 
-One lot of a holding, as the custodian lists it, `meridian.ReportedLot(...)`, keyword only. From 0.12.0.
+One lot of a holding, as the custodian lists it, `meridian.ReportedLot(...)`, keyword only.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -2640,7 +2782,7 @@ What the custodian says an account holds of an instrument, on one side. It is th
 | `market_value` | `Money` message | Unset where the custodian reported no value, which is not zero. |
 | `also_counted_in_cash` | `bool` | Its value is also in the account's cash holding as the custodian reports it. |
 | `cost_basis`, `average_cost`, `lots`, `margin_requirement` | as on [`record_holding`](#record_holding) | As the custodian reported them on the row that last stated the position, unset or empty where it reported none. |
-| `available_quantity`, `not_available_quantity`, `available_basis`, `encumbrances` | as on [`record_holding`](#record_holding) | The same, from 0.13.0. |
+| `available_quantity`, `not_available_quantity`, `available_basis`, `encumbrances` | as on [`record_holding`](#record_holding) | The same. |
 | `last_statement_id`, `as_of_date`, `updated_at_ns` | `str`, `str`, `int` | The statement that last stated it, and when. |
 | `last_change` | `JournalRef` | Where its last change sits in the store's record, which [`receive`](python-sdk.md#receive) reads to catch up. A handler is handed none. |
 | `removed` | `bool` | Removed, as when a placeholder's replacement moved it: answered only to a read given `since`, and heard once. |
@@ -2666,19 +2808,19 @@ A completed statement, as the street store announced it when its last row landed
 | Field | Type | Meaning |
 |---|---|---|
 | `statement_id` | `str` | The statement. |
-| `account_id` | `str` | The account it is of: its external account's, or, from a plugin built before contract v7, its rows'. |
-| `external_account_id`, `institution` | `str` | As the statement named them. Empty from a plugin built before contract v7. |
+| `account_id` | `str` | The account it is of: its external account's, or, from a plugin that named none, its rows'. |
+| `external_account_id`, `institution` | `str` | As the statement named them. Empty from a plugin that named none. |
 | `source`, `as_of_date` | `str` | As the statement named them. |
 | `rows_received`, `rows_resolved`, `rows_unresolved` | `int` | Its counts. The unresolved count is the one an operator watches. |
 | `figures` | sequence of `StatementFigures` | Its figures as recorded, one set per segment. |
 | `currency_assumed` | `bool` | As the statement said. |
-| `security_interest` | optional `bool` | As the statement said, from 0.13.0; unset where it did not say. |
+| `security_interest` | optional `bool` | As the statement said; unset where it did not say. |
 | `recorded_at_ns` | `int` | When it was completed. |
 | `journal`, `cause` | `JournalRef`, `ChangeCause` | Where its completion sits in the store's record, and who caused it. A handler is handed `cause` as [`Heard.cause`](python-sdk.md#heard), and no `journal`. |
 
 ### `CustodialActivity` { #custodialactivity }
 
-One activity on an account as the custodian states it, `meridian.CustodialActivity(...)`, the SDK's form: a number as a `Decimal`, an amount as a [`Money`](#money), the kind as an enum's value or name, each converted and refused naming its path (`activity.units`), as a parameter is. From 0.19.0. Each field's meaning and bounds are in the data dictionary, [the street's `CustodialActivity`](../boundaries/street.md#meridian.v1.CustodialActivity).
+One activity on an account as the custodian states it, `meridian.CustodialActivity(...)`, the SDK's form: a number as a `Decimal`, an amount as a [`Money`](#money), the kind as an enum's value or name, each converted and refused naming its path (`activity.units`), as a parameter is. Each field's meaning and bounds are in the data dictionary, [the street's `CustodialActivity`](../boundaries/street.md#meridian.v1.CustodialActivity).
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -2699,7 +2841,7 @@ Activity is never netted or deduplicated against holdings: a sweep fund's purcha
 
 ### `ActivityKind` { #activitykind }
 
-What an activity was, in the platform's own words, never a custodian's. From 0.19.0.
+What an activity was, in the platform's own words, never a custodian's.
 
 | Value | Number | Meaning |
 |---|---|---|
@@ -2721,7 +2863,7 @@ What an activity was, in the platform's own words, never a custodian's. From 0.1
 
 ### `ActivityRecordedEvent` { #activityrecordedevent }
 
-An activity, as the street store announced it when it was recorded (W2.12), and each item of [`list_activities`](#list_activities). The `activity_recorded` handler of [`receive`](python-sdk.md#receive) is handed one. From 0.19.0.
+An activity, as the street store announced it when it was recorded (W2.12), and each item of [`list_activities`](#list_activities). The `activity_recorded` handler of [`receive`](python-sdk.md#receive) is handed one.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -2733,7 +2875,7 @@ An activity, as the street store announced it when it was recorded (W2.12), and 
 
 ### `ActivityReResolution` { #activityreresolution }
 
-One re-resolution of an activity, as the street keeps it beside the activity as first recorded, and each item of `list_activities`' `re_resolutions`. From 0.20.0.
+One re-resolution of an activity, as the street keeps it beside the activity as first recorded, and each item of `list_activities`' `re_resolutions`.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -2746,7 +2888,7 @@ One re-resolution of an activity, as the street keeps it beside the activity as 
 
 ### `ActivityReResolvedEvent` { #activityreresolvedevent }
 
-A re-resolution, as the street store announced it when it was recorded (W2.16). The `activity_re_resolved` handler of [`receive`](python-sdk.md#receive) is handed one, caught up after a gap from `list_activities`' `re_resolutions`. From 0.20.0.
+A re-resolution, as the street store announced it when it was recorded (W2.16). The `activity_re_resolved` handler of [`receive`](python-sdk.md#receive) is handed one, caught up after a gap from `list_activities`' `re_resolutions`.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -2756,7 +2898,7 @@ A re-resolution, as the street store announced it when it was recorded (W2.16). 
 
 ### `SyncStatusRecordedEvent` { #syncstatusrecordedevent }
 
-A sync status the street store heard and kept (W2.13), and each item of [`list_sync_statuses`](#list_sync_statuses). The `sync_status_recorded` handler of [`receive`](python-sdk.md#receive) is handed one. From 0.19.0.
+A sync status the street store heard and kept (W2.13), and each item of [`list_sync_statuses`](#list_sync_statuses). The `sync_status_recorded` handler of [`receive`](python-sdk.md#receive) is handed one.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -2785,7 +2927,7 @@ One of the firm's accounts. See [Accounts](../concepts/accounts.md).
 
 ### `InstrumentRecord` { #instrumentrecord }
 
-An instrument's record, as [`resolve_instrument`](#resolve_instrument) answers it. From 0.13.0.
+An instrument's record, as [`resolve_instrument`](#resolve_instrument) answers it.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -2793,19 +2935,19 @@ An instrument's record, as [`resolve_instrument`](#resolve_instrument) answers i
 | `identifiers` | sequence of `Identifier` | Its full identifier set. |
 | `asset_class` | [`AssetClass`](#assetclass) | Its asset class. |
 | `currency` | `str` | ISO 4217. |
-| `exchange_mic` | `str` | Its listing venue, ISO 10383; empty where there is none. Deprecated in contract v18 for `listing_venue_id`, and read until every record carries a venue ID. |
-| `listing_venue_id` | `str` | From 0.22.0, contract v18: the [venue](../concepts/venues.md) it is listed on, a venue master ID (`VEN-`), a segment's venue where the listing is on one; empty where it is listed on none or its venue is not yet known. |
+| `exchange_mic` | `str` | Its listing venue, ISO 10383; empty where there is none. Deprecated for `listing_venue_id`, and read until every record carries a venue ID. |
+| `listing_venue_id` | `str` | The [venue](../concepts/venues.md) it is listed on, a venue master ID (`VEN-`), a segment's venue where the listing is on one; empty where it is listed on none or its venue is not yet known. |
 | `description` | `str` | Its name. |
 | `lifecycle_state` | `InstrumentLifecycleState` | `DEFINE` (its attributes may be incomplete), `ACTIVE` or `DECOMMISSIONED`. |
 | `version`, `valid_from_ns`, `record_time_ns` | `int` | The record's version, when its mapping became true, and when the store recorded it. |
-| `instrument_type` | `InstrumentType` | Its type within its class, where known: `INSTRUMENT_TYPE_MONEY_MARKET_FUND`, or from 0.23.0 `INSTRUMENT_TYPE_BINARY_EVENT_CONTRACT`. |
-| `binary_event_contract` | `BinaryEventContract` | From 0.23.0, contract v19: a [binary event contract](../concepts/instruments.md#binary-event-contracts)'s `payout`, a `Money` naming its cash instrument, and `closes_at_ns`, when trading closes (0 where none is stated). Unset for any other type. |
+| `instrument_type` | `InstrumentType` | Its type within its class, where known: `INSTRUMENT_TYPE_MONEY_MARKET_FUND` or `INSTRUMENT_TYPE_BINARY_EVENT_CONTRACT`. |
+| `binary_event_contract` | `BinaryEventContract` | A [binary event contract](../concepts/instruments.md#binary-event-contracts)'s `payout`, a `Money` naming its cash instrument, and `closes_at_ns`, when trading closes (0 where none is stated). Unset for any other type. |
 
-From 0.23.0 each of its `identifiers` carries its window on the record, `valid_from_ns` and `valid_until_ns` (0 while it is on the record), filled by the instrument store: one that left the record is kept, its window closed.
+Each of its `identifiers` carries its window on the record, `valid_from_ns` and `valid_until_ns` (0 while it is on the record), filled by the instrument store: one that left the record is kept, its window closed.
 
 ### `AvailableBasis` { #availablebasis }
 
-What a holding's available quantity is on, as the source says. From 0.13.0.
+What a holding's available quantity is on, as the source says.
 
 | Value | Number | Meaning |
 |---|---|---|
@@ -2817,7 +2959,7 @@ What a holding's available quantity is on, as the source says. From 0.13.0.
 
 ### `ReportedEncumbrance` { #reportedencumbrance }
 
-One sub-balance of a holding the source reports as encumbered, `meridian.ReportedEncumbrance(...)`, keyword only, as the source reports it. From 0.13.0.
+One sub-balance of a holding the source reports as encumbered, `meridian.ReportedEncumbrance(...)`, keyword only, as the source reports it.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -2832,7 +2974,7 @@ One sub-balance of a holding the source reports as encumbered, `meridian.Reporte
 
 ### `EncumbranceKind` { #encumbrancekind }
 
-Why some of a holding cannot move. From 0.13.0.
+Why some of a holding cannot move.
 
 | Value | Number | Meaning |
 |---|---|---|
@@ -2850,7 +2992,7 @@ Why some of a holding cannot move. From 0.13.0.
 
 ### Book entry result { #book-entry-result }
 
-Every command of the book answers after its entry commits, with the same fields: `RecordOpeningBalanceResult`, `RecordBreakResult`, `RecordAccountFiguresResult`, `RecordEncumbrancesResult`, `HandleBreakResult`, `ResolveBreakResult` and `CloseBreaksAsClearedResult`. A repeat, by its message identifier or its idempotency key, is answered with the first's. From 0.13.0.
+Every command of the book answers after its entry commits, with the same fields: `RecordOpeningBalanceResult`, `RecordBreakResult`, `RecordAccountFiguresResult`, `RecordEncumbrancesResult`, `HandleBreakResult`, `ResolveBreakResult` and `CloseBreaksAsClearedResult`. A repeat, by its message identifier or its idempotency key, is answered with the first's.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -2863,13 +3005,13 @@ Every command of the book answers after its entry commits, with the same fields:
 
 ### `EntryMeta` { #entrymeta }
 
-What a journal entry records. From 0.13.0.
+What a journal entry records.
 
 | Field | Type | Meaning |
 |---|---|---|
 | `entry_id` | `str` | Minted by the book. |
 | `kind` | `str` | `opening-balance`, `placeholder-moved`, `figures-recorded`, `break-recorded`, `break-handled`, `break-resolved`, `break-closed`, `adjustment`, `reversal`, `attribute-set` or `encumbrances-recorded`: an open list, which a reader takes as data. |
-| `actor` | `Actor` | Who made it, set by the book from what the sidecar stamped: `person`, with the person's `subject`, or `system`, with the `instance_id` of the plugin that reported a finding as itself, empty for the book's own act. From contract v21 also `service_account`, with the service account's `subject` (its `SA-` ID) and its `owner_subject` when it acted. |
+| `actor` | `Actor` | Who made it, set by the book from what the sidecar stamped: `person`, with the person's `subject`, or `system`, with the `instance_id` of the plugin that reported a finding as itself, empty for the book's own act; or `service_account`, with the service account's `subject` (its `SA-` ID) and its `owner_subject` when it acted. |
 | `event_time_ns`, `received_at_ns` | `int` | The time on the message that caused it, and when the book received it. When it committed is its cause's `committed_at_ns`. |
 | `effective_date` | `str` | The ISO 8601 business date it stands for. |
 | `control_sequence` | `int` | The control partition's sequence in force. |
@@ -2880,14 +3022,14 @@ What a journal entry records. From 0.13.0.
 
 ### `BookPosition` { #bookposition }
 
-A position in the book. From 0.13.0.
+A position in the book.
 
 | Field | Type | Meaning |
 |---|---|---|
 | `account_id`, `instrument_id`, `side` | `str`, `str`, [`HoldingSide`](#holdingside) | Whose, of what, and which side. |
-| `trade_date_quantity` | `Decimal` message | The settled quantity plus what is pending: by construction. On a position a contract v8 opening balance opened with some of it not stated, that too. |
-| `settled_quantity` | `Decimal` message, optional | Set on every position contract v9 records. Unset only while some of the quantity is in the not-stated bucket a v8 opening balance opened: unknown, never zero. |
-| `not_stated_quantity` | `Decimal` message | Retired in contract v9: zero on every position v9 records. What a v8 opening balance's source did not say was settled or pending. |
+| `trade_date_quantity` | `Decimal` message | The settled quantity plus what is pending: by construction. On a position an older opening balance opened with some of it not stated, that too. |
+| `settled_quantity` | `Decimal` message, optional | Set on every position the book records now. Unset only while some of the quantity is in the not-stated bucket an older opening balance opened: unknown, never zero. |
+| `not_stated_quantity` | `Decimal` message | Retired: zero on every position the book records now. What an older opening balance's source did not say was settled or pending. |
 | `pending` | sequence of [`PendingSettlement`](#pendingsettlement) | What is pending, by value date. |
 | `lots` | sequence of [`Lot`](#lot) | Its open lots, whose open quantities sum to its trade-date quantity; cash has none. |
 | `opened_from` | sequence of [`OpeningSource`](#openingsource) | Its opening balance's sources. |
@@ -2901,7 +3043,7 @@ A position in the book. From 0.13.0.
 
 ### `Lot` { #lot }
 
-One of a position's lots, the book's own record. From 0.13.0.
+One of a position's lots, the book's own record.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -2912,7 +3054,7 @@ One of a position's lots, the book's own record. From 0.13.0.
 
 ### `Encumbrance` { #encumbrance }
 
-One encumbrance of a position, as the book holds it, `meridian.Encumbrance(...)` when sent. From 0.13.0.
+One encumbrance of a position, as the book holds it, `meridian.Encumbrance(...)` when sent.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -2927,11 +3069,11 @@ One encumbrance of a position, as the book holds it, `meridian.Encumbrance(...)`
 
 ### `PositionEncumbrances` { #positionencumbrances }
 
-One position's encumbrances as a statement states them, `meridian.PositionEncumbrances(instrument_id=..., side=..., encumbrances=[...])`: the whole set, empty when the statement reports none. From 0.13.0.
+One position's encumbrances as a statement states them, `meridian.PositionEncumbrances(instrument_id=..., side=..., encumbrances=[...])`: the whole set, empty when the statement reports none.
 
 ### `OpeningSource` { #openingsource }
 
-A source an opening balance was composed from, `meridian.OpeningSource(...)`, keyword only. From 0.13.0.
+A source an opening balance was composed from, `meridian.OpeningSource(...)`, keyword only.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -2943,30 +3085,30 @@ A source an opening balance was composed from, `meridian.OpeningSource(...)`, ke
 
 ### `OpeningPosition` { #openingposition }
 
-One position of an opening balance, `meridian.OpeningPosition(...)`, keyword only. From 0.13.0.
+One position of an opening balance, `meridian.OpeningPosition(...)`, keyword only.
 
 | Field | Type | Meaning |
 |---|---|---|
 | `instrument_id` | `str` | An instrument, a placeholder, or a currency's cash instrument. |
 | `side` | [`HoldingSide`](#holdingside), `str` or `None` | Long or short. |
 | `trade_date_quantity` | `Decimal` or `int` | Required. |
-| `settled_quantity` | `Decimal`, `int` or `None` | Required by the book from contract v9: where the source states none, a person supplies it. `None` is refused as `positions[n].settled_quantity`. |
+| `settled_quantity` | `Decimal`, `int` or `None` | Required by the book: where the source states none, a person supplies it. `None` is refused as `positions[n].settled_quantity`. |
 | `pending` | sequence of [`PendingSettlement`](#pendingsettlement) | Its pending settlements, each with its value date. With the settled quantity they account for the whole trade-date quantity, or the book refuses it as `positions[n].pending`. |
-| `lots` | sequence of `OpeningLot` | As reported and completed by a person, each `meridian.OpeningLot(quantity=..., terms=LotTerms(...))` with its quantity, and its terms' `cost` and `acquired_date` from contract v9; they must sum to the trade-date quantity. Required but on cash, which sends none. |
+| `lots` | sequence of `OpeningLot` | As reported and completed by a person, each `meridian.OpeningLot(quantity=..., terms=LotTerms(...))` with its quantity, and its terms' `cost` and `acquired_date`; they must sum to the trade-date quantity. Required but on cash, which sends none. |
 
 ### `PendingSettlement` { #pendingsettlement }
 
-Quantity pending on a value date, `meridian.PendingSettlement(...)`. From 0.13.0.
+Quantity pending on a value date, `meridian.PendingSettlement(...)`.
 
 | Field | Type | Meaning |
 |---|---|---|
-| `value_date` | `str` | ISO 8601, which may be years out. Required at an opening balance from contract v9. Empty on a position only for "date not stated", from a contract v8 opening balance or an adjustment the street gave no date for. |
+| `value_date` | `str` | ISO 8601, which may be years out. Required at an opening balance. Empty on a position only for "date not stated", from an older opening balance or an adjustment the street gave no date for. |
 | `quantity` | `Decimal` or `int` | Required. |
 | `state` | `PendingState` or `None` | Where the source reports a fail: `failing`, `fail_reason` as reported, and `expected_date`, when it is now expected. |
 
 ### `LotTerms` { #lotterms }
 
-A lot's terms, `meridian.LotTerms(...)`, each unset where not known and never derived one from another. From 0.13.0. From contract v9 a lot the book opens, at an opening balance or by an adjustment, carries its `cost` and `acquired_date`, or the book refuses it; a lot a contract v8 book opened may lack them.
+A lot's terms, `meridian.LotTerms(...)`, each unset where not known and never derived one from another. A lot the book opens, at an opening balance or by an adjustment, carries its `cost` and `acquired_date`, or the book refuses it; a lot an older opening balance opened may lack them.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -2978,19 +3120,19 @@ A lot's terms, `meridian.LotTerms(...)`, each unset where not known and never de
 
 ### `StreetRecordRef` { #streetrecordref }
 
-A street record named by value, never a key the book follows: `statement_id`, `change` (the custodial position's change, a `JournalRef`, where one was compared or used) and `as_of_date`, the custodian's. From 0.13.0.
+A street record named by value, never a key the book follows: `statement_id`, `change` (the custodial position's change, a `JournalRef`, where one was compared or used) and `as_of_date`, the custodian's.
 
 ### `PositionKey` { #positionkey }
 
-A position a break concerns, `meridian.PositionKey(instrument_id=..., side=...)`. From 0.13.0.
+A position a break concerns, `meridian.PositionKey(instrument_id=..., side=...)`.
 
 ### `FigureKey` { #figurekey }
 
-An account-level figure a break concerns: `agreement`, a [`MarginAgreementRef`](#marginagreementref); `figure`, by its field's name in the data dictionary; and `instrument_id`, for a collateral balance. From 0.13.0.
+An account-level figure a break concerns: `agreement`, a [`MarginAgreementRef`](#marginagreementref); `figure`, by its field's name in the data dictionary; and `instrument_id`, for a collateral balance.
 
 ### `MarginAgreementRef` { #marginagreementref }
 
-A margin agreement. In this release its one arm is `statement_segment`, a `StatementSegmentRef`: the statement's `external_account_id`, its `segment` as the venue names it (empty for the account as a whole), and its `counterparty`, the external account's institution as reported. From 0.13.0.
+A margin agreement. In this release its one arm is `statement_segment`, a `StatementSegmentRef`: the statement's `external_account_id`, its `segment` as the venue names it (empty for the account as a whole), and its `counterparty`, the external account's institution as reported.
 
 ### `BreakCategory` { #breakcategory }
 
@@ -3007,25 +3149,25 @@ A margin agreement. In this release its one arm is `statement_segment`, a `State
 
 ### `BreakDifference` { #breakdifference }
 
-One differing field, `meridian.BreakDifference(field=..., book=..., street=...)`: `field`, by its name in the data dictionary (`"settled_quantity"`, `"lots[2].terms.cost"`), and each side a `meridian.BreakValue` of one of `quantity`, `amount` or `text`, or `None` where it is absent on that side. From 0.13.0.
+One differing field, `meridian.BreakDifference(field=..., book=..., street=...)`: `field`, by its name in the data dictionary (`"settled_quantity"`, `"lots[2].terms.cost"`), and each side a `meridian.BreakValue` of one of `quantity`, `amount` or `text`, or `None` where it is absent on that side.
 
 ### `BreakState` { #breakstate }
 
-`BREAK_STATE_OPEN` (1), `BREAK_STATE_RESOLVED` (2) or `BREAK_STATE_CLOSED` (3); `open`, `resolved` or `closed` in a string. From 0.13.0.
+`BREAK_STATE_OPEN` (1), `BREAK_STATE_RESOLVED` (2) or `BREAK_STATE_CLOSED` (3); `open`, `resolved` or `closed` in a string.
 
 ### `BreakCause` { #breakcause }
 
-The item found to cause a break, linked by value, `meridian.BreakCause(...)`. From 0.13.0.
+The item found to cause a break, linked by value, `meridian.BreakCause(...)`.
 
 | Field | Type | Meaning |
 |---|---|---|
-| `category` | `BreakCauseCategory`, `str` or `None` | `unbooked_trade`, `settlement_timing`, `cost_or_price`, `corporate_action`, `fail`, `custodian_error` or `unknown`; from 0.19.0, `income_reinvested`, income the custodian reinvested in units that the book has not booked, such as a money market fund's monthly dividend. |
-| `street_record`, `book_entry`, `pending_settlement`, `event_reference`, `none_found`, `activity` | one of these | The item: a street record, a book entry, a pending settlement (`meridian.PendingSettlementRef`), a corporate action's reference as reported, `none_found=True`, or, from 0.19.0, the custodian's activity that explains it, an [`ActivityRef`](#activityref). |
+| `category` | `BreakCauseCategory`, `str` or `None` | `unbooked_trade`, `settlement_timing`, `cost_or_price`, `corporate_action`, `fail`, `custodian_error`, `unknown`, or `income_reinvested`, income the custodian reinvested in units that the book has not booked, such as a money market fund's monthly dividend. |
+| `street_record`, `book_entry`, `pending_settlement`, `event_reference`, `none_found`, `activity` | one of these | The item: a street record, a book entry, a pending settlement (`meridian.PendingSettlementRef`), a corporate action's reference as reported, `none_found=True`, or the custodian's activity that explains it, an [`ActivityRef`](#activityref). |
 | `note` | `str` | A note. |
 
 ### `ActivityRef` { #activityref }
 
-An activity the street recorded, named by value, `meridian.ActivityRef(activity_id=..., change=..., trade_date=...)`: the street's `activity_id`, its record in the street's partition (`change`, the `journal` of its [`ActivityRecordedEvent`](#activityrecordedevent)), and its `trade_date` as the custodian stated it. The book records it as given and follows no key to the street, as it does a street record's. From 0.19.0.
+An activity the street recorded, named by value, `meridian.ActivityRef(activity_id=..., change=..., trade_date=...)`: the street's `activity_id`, its record in the street's partition (`change`, the `journal` of its [`ActivityRecordedEvent`](#activityrecordedevent)), and its `trade_date` as the custodian stated it. The book records it as given and follows no key to the street, as it does a street record's.
 
 ```python
 # each: an ActivityRecordedEvent that list_activities answered
@@ -3040,11 +3182,11 @@ meridian.BreakCause(
 
 ### `BreakHandling` { #breakhandling }
 
-A break's handling: `owner_subject`, a user the deployment knows; `escalation_level`, the operations plugin's own levels, to which core gives no meaning; and `due_date`. From 0.13.0.
+A break's handling: `owner_subject`, a user the deployment knows; `escalation_level`, the operations plugin's own levels, to which core gives no meaning; and `due_date`.
 
 ### `Break` { #break }
 
-A break, as the book holds it. From 0.13.0.
+A break, as the book holds it.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -3062,15 +3204,15 @@ A break, as the book holds it. From 0.13.0.
 
 ### `AgreementFigures` { #agreementfigures }
 
-One agreement's figures to record, `meridian.AgreementFigures(...)`: `agreement`, a [`MarginAgreementRef`](#marginagreementref); `figures`, a [`StatementFigures`](#statementfigures) as the street recorded them, its segment the agreement's; and `position_values`, on the set with no segment only, each a `meridian.ReportedPositionValue` of `instrument_id`, `side`, and the custodian's `market_value` and `margin_requirement`, labelled as the custodian's and never a position's own. From 0.13.0.
+One agreement's figures to record, `meridian.AgreementFigures(...)`: `agreement`, a [`MarginAgreementRef`](#marginagreementref); `figures`, a [`StatementFigures`](#statementfigures) as the street recorded them, its segment the agreement's; and `position_values`, on the set with no segment only, each a `meridian.ReportedPositionValue` of `instrument_id`, `side`, and the custodian's `market_value` and `margin_requirement`, labelled as the custodian's and never a position's own.
 
 ### `AccountFigures` { #accountfigures }
 
-The record: one per account, agreement and business date, with `account_id`, `business_date`, `agreement`, `figures`, `position_values`, `source` (the statement, a [`StreetRecordRef`](#streetrecordref)) and `last_change`. From 0.13.0.
+The record: one per account, agreement and business date, with `account_id`, `business_date`, `agreement`, `figures`, `position_values`, `source` (the statement, a [`StreetRecordRef`](#streetrecordref)) and `last_change`.
 
 ### `AccountAttributes` { #accountattributes }
 
-An account's attributes in the book. From 0.13.0.
+An account's attributes in the book.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -3082,37 +3224,37 @@ An account's attributes in the book. From 0.13.0.
 
 ### `Adjustment` { #adjustment }
 
-An adjustment that resolves a break, `meridian.Adjustment(...)`. From 0.13.0.
+An adjustment that resolves a break, `meridian.Adjustment(...)`.
 
 | Field | Type | Meaning |
 |---|---|---|
 | `effective_date` | `str` | After the opening balance's date. |
-| `lines` | sequence of `meridian.MovementLine` | Each an `instrument_id` and `side`, a `bucket` (`settled`, or `pending` with its `value_date`, which may be empty where the street gave none), a signed `quantity` added to the position, and the `lot_id` it adds to or relieves, or `opens_lot`, the [`LotTerms`](#lotterms) of a lot it opens, with its `cost` and `acquired_date` from contract v9. |
-| `basis_adjustments` | sequence of `meridian.BasisAdjustment` | Each a `lot_id`, and one of `cost_change`, added to a known cost, or `stated_cost`, the cost of a lot a contract v8 book opened with its cost unknown, from contract v9 the only such lots; and `holding_period_start`, where it moves. |
-| `event_reference` | `str` | A corporate action's reference, as reported, where it records one; from 0.19.0, the street's `activity_id` where the adjustment was proposed from the custodian's activity. |
+| `lines` | sequence of `meridian.MovementLine` | Each an `instrument_id` and `side`, a `bucket` (`settled`, or `pending` with its `value_date`, which may be empty where the street gave none), a signed `quantity` added to the position, and the `lot_id` it adds to or relieves, or `opens_lot`, the [`LotTerms`](#lotterms) of a lot it opens, with its `cost` and `acquired_date`. |
+| `basis_adjustments` | sequence of `meridian.BasisAdjustment` | Each a `lot_id`, and one of `cost_change`, added to a known cost, or `stated_cost`, the cost of a lot an older opening balance opened with its cost unknown, the only such lots; and `holding_period_start`, where it moves. |
+| `event_reference` | `str` | A corporate action's reference, as reported, where it records one, or the street's `activity_id` where the adjustment was proposed from the custodian's activity. |
 
 ### `Reversal` { #reversal }
 
-`Reversal(entry_id=...)`: the entry it reverses, whose lines the book negates at that entry's effective date. From 0.13.0.
+`Reversal(entry_id=...)`: the entry it reverses, whose lines the book negates at that entry's effective date.
 
 ### `ResolvedByEntries` { #resolvedbyentries }
 
-`ResolvedByEntries(entry_ids=[...])`: entries already recorded that resolve the breaks. From 0.13.0.
+`ResolvedByEntries(entry_ids=[...])`: entries already recorded that resolve the breaks.
 
 ### `Price` { #price }
 
-From 0.22.0. A price of one kind for one subject, `meridian.Price(...)`: a frozen dataclass, keyword only, converted and refused as a call's own parameters are. What a read answers is the generated message of the same name.
+A price of one kind for one subject, `meridian.Price(...)`: a frozen dataclass, keyword only, converted and refused as a call's own parameters are. What a read answers is the generated message of the same name.
 
 | Field | Type | Meaning |
 |---|---|---|
 | `meta` | [`ObservationMeta`](#observationmeta) | Its envelope. |
 | `kind` | [`PriceKind`](#pricekind) | Which price. |
 | `price` | [`Money`](#money) | The price of one unit of the subject. An FX rate is the price of one currency's cash instrument in another. |
-| `basis` | `PriceBasis` | `per_unit`, the one basis in v18. |
+| `basis` | `PriceBasis` | `per_unit`, the one basis there is. |
 
 ### `Bar` { #bar }
 
-From 0.22.0. Open, high, low and close over an interval, `meridian.Bar(...)`: a frozen dataclass, keyword only.
+Open, high, low and close over an interval, `meridian.Bar(...)`: a frozen dataclass, keyword only.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -3124,7 +3266,7 @@ From 0.22.0. Open, high, low and close over an interval, `meridian.Bar(...)`: a 
 
 ### `Trade` { #trade }
 
-From 0.23.0, contract v19. One trade as its source reported it, `meridian.Trade(...)`: a frozen dataclass, keyword only, converted and refused as a call's own parameters are. What a read answers is the generated message of the same name.
+One trade as its source reported it, `meridian.Trade(...)`: a frozen dataclass, keyword only, converted and refused as a call's own parameters are. What a read answers is the generated message of the same name.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -3138,15 +3280,15 @@ From 0.23.0, contract v19. One trade as its source reported it, `meridian.Trade(
 
 ### `TradeAttributes` { #tradeattributes }
 
-From 0.23.0. What a trade may count for, `meridian.TradeAttributes(...)`: `consolidated` and `market_centre`, each an [`Eligibility`](#eligibility) for the consolidated view and its own market centre's; and `characteristics`, at most 16 [`TradeCharacteristic`](#tradecharacteristic)s. A code the plugin cannot convert goes, as reported, in the envelope's `unconverted`, its eligibilities left unspecified.
+What a trade may count for, `meridian.TradeAttributes(...)`: `consolidated` and `market_centre`, each an [`Eligibility`](#eligibility) for the consolidated view and its own market centre's; and `characteristics`, at most 16 [`TradeCharacteristic`](#tradecharacteristic)s. A code the plugin cannot convert goes, as reported, in the envelope's `unconverted`, its eligibilities left unspecified.
 
 ### `Eligibility` { #eligibility }
 
-From 0.23.0. Whether a trade may set each statistic of a bar, not whether it did: `high_low`, `open`, `close` and `volume`, each an `Eligible`: `ELIGIBLE_ELIGIBLE`, `ELIGIBLE_NOT_ELIGIBLE`, or unspecified where it is not known. In a string, `"eligible"` or `"not_eligible"`.
+Whether a trade may set each statistic of a bar, not whether it did: `high_low`, `open`, `close` and `volume`, each an `Eligible`: `ELIGIBLE_ELIGIBLE`, `ELIGIBLE_NOT_ELIGIBLE`, or unspecified where it is not known. In a string, `"eligible"` or `"not_eligible"`.
 
 ### `TradeCharacteristic` { #tradecharacteristic }
 
-From 0.23.0. In a string, spelled as its name without `TRADE_CHARACTERISTIC_`, in lower case (`"odd_lot"`).
+In a string, spelled as its name without `TRADE_CHARACTERISTIC_`, in lower case (`"odd_lot"`).
 
 | Value | Meaning |
 |---|---|
@@ -3166,11 +3308,11 @@ From 0.23.0. In a string, spelled as its name without `TRADE_CHARACTERISTIC_`, i
 
 ### `Aggressor` { #aggressor }
 
-From 0.23.0. `AGGRESSOR_BUY` or `AGGRESSOR_SELL`, the side that took liquidity; unspecified where the source does not say. In a string, `"buy"` or `"sell"`.
+`AGGRESSOR_BUY` or `AGGRESSOR_SELL`, the side that took liquidity; unspecified where the source does not say. In a string, `"buy"` or `"sell"`.
 
 ### `Quote` { #quote }
 
-From 0.23.0, contract v19. The best bid and offer, on a venue or consolidated, `meridian.Quote(...)`: a frozen dataclass, keyword only.
+The best bid and offer, on a venue or consolidated, `meridian.Quote(...)`: a frozen dataclass, keyword only.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -3181,7 +3323,7 @@ From 0.23.0, contract v19. The best bid and offer, on a venue or consolidated, `
 
 ### `ObservationMeta` { #observationmeta }
 
-From 0.22.0. The envelope every lake row carries as its first field, `meridian.ObservationMeta(...)`: a frozen dataclass, keyword only.
+The envelope every lake row carries as its first field, `meridian.ObservationMeta(...)`: a frozen dataclass, keyword only.
 
 | Field | Type | Filled | Meaning |
 |---|---|---|---|
@@ -3193,17 +3335,17 @@ From 0.22.0. The envelope every lake row carries as its first field, `meridian.O
 | `source_times` | sequence of `SourceTime` | by the plugin | The source's own times, each a `kind` (`event`, `consolidated`, `reported`, `vendor_received`, `published`) once, and `at_ns`. |
 | `raw` | `RawRecordRef` | by the plugin | The raw record it was converted from, `plugin.raw_record(key)`. |
 | `unconverted` | sequence of `AsReported` | by the plugin | A value that failed conversion, as reported, such as a venue's code the deployment does not hold. |
-| `closed_day` | `DateCheck` or `None` | by the lake | From contract v23: on a daily row dated on a closed day of its dataset's calendar, the date, each calendar with its version, why (a weekend, a named holiday, or outside coverage) and the holiday's name. Unset otherwise. |
+| `closed_day` | `DateCheck` or `None` | by the lake | Added in contract 23. On a daily row dated on a closed day of its dataset's calendar, the date, each calendar with its version, why (a weekend, a named holiday, or outside coverage) and the holiday's name. Unset otherwise. |
 | `sent_at_ns` | `int` | stamped | The envelope's publication time. |
 | `recorded_at_ns`, `version`, `sequence`, `previous_sequence` | `int` | by the lake | When it was recorded, its version under the row key from 1, its sequence in the dataset, and the previous sequence of the same subject. |
 
 ### `SubjectRef` { #subjectref }
 
-From 0.22.0. One entity a row is about: `entity_id`, the deployment's instrument ID.
+One entity a row is about: `entity_id`, the deployment's instrument ID.
 
 ### `Source` { #source }
 
-From 0.22.0. Where a row came from.
+Where a row came from.
 
 | Field | Meaning |
 |---|---|
@@ -3213,11 +3355,11 @@ From 0.22.0. Where a row came from.
 
 ### `SourceChoice` { #sourcechoice }
 
-From 0.22.0. Which sources a read takes, one of: `default=True` (or no choice), the deployment's source priority, falling through where one is silent, not covering or not entitled; `named`, the datasets named; `side_by_side=True`, every entitled dataset, each its own row.
+Which sources a read takes, one of: `default=True` (or no choice), the deployment's source priority, falling through where one is silent, not covering or not entitled; `named`, the datasets named; `side_by_side=True`, every entitled dataset, each its own row.
 
 ### `PriceKind` { #pricekind }
 
-From 0.22.0. In a string, spelled as its name without `PRICE_KIND_`, in lower case.
+In a string, spelled as its name without `PRICE_KIND_`, in lower case.
 
 | Value | Meaning |
 |---|---|
@@ -3229,11 +3371,11 @@ From 0.22.0. In a string, spelled as its name without `PRICE_KIND_`, in lower ca
 
 ### `Unanswered` { #unanswered }
 
-From 0.22.0. What a lake read did not answer: `subject`, `dataset`, `field` (a field stripped, by its dictionary entry; empty for the whole row) and `reason`, an [`UnansweredReason`](#unansweredreason).
+What a lake read did not answer: `subject`, `dataset`, `field` (a field stripped, by its dictionary entry; empty for the whole row) and `reason`, an [`UnansweredReason`](#unansweredreason).
 
 ### `UnansweredReason` { #unansweredreason }
 
-From 0.22.0. In a string, spelled as its name without `UNANSWERED_REASON_`, in lower case.
+In a string, spelled as its name without `UNANSWERED_REASON_`, in lower case.
 
 | Value | Meaning |
 |---|---|
@@ -3247,11 +3389,11 @@ From 0.22.0. In a string, spelled as its name without `UNANSWERED_REASON_`, in l
 
 ### `DatasetRef` { #datasetref }
 
-From 0.22.0. A dataset as a lake answer names it, once: `dataset`, `instance`, `vendor`, `aggregator`, and its catalogue entry as declared, `declaration` ([`DatasetDeclaration`](../boundaries/sidecar.md#meridian.v1.DatasetDeclaration)); and `unconverted_count` and `miss_count`, the values its plugin left unconverted and the identifiers and venues it reported missing; from contract v23 `closed_day_count` and `outside_coverage_count`, its daily rows flagged on a closed day of its calendar, and those outside the calendar's coverage, counted apart.
+A dataset as a lake answer names it, once: `dataset`, `instance`, `vendor`, `aggregator`, and its catalogue entry as declared, `declaration` ([`DatasetDeclaration`](../boundaries/sidecar.md#meridian.v1.DatasetDeclaration)); and `unconverted_count` and `miss_count`, the values its plugin left unconverted and the identifiers and venues it reported missing; and `closed_day_count` and `outside_coverage_count` (added in contract 23), its daily rows flagged on a closed day of its calendar, and those outside the calendar's coverage, counted apart.
 
 ### `Outcome` { #outcome-type }
 
-From 0.27.0, contract v23. An event contract's outcome, `meridian.Outcome(...)`, a frozen dataclass, keyword only. See [An event contract's outcome](../concepts/the-lake.md#an-event-contracts-outcome).
+Added in SDK 0.27.0 (contract 23). An event contract's outcome, `meridian.Outcome(...)`, a frozen dataclass, keyword only. See [An event contract's outcome](../concepts/the-lake.md#an-event-contracts-outcome).
 
 | Field | Meaning |
 |---|---|
@@ -3264,7 +3406,7 @@ From 0.27.0, contract v23. An event contract's outcome, `meridian.Outcome(...)`,
 
 ### `VenueRecord` { #venuerecord }
 
-From 0.22.0. A venue as the deployment holds it, from the platform's venue master: `venue_id` (`VEN-`), `name`, `country_code`, `kind` (`VenueKind`: `exchange`, `alternative_trading_system`, `crypto_exchange`, `dealer_network`, `reporting_facility`), `identifiers` (its MIC under `iso10383` and vendors' codes as `symbol`, each dated), `operating_venue_id`, `time_zone`, `lifecycle_state`, `version`, `valid_from_ns` and `record_time_ns`. See [Venues](../concepts/venues.md).
+A venue as the deployment holds it, from the platform's venue master: `venue_id` (`VEN-`), `name`, `country_code`, `kind` (`VenueKind`: `exchange`, `alternative_trading_system`, `crypto_exchange`, `dealer_network`, `reporting_facility`), `identifiers` (its MIC under `iso10383` and vendors' codes as `symbol`, each dated), `operating_venue_id`, `time_zone`, `lifecycle_state`, `version`, `valid_from_ns` and `record_time_ns`. See [Venues](../concepts/venues.md).
 
 ## The gRPC service
 
@@ -3298,4 +3440,4 @@ service PluginOperations {
 }
 ```
 
-Each `…Params` message keeps the field numbers of the domain message it stands for and drops the fields the sidecar stamps, so its encoding is the domain message's. `acting_for` is field 1000 on the eleven operations that take it, a `meridian.v1.CallerAssertion`. The SDK decodes it from the base64url `Meridian-Caller` header you pass. A number is a `Decimal` message, `high` and `low` halves of a 128-bit integer and a `scale` of 0 to 18, and an amount a `Money` message, a `Decimal` and a `currency_code`. `Identifier`, `MissReason` and the other types are plugin-facing mirrors of the domain types. `Receive`, from 0.12.0, is a stream: each item a `Delivery`, a row's message beside what is known of it, or a `Lost` where the sidecar dropped deliveries. The SDK's [`receive`](python-sdk.md#receive) reads it, and catches up from the store where it missed something.
+Each `…Params` message keeps the field numbers of the domain message it stands for and drops the fields the sidecar stamps, so its encoding is the domain message's. `acting_for` is field 1000 on the eleven operations that take it, a `meridian.v1.CallerAssertion`. The SDK decodes it from the base64url `Meridian-Caller` header you pass. A number is a `Decimal` message, `high` and `low` halves of a 128-bit integer and a `scale` of 0 to 18, and an amount a `Money` message, a `Decimal` and a `currency_code`. `Identifier`, `MissReason` and the other types are plugin-facing mirrors of the domain types. `Receive` is a stream: each item a `Delivery`, a row's message beside what is known of it, or a `Lost` where the sidecar dropped deliveries. The SDK's [`receive`](python-sdk.md#receive) reads it, and catches up from the store where it missed something.

@@ -1,45 +1,15 @@
 # The lake
 
-The **lake** is where a deployment keeps what its data sources say: prices
-and bars, and from contract v19 trades and quotes, each as one source stated
-it, kept side by side, never overwritten. A plugin holding `data` puts them
-in, converted at the edge from its vendor's form. The reading roles,
-`reporting`, `portfolio`, `compliance` and `signal`, read prices and bars and
-hear them as they are recorded; trades and quotes are read by `signal` and
-`ems` alone, and from contract v23 an event contract's outcome by prices'
-readers and `operations` (see [Who reads what](#who-reads-what)). The lake is core's,
-beside the street and the book: it is not a plugin, and nothing in it leaves
-the deployment.
-
-!!! note "Contract v18"
-    This page describes contract v18: core's lake from chart 0.1.292 and
-    open-meridian 0.22.0. The lake's
-    operations are `preview` in v18. A runtime serving v16 or earlier
-    refuses a plugin built on 0.22.0 at registration, naming both versions.
-
-!!! note "Contract v19"
-    The lake's second part, trades and quotes, is contract v19: core's lake
-    from chart 0.1.293 and open-meridian 0.23.0, released 2026-10-10 in
-    chart 0.1.294. Its operations are `preview` in v19. A runtime serving
-    v18 or earlier refuses a plugin built on 0.23.0 at registration, naming
-    both versions; a plugin on 0.22.0 runs unchanged on chart 0.1.294.
-
-!!! note "Contract v20"
-    From contract v20 the role `dgm` is named `data` ("data plugin"); a
-    restarted data plugin fills the gap its restart left from the venue's
-    history, where the vendor allows (see
-    [A restarted data plugin resumes](#a-restarted-data-plugin-resumes));
-    and a data plugin reads its own datasets' licences. In core and
-    open-meridian 0.24.0, released 2026-10-12 in chart 0.1.298.
-
-!!! note "Contract v23"
-    The lake's third part, contract v23, is in core and open-meridian
-    0.27.0, released 2026-10-14 in chart 0.1.303: an event contract's
-    [outcome](#an-event-contracts-outcome), recorded by a data plugin and
-    read by prices' readers and `operations`; a daily value dated on a
-    closed day of its dataset's calendar [flagged](#a-daily-value-on-a-closed-day)
-    and counted; and the Data sources page's reads answering `unchanged`.
-    Its operations are `preview`.
+The **lake** is where a deployment keeps what its data sources say: prices,
+bars, trades and quotes, each as one source stated it, kept side by side,
+never overwritten. A plugin holding `data` puts them in, converted at the
+edge from its vendor's form. The reading roles, `reporting`, `portfolio`,
+`compliance` and `signal`, read prices and bars and hear them as they are
+recorded; trades and quotes are read by `signal` and `ems` alone, and an
+event contract's outcome by prices' readers and `operations` (see
+[Who reads what](#who-reads-what)). The lake is core's, beside the street
+and the book: it is not a plugin, and nothing in it leaves the deployment.
+The lake's operations are `preview`.
 
 ## Two stores, two questions
 
@@ -53,17 +23,16 @@ recorded: the plugin reports the miss, and the Data sources page counts it.
 
 ## What it holds
 
-Four data types, each one message per row: prices and bars from contract
-v18, trades and quotes from contract v19; and from contract v23 a fifth, an
-event contract's outcome.
+Five data types, each one message per row: prices, bars, trades, quotes
+and an event contract's outcome.
 
 | Type | What one row is |
 |---|---|
-| **Price** | A price of one kind for one subject: `close` (the official close for a business date), `last` (the last eligible trade's price), `nav` (a fund's net asset value per share), `settlement`, `bid`, `ask` or `mid`. Its amount is a [Money](money-and-instruments.md), always per unit in v18. |
+| **Price** | A price of one kind for one subject: `close` (the official close for a business date), `last` (the last eligible trade's price), `nav` (a fund's net asset value per share), `settlement`, `bid`, `ask` or `mid`. Its amount is a [Money](money-and-instruments.md), always per unit. |
 | **Bar** | Open, high, low and close over an interval, in one asset, with its volume, and its VWAP and trade count where the source gives them. A daily bar names its business date. |
-| **Trade** | One trade as its source reported it: its price, a [Money](money-and-instruments.md) naming its cash instrument; its quantity, more than zero; its **trade attributes**; the side that took liquidity, where the source says it; the source's own number for it. From contract v19. |
-| **Quote** | The best bid and offer, on a venue or consolidated, each with its quantity, both sides in one asset; a side the source left empty is unset, never zero. In force until the next quote for the same subject, dataset, venue and asset. From contract v19. |
-| **Outcome** | What an event contract pays, as its venue determined it, at one stage. From contract v23: see [An event contract's outcome](#an-event-contracts-outcome). |
+| **Trade** | One trade as its source reported it: its price, a [Money](money-and-instruments.md) naming its cash instrument; its quantity, more than zero; its **trade attributes**; the side that took liquidity, where the source says it; the source's own number for it. |
+| **Quote** | The best bid and offer, on a venue or consolidated, each with its quantity, both sides in one asset; a side the source left empty is unset, never zero. In force until the next quote for the same subject, dataset, venue and asset. |
+| **Outcome** | What an event contract pays, as its venue determined it, at one stage: see [An event contract's outcome](#an-event-contracts-outcome). |
 
 **An FX rate is a price**: the price of one currency's cash instrument in
 another, EUR at 1.0842 USD, of kind `mid`, `bid`, `ask` or `close`. A fixing
@@ -119,7 +88,7 @@ declares:
 | Modes | How its rows can arrive: `pull` (fetched when a read wants them), `push` (recorded on the source's own timetable) and `stream`. |
 | Cadence, history | How often it updates, which says when it is silent; how far back it reaches. |
 | Default licence | What the vendor's standard terms say: kept or not, derived use, display, the default fields, and whether the terms are one person's. See [Licences and entitlements](licences-and-entitlements.md). |
-| Its day | The time zone a business date is in and the minute the day ends; from contract v22 the [settlement calendar](settlement-calendars.md) its business dates follow, by its `CAL-` ID, by which from contract v23 the lake flags a daily value dated on a closed day (see [A daily value on a closed day](#a-daily-value-on-a-closed-day)). See [Dates and time](dates-and-time.md). |
+| Its day | The time zone a business date is in and the minute the day ends; the [settlement calendar](settlement-calendars.md) its business dates follow, by its `CAL-` ID, by which the lake flags a daily value dated on a closed day (see [A daily value on a closed day](#a-daily-value-on-a-closed-day)). See [Dates and time](dates-and-time.md). |
 | Its venue | The venue the dataset is, by its [venue ID](venues.md); none for a consolidated view. |
 
 A catalogue is checked when the version is uploaded and again when its
@@ -153,7 +122,7 @@ final.
 
 ### A daily value on a closed day
 
-From contract v23. A daily price or bar dated on a day its dataset's
+A daily price or bar dated on a day its dataset's
 [calendar](settlement-calendars.md) says is closed is **recorded as
 reported, never refused**, and flagged: its `closed_day` holds the date,
 each calendar with its version, why the day is closed (a weekend, a named
@@ -177,7 +146,7 @@ The Data sources page counts both, per dataset: see
 
 ## An event contract's outcome
 
-From contract v23. A data plugin records what an
+A data plugin records what an
 [event contract](instruments.md#binary-event-contracts) pays once its
 venue determines it, an **outcome**, per instrument: Kalshi's one contract,
 or each of Polymarket's tokens.
@@ -217,11 +186,10 @@ A reader asks for prices or bars for up to 500 subjects at one of:
 - a **business date**;
 - a range of valid time.
 
-**The latest is chosen per asset.** From contract v19 a latest read chooses
-per subject, dataset, kind, venue and the asset the price is in, so a
-subject priced in two assets on one venue, BTC in USD and in USDC, answers
-both, never one for the other. Contract v18 chose without the asset, and
-answered one of the two.
+**The latest is chosen per asset.** A latest read chooses per subject,
+dataset, kind, venue and the asset the price is in, so a subject priced in
+two assets on one venue, BTC in USD and in USDC, answers both, never one
+for the other.
 
 **Trades and quotes** are read over a range of valid time that lies within
 one day of each dataset, as the dataset declares its day; a wider range is
@@ -239,8 +207,7 @@ And from one of three choices of source:
   for that data type and, for prices, kind (the **source priority**),
   falling through to the next where the first is silent beyond its cadence,
   does not cover the subject, or is not entitled. The answer names why it
-  fell through. From contract v19 trades and quotes take a priority too,
-  with no kind.
+  fell through. Trades and quotes take a priority too, with no kind.
 - **named datasets**;
 - **every dataset side by side**, each source's own row.
 
@@ -264,14 +231,11 @@ plugin valuing the instruments in the book, leaves a **standing want**: the
 cadence, and the lake withdraws it. That is how a data plugin learns what
 matters without reading the book, which its role does not reach.
 
-**A decline stands for the date asked.** From contract v19, a decline holds
-for the business date or range its want asked, or for the latest where the
-want asked the latest, and for no other date: a later want of another date
-is asked again. In contract v18 a decline stood for a day across every date
-of that dataset and subject, so a daily want for the latest could record the
-past week rather than decline a day just begun.
+**A decline stands for the date asked.** A decline holds for the business
+date or range its want asked, or for the latest where the want asked the
+latest, and for no other date: a later want of another date is asked again.
 
-**Streamed.** From contract v19 a dataset declaring the `stream` mode keeps
+**Streamed.** A dataset declaring the `stream` mode keeps
 a standing want current from its vendor's stream until the want is
 withdrawn, its trades and quotes recorded in batches as they arrive. Which
 subjects a plugin streams, and how often it records, are the plugin's; core
@@ -281,20 +245,16 @@ live prices, so an admin licenses and keeps them apart.
 
 ### A restarted data plugin resumes
 
-A data plugin holds nothing it cannot lose, and contract v19 gives it no
-way to read the standing wants back. So from chart 0.1.294 the lake
-delivers each standing want still asked for again once a minute, the same
-want under the same ID: a data plugin already holding it hears what it
-holds, and one relaunched or upgraded resumes its stream within about a
-minute. On chart 0.1.293 a restarted data plugin streamed nothing until a
-reader's read made a want again.
+A data plugin holds nothing it cannot lose, and has no way to read the
+standing wants back. So the lake delivers each standing want still asked
+for again once a minute, the same want under the same ID: a data plugin
+already holding it hears what it holds, and one relaunched or upgraded
+resumes its stream within about a minute.
 
-**The gap is filled from the venue's history** (contract v20). Within a running plugin, a dropped connection is refilled from
-the venue's history, from the last trade the plugin recorded. In v19 that
-last trade was held in the plugin's memory, which a restart loses, so a
-trade printed while a data plugin restarted was recorded by none of them.
-From v20 a data plugin asks the lake instead: on start, before resuming its
-stream, it reads the last trade its own instance recorded of each subject
+**The gap is filled from the venue's history.** Within a running plugin, a
+dropped connection is refilled from the venue's history, from the last trade
+the plugin recorded. Across a restart, a data plugin asks the lake: on
+start, before resuming its stream, it reads the last trade its own instance recorded of each subject
 it streams (`list_trades` with `latest_recorded`, its own rows only), reads
 the venue's history from each, and records what it missed. A trade
 recorded again is answered unchanged by its row key, so nothing is
@@ -302,8 +262,8 @@ doubled. The data suite holds a plugin that records trades to it
 (`a-restarts-gap-backfilled`).
 
 It reaches only as far as the vendor allows. A venue whose history names
-each trade, and reaches back past the restart, fills it: Coinbase 0.3.0,
-Kraken 0.3.0 and Alpaca 0.4.0, released 2026-10-12. **Tradier cannot**: its
+each trade, and reaches back past the restart, fills it: Coinbase, Kraken
+and Alpaca do. **Tradier cannot**: its
 time and sales history names no trade by an ID, so a gap across a restart
 stays, as a gap between two of its stream sessions does. A reader catches
 up from the lake by its watermark, so it misses only what the lake never
@@ -326,8 +286,8 @@ reader names the subjects it wants to hear, up to 500, and hears nothing
 without them: a plugin holding ten instruments does not receive a whole
 market. Its sidecar delivers prices, bars and quotes **conflated**: the
 latest value first for each key, replacing one not yet delivered with a
-later one. A price's key is its dataset, subjects, venue, kind and, from
-contract v19, the asset it is in; a bar's its dataset, subjects, venue and
+later one. A price's key is its dataset, subjects, venue, kind and the
+asset it is in; a bar's its dataset, subjects, venue and
 interval start; a quote's its dataset, subjects, venue and asset. The SDK
 reads the lake again on start, after a loss and after a broken stream.
 
@@ -351,9 +311,9 @@ conflated, catch up by reading the latest in force.
 | Data | Read and heard by |
 |---|---|
 | Prices and bars | `reporting`, `portfolio`, `compliance`, `signal` |
-| Trades and quotes, from contract v19 | `signal` and `ems` |
-| Outcomes, from contract v23 | `reporting`, `portfolio`, `compliance`, `signal`, and `operations`, which reads the lake for outcomes alone, to explain a payout's break |
-| The datasets a plugin may read | `reporting`, `portfolio`, `compliance`, `signal`, and from contract v19 `ems` |
+| Trades and quotes | `signal` and `ems` |
+| Outcomes | `reporting`, `portfolio`, `compliance`, `signal`, and `operations`, which reads the lake for outcomes alone, to explain a payout's break |
+| The datasets a plugin may read | `reporting`, `portfolio`, `compliance`, `signal` and `ems` |
 
 **`reporting` is for slower consumers.** In the product owner's words,
 "reporting is primarily aimed for slower consumers": it reads conflated
@@ -379,7 +339,7 @@ A deployment admin sees and sets the lake's configuration on the
 dashboard's **Data sources** page, beside **Instruments** on **Settings**,
 and through its five tools:
 see [License and entitle a dataset](../how-to/license-and-entitle-a-dataset.md).
-From contract v23 its Datasets tab counts, per dataset, the rows flagged on
+Its Datasets tab counts, per dataset, the rows flagged on
 a closed day of its calendar, **Closed days**, those outside the calendar's
 coverage beside them ("(2 outside)"), and `dashboard__list_datasets`
 carries both counts (`closed_day_count`, `outside_coverage_count`); its

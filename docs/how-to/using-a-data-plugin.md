@@ -9,20 +9,6 @@ knows how to set up any. This page is that path, valid for every data
 plugin; the vendors' own parts, what each serves and its terms, follow it
 under [The data plugins](#the-data-plugins).
 
-!!! note "Contract v20"
-    The common part is in open-meridian 0.24.0 (contract v20), the kit
-    0.12.0 and core's **Setting up**, released 2026-10-12 in chart
-    0.1.298. From contract v20 the role `dgm` is named `data`. Alpaca
-    0.4.0, Tradier 0.3.0, Tiingo 0.2.0, H.10 0.2.0, Coinbase 0.3.0, Kraken
-    0.3.0, Kalshi 0.2.0 and Polymarket 0.2.0, released 2026-10-12, are built
-    on open-meridian 0.24.0 and run on chart 0.1.298 or later. Each
-    takes the common pages and figures, reads its datasets' licences, and
-    has its `synthetic` setting renamed `sample_data`; Tradier's `sandbox`
-    becomes the **Environment** choice; Alpaca, Coinbase and Kraken fill a
-    restart's gap from the venue's history, and Tradier cannot. An earlier
-    version keeps the pages described under its own section below, with the
-    same two page names, Connection and Datasets.
-
 ## The first-use path
 
 | # | Step | Whose | Where |
@@ -38,8 +24,7 @@ its datasets, and the people who manage it reach no account.
 
 ### Setting up, on the Summary
 
-From contract v20 core draws a **Setting up** part on
-every plugin's **Summary**, first under its status while any step is
+Core draws a **Setting up** part on every plugin's **Summary**, first under its status while any step is
 undone: one line a step, done or not, each linking to where it is done. It
 is drawn from core's own records, never from what the plugin says, so a
 plugin cannot misreport it:
@@ -64,8 +49,10 @@ under `setting-up`.
 On the plugin's **Settings** form, in this order on every data plugin:
 
 1. **Environment**, first, only for a vendor with more than one: **Live**
-   or **Sandbox**, required, Live by default. A credential that differs by
-   environment is shown only for the environment chosen.
+   or **Sandbox**, required, Sandbox by default: a plugin is Live only once
+   a person chooses Live, never because an upgrade added the setting. A
+   credential that differs by environment is shown only for the
+   environment chosen.
 2. **The credentials**, each a secret, labelled in the vendor's own words
    ("API key ID", "Access token") so you find the same words on the
    vendor's page, each saying where at the vendor it is found.
@@ -74,8 +61,8 @@ On the plugin's **Settings** form, in this order on every data plugin:
    from recorded responses and the vendor is not called.
 
 A secret is write-only: its field is always empty and says in its
-placeholder where it stands, "Not set", or who set it and when, and from
-contract v20, for a key of 16 characters or more, its last four characters
+placeholder where it stands, "Not set", or who set it and when, and, for
+a key of 16 characters or more, its last four characters
 ("Ends in a9F2 · set by Ada, ..."). The value itself is never shown, logged,
 put on a page, read by an agent or sent anywhere but the vendor. Leave the
 field empty to keep it; type to replace it. A required key is only ever
@@ -115,10 +102,9 @@ The second page under Manage, `/datasets`, at `admin`:
 2. **Served.** One row a dataset, as its catalogue declares it: **Dataset**,
    **Data**, **Arrives**, **Day**, **Default terms**, **Entitled at the
    vendor**, **Recorded**, **Declined**, **Last recorded**, its detail
-   holding history, cadence, restated and unconverted counts. From contract
-   v20 a data plugin reads its own datasets' licences,
-   so each says **Licensed** or **Not licensed yet** exactly: before it, a
-   data plugin could only guess from the wants it heard.
+   holding history, cadence, restated and unconverted counts. A data plugin
+   reads its own datasets' licences, so each says **Licensed** or **Not
+   licensed yet** exactly.
 3. **Wants.** The standing wants it keeps current and the wants it answered,
    one row each, searched and paged: **Dataset**, **Asked**, **Subjects**,
    **Recorded**, **Declined**, **State**.
@@ -139,11 +125,11 @@ own follow.
 
 A data plugin holds nothing it cannot lose, so it may be stopped, restarted,
 moved or upgraded at any time. Started again, it hears each standing want
-within about a minute and opens its stream again. From contract v20 a data plugin that records trades also **fills the gap**: on
+within about a minute and opens its stream again. A data plugin that
+records trades also **fills the gap**: on
 start it reads the last trade it recorded of each subject from the lake,
 and records what the venue's history states since, where the vendor's
-history allows it. Before contract v20 the trades printed while a plugin
-restarted were not in the lake. Which vendors allow it is said under each,
+history allows it. Which vendors allow it is said under each,
 below; Tradier's history cannot, so a restart leaves a gap there.
 
 ## For an agent
@@ -167,11 +153,11 @@ meridian plugin upload --dir plugin-alpaca
 meridian plugin launch alpaca <version> --instance alpaca-1
 ```
 
-The launch prints the role the version declares, `data` (`dgm` before
-contract v20), for you to approve, and asks for storage for its raw
+The launch prints the roles the version declares, `data` among them, for
+you to approve, and asks for storage for its raw
 responses. Its datasets are then `alpaca-1:daily` and so on, listed on the
-Data sources page while the instance runs. From v20 the plugin
-repositories are named `plugin-<name>`; the plugins keep their names.
+Data sources page while the instance runs. The plugin repositories are
+named `plugin-<name>`.
 
 ## The data plugins
 
@@ -179,12 +165,6 @@ repositories are named `plugin-<name>`; the plugins keep their names.
 
 The two retail equity plugins, from plugin-alpaca and plugin-tradier
 (`alpaca`, `tradier`), pass the same suite unchanged.
-
-!!! note "Contract v20"
-    Alpaca 0.4.0 and Tradier 0.3.0, released 2026-10-12, are built on
-    open-meridian 0.24.0 (contract v20), and run on chart 0.1.298 or
-    later. Alpaca 0.3.0 and Tradier 0.2.1, released 2026-10-10, are built on
-    open-meridian 0.23.0 (contract v19), and run on chart 0.1.294 or later.
 
 Each serves two datasets, US equities and ETFs, daily prices keyed by a
 plain date in New York's day ending at the 16:00 close:
@@ -229,9 +209,9 @@ plain date in New York's day ending at the 16:00 close:
 | Plugin | Dataset | What | Arrives | Default terms |
 |---|---|---|---|---|
 | Alpaca | `trades` | each trade with the platform's trade attributes, converted from its conditions on its tape (the CTA's letters on tapes A and B, the UTP's on C) | streamed for the listings under a standing want; pulled for a range a reader wants | kept two days; one person's |
-| Alpaca | `live` | gains quotes: the best bid and offer with their sizes | streamed at most once a second a listing, or read for a want | as before |
+| Alpaca | `live` | also quotes: the best bid and offer with their sizes | streamed at most once a second a listing, or read for a want | as `live` above |
 | Tradier | `trades` | each time and sale with the platform's trade attributes and Tradier's sequence number | streamed only | kept two days; one person's |
-| Tradier | `live` | gains quotes: the consolidated best bid and offer, sizes in shares from Tradier's hundreds | as Alpaca's | as before |
+| Tradier | `live` | also quotes: the consolidated best bid and offer, sizes in shares from Tradier's hundreds | as Alpaca's | as `live` above |
 
 - **Only what a reader follows** is streamed: the listings under a standing
   want, and nothing while there is none. A free Alpaca account streams IEX
@@ -253,19 +233,14 @@ plain date in New York's day ending at the 16:00 close:
   trade history, sending only the trades not yet recorded. Tradier's history
   names no print by its sequence number, so a gap between two sessions is
   not filled, and a reader's range of trades is declined, not covered.
-- **A restart.** In v19 neither fills the trades printed while it restarts.
-  From Alpaca 0.4.0 Alpaca reads its last recorded trade from the lake and
+- **A restart.** Alpaca reads its last recorded trade from the lake and
   fills the gap from its history, two days back at most (see
   [After a restart](#after-a-restart)); Tradier cannot, for the reason
   above, and its Datasets page says why.
-- **The suite.** Alpaca passes 17 of the data suite's 21 v19 cases, and
-  marks four not presented with why (a currency's rate, a crypto asset's
-  price, and the two asking for the side that took liquidity); Tradier
-  passes 16 and marks five (those, and an odd lot, which no documented flag
-  says). Of contract v20's three new cases, each presents
-  `reads-its-datasets-licences` and marks `the-takers-side-stated` not
-  presented; Alpaca 0.4.0 presents `a-restarts-gap-backfilled`, and Tradier
-  0.3.0 marks it not presented, with why.
+- **The suite.** Each passes the data suite, marking not presented, with
+  why, the cases its source never presents: a currency's rate, a crypto
+  asset's price and the side that took liquidity, and for Tradier an odd
+  lot, which no documented flag says, and a restart's gap backfilled.
 
 Trades and quotes are read by `signal` and `ems` plugins: license `trades`
 on the Data sources page, and entitle those plugins to it and to `live`.
@@ -311,15 +286,14 @@ vendor's terms: a licence records what the admin entered.
     2. Copy your access token.
 
 **Enter the key** on the plugin's **Settings**: Alpaca's **API key ID** and
-**API secret key**; Tradier's **API access token**. Tradier has a developer
-sandbox as well as its live service: in Tradier 0.2.1 its setting
-**Tradier's developer sandbox** (`sandbox`, off by default) is for testing
-with a sandbox token, the plugin then asking `sandbox.tradier.com`, delayed
-15 minutes and not streaming, its quotes marked delayed. From Tradier 0.3.0
-it is the common **Environment** choice, shown first, **Live** or
-**Sandbox**: one token serves either, its value carried over, on the
-Settings form as **Access token**, which must match the environment, and
-the plugin's pages say which environment the data comes from. Then open **Connection**: it says whether each
+**API secret key**; Tradier's **API access token**. Each has a sandbox as well as its live
+service (Alpaca's paper trading API, Tradier's developer sandbox): the
+common **Environment** choice, shown first, **Live** or **Sandbox**, picks
+one, and starts on **Sandbox** until a person chooses Live; the key must
+match it. Tradier's token is on the Settings form as **Access token**. The sandbox,
+`sandbox.tradier.com`, is delayed 15 minutes and does not stream, its
+quotes marked delayed, and the plugin's pages say which environment the
+data comes from. Then open **Connection**: it says whether each
 part of the key is set, whether the vendor answered, and which feeds the
 key is entitled to (for Alpaca, IEX in real time and SIP past 15 minutes on
 a free key; for Tradier, whether its quotes are real time).
@@ -336,10 +310,7 @@ key, never in CI.
 
 plugin-tiingo (`tiingo`) puts mutual funds' daily net asset values from
 Tiingo into the lake, so a reporting plugin can value a fund no exchange
-prices, such as VIGIX. Tiingo 0.2.0, released 2026-10-12, is built on
-open-meridian 0.24.0 (contract v20), and runs on chart 0.1.298 or
-later. Tiingo 0.1.0 is built on open-meridian 0.22.0 (contract v18), and
-runs on chart 0.1.292 or later.
+prices, such as VIGIX.
 
 - **One dataset, `<instance>:daily`**: each listed fund's NAV, kind `nav`,
   for its business date, in US dollars, exact. Each fund's last days are
@@ -353,6 +324,16 @@ runs on chart 0.1.292 or later.
 - **Each fund resolved** to the deployment's record: the one its row in the
   **Funds** setting names, or its ticker as Tiingo's symbol, a miss
   reported.
+- **Priced only on the platform's record.** A ticker is Tiingo's own
+  symbol, which the platform cannot match: a fund named by it alone, with
+  no record in the deployment, is at most a local record, which the lake
+  never prices. For its NAV to value a holding, the fund's record needs an
+  identifier the platform can match, such as a FIGI; usually that is the
+  record your custodian's positions already name, which the Funds
+  setting's **Instrument** column picks (see
+  [One ID per instrument](../concepts/one-id.md#an-lcl-record-a-local-record-until-the-platform-answers)).
+- **Its calendar.** The dataset names the platform's US equity venues'
+  calendar, so the lake flags a NAV dated on a day it says is closed.
 - Every response is kept as received, without the token, in the plugin's
   own storage, and named by each row read from it.
 
@@ -372,7 +353,8 @@ Tiingo account's token from its API page, sent only to Tiingo; **Funds**
 (`funds`), a table of up to 100 rows, each fund's **Ticker** and optionally
 its **Instrument**, the deployment's record for it where the ticker alone
 does not find it, such as the one your custodian's positions name; and
-sample data on a development deployment. From contract v20 the Instrument column is a search-as-you-type picker: type a
+sample data on a development deployment. The Instrument column is a
+search-as-you-type picker: type a
 name, a symbol or an identifier and choose the record (see
 [A table setting](set-a-plugins-settings.md#a-table-setting)). Until the
 token is set the plugin waits and reads nothing.
@@ -387,24 +369,17 @@ Data sources as your terms say, and entitle your reporting plugin to it. If
 Connection says Tiingo refused the token, enter it again; if it says the
 limit was reached, the plugin waits and tries again.
 
-`meridian plugin check --verified` refuses Tiingo 0.1.0, on open-meridian
-0.22.0: a fund's NAV is no close, bar, FX rate, stablecoin or venue, and on
-0.22.0 a source cannot mark those cases not presented. From 0.23.0 it can
-(see [A kind of data your source never publishes](write-a-data-plugin.md#a-kind-of-data-your-source-never-publishes)).
-A plain `meridian plugin upload` takes it. Tiingo 0.2.0 passes the whole
-data suite: it presents seven cases, its licences among them, and names
-every case about a kind of data it never publishes in `not_presented`, with
-why.
+Tiingo passes the whole data suite: it presents what it serves, its
+licences among them, and names every case about a kind of data it never
+publishes, a fund's NAV being no close, bar, FX rate, stablecoin or venue,
+in `not_presented`, with why (see
+[A kind of data your source never publishes](write-a-data-plugin.md#a-kind-of-data-your-source-never-publishes)).
 
 ### Coinbase and Kraken
 
 The crypto pair, from plugin-coinbase and plugin-kraken (`coinbase`,
 `kraken`), read public market data with no key and no account, and pass one
-suite between them. Coinbase 0.3.0 and Kraken 0.3.0, released 2026-10-12,
-are built on open-meridian 0.24.0 (contract v20), and run on chart
-0.1.298 or later. Coinbase 0.2.0 and Kraken 0.2.0, released 2026-10-10,
-are built on open-meridian 0.23.0 (contract v19), and run on chart 0.1.294
-or later.
+suite between them.
 
 | Plugin | Dataset | What | Day | Default terms |
 |---|---|---|---|---|
@@ -437,9 +412,8 @@ or later.
       security, or carrying a CUSIP or an ISIN: Ethan Allen's shares trade
       as `ETH`, and are never taken for ether.
 - **Only a wanted product's quote asset is resolved**, and a record is
-  added only where none resolves: a currency by its ISO 4217 code (from
-  contract v20 the deployment pulls a currency it
-  does not hold from the platform's master instead: see
+  added only where none resolves: a currency by its ISO 4217 code (the deployment pulls a currency it does
+  not hold from the platform's master: see
   [Instruments](../concepts/instruments.md#a-currency-is-fetched-from-the-master)),
   a native coin by its SLIP-44 CAIP-19, a token Coinbase lists on exactly
   one network by that contract's CAIP-19, and any other token as the
@@ -458,16 +432,14 @@ or later.
   took liquidity, recorded as sent. A stream that drops is opened again and
   the trades since the last one recorded are read back from the exchange's
   history, at most ten pages of 1,000.
-- **A restart.** In v19 the last trade recorded is held in memory, which a
-  restart loses, so the trades printed while either restarts are not
-  recorded. From Coinbase 0.3.0 and Kraken 0.3.0 each reads its last
-  recorded trade from the lake on start and fills the gap from the exchange's history, within
-  the same ten pages (see [After a restart](#after-a-restart)).
-- **The suite.** Of the data suite's 21 v19 cases each passes 17 and marks
-  four not presented, with why. Of contract v20's three new cases, each
-  presents `a-restarts-gap-backfilled` and `reads-its-datasets-licences`;
-  Kraken presents `the-takers-side-stated`, and Coinbase, naming the resting
-  order's side, marks it not presented.
+- **A restart.** Each reads its last recorded trade from the lake on start
+  and fills the gap from the exchange's history, within the same ten pages
+  (see [After a restart](#after-a-restart)).
+- **The suite.** Each presents `a-restarts-gap-backfilled` and
+  `reads-its-datasets-licences`, and marks the cases about data it never
+  publishes not presented, with why; Kraken presents
+  `the-takers-side-stated`, and Coinbase, naming the resting order's side,
+  marks it not presented.
 
 **The terms, summarised.** Not legal advice: read each source's own terms
 before relying on this. What a deployment's licence says is for its
@@ -490,9 +462,7 @@ Neither is affiliated with or endorses Open Meridian.
 plugin-fed-h10 (`fed-h10`) puts the Board's weekly noon buying rates in New
 York for about two dozen currencies against the US dollar into one dataset,
 `daily`: pushed when each weekly release appears, pulled for any past week,
-ten years back, kept, public domain. H.10 0.2.0, released 2026-10-12, is
-built on open-meridian 0.24.0 (contract v20), and runs on chart 0.1.298
-or later. H.10 0.1.0 is built on open-meridian 0.22.0 (contract v18).
+ten years back, kept, public domain.
 
 - **Each rate as the Board quotes it**, never inverted. Most currencies are
   quoted per US dollar, so CHF 0.8293 is the price of the dollar's cash
@@ -502,28 +472,24 @@ or later. H.10 0.1.0 is built on open-meridian 0.22.0 (contract v18).
 - **A close for its business date**, kind `close` (the noon rate),
   published weekly on Monday for the week before. A valuation for yesterday
   has no H.10 rate until the next release.
-- **Every currency resolved** to its cash instrument by its ISO 4217 code.
-  In v19 a currency the deployment did not hold was minted as a local
-  record, which left 23 stubs beside the platform's; from contract v20 the deployment fetches it from the platform's master
-  instead. A day the Board marks `ND` is no rate, never a zero.
+- **Every currency resolved** to its cash instrument by its ISO 4217 code;
+  a currency the deployment does not hold is fetched from the platform's
+  master. A day the Board marks `ND` is no rate, never a zero.
 - Read from the Board's own site, not through FRED.
 - **Its terms.** The Board's site says its information is in the public
   domain and may be copied and distributed without permission, and asks
   that the Board be cited as the source. So the default licence is kept,
   with no limit on retention, derived use or display.
 
-`meridian plugin check --verified` refuses H.10 0.1.0, on open-meridian
-0.22.0, as it refuses Tiingo 0.1.0, and a plain upload takes it. H.10
-0.2.0 passes the whole data suite: it presents nine cases, its licences
+H.10 passes the whole data suite: it presents what it serves, its licences
 among them, and names every case about a kind of data the Board never
 states in `not_presented`, with why.
 
 ### Kalshi and Polymarket
 
 The two prediction-market plugins are data plugins too: see
-[Add a prediction-market plugin](add-a-prediction-market-plugin.md). From
-contract v23 each records its contracts' outcomes,
-and a third, Polymarket US, joins them.
+[Add a prediction-market plugin](add-a-prediction-market-plugin.md). Each
+records its contracts' outcomes, as does a third, Polymarket US.
 
 ## Related
 

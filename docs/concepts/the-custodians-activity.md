@@ -2,7 +2,7 @@
 
 A custodian keeps two records of an account: what it holds, and what happened
 to it. A statement is the first: the street store keeps it, and the [book of record](the-book-of-record.md) is reconciled
-with it. From contract v14 a custody plugin also reports the second, each
+with it. A custody plugin also reports the second, each
 **activity** on the account as the custodian states it: a purchase, a sale,
 a reinvested dividend, a dividend or interest, a fee or a tax, a split or
 another corporate action, a transfer, a contribution, a withdrawal or a
@@ -14,13 +14,6 @@ never a source.** The street keeps it as reported and derives no position,
 lot or cash figure from it, and nothing moves the book until a person
 confirms an entry. Nothing here books income: a reinvested dividend is
 proposed as the lot it bought, no more.
-
-!!! note "Released 2026-10-05"
-    This page describes open-meridian 0.19.0 (contract v14), on PyPI, with
-    CLI 0.1.34, the runtime chart 0.1.262, the SnapTrade plugin 0.11.1 and
-    the sample operations plugin 0.8.1. The data dictionary marks the rows
-    v14 adds `preview` in the contract. A plugin built on 0.19.0 is refused
-    by a runtime serving v13, naming both versions.
 
 Without it, every money market fund's monthly dividend, every split and
 every fund bought in a retirement plan under the plan's own code shows as a
@@ -80,8 +73,7 @@ the plugin can link such a code to an instrument once, in a table on its
 own tab beside the plugin's Settings (see
 [A table setting](../how-to/set-a-plugins-settings.md#a-table-setting)), and
 from then on it resolves to that instrument, with that person, and when they
-linked it, named as where the value came from. From contract v15 the
-activities recorded under the code before it was linked are re-resolved,
+linked it, named as where the value came from. The activities recorded under the code before it was linked are re-resolved,
 each kept as first recorded: see [An activity re-resolved](#an-activity-re-resolved).
 
 ### Sent twice, kept once
@@ -112,10 +104,6 @@ two years of history is two years of activity, each recorded today.
 
 ## An activity re-resolved
 
-!!! note "Contract v15"
-    This section describes a runtime serving contract v15 (chart 0.1.268 or
-    later) and open-meridian 0.20.0. Both rows are `preview` in v15.
-
 An activity is recorded once, and sent again it is answered as already
 recorded and changes nothing. So an activity recorded before its
 instrument resolved would otherwise keep the custodian's code for good: a
@@ -123,7 +111,7 @@ backfill of a 401(k)'s history recorded before anyone linked the plan's
 code `OQKR` to its fund, or a symbol the deployment's instrument records
 complete later.
 
-From contract v15 a custody plugin **re-resolves** such an activity
+A custody plugin **re-resolves** such an activity
 ([`re_resolve_activity`](../api/typed-operations.md#re_resolve_activity)):
 it names the activity as it was recorded (its source, its account and the
 custodian's identifier), the instrument it now resolves to, how it was
@@ -151,7 +139,7 @@ and what resolved it later, by whom.
 
 ## The street keeps each sync status
 
-From contract v14 the street also hears every sync status a custody plugin
+The street also hears every sync status a custody plugin
 reports, and keeps each as a record of its own, as it keeps an activity.
 `operations` reads them
 ([`list_sync_statuses`](../api/typed-operations.md#list_sync_statuses)) and
@@ -171,7 +159,7 @@ How a plugin matches is its own behaviour, as reconciling is. The contract's
 `operations` suite asks for a reinvestment and a split each to explain the
 units they added, for activity heard after a break to bring it up to date,
 and for activity to book nothing by itself. What follows is what the sample
-operations plugin 0.8.0 does.
+operations plugin does.
 
 When an `operations` plugin finds a difference in a security's units, it
 reads the account's activity
@@ -183,7 +171,7 @@ activity by value, the most specific first:
 
 | The activity | The candidate cause |
 |---|---|
-| A reinvestment | **Income reinvested**, a cause category of its own from contract v14: income the custodian reinvested in units that the book has not booked. |
+| A reinvestment | **Income reinvested**, a cause category of its own: income the custodian reinvested in units that the book has not booked. |
 | A split, or another corporate action | **Corporate action**, the activity linked, where before the plugin could say only that it found none. |
 | A purchase or a sale | **Unbooked trade**: a trade made away from the platform. |
 | A fee or a tax taken in units | **Unbooked trade**, the cause already offered for units removed, the activity linked. |
@@ -243,7 +231,7 @@ history says so.
 
 ## In the plugins
 
-### SnapTrade 0.11.0
+### SnapTrade { #snaptrade }
 
 [plugin-snaptrade](https://github.com/open-meridian/plugin-snaptrade)
 reports each activity on every linked account as SnapTrade states it: on an
@@ -271,17 +259,17 @@ any other code
 travels as reported, so an old activity naming a security the account no
 longer holds mints no instrument record. Each reported activity's raw record
 is kept seven years, so the record behind every activity the street holds
-can be read back on the plugin's **Raw responses** tab. From SnapTrade 0.13.0
-(contract v16) seven years is the default of its
+can be read back on the plugin's **Raw responses** tab. Seven years is the
+default of its
 **Reported activity: window**, which an admin of the plugin may set, and past
 it the record is archived, kept or deleted as they chose, never deleted
 within the history SnapTrade reported (see [The archive](the-archive.md)). Its sync status
 carries `history_from`, the first transaction SnapTrade holds for the
 account.
 
-### SnapTrade 0.12.0: a plan code linked later
+### SnapTrade: a plan code linked later { #snaptrade-a-plan-code-linked-later }
 
-From 0.12.0 SnapTrade [re-resolves](#an-activity-re-resolved) the
+SnapTrade [re-resolves](#an-activity-re-resolved) the
 activities it reported under a plan's own code before anyone linked it.
 When a person adds or changes a row on **Plan-code links**, the account the
 row names is backfilled again on the read that change wakes, and each
@@ -304,10 +292,9 @@ it.
   says why.
 
 Each backfill's log line counts the activities re-resolved through a
-plan-code link. SnapTrade holds one role, so access per role changes nothing
-of its pages or settings.
+plan-code link.
 
-### The sample operations plugin 0.8.0
+### The sample operations plugin
 
 The sample operations plugin, the reference `operations` plugin, does what
 the two sections above describe: it matches a break to the activity that
@@ -327,6 +314,6 @@ street keeps.
   a person resolves them.
 - [Typed operations](../api/typed-operations.md#record_activity): every
   argument of `record_activity`, `list_activities`, `list_sync_statuses`
-  and, from contract v15, `re_resolve_activity`.
+  and `re_resolve_activity`.
 - [The street](../boundaries/street.md#meridian.v1.CustodialActivity): each
   field of an activity in the data dictionary.

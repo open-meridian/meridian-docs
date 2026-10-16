@@ -15,27 +15,17 @@ strictest wins. Allowed to make the act, it makes it, and the record names
 the service account and its owner; held to preparing, it prepares it, and a
 person makes it.
 
-!!! note "Contract v21"
-    Service accounts, **Runs as** on a plugin's Access tab, the owner's
-    pages and notices, `dashboard__list_service_accounts` and
-    [`meridian.runs_as`](../api/python-sdk.md#runs_as) are built in core for
-    contract v21, with open-meridian 0.25.0 and CLI 0.1.41, released
-    2026-10-12 in chart 0.1.299.
-
-!!! note "Contract v22"
-    On the [order path](the-order-lifecycle.md) an automated strategy's
-    orders and an `ems`'s own placements are made as its role's service
-    account, through the plugin's own acts. Its call names the algorithm
-    its work runs, one the plugin's version declares (`algorithm_id`),
-    which the book records on the entry's service account actor. A service
-    account may be among those who may route through a connectivity
-    plugin, and a [trading instruction](the-order-lifecycle.md#trading-instructions)
-    may target it, as a person. Released 2026-10-13 in chart 0.1.301.
+On the [order path](the-order-lifecycle.md) an automated strategy's orders
+and an `ems`'s own placements are made as its role's service account,
+through the plugin's own acts. Its call names the algorithm its work runs,
+one the plugin's version declares (`algorithm_id`), which the book records
+on the entry's service account actor. A service account may be among those
+who may route through a connectivity plugin, and a
+[trading instruction](the-order-lifecycle.md#trading-instructions) may
+target it, as a person.
 
 Work a plugin does with no person behind it runs as a service account,
 never on a person's delegation: a delegation does not outlive its person.
-Before contract v21 such work could only find something (a break, a
-figure) as the plugin itself, or offer a person the act to take.
 
 ## What it is, and is not
 
@@ -176,9 +166,8 @@ Each change is its own record, naming who made it, when, and why:
 | A call, made, prepared or refused | the call's record: the account, the act, the outcome and why refused, never the arguments; its last use and last refusal on its row |
 | A change it prepared | the prepared change, its preparer the service account, every step its own record |
 
-There is nothing to backfill. No service account existed before contract
-v21, and what a plugin did as itself stays recorded as the plugin's
-instance, which is what it was.
+What a plugin did as itself, a finding such as a break, stays recorded as
+the plugin's instance, which is what it was.
 
 What a service account's setting and the levels do is what they say: it
 prepares this act, or it makes it, or it is refused. Nothing here describes

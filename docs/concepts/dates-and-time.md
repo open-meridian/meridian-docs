@@ -10,11 +10,6 @@ questions:
   day a close is for, the date positions are read at. It crosses the wire as
   its ISO 8601 text, `2026-10-09`.
 
-!!! note "Contract v18"
-    This page describes contract v18: core from chart 0.1.292 and
-    open-meridian 0.22.0; and contract v19's trades and quotes, from chart
-    0.1.293 and open-meridian 0.23.0, released in chart 0.1.294.
-
 ## A daily price is keyed by a date
 
 A close, a NAV, a settlement price or a daily bar is for a **business
@@ -23,7 +18,7 @@ happens to fall on it in some zone. Real-time data, a last price or a bid,
 is keyed by the moments it was in force, the venue's zone known from its
 [venue](venues.md).
 
-**Trades and quotes name no business date** (contract v19). A trade is valid from its event time at its venue, a quote from
+**Trades and quotes name no business date.** A trade is valid from its event time at its venue, a quote from
 its time until the next for the same subject, dataset, venue and asset, and
 the lake refuses either naming a business date. A range read of them lies
 within **one day of each dataset**, as the dataset declares its day below,
@@ -39,14 +34,12 @@ so each [dataset](the-lake.md#datasets) declares its day:
 |---|---|---|
 | `day_time_zone` | The IANA zone a business date is in. Empty for a dataset that is not daily. | `America/New_York` for a US close and FX's 17:00 roll; `Etc/UTC` for a crypto venue's daily candle. |
 | `day_end_minute` | The minutes after local midnight the day ends, 0 to 1,439; 0 ends it at midnight. | 960 for a US equity close at 16:00 New York; 1,020 for FX at 17:00 New York; 0 for a candle ending at UTC midnight. |
-| `calendar_id` | From contract v22: the [settlement calendar](settlement-calendars.md) its business dates follow, by its `CAL-` ID; empty names none. Anything else is refused at registration, naming the field. | The NYSE markets' trading calendar for a US equity close. |
+| `calendar_id` | The [settlement calendar](settlement-calendars.md) its business dates follow, by its `CAL-` ID; empty names none. Anything else is refused at registration, naming the field. | The NYSE markets' trading calendar for a US equity close. |
 
 So the day says which session counts as the date, and when its value is
 final. It carries no holiday calendar: a business date with no session has
-no close. From contract v22 a dataset may name its
-calendar beside its day, and in v22 the lake applies nothing by it. From
-contract v23 a daily value dated on a day that calendar says is closed is
-still recorded as reported, and flagged with why the day is closed (see
+no close. A dataset may name its calendar beside its day: a daily value
+dated on a day that calendar says is closed is still recorded as reported, and flagged with why the day is closed (see
 [A daily value on a closed day](the-lake.md#a-daily-value-on-a-closed-day)
 and [Settlement calendars](settlement-calendars.md)).
 
@@ -60,8 +53,8 @@ sees the version in force then.
 A date is a date in the SDK and in core, and text that is no date is
 refused, naming the field, before it goes anywhere:
 
-- **In the SDK** (open-meridian 0.22.0), every field the data dictionary
-  types `date` takes a Python `datetime.date`, or its ISO text as before.
+- **In the SDK**, every field the data dictionary types `date` takes a
+  Python `datetime.date`, or its ISO text.
   Text that is no day that exists (`2026-02-30`), text in another form
   (`20261009`) and a `datetime`, which is a moment, are refused before
   anything is sent. What comes back is the text:
@@ -70,8 +63,8 @@ refused, naming the field, before it goes anywhere:
   that is no day, before anything is sent on, and the lake and the book
   read every date as a date.
 
-On the wire a date stays its ISO text, so a plugin built before v18 sending
-valid ISO dates sends what it always sent.
+On the wire a date is its ISO text, so a plugin that builds its params by
+hand sends valid ISO dates.
 
 ## Related
 

@@ -33,7 +33,7 @@ Decide each page's levels by what it shows:
   there, on the heartbeat, rather than building tiles of your own, and only where the plugin has
   work worth counting. See [Figures](../api/python-sdk.md#figures).
 
-In Python, from SDK 0.10.0, a page is a view function and a template, declared where the view is
+In Python, a page is a view function and a template, declared where the view is
 with [`meridian.Pages`](../api/python-sdk.md#pages):
 
 ```python title="src/my_plugin/page.py"
@@ -102,8 +102,8 @@ stylesheet and script in `<head>`, and draw the page inside `<main class="page">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Accounts</title>
-  <link rel="stylesheet" href="/.meridian/ui/0.11.0/meridian.css">
-  <script src="/.meridian/ui/0.11.0/meridian.js"></script>
+  <link rel="stylesheet" href="/.meridian/ui/0.12.0/meridian.css">
+  <script src="/.meridian/ui/0.12.0/meridian.js"></script>
 </head>
 <body>
   <main class="page">
@@ -130,22 +130,10 @@ Three rules hold for every page, and `meridian plugin check` checks them (see th
 The theme needs no code. The dashboard hands the page the person's scheme, mode and
 market-direction convention, and the kit applies them.
 
-## Kit versions
+## The kit's version
 
-| Version | What it added |
-|---|---|
-| 0.1.0 | The brand's tokens and colour schemes, the platform's CSS classes, and `om-grid` (with its high-rate mode), `om-chart`, `om-asof`, `om-instrument-picker`, `om-live` and `om-panels` |
-| 0.2.0 | The seamless frame: a page the dashboard frames drops its own heading and tab row, and the frame is sized to the page. See [Inside the dashboard's frame](#inside-the-dashboards-frame). |
-| 0.3.0 | `om-account-map`; `om-moment`; the grid's declared JSON, rich cells and narrow layouts; list rows that wrap; option and field-row styles, and a select as tall as an input |
-| 0.4.0 | Header actions: a framed page's head buttons, drawn by the dashboard in its own header. See [Header actions](#header-actions). |
-| 0.5.0 | `om-account-map` at scale: a dense table with search, filters, grouping, pages, a chooser found by typing, suggestions, and several links in one form (`link-several`). See [At thousands of accounts](#at-thousands-of-accounts). |
-| 0.6.0 | `om-status`, a status dot with its note on hover, focus or a tap; and in `om-account-map`, each account's optional `status` and `values`, a Status column and a filter by state |
-| 0.7.0 | Header status: a framed page's head `om-status` marked `data-om-header`, drawn by the dashboard beside the plugin's name. See [Header status](#header-status). |
-| 0.8.0 | Icon actions: a button marked `data-om-icon="refresh"` is drawn as a circular arrow, in the page and as a header action in the dashboard's header. See [Icon actions](#icon-actions). |
-| 0.9.0 | `om-entry-grid`: a table of typed inputs a person enters rows in, posted with the page's own form, the server's messages placed on their cells, a spreadsheet's paste and a CSV in a dialog |
-| 0.10.0 | Every page fits one screen: a height budget the dashboard holds to the screen, compact chrome, one-line rows (`table.one-line`, `om-grid`'s `one-line`) with the whole row a click away, `om-pager`, as many rows a page as fit, and the overflow check |
-| 0.11.0 | A search beside the pager, `search` on `om-grid`, `om-pager` and `om-entry-grid`, `search-param` on `om-pager`, and the `om-search` event; and fields gated on a choice, `data-om-applies-when` and `data-om-one-of`. See [To search a list, and show a field only when it applies](#to-search-a-list-and-show-a-field-only-when-it-applies). Served from chart 0.1.293 (contract v19). |
-| 0.12.0 | An `instrument` column on `om-entry-grid` with its `src`, found as you type; the patterns **Facts**, **Next step** and **Prepare**; and `meridian:open` with `data-om-opens`, a link from a framed page to one of the dashboard's own tabs. See [Kit 0.12.0: role pages, instruments and Prepare](#kit-0120-role-pages-instruments-and-prepare). Served from chart 0.1.298 (contract v20). |
+The kit is at 0.12.0. What each version added is in the
+[release notes](../api/python-sdk.md#release-notes).
 
 **A 0.x release only adds.** Nothing in the kit is removed or renamed within 0.x, so a page built
 against an earlier 0.x keeps working on a later one.
@@ -156,8 +144,8 @@ and not with nothing. So the version in a page's path says what it was built aga
 deployment decides what it gets: a brand change reaches every page at once, and no plugin is
 rebuilt for it. The kit's README states the rule under
 [Versions](https://github.com/open-meridian/meridian-ui#linking-the-kit). A page on
-`meridian/base.html` from SDK 0.12.0 to 0.14.0 links 0.7.0, and a deployment carrying 0.8.0 answers it with
-0.8.0, so its icons are drawn.
+`meridian/base.html` links the kit its SDK was built with, and a deployment carrying a newer 0.x
+answers it with that one.
 
 It also means a deployment older than the kit a page was built against answers with the kit it
 has. A component that kit does not know stays an unknown element and shows what the page put inside
@@ -169,16 +157,16 @@ do.
 A plugin that reads accounts at a source, and names them by that source's identifiers, has an admin
 of the plugin link each of them to one of the firm's accounts, on one of the plugin's pages at
 `admin`. `om-account-map` is that page's content: each external account beside the account it is
-linked to, or the forms to link it. It needs kit 0.3.0 and SDK 0.7.0, and no script on the page.
-From kit 0.5.0 it is built for hundreds or thousands of accounts; see
+linked to, or the forms to link it. It needs no script on the page. It is built for hundreds or
+thousands of accounts; see
 [At thousands of accounts](#at-thousands-of-accounts).
 
 Declare the page at `admin`, so it is shown and served under Manage alone:
-`@pages.page("/admin/accounts", "Account links", levels="admin")`. A plugin admin is account
-agnostic: they link to any existing account, and the page shows identities and links, never an
+`@pages.page("/admin/accounts", "Account links", levels="admin")`. A plugin admin links only to
+the accounts a deployment admin granted the plugin, and the page shows identities and links, never an
 account's holdings or values. Only a deployment admin may name a new account, which
-`caller.deployment_admin` says; the sidecar refuses a new account from anybody else. From kit 0.6.0
-an external account in the map may carry a `status` and `values`; on a page at `admin`, give it
+`caller.deployment_admin` says; the sidecar refuses a new account from anybody else. An external
+account in the map may carry a `status` and `values`; on a page at `admin`, give it
 neither, since they are an account's data. See
 [Accounts](../concepts/accounts.md#external-accounts) for what a link is.
 
@@ -311,7 +299,7 @@ fields, and cancel it to send the link itself.
 
 ### At thousands of accounts
 
-From kit 0.5.0 the map is a dense table, one row per external account, built for a deployment with
+The map is a dense table, one row per external account, built for a deployment with
 hundreds or thousands of them. The document holds one page of rows however many there are. Above
 the table:
 
@@ -390,7 +378,7 @@ way. The kit's README lists every property, method and event of the map.
 
 ## To show records on a phone: `om-grid` with `narrow`
 
-A grid that is wide on a desk is cramped on a phone, or in a narrow panel. With kit 0.3.0, `narrow`
+A grid that is wide on a desk is cramped on a phone, or in a narrow panel. With `narrow`
 chooses what a grid does where it is under 40rem wide. It is the grid's own width, so a grid in a
 narrow panel counts as narrow too.
 
@@ -402,7 +390,7 @@ narrow panel counts as narrow too.
   a table, so figures still compare down a column. Use it for positions or quotes, and with
   high-rate mode.
 
-Without `narrow`, a narrow grid scrolls sideways, as it did before 0.3.0.
+Without `narrow`, a narrow grid scrolls sideways.
 
 The grid takes its columns and rows as JSON inside it, as the map does, so a page needs no script.
 **Rich cells** say more than a value, each as plain JSON on the column:
@@ -434,7 +422,7 @@ The grid takes its columns and rows as JSON inside it, as the map does, so a pag
 Data set from script, through the grid's `columns` and `rows` properties, wins over the declared
 JSON.
 
-Kit 0.3.0 also fits the rest of a page to a phone, with nothing to do but use its classes:
+The kit also fits the rest of a page to a phone, with nothing to do but use its classes:
 
 - **List rows wrap.** In a `.list-row`, where the text and the row's buttons do not fit side by
   side, the buttons drop below the text.
@@ -449,7 +437,7 @@ Kit 0.3.0 also fits the rest of a page to a phone, with nothing to do but use it
 
 ## To search a list, and show a field only when it applies
 
-From kit 0.11.0: where a list's rows will grow, give it a search; where a
+Where a list's rows will grow, give it a search; where a
 form's fields depend on a choice, show each only when it applies. Both work
 without the kit too, every row there and every field posted, so the server
 stays the judge.
@@ -516,18 +504,14 @@ a field only with its choice**, as it would a field gated off. It is the
 declared settings' [`AppliesWhen`](../api/python-sdk.md#applieswhen),
 taken into the kit for a page's own forms.
 
-Core's own pages use both from chart 0.1.293: the Instruments page and its
+Core's own pages use both: the Instruments page and its
 conflicts, the Data sources tabs, the archive's moves, a plugin's Access
 tab, the links tables, Tickets and the Inbox are searched; the completion
 form shows a type under its class and a binary event contract's payout and
 close only for that type, and the licence's "Kept for" only when it is
 kept.
 
-## Kit 0.12.0: role pages, instruments and Prepare
-
-!!! note "Contract v20"
-    Kit 0.12.0 is built for contract v20, released 2026-10-12 and served
-    from chart 0.1.298.
+## Role pages, instruments and Prepare
 
 **An instrument column.** An `om-entry-grid` column of type `instrument`,
 with the grid's `src`, is a search-as-you-type picker: typing in a cell asks
@@ -583,8 +567,7 @@ the page's server decides, from `request.caller.second_pair_of_eyes`.
 <div class="row"><button type="submit" name="prepare" value="1">Prepare</button><button class="primary">Confirm</button></div>
 ```
 
-The SDK's role templates (`meridian/roles/<role>/<page>.html`, from
-open-meridian 0.24.0) are drawn from these patterns: see
+The SDK's role templates (`meridian/roles/<role>/<page>.html`) are drawn from these patterns: see
 [Each role's common part](../api/python-sdk.md#each-roles-common-part).
 
 ## Inside the dashboard's frame
@@ -597,7 +580,7 @@ plugin's name and its status dot; on the right the page's [actions](#header-acti
 **Manage** | **Open** | **View** switch of the levels the person holds, always the rightmost. On a
 phone the head stays one row: the switch is a menu naming the session's level and listing the levels
 held, and a long name is cut with an ellipsis. The frame stays, because it keeps the plugin's
-script on the plugin's own origin, away from the person's dashboard session. From kit 0.2.0 it is
+script on the plugin's own origin, away from the person's dashboard session. It is
 **seamless**: it has no border and no scrollbar of its own, it is as tall as the page's content, and
 the dashboard's heading and tab row are the only ones. It is the same frame, on the same template,
 under each of the three buttons.
@@ -636,7 +619,7 @@ So draw the heading and tab row with the kit, in its shape, and the frame takes 
 
 ### Header actions
 
-From kit 0.4.0 a framed page can hand the buttons in its head to the dashboard, which draws them in
+A framed page can hand the buttons in its head to the dashboard, which draws them in
 its own header, immediately left of the level switch. The switch stays the rightmost, so an action
 never moves it. Mark each with `data-om-action` and an id, on a `button` (or an
 `input type="submit"`) inside the head's `.actions`. Most often it is a plain form's submit button:
@@ -666,7 +649,7 @@ its answer. Opened on its own, the page shows its buttons where they are.
 
 #### Icon actions
 
-From kit 0.8.0 a button can be an icon: mark it `data-om-icon` with a name the kit knows. The kit
+A button can be an icon: mark it `data-om-icon` with a name the kit knows. The kit
 draws it square, as tall as a button of words, with the icon in place of its words, in the page and,
 as a header action, in the dashboard's header. Its words stay: they are its accessible name and the
 label the dashboard is told, so give it a `title` of the same words, for a pointer's tooltip. The kit
@@ -683,14 +666,12 @@ knows one icon:
 </form>
 ```
 
-Any other name is no icon, and the button is drawn with its words; an `input` is never an icon. A
-deployment whose kit is older than 0.8.0 draws the button with its words, in the page and in the
-header. SnapTrade's Statements page, under Open, hands the dashboard its Refresh as this icon; its
+Any other name is no icon, and the button is drawn with its words; an `input` is never an icon. SnapTrade's Statements page, under Open, hands the dashboard its Refresh as this icon; its
 Connections page keeps a Refresh in words, in the page.
 
 ### Header status
 
-From kit 0.7.0 a framed page can hand the dashboard its status dot, which it draws beside the
+A framed page can hand the dashboard its status dot, which it draws beside the
 plugin's name, so the dot takes no line of the page's. Mark an `om-status` in the head with
 `data-om-header`; in a template on `meridian/base.html`, put it in the `status` block:
 

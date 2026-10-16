@@ -36,8 +36,8 @@
   assets: [fund]
   environments: [live, sample-data]
   status: released
-  version: "0.4.0"
-  contract: 22
+  version: "0.5.0"
+  contract: 24
   guide: how-to/using-a-data-plugin.md#tiingo-mutual-funds-daily-navs
 
 # Data: the H.10 release's FX rates against the US dollar (README). No key;
@@ -117,28 +117,28 @@
 # All three roles on US equities and ETFs (ETFs are funds), the account's
 # positions and cash (README; Alpaca does not serve crypto or options here).
 # Settings: environment (live, sandbox: Alpaca's paper trading API),
-# sample_data. README: "Not released."; CHANGELOG: "0.8.0 (unreleased)".
+# sample_data, the environment defaulting to sandbox (CHANGELOG 0.9.0).
 - service: Alpaca
   plugin: plugin-alpaca
   roles: [data, custody, connectivity]
   assets: [equity, fund, cash]
   environments: [sandbox, live, sample-data]
   status: released
-  version: "0.8.0"
+  version: "0.9.0"
   contract: 23
   guide: how-to/using-a-data-plugin.md#alpaca-and-tradier
 
 # All three roles on US equities and ETFs, each account's positions and cash
 # (README; options and mutual funds not served). Settings: environment
-# (live, sandbox: Tradier's developer sandbox), sample_data. README: "Not
-# released."; CHANGELOG: "0.7.0 (unreleased)".
+# (live, sandbox: Tradier's developer sandbox), sample_data, the environment
+# defaulting to sandbox (CHANGELOG 0.8.0).
 - service: Tradier
   plugin: plugin-tradier
   roles: [data, custody, connectivity]
   assets: [equity, fund, cash]
   environments: [sandbox, live, sample-data]
   status: released
-  version: "0.7.0"
+  version: "0.8.0"
   contract: 23
   guide: how-to/using-a-data-plugin.md#alpaca-and-tradier
 

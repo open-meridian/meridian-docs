@@ -32,41 +32,36 @@ developer guide. They are written from the code of
 [meridian-python](https://github.com/open-meridian/meridian-python),
 [meridian-schema](https://github.com/open-meridian/meridian-schema) and
 [meridian-ui](https://github.com/open-meridian/meridian-ui); when those
-change, the pages change with them. Today they describe CLI 0.1.43, SDK
-0.27.0 (contract v23; chart 0.1.303): venue-originated fills, accepted or
-answered DK by the `ems`, the FIX acknowledgements a venue takes, a venue's
-value-date roll, financing and commission fees, an FX order's quote
-currency, an event contract's outcomes in the lake, the closed-day flag and
-the Data sources page's two counts and `unchanged` reads, a spot-date
-rule's counting mode, the Calendars tab's subject and search (venues shown
-by their `VEN-` IDs), `account_currency`, the suites' v23 cases, `about`
-markers and `any_of`, `role-suite` holding a suite test to its outcome, and
-the "Answer a venue-originated fill" how-to. Before it, core's order path
-in the book (child orders, the release gate and waiting for compliance,
-connectivity plugins linked to an `ems` and its venue account map, trading
-instructions and the Trading instructions page, four tools; chart
-0.1.301), the Instruments page's Calendars tab and its two tools, the
-platform's settlement calendars, the ten G10 currencies' and the US
-calendars, the suites' cases a plugin whose work never uses calendars,
-settlement dates, locates or compliance waits marks not presented, core's
-service accounts (chart 0.1.299), core's prepared changes, account grants
-and Setting up (chart 0.1.298), backup and restore, the role renames
-(`data`, `connectivity`, `confirmation`), the four "Using a ... plugin"
-pages, and kit 0.12.0. The plugins on contract v23: Kalshi 0.5.0,
-Polymarket 0.5.0 and the new Polymarket US 0.1.0 recording outcomes,
-Alpaca 0.8.0 and Tradier 0.7.0 holding `connectivity` and `custody`
-beside `data`, and SnapTrade 0.17.0 reporting venue-originated fills; on
-contract v22, Tiingo 0.4.0, Fed H.10 0.4.0, Coinbase 0.5.0, Kraken 0.5.0,
-the sample operations plugin 0.12.0 and its Flags tab, and the sample
-reporting plugin 0.5.0 and its Orders tab.
-**Notice for contract v24**, the one-ID revision: three stable reads,
-`ResolveIdentifier`, `ResolveInstrument` and `ReportMissingInstrument`,
-change. Every instrument comes to be keyed by its platform `INS-` ID; a
-deployment's provisional records stay `LCL-`, resolved to their `INS-`
-record, and a resolved `LCL-` ID is accepted forever. The `open_meridian`
-identifier stops being added to records. Plugins treat IDs as opaque and
-need no change; one that reads the `open_meridian` identifier should stop
-relying on it.
+change, the pages change with them.
+
+**Pages describe the current release only.** A tutorial names the CLI and
+SDK it needs once; an API page marks a field, tool or operation new or
+changed in the last two releases with one line ("Added in SDK 0.28.0",
+"Changed in contract 24"). History lives in two places: the Python SDK
+page's [release notes](docs/api/python-sdk.md#release-notes), and its
+[Moving a plugin to a new release](docs/api/python-sdk.md#moving-a-plugin-to-a-new-release)
+with the CLI's `plugin migrate` step table. An upgrade fact a page drops
+goes there first.
+
+Today they describe contract v24, released 2026-10-15: CLI 0.1.45, SDK
+0.28.0 and chart 0.1.305 (core 6eb6887, its runtime and harness pinned by
+digest), with `boundaries/` vendored from meridian-schema a6a0af7. Contract
+v24 brings booking (allocations, the block, the error account, the
+hand-off, corrections, sleeves, give-ups and alerts, and cash lots outside
+the base currency); the one-ID model (`INS-` records minted by the
+platform, local `LCL-` records never priced, the Provisional tab and the
+upgrade's migration lines, orders on local records, the licence list and
+the weekly usage report); closing an account still attached; the book's
+own resources; `meridian plugin migrate`'s v24 rewrites and `plugin
+check`'s `replaced-ids-followed` warning; and `meridian.environment()`
+defaulting to the sandbox. The plugins on contract v24: Tiingo 0.5.0, the
+sample operations plugin 0.13.0 and its bookings, and the sample reporting
+plugin 0.6.0 and its Bookings tab; on contract v23, Alpaca 0.9.0 and
+Tradier 0.8.0, each now starting on its sandbox, Kalshi 0.5.0, Polymarket
+0.5.0, Polymarket US 0.1.0, SnapTrade 0.17.0 and OANDA 0.2.0 (TODO: 0.3.0,
+picking the account by its ID, pending its merge); on contract v22, Fed H.10 0.4.0,
+Coinbase 0.5.0 and Kraken 0.5.0. What each release added is in the Python
+SDK page's release notes.
 The tutorials were walked on CLI 0.1.36 and SDK 0.21.0. A page describes
 what is built, and says so where something is specified and not built yet.
 

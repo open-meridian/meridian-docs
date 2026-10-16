@@ -2,13 +2,13 @@
   "refreshed_by": "python tools/integrations_page.py refresh",
   "plugins": {
     "plugin-tiingo": {
-      "commit": "9c6abe6021b7c10ba70797646ad11f10d59ccf4a",
-      "version": "0.4.0",
+      "commit": "cc2ba5834088fc4f656c82da3ddba7b7059679fe",
+      "version": "0.5.0",
       "roles": [
         "data"
       ],
-      "sdk": "0.26.0",
-      "contract": 22
+      "sdk": "0.28.0",
+      "contract": 24
     },
     "plugin-fed-h10": {
       "commit": "9d289da7f0d136d3d5cda1a0b9d1fc46d67ceec1",
@@ -65,8 +65,8 @@
       "contract": 23
     },
     "plugin-alpaca": {
-      "commit": "089c03eb8d56fec4e72b4b9cf36c11699f904e1a",
-      "version": "0.8.0",
+      "commit": "2b5f17c455b392c2af88bc6a385f7d9af7f3bf61",
+      "version": "0.9.0",
       "roles": [
         "data",
         "custody",
@@ -76,8 +76,8 @@
       "contract": 23
     },
     "plugin-tradier": {
-      "commit": "fdfc3fac4a0f4efa06fff6e8ce66633e7d486bac",
-      "version": "0.7.0",
+      "commit": "db9aa14cf9aff52aa4a88b7eb921e1ca1f70c764",
+      "version": "0.8.0",
       "roles": [
         "data",
         "custody",
@@ -115,6 +115,10 @@
     "0.27.0": {
       "commit": "b03b6700c213df45fd3cef57afeb684bcb64ed62",
       "contract": 23
+    },
+    "0.28.0": {
+      "commit": "99a9061d52d2e78cc38f84eb8356f4ce05ee5344",
+      "contract": 24
     }
   }
 }

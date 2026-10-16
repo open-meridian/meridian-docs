@@ -153,8 +153,8 @@ a new instrument the store has never seen, and redeeming a one-time code.
 
 ## What is not built yet
 
-- **Order routing and execution** are on the roadmap. From contract v8 the
-  `oms` role reads the book's positions and breaks, but no workflow grants it
-  or `ems` an order yet. Until orders are booked on the platform, the book
-  moves only by an opening balance, a placeholder followed onto its
-  instrument, and the entries that resolve its breaks.
+- **Parts of the order path.** Orders reach venues through the book and
+  are booked to their accounts, but RFQs and axes, confirming an allocation
+  with a client, non-order transactions and settlement are not built: see
+  [The order lifecycle](the-order-lifecycle.md#not-built-yet) and
+  [Booking](booking.md#not-built-yet).

@@ -93,7 +93,7 @@ first; `--yes` answers for a script. Not to be confused with `meridian down`, wh
 
 ## What to back up
 
-From chart 0.1.298 a deployment backs itself up on a schedule once you set it up, sealed to an
+A deployment backs itself up on a schedule once you set it up, sealed to an
 identity you keep: see [Back up and restore a deployment](back-up-and-restore.md).
 
 - **A database the deployment brought:** its backups include it. Without backups set up, nothing

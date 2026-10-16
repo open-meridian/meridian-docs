@@ -7,18 +7,6 @@ person's agent do the work of a change (fill in a long form, read the
 statements, check it against the rules) while a person decides, and let a
 firm say, per act, how far its people's agents may go.
 
-!!! note "Contract v20"
-    Prepared changes, the levels per act, the second pair of eyes and the
-    Agents tab are built in core for contract v20, with open-meridian 0.24.0
-    and the kit 0.12.0, released 2026-10-12 in chart 0.1.298.
-
-!!! note "Contract v21"
-    From contract v21 a [service account](service-accounts.md) prepares
-    too: a plugin's autonomous work held to preparing an act prepares it,
-    for everyone who may make it and the account's owner (see
-    [Prepared by a service account](#prepared-by-a-service-account)).
-    Released 2026-10-12 in chart 0.1.299.
-
 ## Preparing, making
 
 Any act that can be checked can be prepared:
@@ -106,9 +94,8 @@ Access tab shows both side by side for each act: who may make it by hand,
 and what their agents may.
 
 An act a plugin offers with no check tool cannot be prepared, so it takes
-only "may make" or "may not". Every act was "may make", with the second pair
-of eyes off, at the upgrade to contract v20, which is what every delegation
-could do before; each is recorded as set then.
+only "may make" or "may not". An act nobody has set is "may make", with the
+second pair of eyes off.
 
 ## A second pair of eyes
 
@@ -128,8 +115,7 @@ rule: whether they serve one is for the firm to judge.
 
 ## Prepared by a service account
 
-From contract v21 a plugin's autonomous work acts as
-a [service account](service-accounts.md), and the levels and the second
+A plugin's autonomous work acts as a [service account](service-accounts.md), and the levels and the second
 pair of eyes bind it as they bind a person's agent, with its own setting,
 **prepare only** or **act**, the strictest of them. Held to preparing, it
 prepares the act through its check tool, as an agent does; an act with no
@@ -208,4 +194,4 @@ naming each one's check (see
 - [Tickets and the inbox](tickets-and-the-inbox.md).
 - [Access](access.md).
 - [Service accounts](service-accounts.md): the plugin's autonomous work,
-  preparing by default (contract v21).
+  preparing by default.
