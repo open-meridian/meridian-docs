@@ -43,25 +43,25 @@ page's [release notes](docs/api/python-sdk.md#release-notes), and its
 with the CLI's `plugin migrate` step table. An upgrade fact a page drops
 goes there first.
 
-Today they describe contract v24, released 2026-10-15: CLI 0.1.45, SDK
-0.28.0 and chart 0.1.305 (core 6eb6887, its runtime and harness pinned by
-digest), with `boundaries/` vendored from meridian-schema a6a0af7. Contract
-v24 brings booking (allocations, the block, the error account, the
-hand-off, corrections, sleeves, give-ups and alerts, and cash lots outside
-the base currency); the one-ID model (`INS-` records minted by the
-platform, local `LCL-` records never priced, the Provisional tab and the
-upgrade's migration lines, orders on local records, the licence list and
-the weekly usage report); closing an account still attached; the book's
-own resources; `meridian plugin migrate`'s v24 rewrites and `plugin
-check`'s `replaced-ids-followed` warning; and `meridian.environment()`
-defaulting to the sandbox. The plugins on contract v24: Tiingo 0.5.0, the
-sample operations plugin 0.13.0 and its bookings, and the sample reporting
-plugin 0.6.0 and its Bookings tab; on contract v23, Alpaca 0.9.0 and
-Tradier 0.8.0, each now starting on its sandbox, Kalshi 0.5.0, Polymarket
-0.5.0, Polymarket US 0.1.0, SnapTrade 0.17.0 and OANDA 0.2.0 (TODO: 0.3.0,
-picking the account by its ID, pending its merge); on contract v22, Fed H.10 0.4.0,
-Coinbase 0.5.0 and Kraken 0.5.0. What each release added is in the Python
-SDK page's release notes.
+Today they describe contract v25 (TODO: released on the date): CLI 0.1.46,
+SDK 0.29.0 and chart `0.1.CHART25` (TODO: core's commit, its runtime and
+harness pinned by digest), with `boundaries/` vendored from meridian-schema
+3983435. Contract v25 brings a plugin's own documentation (the whole
+declaration, `docs/` sections by digest, registration held to the version,
+`plugin check`'s `documentation-sections` and `documentation-safe` and its
+advice) and the platform's registries in Phase 0 (Open Meridian's own
+plugins in community; `meridian plugin publish`, `plugin key`, `plugin
+download` and `upload --bundle`); `meridian status` and `meridian logs`;
+the book's snapshots and its health; a version retired from the catalogue;
+the licensed schemes declared; and the carried items (a venue resolved by
+its ID, a listing's trading currency, a give-up naming nothing held kept
+unplaced, the trade date at the cut rolled past the weekend). Pages marked
+"TODO: core, not built yet" (the Documentation tab, the Plugins page's
+Browse, Installed and Registries, their tools, the usage report) wait on
+core's v25 branch. The plugins on contract v25: TODO at release (each
+plugin's move, step 8 of the v25 plan, and integrations/released.json
+refreshed). What each release added is in the Python SDK page's release
+notes.
 The tutorials were walked on CLI 0.1.36 and SDK 0.21.0. A page describes
 what is built, and says so where something is specified and not built yet.
 

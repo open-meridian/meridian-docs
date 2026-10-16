@@ -226,6 +226,12 @@ venue. The runner's `instrument` command takes `--ask-platform`, asking the plat
 record from its page as a deployment admin's button does, so a `compute_date` for that equity
 gives its settlement date in a harness run (T+1) rather than "rule not held".
 
+!!! note "TODO: contract v25's runtime and harness"
+    Replace the pins below with core's v25 runtime and harness, released in chart
+    `0.1.CHART25`, by commit and digest, and say what the harness's stand-ins add for contract
+    v25 (the upload's documentation, registration held to the version, and any stand-in
+    registry `e2e-plugin-area` gains), from core as released.
+
 Core 6eb6887's runtime and harness serve contract v24, released 2026-10-15 in chart 0.1.305,
 pinned by digest as in [step 1](#1-pin-a-runtime-image-and-its-harness):
 
