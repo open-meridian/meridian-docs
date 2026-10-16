@@ -345,12 +345,18 @@ The suite's test may not skip or expect a failure, and asserts `report.passed` i
 run, as above: mark what your source never presents instead (see
 [`plugin check`](../api/cli.md#plugin-check)).
 
-Then hold the plugin to the framework's rules as a verified plugin:
+Then hold the plugin to the framework's rules as a verified plugin, installing it and pytest in a
+virtual environment of the plugin's own:
 
 ```sh
+python3 -m venv .venv && . .venv/bin/activate
 pip install -e . pytest
 meridian plugin check --verified --run-tests
 ```
+
+A bare `pip install` outside a virtual environment is refused by some Pythons, such as Homebrew's on
+macOS (`externally-managed-environment`). `--run-tests` runs the tests with `.venv/bin/python` when
+the plugin has a `.venv`.
 
 `--verified` fails `role-suite` where no test runs the data suite, and
 `--run-tests` runs it; see [`plugin check`](../api/cli.md#plugin-check). It

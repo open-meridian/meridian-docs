@@ -943,7 +943,7 @@ Reverse resolution: asks which instrument a set of identifiers maps to, as of a 
 
 There are two outcomes other than a match:
 
-- **Nothing matched.** The store asks the platform to match or mint the security, and answers its record, or a provisional local record of the deployment's own (see **Provisional** below): `found` is `True`, and `minted` is `True` on the resolve that minted the deployment's record. A later resolve of the same identifiers matches that record, with `minted` `False`. Record the holding against it; the instrument store reports the miss itself.
+- **Nothing matched.** When the source states an identifier, a description and a currency, the store asks the platform to match or mint the security, and answers its record, or a provisional local record of the deployment's own (see **Provisional** below): `found` is `True`, and `minted` is `True` on the resolve that minted the deployment's record. A later resolve of the same identifiers matches that record, with `minted` `False`. Record the holding against it; the instrument store reports the miss itself. A source stating less mints nothing: `found` is `False` and `miss_reason` is `MISS_REASON_NOT_FOUND`, and the holding is recorded with `unresolved_identifiers`.
 - **More than one matched.** The result is a miss rather than a pick: `found` is `False` and `miss_reason` is `MISS_REASON_AMBIGUOUS`. Record the holding with `unresolved_identifiers`, and [report the miss](#report_missing_instrument).
 
 ```python
@@ -987,7 +987,7 @@ async def resolve_identifier(
 | `found` | `bool` | Whether `instrument_id` holds an answer: exactly one instrument matched, or nothing did and the deployment minted its record for the set. |
 | `instrument_id` | `str` | The instrument, when `found`. |
 | `minted` | `bool` | `True` when nothing matched and this resolve minted `instrument_id`, the deployment's `LCL-` record for the set; `found` is `True` beside it. A later resolve of the same identifiers matches the record, and is not minted. |
-| `miss_reason` | `MissReason` | Set only when `found` is `False`: `MISS_REASON_AMBIGUOUS`, or `MISS_REASON_NOT_FOUND` for an empty set. |
+| `miss_reason` | `MissReason` | Set only when `found` is `False`: `MISS_REASON_AMBIGUOUS` when more than one instrument matched, or `MISS_REASON_NOT_FOUND` when nothing matched and nothing was minted: an empty set, a source stating less than an identifier, a description and a currency, or a `reporting` plugin asking. |
 
 **Errors:** `no handler`, `timeout` or `handler error` from the instrument store. `NotGranted` without one of its roles.
 

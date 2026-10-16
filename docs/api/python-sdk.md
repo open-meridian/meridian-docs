@@ -5,8 +5,12 @@ The Python SDK is how an Open Meridian plugin talks to the deployment. A plugin'
 ## Install
 
 ```sh
+python3 -m venv .venv && . .venv/bin/activate
 pip install open-meridian
 ```
+
+Install it in a virtual environment: a bare `pip install` outside one is refused by some Pythons,
+such as Homebrew's on macOS (`externally-managed-environment`).
 
 | | |
 |---|---|

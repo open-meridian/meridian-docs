@@ -121,13 +121,15 @@ meridian plugin logs --instance holdings-demo
 
 ```text
 … INFO holdings_demo: registered as holdings-demo, roles custody
-… INFO holdings_demo: may publish …; may subscribe nothing
+… INFO holdings_demo: may publish …; may subscribe platform.reference.event.instrument-replaced
 … INFO holdings_demo: reported 1 external account(s) to link
 … INFO holdings_demo: serving its pages on 127.0.0.1:8000
 ```
 
 The `may publish` list is what the `custody` role grants, among it
-`platform.street.command.record-statement` and `platform.street.command.record-holding`. With it,
+`platform.street.command.record-statement` and `platform.street.command.record-holding`. The
+`may subscribe` list is the one event the role hears, `platform.reference.event.instrument-replaced`:
+the deployment saying an instrument ID was replaced, as when two records are merged. With it,
 the scaffold reports the one external account it reaches, `reference-1`: a plugin holding no role
 that may report accounts reports none.
 
@@ -164,7 +166,9 @@ REACHES = [
 ```
 
 `DEMO-ACCT-1` and `DEMO-ACCT-2` are the names the source uses for the accounts, as a broker would.
-The name and type are the source's own words, shown to the admin who links them.
+The name and type are the source's own words. The scaffold's **Setup** page shows each account's
+ID and name to the admin who links them, and not its type: the type goes to the deployment with
+the report, and is given to an account created from the link (see the note in step 10).
 
 Save, wait for `ready`, and read what that revision logged. If it was `r2`:
 
@@ -174,7 +178,7 @@ meridian plugin logs --instance holdings-demo --since 1
 
 ```text
 … INFO holdings_demo: registered as holdings-demo, roles custody
-… INFO holdings_demo: may publish …; may subscribe nothing
+… INFO holdings_demo: may publish …; may subscribe platform.reference.event.instrument-replaced
 … INFO holdings_demo: reported 2 external account(s) to link
 … INFO holdings_demo: serving its pages on 127.0.0.1:8000
 ```
@@ -185,12 +189,18 @@ to `"DEMO-ACCT-1"` in `LINKED`, in each `external_account_id` a test posts or ch
 `"Linked reference-1."`, and change `Reference account` to `Demo brokerage`. Leave
 `meridian.Identity("reference-1", …)`, and the `<code>reference-1</code>` the Setup test looks for:
 that is the instance the tests' stand-in sidecar says the plugin was launched as. The tests are
-never sent to the instance, so this save makes no revision. Run them:
+never sent to the instance, so this save makes no revision. Run them, in a virtual environment
+of the plugin's own:
 
 ```bash
+python3 -m venv .venv && . .venv/bin/activate
 pip install -e . pytest
 meridian plugin check --run-tests
 ```
+
+A bare `pip install` outside a virtual environment is refused by some Pythons, such as Homebrew's on
+macOS (`externally-managed-environment`). `--run-tests` runs the tests with `.venv/bin/python` when
+the plugin has a `.venv`.
 
 `tests-pass` passes, and every rule holds. `role-suite`, by which a plugin holding `custody` runs
 the custody suite in its tests, each case mapped to its own exchange with its vendor, is held only
@@ -199,6 +209,20 @@ verified for the role, which breaks no rule. This plugin converts no vendor's da
 nothing to map. A real custody plugin passes it,
 checked with `meridian plugin check --verified --run-tests`; see
 [Pass the role's suite](../how-to/keep-what-the-edge-converts.md#pass-the-roles-suite).
+
+`role-pages`, by which a plugin holding `custody` keeps the role's common pages, is held only under
+`--verified` too, and its findings are printed below it as advice that fails nothing: this plugin
+declares no **Account links** page and no **Statements** page, each `instead:` pointing to the
+role's common part as `meridian plugin new --role custody` writes it. The output ends:
+
+```text
+Advice, 2 place(s), failing nothing: a verified plugin is held to it (--verified).
+
+Every rule it was checked against holds.
+```
+
+This tutorial builds on the plain scaffold, to show each call on its own. A real custody plugin
+starts from `meridian plugin new --role custody`, which writes those pages.
 
 ## 6. Link DEMO-ACCT-1
 
@@ -275,11 +299,17 @@ async def record_demo_statement(plugin: meridian.Plugin) -> None:
             observed_at_ns=now,
         )
 
-        # W3.1: which instrument this identifier means. When nothing matches,
-        # the deployment mints its own record for it, and answers that; only
-        # an ambiguous match is a miss.
+        # W3.1: which instrument this identifier means. When nothing matches
+        # and the source states an identifier, a description and a currency,
+        # the deployment mints its own record for it, and answers that. Stated
+        # less, or matching several records, it is a miss.
         symbol = meridian.Identifier(scheme="symbol", value="ACME", source=SOURCE)
-        resolved = await plugin.resolve_identifier(identifiers=[symbol], as_of_ns=now)
+        resolved = await plugin.resolve_identifier(
+            identifiers=[symbol],
+            as_of_ns=now,
+            stated_description="Acme Corp common stock",  # as the source describes it
+            stated_currency="USD",  # the currency the source states it in
+        )
         if resolved.found:
             log.info("ACME is %s (minted: %s)", resolved.instrument_id, resolved.minted)
 
@@ -306,7 +336,7 @@ async def record_demo_statement(plugin: meridian.Plugin) -> None:
             opened.already_recorded,
         )
 
-        # W2.3: one row. Resolved, it names the instrument. Ambiguous, it
+        # W2.3: one row. Resolved, it names the instrument. Missed, it
         # carries what we held, and is recorded rather than dropped.
         row = await plugin.record_holding(
             statement_id=opened.statement_id,
@@ -375,7 +405,7 @@ Expected output:
 
 ```text
 … INFO holdings_demo: registered as holdings-demo, roles custody
-… INFO holdings_demo: may publish …; may subscribe nothing
+… INFO holdings_demo: may publish …; may subscribe platform.reference.event.instrument-replaced
 … INFO holdings_demo: reported 2 external account(s) to link
 … INFO holdings_demo: serving its pages on 127.0.0.1:8000
 … INFO holdings_demo: ACME is LCL-… (minted: True)
@@ -388,17 +418,23 @@ What happened:
 - The statement was opened against `Demo brokerage account`, which `DEMO-ACCT-1` is linked to, and
   given an id by the deployment.
 - The row was recorded against the same account.
-- The deployment knew no instrument for the symbol `ACME`, so it **minted** its own record for it,
-  an identifier beginning `LCL-`, and answered that, with `minted: True`. A later resolve of the
-  same identifiers matches that record, and says `minted: False`: from the next save on, and on any
-  later run of this tutorial on the same deployment. An `LCL-` record is the deployment's own, a
-  record like any other; a deployment admin completes what it lacks, such as its asset class, on
-  the dashboard's **Instruments** page.
-- `resolved: True` because the row names an instrument, and so it updates a custodial position
-  under it.
-- Had more than one instrument matched `ACME`, the answer would have been a miss, not a pick. The
-  row would then carry the identifier it held instead, be recorded as unresolved, with
-  `resolved: False`, and update no position. See
+- The deployment knew no instrument for the symbol `ACME`. The source stated an identifier, a
+  description and a currency, so the deployment **minted** its own record for it, an identifier
+  beginning `LCL-`, and answered that, with `minted: True`. The record is provisional: the result's
+  `provisional` is `True`. A later resolve of the same identifiers matches that record, and says
+  `minted: False`: from the next save on, and on any later run of this tutorial on the same
+  deployment. An `LCL-` record is the deployment's own, a record like any other; a deployment admin
+  completes what it lacks, such as its asset class, on the dashboard's **Instruments** page. The
+  description and currency the source stated are kept on it as offers, in force once a person
+  accepts them.
+- `resolved: True` because the row names an instrument, and so it updates a custodial position:
+  the street store now holds a long position of 12.5 under `Demo brokerage account`, valued at
+  2812.50 USD.
+- Had the source stated the symbol alone, with no description or currency, nothing would have been
+  minted: the resolve would have answered `found` `False`, with `MISS_REASON_NOT_FOUND`, and logged
+  no `ACME is` line. Had more than one instrument matched `ACME`, the answer would have been a miss
+  too, not a pick, with `MISS_REASON_AMBIGUOUS`. Either way the row carries the identifier it held
+  instead, is recorded as unresolved, with `resolved: False`, and updates no position. See
   [`resolve_identifier`](../api/typed-operations.md#resolve_identifier).
 - One row arrived of one expected, so the street store closed the statement.
 
@@ -446,8 +482,9 @@ linked `DEMO-ACCT-1`.
     [Build a plugin's page](../how-to/build-a-plugin-page.md#to-link-external-accounts-om-account-map).
 
 The next statement records it. Make any change to `statement.py`, a blank line will do, save, and
-read the logs after that revision: the last line is `recorded holding …` again, and the resolve
-before it says `minted: False`.
+read the logs after that revision: the last line is `recorded holding … (resolved: True)` again.
+The resolve before it answers the `LCL-` record step 9 minted, matched this time rather than
+minted, so its line says `minted: False`.
 
 A statement or a row for a closed account is refused too, as outside the plugin's write scope,
 and that refusal also shows as a `refused` event from `meridian plugin events`.
@@ -480,7 +517,8 @@ Settings if you do not want them.
   external account.
 - A statement names its external account, states its figures per margin segment as the source
   reported them, and says how many rows follow. An instrument nobody knows is answered with a
-  record the deployment mints, and an ambiguous one is recorded unresolved; a row is never dropped.
+  record the deployment mints, when the source states an identifier, a description and a currency;
+  one stated with less, or an ambiguous one, is recorded unresolved. A row is never dropped.
 - Refusals come back as `MeridianError` with the deployment's own reason.
 
 ## Next steps
