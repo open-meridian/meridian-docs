@@ -226,7 +226,8 @@ make an instrument record -- less than an identifier, a description and a
 currency -- is kept in the street as a placeholder, outside the book. The
 `operations` plugin records it as a break of its own category,
 `BREAK_CATEGORY_UNRECOGNIZED_SECURITY`, naming no instrument and the street
-record by its identifiers, brought up to date while it persists. A local
+record by its identifiers, carried in the break's own field
+(`unresolved_identifiers`), brought up to date while it persists. A local
 line, a position under a provisional record, is reconciled as any position.
 See [One ID per instrument](one-id.md#why-a-thinly-described-security-stays-unrecognised).
 
