@@ -15,7 +15,7 @@ what each registry checks, and what your firm checks itself.
 |---|---|---|---|
 | **Where it is** | Inside your deployment | The platform | The platform |
 | **Who puts a plugin there** | A deployment admin, with `meridian plugin upload` | An organisation holding publisher status, from a signed release tag the platform builds | The same, at the verified grade, after a person's review |
-| **What is checked** | Nothing | The platform's automatic checks at build. Nobody reviews it: it is labelled **Unsupervised** wherever it appears | The automatic checks, a person's review at best effort, and a version floor |
+| **What is checked** | Nothing | The [automatic checks](#the-automatic-checks), at build. Labelled **Unsupervised** wherever it appears | The automatic checks, a person's review at best effort, and a version floor |
 | **Named** | By its bare name, `my-plugin` | `organisation/plugin`, such as `open-meridian/snaptrade` | The same |
 | **Open today** | Yes | To Open Meridian's own plugins (Phase 0, below) | Not yet |
 
@@ -100,7 +100,8 @@ A version that fails one is refused, naming it; nothing is half-listed.
 - Its documentation's digests match its texts, and pass `documentation-sections` and
   `documentation-safe` (see [Write a plugin's documentation](../how-to/write-a-plugins-documentation.md)).
 
-The checks are not a review, and they change nothing the notice says.
+What these checks are, and are not, is in
+[the notice](plan-your-deployment.md#who-checks-a-plugin).
 
 ## Installing, updating and pulls
 

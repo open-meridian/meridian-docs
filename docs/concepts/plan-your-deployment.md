@@ -16,8 +16,10 @@ it.
 ## Who checks a plugin
 
 !!! warning "Naming a plugin here is not an endorsement"
-    **Local and community plugins are completely unsupervised.** The platform
-    checks nothing about them, and whoever installs one carries its risk.
+    **Local and community plugins are unsupervised.** Nobody reviews them. A
+    community version passes only the platform's automatic build checks, which
+    are not a review, an audit or a warranty. A local plugin is not checked at
+    all. Whoever installs one carries its risk.
 
     **Verified plugins are checked at best effort**: the platform's review and a
     version floor. That is not an audit, a warranty, or due diligence on the vendor.
