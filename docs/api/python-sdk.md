@@ -2350,6 +2350,11 @@ Then, by hand where they apply:
   and `docs/setup.md` (`troubleshooting.md` and `terms.md` prompted,
   `pages.md` optional); `meridian plugin check` checks them. See
   [Write a plugin's documentation](../how-to/write-a-plugins-documentation.md).
+- **A Dockerfile that installs only the package**, such as one building
+  wheels in a stage of its own: add `COPY docs/ docs/` to its final stage,
+  so the image holds `/plugin/docs`, which `Declaration(documentation="docs")`
+  reads where the plugin runs. The template's Dockerfile copies the whole
+  project, `docs/` with it.
 - **A connectivity plugin's read of the escape hatch the migration cannot
   remove alone**, its answer used or the read inside another expression
   (`escape-hatch-read-kept`): remove the read and what depends on its

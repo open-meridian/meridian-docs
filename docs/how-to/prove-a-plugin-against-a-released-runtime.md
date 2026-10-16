@@ -113,12 +113,41 @@ naming it.
   `dashboard-1`, or a name starting `sidecar-`.
 - `image` is the plugin's image.
 - `roles` is a list, empty for a plugin holding none. Give your plugin the roles it declares.
+- `archive`, where given, is `true`, and only for a plugin holding an edge role.
+- `declaration`, where given, is the file its registration is held to (below).
 - The first plugin listed is the one the runner acts on when a command names no `--instance`.
 
 **A plugin is started again whenever it exits failing**, as a pod's container is. The harness starts
 each plugin beside its sidecar without waiting for the rest of the deployment, so a plugin whose
 first call reaches its sidecar before the deployment serves is refused, exits, and finds it serving
 on its next start. You need no override for that.
+
+### Hold each registration to its declaration { #hold-each-registration-to-its-declaration }
+
+From contract v25 a plugin declaring v25 registers exactly the declaration its version was uploaded
+with, or its sidecar refuses it, naming the first difference. The harness performs no upload, so
+list each plugin with `"declaration": PATH`, and its sidecar holds it to that file instead: the
+SDK's JSON as `meridian-declaration` prints it from the plugin's own image, which is what
+`meridian plugin upload` sends. Print it before writing the compose file, beside it, from the image
+under test:
+
+```bash
+docker run --rm --network none --entrypoint meridian-declaration <image> \
+    <module:attribute> >.e2e/harness/declaration.json
+```
+
+```json
+[
+  {"instance": "snaptrade", "image": "snaptrade:local", "roles": ["custody", "connectivity"],
+   "declaration": "declaration.json"}
+]
+```
+
+`<module:attribute>` is what `[tool.meridian]`'s `declaration` names. PATH is relative to the
+directory of the first compose file (`.e2e/harness/`), or absolute, a path with no space, colon or
+`$`. A plugin listed without one registers unchecked, as on any sidecar no launch made; with one,
+the e2e proves that what it registers is what its upload would declare. Give a stand-in run beside
+your plugin a declaration of its own the same way.
 
 Write the file again for another list; never edit it. To give a plugin environment, a command or a
 volume, add a compose file of your own that overrides its service by its instance name
@@ -228,9 +257,10 @@ gives its settlement date in a harness run (T+1) rather than "rule not held".
 
 !!! note "TODO: contract v25's runtime and harness"
     Replace the pins below with core's v25 runtime and harness, released in chart
-    `0.1.CHART25`, by commit and digest, and say what the harness's stand-ins add for contract
-    v25 (the upload's documentation, registration held to the version, and any stand-in
-    registry `e2e-plugin-area` gains), from core as released.
+    `0.1.CHART25`, by commit and digest, and say what else the harness's stand-ins add for
+    contract v25 (any stand-in registry `e2e-plugin-area` gains), from core as released. Each
+    registration held to its declaration is in
+    [Hold each registration to its declaration](#hold-each-registration-to-its-declaration).
 
 Core 6eb6887's runtime and harness serve contract v24, released 2026-10-15 in chart 0.1.305,
 pinned by digest as in [step 1](#1-pin-a-runtime-image-and-its-harness):
@@ -397,28 +427,42 @@ differ from one day to the next: replace it with a fixed word, such as `D0`, bef
 ## Worked example: SnapTrade's `make e2e`
 
 [plugin-snaptrade](https://github.com/open-meridian/plugin-snaptrade) reads brokerage accounts
-and holds the `custody` role. In synthetic mode it serves invented data for three connections with
-no SnapTrade key. Its `make e2e` builds its image, then, on the harness its `Makefile` pins beside
-the runtime, with itself as the one plugin, instance `snaptrade`:
+and places orders at them: it holds the `custody` and `connectivity` roles. With its developer
+setting **Sample data** on, it serves invented data for its connections and trades with a simulated
+brokerage, with no SnapTrade key. Its `make e2e` builds its image, prints the declarations the
+harness holds each registration to, then runs it on the harness its `Makefile` pins beside the
+runtime, as instance `snaptrade` with the roles `pyproject.toml` declares and the harness's
+archive, beside a desk stand-in from the same image (`e2e/desk.py`, holding `portfolio`, `oms`,
+`ems` and `reporting`). The first steps:
 
 1. waits for the plugin to register;
-2. turns `synthetic` on in its settings form (a developer setting, accepted on the harness);
+2. turns `sample_data` on in its settings form (a developer setting, accepted on the harness);
 3. opens its Account links page under Manage until it lists Alpaca's account, `SYN-ALP-1001`;
 4. posts that page's form to create an account **E2E Alpaca** linked to `ALPACA:SYN-ALP-1001`;
 5. polls the street store until E2E Alpaca's statement is complete, and compares the store with
    `e2e/expected.street`;
-6. checks that the dashboard counts two accounts reported and not linked.
+6. checks that the dashboard counts three accounts reported and not linked.
 
-The variables and the target, after its `Makefile`, each `down` naming `--profile runner` so that
-it removes every volume of the run:
+The repository's target goes on from there: the custodian's activity against
+`e2e/expected.activity`, the raw responses kept on a read-only root, a plan's own fund code linked
+and re-resolved, a deposit counted as cash, raw records archived past their window, restored and
+held, and then the order path with the desk (`e2e/orders.py`). Its variables and the target's first
+steps, after its `Makefile`, each `down` naming `--profile runner` so that it removes every volume
+of the run:
 
 ```makefile
 RUNTIME_IMAGE ?= ghcr.io/open-meridian/meridian-runtime:<commit>@sha256:<digest>
 HARNESS_IMAGE ?= ghcr.io/open-meridian/meridian-harness:<commit>@sha256:<digest>
 # Its roles as pyproject.toml declares them, as `meridian plugin upload` would.
 ROLES   := $(shell sed -n 's/^roles *= *\[\(.*\)\]/\1/p' pyproject.toml | tr -d ' ')
-PLUGINS := [{"instance": "snaptrade", "image": "$(IMAGE)", "roles": [$(ROLES)]}]
-E2E     := MERIDIAN_RUNTIME_IMAGE=$(RUNTIME_IMAGE) \
+# The declaration [tool.meridian] names, printed from the image under test, as upload reads it.
+DECLARATION_REF := $(shell sed -n 's/^declaration *= *"\(.*\)"/\1/p' pyproject.toml)
+DECLARE := docker run --rm --network none --entrypoint meridian-declaration
+PLUGINS := [{"instance": "snaptrade", "image": "$(IMAGE)", "roles": [$(ROLES)], "archive": true, \
+             "declaration": "declaration.json"}, \
+            {"instance": "desk", "image": "$(IMAGE)", "roles": ["portfolio", "oms", "ems", "reporting"], \
+             "declaration": "desk.json"}]
+E2E     := MERIDIAN_RUNTIME_IMAGE=$(RUNTIME_IMAGE) E2E_DIR=$(CURDIR)/e2e \
            docker compose -p snaptrade-e2e -f .e2e/harness/compose.yaml \
            -f .e2e/harness/plugins.yaml -f e2e/plugin.yaml
 E2E_RUN    := $(E2E) run --rm -T runner
@@ -431,33 +475,41 @@ e2e: image
 	id="$$(docker create $(HARNESS_IMAGE) none)" \
 		&& docker cp "$$id:/harness" .e2e/harness >/dev/null \
 		&& docker rm "$$id" >/dev/null || exit 1; \
+	$(DECLARE) $(IMAGE) $(DECLARATION_REF) >.e2e/harness/declaration.json || exit 1; \
+	$(DECLARE) -v "$(CURDIR)/e2e":/e2e:ro -e PYTHONPATH=/e2e $(IMAGE) desk:DECLARATION \
+		>.e2e/harness/desk.json || exit 1; \
 	printf '%s\n' '$(PLUGINS)' >.e2e/plugins.json; \
 	docker run --rm -i -v "$(CURDIR)/.e2e/harness":/harness:ro python:3.12-alpine \
 		python /harness/harness.py compose <.e2e/plugins.json >.e2e/harness/plugins.yaml || exit 1; \
 	$(E2E) --profile runner down -v --remove-orphans >>.e2e/components.log 2>&1; \
 	$(E2E) up -d >>.e2e/components.log 2>&1 || fail "the harness did not start"; \
 	$(E2E_RUN) ready >>.e2e/runner.log || fail "the plugin never registered"; \
-	$(E2E_RUN) settings synthetic=true >>.e2e/runner.log || fail "synthetic was not set"; \
+	$(E2E_RUN) settings sample_data=true >>.e2e/runner.log || fail "sample data was not set"; \
 	$(E2E_RUN) page --level admin /admin/accounts --until SYN-ALP-1001 >>.e2e/runner.log \
 		|| fail "Account links never listed Alpaca's account"; \
 	$(E2E_RUN) form --level admin --page /admin/accounts --post /admin/accounts/link \
 		intent=create external_account_id=ALPACA:SYN-ALP-1001 'new_account_name=E2E Alpaca' \
 		--expect "Created E2E Alpaca and linked" >>.e2e/runner.log \
 		|| fail "the Account links form did not create and link E2E Alpaca"; \
-	for i in $$(seq 1 60); do \
+	for i in $$(seq 1 90); do \
 		$(E2E_STREET) >.e2e/street || fail "store street did not print the street store"; \
 		grep -q '^statement|E2E Alpaca|snaptrade|[0-9]*|complete|' .e2e/street && break; \
 		sleep 1; \
 	done; \
 	diff -u e2e/expected.street .e2e/street >&2 || fail "the street store is not e2e/expected.street"; \
-	$(E2E_RUN) unlinked --expect 2 || fail "the dashboard did not count the two accounts left unlinked"
+	$(E2E_RUN) unlinked --expect 3 || fail "the dashboard did not count the three accounts left unlinked"
 ```
 
-The repository's own target adds the elapsed time, a check of what the plugin kept on its read-only
-root, and a few messages; the steps are these. `e2e/expected.street` holds Alpaca's statement and
-its rows as the synthetic data serves them, in the forms [above](#the-street-store), and nothing for
-the accounts left unlinked: each row names its instrument by what SnapTrade sent, a security by its
-identifiers in a `local(...)` form, and what SnapTrade does not report is empty.
+From contract v25 a plugin registers exactly the declaration its version was uploaded with, so a
+stand-in run beside it, such as the desk, registers its interface in a declaration too,
+`meridian.connect(declaration=meridian.Declaration(interface=...))`, and the target prints the
+stand-in's declaration from the same image, its directory mounted, as it prints the plugin's (see
+[Hold each registration to its declaration](#hold-each-registration-to-its-declaration)).
+
+`e2e/expected.street` holds Alpaca's statement and its rows as the sample data serves them, in the
+forms [above](#the-street-store), and nothing for the accounts left unlinked: each row names its
+instrument by what SnapTrade sent, a security by its identifiers in a `local(...)` form, and what
+SnapTrade does not report is empty.
 
 To make your own expected file, run the target once with an empty one, read what it printed in
 `.e2e/street` against the data your plugin served, row by row, and commit it once every row is
