@@ -769,7 +769,7 @@ Builds the plugin's image on this machine and puts it in the deployment's catalo
 5. Push it into the deployment's registry through the dashboard. A layer the registry already holds is not sent again, and one another plugin's repository holds is mounted from there.
 6. Send the manifest's metadata, the declaration and the texts with the image's digest. The deployment records the version, and refuses texts that do not match the declaration (TODO: core's check and keeping of the texts, not built yet).
 
-A version is recorded once and never replaced: uploading a name and version already in the catalogue is refused. On success it prints `Uploaded to <address>, as sha256:<digest>.`, and, for a version carrying documentation, where a deployment admin reads it before launching it (TODO: the address, `<address>/admin/plugins/versions/<name>/<version>/documentation` in CLI 0.1.46, is a placeholder until core draws that page).
+A version is recorded once and never replaced: uploading a name and version already in the catalogue is refused. On success it prints `Uploaded to <address>, as sha256:<digest>.`, and, for a version carrying documentation, where a deployment admin reads it before launching it: the version's **Documentation** page, `<address>/admin/plugins/versions/<name>/<version>/documentation`.
 
 ### `meridian plugin list`
 
@@ -777,7 +777,7 @@ A version is recorded once and never replaced: uploading a name and version alre
 meridian plugin list [--deployment <addr>]
 ```
 
-Prints the catalogue: every version uploaded, with its roles, whether it serves a page, and the SDK version it pins, and, where it carries documentation, where it is read; and every launch, with its instance, version and state (`launched`, `stopped` or `failed`, with the failure). Because it needs a live delegation, it is also the way to check you are connected: it exits 3 when you aren't.
+Prints the catalogue: every version uploaded, with its roles, whether it serves a page, and the SDK version it pins, and, where it carries documentation, its **Documentation** page, `<address>/admin/plugins/versions/<name>/<version>/documentation`; and every launch, with its instance, version and state (`launched`, `stopped` or `failed`, with the failure). Because it needs a live delegation, it is also the way to check you are connected: it exits 3 when you aren't.
 
 ### `meridian plugin launch`
 

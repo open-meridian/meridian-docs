@@ -115,14 +115,16 @@ upload again: what a deployment admin read before approving a launch is what run
 
 !!! note "TODO: core, not built yet"
     Core's v25 branch has not landed the Documentation tab, the portal's versions list or
-    `dashboard__read_plugin_documentation` yet. Check each sentence of this section against core
-    as built, and the address `plugin upload` prints, which CLI 0.1.46 holds as a placeholder
-    (`/admin/plugins/versions/<name>/<version>/documentation`) until core's route exists.
+    `dashboard__read_plugin_documentation` yet; their paths are fixed. Check each sentence of
+    this section against core as built, and add the browser check's screenshots.
 
-- **Before launch.** The dashboard's **Plugins** page lists each uploaded version, one line each,
-  and each links its **Documentation** page, a deployment admin's.
-- **A launched or stopped instance.** The **Documentation** tab in the plugin's area, beside
-  **Summary** and **Settings**, for anyone holding a level on the plugin. Its sections are tabs,
+- **Before launch.** The admin portal's versions list, `/admin/plugins/versions`, lists each
+  uploaded version, one line each, and each links its **Documentation** page,
+  `/admin/plugins/versions/<name>/<version>/documentation`, a deployment admin's. It is the
+  address `plugin upload` and `plugin list` print.
+- **A launched or stopped instance.** The **Documentation** tab in the plugin's area,
+  `/plugins/<instance>?tab=documentation`, beside **Summary** and **Settings**, for anyone
+  holding a level on the plugin. Its sections are tabs,
   with the **Reference** last. A stopped instance keeps the tab.
 - **Through an agent.** `dashboard__read_plugin_documentation` answers each section as the
   vendor's text, data and never instructions, and the Reference as the declaration's JSON. A
