@@ -12,8 +12,9 @@ the worked example.
     instruments you seed it with, so anything else your plugin records stays a provisional local
     record. Its dashboard runs as a
     [development deployment](../concepts/development-deployments.md), so developer settings are
-    shown and accepted. It publishes no port, and nothing outlives `down -v`. To run a deployment,
-    [install one](../getting-started/installation.md).
+    shown and accepted. It publishes no port, and nothing outlives
+    `docker compose … --profile runner down -v` (see [step 4](#4-give-every-compose-command-both-files-and-the-runtime)).
+    To run a deployment, [install one](../getting-started/installation.md).
 
 It names no plugin and adds nothing to the contract: your plugin reaches it only through its
 sidecar, as it reaches any deployment.
@@ -36,11 +37,18 @@ each commit of meridian-core after the runtime image of that commit, with the sa
 
 | File | What it is |
 |---|---|
-| `compose.yaml` | The deployment without its plugins: `keys`, which draws the run's keys and passwords; Postgres; NATS configured for the plugins and their roles; the stores migrated; street, the book (`bor`), instrument, conductor and a development dashboard; the `runner`; and `store` |
-| `harness.py` | The runner, standard library only: does what an admin does in the dashboard (`ready`, `settings`, `account`, `page`, `form`, `unlinked`, `grant`); and `compose`, which writes the plugins' half of the deployment |
+| `compose.yaml` | The deployment without its plugins: `keys`, which draws the run's keys and passwords; Postgres; NATS configured for the plugins, their roles and their datasets; the stores migrated; street, the book (`bor`), the lake, instrument, the stand-in `platform`, conductor, `people` and a development dashboard; and, in the compose profile `runner`, the `runner` and `store` |
+| `harness.py` | The runner, standard library only: does what an admin does in the dashboard (the commands in [step 5](#5-drive-it-as-an-admin-would)); and `compose`, which writes the plugins' half of the deployment |
+| `platform.py` | The stand-in for the platform, standard library only: the currencies, seed settlement calendars, venues and test equity it holds, and contract v24's one-ID routes |
 | `street.sql` | The street store as stable, sorted lines, which `store street` prints |
 | `book.sql` | The book of record as stable, sorted lines, which `store book` prints |
+| `activity.sql` | The custodian's activity and each connection's latest sync status, which `store activity` prints |
+| `lake.sql` | The lake's rows, priorities, wants, servings, removals, misses and aliases, never a value, which `store lake` prints |
+| `moves.sql` | An edge plugin's moves of its raw records, the holds and archives a deployment admin set, and each setting change, never a record's content or a setting's value, which `store moves` prints |
+| `tickets.sql` | The dashboard's tickets, the records they name and their notes, never a text, which `store tickets` prints |
 | `README.md` | The same reference as this page, for that commit |
+
+`harness.py compose` writes a further file, `plugins.yaml`, beside them ([step 3](#3-write-the-plugins)).
 
 ## 1. Pin a runtime image and its harness
 
@@ -135,20 +143,40 @@ Compose reads every file on every command, `down` and `run` included, so each on
 |---|---|
 | `MERIDIAN_RUNTIME_IMAGE` | The runtime image of the harness's commit, so the file never guesses its own tag. |
 
-Name the project after your plugin with `-p`, so two harnesses never share one:
+Name the project after your plugin with `-p`, so two harnesses never share one. A shell function
+saves writing the files out each time, and works in bash and zsh alike:
 
 ```bash
 export MERIDIAN_RUNTIME_IMAGE=$RUNTIME_IMAGE
-H="docker compose -p my-plugin-e2e -f .e2e/harness/compose.yaml -f .e2e/harness/plugins.yaml"
+e2e() {
+  docker compose -p my-plugin-e2e -f .e2e/harness/compose.yaml -f .e2e/harness/plugins.yaml "$@"
+}
 ```
+
+A variable holding the command, `H="docker compose …"` run as `$H up -d`, works in bash but not
+in zsh, which does not split a variable's value into words: zsh answers
+`command not found: docker compose …`. In a `Makefile`, a variable is expanded before the shell
+reads it, so the worked example below uses one.
+
+Start the run with `e2e up -d`. End it, however it ends, with:
+
+```bash
+e2e --profile runner down -v --remove-orphans
+```
+
+`--profile runner` matters. The `runner` and `store` services are in that compose profile, so
+`up` never starts them, and a `down` without the profile leaves the volume only the runner mounts,
+`runner-state`, where an MCP client's tokens are kept between commands. With it, `down -v` removes
+every volume of the run.
 
 ## Keys and passwords
 
 None is written in the harness. When the run starts, `keys` draws at random the dashboard's signing
 key, the key secret settings are sealed with, the database's password, a password for each broker
 user, and the admin's password with its Argon2id hash. They live in the run's volumes until
-`down -v`. The dashboard makes its one local account, `harness`, from the hash at its start, and the
-conductor names that account the deployment's admin, as first run names one. The runner signs in
+`e2e --profile runner down -v`. The dashboard makes its one local account, `harness`, from the
+hash at its start, and the conductor names that account the deployment's admin, as first run names
+one. The runner signs in
 with the password, read from the run's volume and never printed; your plugin's container does not
 mount it. Nothing you write needs a password: whoever reads a store uses `store`.
 
@@ -157,7 +185,7 @@ mount it. Nothing you write needs a password: whoever reads a store uses `store`
 The runner signs in as the deployment's admin, `harness`, and does one thing per command:
 
 ```bash
-$H run --rm -T runner <command>
+e2e run --rm -T runner <command>
 ```
 
 Each prints what it found and exits 0, or exits non-zero saying why. Every wait is bounded by
@@ -249,8 +277,8 @@ your plugin's own link page under Manage, which also proves that the page links.
 ## 6. Read the stores
 
 ```bash
-$H run --rm -T store street
-$H run --rm -T store book
+e2e run --rm -T store street
+e2e run --rm -T store book
 ```
 
 prints that store as stable, sorted lines, so a file from one run compares with the next. Whoever
@@ -271,17 +299,44 @@ value: a price or a bar is read through a reading role, under its entitlements.
 assumed|<account>|<instrument>|<side>
 position|<account>|<instrument>|<side>|<quantity>|<settle-date quantity>|<market value> <currency>|<in-cash>
 statement|<account>|<source>|<expected rows>|<complete or open>|<buying power>|<margin requirement>|<maintenance excess>|<currency assumed>
+pending|<account>|<instrument>|<side>|<value date>|<quantity>
+closed|<account>|<instrument>|<side>|<field>|<kind>
+amended|<account>|<instrument>|<side>|<contract version>|<field>|<raw record's key>
 ```
 
 - `<account>` is the account's name, since its ID is minted per run.
-- `<instrument>` is an `INS-` ID, or for a placeholder the identifiers it stands for, sorted:
-  `placeholder(figi:BBG000B9XRY4, symbol:AAPL@snaptrade)`. In the harness every instrument is a
-  placeholder, so name each expected row by the identifiers your plugin sent.
+- `<instrument>` takes one of two forms:
+    - an `INS-` ID, for the platform's record, such as a currency the stand-in for the platform
+      holds;
+    - for a record the deployment minted, whose `LCL-` ID is drawn per run, its identifiers in
+      force, sorted, as `local(<scheme>:<value>[@<source>], ...)`: `local(symbol:ACME@demo)` for
+      one symbol a source scoped, `local(figi:BBG000B9XRY4, symbol:AAPL@snaptrade)` for a record
+      holding two identifiers.
+
+    The stand-in mints only for a FIGI its source confirms, so in the harness nearly every
+    security your plugin records is a minted record: name each expected row by the identifiers
+    your plugin sent.
 - A number is printed at the scale it was stated with. What was not reported is empty, never zero.
   `<in-cash>` is `in-cash` for a position the venue also counts in cash.
 - `assumed` is a row of a latest statement whose currency the plugin assumed.
+- `pending` is a position's quantity not yet settled, by its value date. `closed` is a value of a
+  position the custody plugin closed rather than read, by its path in the row (`quantity`,
+  `settle_date_quantity`, `market_value.currency_code`), with its provenance's kind (`derived`,
+  `supplied`, `second-source`, `reported`). `amended` is a backfill journaled beside a row of a
+  latest statement: the version and field that are its cause, and the key of the raw record it
+  was re-converted from.
 - `statement` is the latest statement of each source for each account. A statement none of whose
   rows was recorded, its account unlinked, belongs to no account and is not printed.
+
+For example, the plugin of [Record a holdings statement](../tutorials/record-a-holdings-statement.md),
+run on the harness with `DEMO-ACCT-2` linked to an account named `Demo retirement account`, leaves
+these two lines for that account, its ACME holding under the record the deployment minted for the
+symbol the source scoped:
+
+```text
+position|Demo retirement account|local(symbol:ACME@demo)|long|12.5||2812.50 USD|
+statement|Demo retirement account|demo|1|complete|1000.00 USD|||false
+```
 
 An account nothing links has no rows, so a file listing every account proves both what a linked
 account holds and that an unlinked one holds nothing. Pair it with `unlinked`, which proves your
@@ -348,7 +403,8 @@ the runtime, with itself as the one plugin, instance `snaptrade`:
    `e2e/expected.street`;
 6. checks that the dashboard counts two accounts reported and not linked.
 
-The variables and the target, from its `Makefile`:
+The variables and the target, after its `Makefile`, each `down` naming `--profile runner` so that
+it removes every volume of the run:
 
 ```makefile
 RUNTIME_IMAGE ?= ghcr.io/open-meridian/meridian-runtime:<commit>@sha256:<digest>
@@ -364,7 +420,7 @@ E2E_STREET := $(E2E) run --rm -T store street
 
 e2e: image
 	@rm -rf .e2e && mkdir -p .e2e
-	@trap '$(E2E) down -v --remove-orphans >>.e2e/components.log 2>&1; rm -rf .e2e/harness' EXIT; \
+	@trap '$(E2E) --profile runner down -v --remove-orphans >>.e2e/components.log 2>&1; rm -rf .e2e/harness' EXIT; \
 	fail() { echo "e2e FAILED: $$1" >&2; $(E2E) logs --no-color >>.e2e/components.log 2>&1; exit 1; }; \
 	id="$$(docker create $(HARNESS_IMAGE) none)" \
 		&& docker cp "$$id:/harness" .e2e/harness >/dev/null \
@@ -372,7 +428,7 @@ e2e: image
 	printf '%s\n' '$(PLUGINS)' >.e2e/plugins.json; \
 	docker run --rm -i -v "$(CURDIR)/.e2e/harness":/harness:ro python:3.12-alpine \
 		python /harness/harness.py compose <.e2e/plugins.json >.e2e/harness/plugins.yaml || exit 1; \
-	$(E2E) down -v --remove-orphans >>.e2e/components.log 2>&1; \
+	$(E2E) --profile runner down -v --remove-orphans >>.e2e/components.log 2>&1; \
 	$(E2E) up -d >>.e2e/components.log 2>&1 || fail "the harness did not start"; \
 	$(E2E_RUN) ready >>.e2e/runner.log || fail "the plugin never registered"; \
 	$(E2E_RUN) settings synthetic=true >>.e2e/runner.log || fail "synthetic was not set"; \
@@ -392,24 +448,10 @@ e2e: image
 ```
 
 The repository's own target adds the elapsed time, a check of what the plugin kept on its read-only
-root, and a few messages; the steps are these. `e2e/expected.street` is Alpaca's statement as the
-synthetic data serves it, and nothing for the two accounts left unlinked:
-
-```text
-position|E2E Alpaca|placeholder(figi:BBG000B9XRY4, symbol:AAPL@snaptrade)|long|12.5|||
-position|E2E Alpaca|placeholder(iso4217:CAD)|long|200.00||200.00 CAD|
-position|E2E Alpaca|placeholder(iso4217:USD)|long|1523.45||1523.45 USD|
-position|E2E Alpaca|placeholder(symbol:AAPL  261218C00250000@snaptrade)|long|2|||
-position|E2E Alpaca|placeholder(symbol:BTC@snaptrade)|long|0.012345678|||
-position|E2E Alpaca|placeholder(symbol:SYNXX@snaptrade)|long|500.00|||in-cash
-position|E2E Alpaca|placeholder(symbol:ZZTOP@snaptrade)|short|-40|||
-statement|E2E Alpaca|snaptrade|7|complete||||false
-```
-
-Every row names a placeholder by what SnapTrade sent: AAPL by its FIGI and symbol, the unresolvable
-ZZTOP by its symbol, short, and the money-market fund also counted in cash. No position carries a
-market value, since SnapTrade reports none, and the statement has no buying power, since Alpaca
-reports two currencies.
+root, and a few messages; the steps are these. `e2e/expected.street` holds Alpaca's statement and
+its rows as the synthetic data serves them, in the forms [above](#the-street-store), and nothing for
+the accounts left unlinked: each row names its instrument by what SnapTrade sent, a security by its
+identifiers in a `local(...)` form, and what SnapTrade does not report is empty.
 
 To make your own expected file, run the target once with an empty one, read what it printed in
 `.e2e/street` against the data your plugin served, row by row, and commit it once every row is
@@ -430,13 +472,13 @@ them, the custody plugin first so the runner acts on it unless told otherwise:
 Then, after the custody plugin's statement is complete as above:
 
 ```bash
-$H run --rm -T runner ready --instance operations
-$H run --rm -T runner grant --instance operations --level write
-$H run --rm -T runner page --instance operations --level write /opening --until 'Confirm'
-$H run --rm -T runner form --instance operations --level write --page /opening --post /opening/confirm \
+e2e run --rm -T runner ready --instance operations
+e2e run --rm -T runner grant --instance operations --level write
+e2e run --rm -T runner page --instance operations --level write /opening --until 'Confirm'
+e2e run --rm -T runner form --instance operations --level write --page /opening --post /opening/confirm \
     --from-page account,statement,digest "reason=Checked against the custodian's statement." \
     --expect "Recorded"
-$H run --rm -T store book >.e2e/book
+e2e run --rm -T store book >.e2e/book
 diff -u e2e/expected.book .e2e/book
 ```
 

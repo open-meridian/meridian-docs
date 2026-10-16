@@ -66,12 +66,13 @@ writes it somewhere other than `./my-plugin`. It never writes over a directory t
 | File | What it is |
 |---|---|
 | `src/my_plugin/__main__.py` | Connects to the sidecar, declaring its pages, logs who it was launched as and what it may do, serves the pages, and reports itself healthy. |
-| `src/my_plugin/page.py` | The pages people see through the dashboard, each a view function declared with the levels it serves: **Setup** (`/setup`), at `admin`, says what the plugin is and what the deployment lets it do, shows no account's data, and is where an admin links the external account the plugin reports to one of the deployment's accounts; **Accounts** (`/`), at `write` and `read`, shows the accounts the person may read and write through the plugin, and under Open an **Open a statement** button (below the table). |
+| `src/my_plugin/page.py` | The pages people see through the dashboard, each a view function declared with the levels it serves: **Setup** (`/setup`), at `admin`, says what the plugin is and what the deployment lets it do, shows no account's data, and is where an admin links the external account the plugin reports to one of the deployment's accounts; **Accounts** (`/`), at `write` and `read`, shows the accounts the person may read and write through the plugin, and under Open an **Open a statement** button, in the page's header (its `head_actions` block) above the table. |
 | `src/my_plugin/templates/` | The pages' Jinja2 templates, `setup.html` and `accounts.html`, each extending the kit's base template. |
 | `pyproject.toml` | The package, pinned exactly to the SDK, `open-meridian==0.28.0`. Its `[tool.meridian]` table declares the plugin's `roles` and whether it serves a page. |
 | `Dockerfile` | Builds on the SDK's base image of the same version, `ghcr.io/open-meridian/plugin-python:0.28.0`. |
 | `tests/test_page.py` | Tests of the pages, run by `meridian plugin check --run-tests`: each page under each level, no account data under Manage, linking on Setup, and the statement button under Open, including what the page says while nothing is linked. |
-| `.github/workflows/check.yaml` | A CI workflow that runs `meridian plugin check --run-tests` on every push. |
+| `.github/workflows/check.yaml` | A CI workflow that runs `meridian plugin check --run-tests` on a push to `main`, on each pull request, and when run by hand (`workflow_dispatch`). |
+| `hooks/pre-push` | A pre-push hook, CI-first: a branch's push runs nothing, its pull request's CI being the gate, and a push straight to `main` runs `meridian plugin check --run-tests` first. Turn it on with `git config core.hooksPath hooks`. |
 | `AGENTS.md`, `CLAUDE.md`, `.claude/skills/develop-live/` | Instructions for coding agents: building pages with the kit, the live loop, and `meridian plugin check`. `.dockerignore` keeps them out of the image. |
 | `README.md`, `.gitignore`, `.dockerignore` | The usual. |
 
@@ -86,7 +87,20 @@ external account, and the page says "Link an account first", and where. `tests/t
 the page to each of these.
 
 `meridian plugin check` holds the plugin to the rules every plugin is built to, and a new plugin keeps
-them all. Run it after each change; see [the command line](../api/cli.md#plugin-check).
+them all. Run it after each change; see [the command line](../api/cli.md#plugin-check). To run the
+plugin's tests with it, install the plugin and pytest first, in a virtual environment of the
+plugin's own:
+
+```bash
+cd my-plugin
+python3 -m venv .venv && . .venv/bin/activate
+pip install -e . pytest
+meridian plugin check --run-tests
+```
+
+A bare `pip install` outside a virtual environment is refused by some Pythons, such as Homebrew's on
+macOS (`externally-managed-environment`). `--run-tests` runs the tests with `.venv/bin/python` when
+the plugin has a `.venv`, and `.dockerignore` keeps the `.venv` out of the image.
 
 The reference plugin asks for no roles:
 
@@ -102,8 +116,9 @@ more. Who may use it is not declared here: a person's level on each of a plugin'
 
 ## 4. Upload it
 
+In the plugin's directory (`cd my-plugin`, if you did not run its tests above):
+
 ```bash
-cd my-plugin
 meridian plugin upload
 ```
 
