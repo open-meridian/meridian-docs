@@ -57,9 +57,15 @@ status` and `meridian logs`; the book's snapshots and its health; a version
 retired from the catalogue; the licensed schemes declared; and the carried
 items (a venue resolved by its ID, a listing's trading currency, a give-up
 naming nothing held kept unplaced, the trade date at the cut rolled past
-the weekend). The plugins on contract v25: TODO until they merge (each
-plugin's release, and integrations/released.json refreshed). What each
-release added is in the Python SDK page's release notes.
+the weekend). The plugins on contract v25: SnapTrade 0.18.0, the sample
+operations plugin 0.14.0, the sample reporting plugin 0.7.0, Alpaca 0.10.0,
+Tradier 0.9.0, Tiingo 0.6.0, Coinbase 0.6.0, Kraken 0.6.0 and Fed H.10
+0.5.0 (integrations/released.json refreshed). Still on their current
+releases: OANDA 0.2.0 on contract v23, which moves to v25 after its
+pending change merges; and Kalshi 0.5.0, Polymarket 0.5.0 and Polymarket
+US 0.1.0 on contract v23, which move with v26, once core's harness mints
+event contracts. What each release added is in the Python SDK page's
+release notes.
 The tutorials were walked on CLI 0.1.36 and SDK 0.21.0. A page describes
 what is built, and says so where something is specified and not built yet.
 
