@@ -15,7 +15,7 @@ The operations are generated, not written by hand. One generator reads the contr
 - the sidecar's side of it;
 - the Python methods on [`Plugin`](python-sdk.md#plugin).
 
-This page lists every operation in SDK 0.28.0, which declares contract 24: holdings ingestion and [the custodian's activity](../concepts/the-custodians-activity.md), the [book of record](../concepts/the-book-of-record.md)'s commands and reads, instrument and venue resolution, [the lake](../concepts/the-lake.md)'s records and reads, [the order path](#the-order-path), [booking](../concepts/booking.md), the [settlement calendars' reads](#settlement-calendars-reads), and the [one-ID model](../concepts/one-id.md)'s reads, [`list_replacements`](#list_replacements), [`list_templates`](#list_templates) and [`read_template`](#read_template), with `reference`'s [`offer_template_fields`](#offer_template_fields). A resolve answers whether its record is provisional. The book refuses an entry missing what it requires, `REFUSAL_REASON_INCOMPLETE`, naming each missing field (see [What the book requires](#what-the-book-requires)). A command naming an order, a placement, a change request or a locate by its ID is admitted on the role's grant and held by the book to the plugin's write scope (see [The order lifecycle](../concepts/the-order-lifecycle.md#a-command-naming-a-record-by-its-id)).
+This page lists every operation in SDK 0.29.0, which declares contract 25: holdings ingestion and [the custodian's activity](../concepts/the-custodians-activity.md), the [book of record](../concepts/the-book-of-record.md)'s commands and reads, instrument and venue resolution, [the lake](../concepts/the-lake.md)'s records and reads, [the order path](#the-order-path), [booking](../concepts/booking.md), the [settlement calendars' reads](#settlement-calendars-reads), and the [one-ID model](../concepts/one-id.md)'s reads, [`list_replacements`](#list_replacements), [`list_templates`](#list_templates) and [`read_template`](#read_template), with `reference`'s [`offer_template_fields`](#offer_template_fields). A resolve answers whether its record is provisional. The book refuses an entry missing what it requires, `REFUSAL_REASON_INCOMPLETE`, naming each missing field (see [What the book requires](#what-the-book-requires)). A command naming an order, a placement, a change request or a locate by its ID is admitted on the role's grant and held by the book to the plugin's write scope (see [The order lifecycle](../concepts/the-order-lifecycle.md#a-command-naming-a-record-by-its-id)).
 
 Three calls every plugin may make are in the Python SDK rather than here: reading the [prepared change](python-sdk.md#prepared) a page was opened from (`ReadPreparedCall`), saving [a person's own settings](python-sdk.md#own_settings) (`SetOwnSettings`), and calling one of the plugin's own acts as the [service account](../concepts/service-accounts.md) its role runs as (`CallAsServiceAccount`, offered as [`meridian.runs_as`](python-sdk.md#runs_as)). Where the dashboard makes such an act, its route is reached with a service account's claims and sends what it sends for a person, `acting_for` the header it received (see [Acting for a person](#acting-for-a-person)); the book records the service account and its owner as the entry's actor.
 
@@ -98,7 +98,7 @@ Three calls every plugin may make are in the Python SDK rather than here: readin
 | [`raise_alert`](#raise_alert) | `RaiseAlert` | W11.34 Raise, acknowledge and clear an alert | command | `compliance` (added in contract 24) | `RaiseAlertResult` |
 | [`acknowledge_alert`](#acknowledge_alert) | `AcknowledgeAlert` | W11.34 Raise, acknowledge and clear an alert | command | `compliance` (added in contract 24) | `AcknowledgeAlertResult` |
 | [`list_alerts`](#list_alerts) | `ListAlerts` | W11.35 Hear and read alerts | query | `compliance`, `reporting`, `oms`, `operations` (added in contract 24) | `ListAlertsResult` |
-| [`read_local_record_orders`](#read_local_record_orders) | `ReadLocalRecordOrders` | W11.37 Read whether an order may name a local record | query | `oms`, `ems`, `connectivity`, `portfolio`, `compliance` (added in contract 24) | `ReadLocalRecordOrdersResult` |
+| [`read_local_record_orders`](#read_local_record_orders) | `ReadLocalRecordOrders` | W11.37 Read whether an order may name a local record | query | `oms`, `ems`, `portfolio`, `compliance` (added in contract 24; `connectivity`'s read dropped in contract 25) | `ReadLocalRecordOrdersResult` |
 | [`list_replacements`](#list_replacements) | `ListReplacements` | W3.22 Catch up on replacements | query | every role (added in contract 24) | `ListReplacementsResult` |
 | [`list_templates`](#list_templates) | `ListTemplates` | W3.24 Read the template catalogue | query | every role (added in contract 24) | `ListTemplatesResult` |
 | [`read_template`](#read_template) | `ReadTemplate` | W3.24 Read the template catalogue | query | every role (added in contract 24) | `ReadTemplateResult` |
@@ -1286,7 +1286,7 @@ async def record_break(
     differences: Sequence[BreakDifference] = (), book_watermark: Watermark | None = None,
     street: StreetRecordRef | None = None, business_date: str = "",
     candidate_causes: Sequence[BreakCause] = (), idempotency_key: str = "",
-    acting_for: str | None = None,
+    unresolved_identifiers: Sequence[Identifier] = (), acting_for: str | None = None,
 ) -> RecordBreakResult
 ```
 
@@ -1311,6 +1311,7 @@ async def record_break(
 | `business_date` | `str` | yes | The reconciliation's ISO 8601 business date: first seen for a new break, last seen for one brought up to date. |
 | `candidate_causes` | sequence of [`BreakCause`](#breakcause) | no | The causes the plugin's matching found, for a person to confirm one. |
 | `idempotency_key` | `str` | no | See [Idempotency keys](#idempotency-keys). |
+| `unresolved_identifiers` | sequence of [`Identifier`](python-sdk.md#identifier) | on an unrecognized security | The identifiers the street row carries for a security the deployment could not recognise, as the street recorded them: at least one on `BREAK_CATEGORY_UNRECOGNIZED_SECURITY`, refused on any other category. The book resolves nothing from them. Added in contract 25. |
 | `acting_for` | `str` or `None` | no | Unset: the plugin reports the finding as itself. |
 
 Every difference is recorded: a plugin may rank or group breaks for its people, never drop one. A difference that persists is one break, brought up to date by its `break_id`, not a new one each day.
@@ -1865,7 +1866,7 @@ This operation is `preview`. Asks which [venue](../concepts/venues.md) a set of 
 
 ```python
 async def resolve_venue(
-    self, *, identifiers: Sequence[Identifier] = (), as_of_ns: int = 0,
+    self, *, identifiers: Sequence[Identifier] = (), as_of_ns: int = 0, venue_id: str = "",
 ) -> ResolveVenueResult
 ```
 
@@ -1879,7 +1880,8 @@ async def resolve_venue(
 
 | Name | Type | Required | Meaning |
 |---|---|---|---|
-| `identifiers` | sequence of [`Identifier`](python-sdk.md#identifier) | yes | A MIC under `iso10383`, or the vendor's own code as a `symbol` with the vendor as its `source`. A venue ID needs no resolving. |
+| `identifiers` | sequence of [`Identifier`](python-sdk.md#identifier) | one of these two | A MIC under `iso10383`, or the vendor's own code as a `symbol` with the vendor as its `source`. |
+| `venue_id` | `str` | one of these two | A venue's `VEN-` ID, to read the venue held under it: answered with its record, or a miss where the deployment holds none. Refused, naming `venue_id`, beside `identifiers`. Added in contract 25. |
 | `as_of_ns` | `int` | no | The date it is asked about; 0 for now. A MIC names the venue in force then. |
 
 **Returns** `ResolveVenueResult`: `found`, when exactly one venue held is named; `venue`, its [`VenueRecord`](#venuerecord); and `miss_reason`, `MISS_REASON_NOT_FOUND` or `MISS_REASON_AMBIGUOUS`, when not.

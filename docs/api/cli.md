@@ -1,10 +1,10 @@
 # Command line
 
-`meridian` is Open Meridian's command line. It brings a deployment up where you have a terminal, signs you in to one that is already running, and brings plugins into it: uploading, launching, stopping, and developing them live.
+`meridian` is Open Meridian's command line. It brings a deployment up where you have a terminal, shows how it is running, signs you in to one that is already running, and brings plugins into it: uploading, launching, stopping, and developing them live, and publishing them to the platform's registries.
 
 Nothing in a cloud install depends on it. A marketplace listing's form and the deployment's own wizard are the whole path there; `meridian` makes the same things convenient from a terminal.
 
-This page describes release 0.1.45 of the command line. `meridian --version` says which one you have. For installing it, see [Install a deployment](../getting-started/installation.md).
+This page describes release 0.1.46 of the command line. `meridian --version` says which one you have. For installing it, see [Install a deployment](../getting-started/installation.md).
 
 ## Synopsis
 
@@ -16,6 +16,8 @@ meridian upgrade-deployment [--release <name>] [--chart-version <v>] [options]
 meridian backup [--release <name>] [--to <dir>] [--timeout <d>]
 meridian backup key [--to <file>]
 meridian restore <file> --identity <file> [options]
+meridian status [--release <name>] [--json]
+meridian logs <component> [--release <name>] [--since <span>]
 meridian connect [<address>]
 meridian sign-out [<address>]
 meridian plugin new <name> [--into <dir>]
@@ -29,6 +31,10 @@ meridian plugin dev --instance <id> [--dir <dir>] [--yes] [--json] [--release]
 meridian plugin logs --instance <id> [--since <revision>] [--json]
 meridian plugin events --instance <id> [--since <revision>] [--follow] [--json]
 meridian plugin open --instance <id> [--level manage|open|view] [--print <path>] [--json]
+meridian plugin publish --registry community|verified --tag <vX.Y.Z> [--organisation <slug>] [--dir <dir>] [--timeout <d>]
+meridian plugin key register <file.pub> | revoke <key-id> --reason <text> [--not-trusted-after <time>] | list [--organisation <slug>]
+meridian plugin download <organisation>/<plugin>@<version> [--registry community|verified] [--to <file>]
+meridian plugin upload --bundle <file> [--deployment <addr>]
 meridian upgrade [--to <version>]
 meridian uninstall [--yes]
 meridian --version
@@ -41,7 +47,7 @@ meridian --help
 - An unknown flag is refused, not ignored, and so is a stray word after a command that takes none. `meridian up --no-docter` exits 2 rather than installing without the checks.
 - A flag given with nothing after it is refused rather than defaulted.
 - When a flag is given twice, the last one counts. The exception is `-f`/`--values`: every one is kept, in the order given.
-- `--release` means two different things. After `up`, `down`, `upgrade-deployment`, `backup` or `restore` it takes a value, the Helm release's name. After `plugin` it takes none, and `plugin dev --release` releases the code as a version.
+- `--release` means two different things. After `up`, `down`, `upgrade-deployment`, `backup`, `restore`, `status` or `logs` it takes a value, the Helm release's name. After `plugin` it takes none, and `plugin dev --release` releases the code as a version.
 
 ## Global options
 
@@ -49,8 +55,8 @@ These are read before any command runs.
 
 | Flag | Argument | Default | Meaning |
 |---|---|---|---|
-| `-n`, `--namespace` | `<name>` | `meridian` | The Kubernetes namespace the deployment goes in. Used by `doctor`, `up`, `down`, `upgrade-deployment` and `backup`. `restore` reads it as where to restore, and defaults to the namespace the backup was taken in. |
-| `--platform` | `<url>` | `https://open-meridian.com` | The platform the deployment reports to. Used by `doctor` and `up`. `up` passes it to the chart only when you give it. |
+| `-n`, `--namespace` | `<name>` | `meridian` | The Kubernetes namespace the deployment goes in. Used by `doctor`, `up`, `down`, `upgrade-deployment`, `backup`, `status` and `logs`. `restore` reads it as where to restore, and defaults to the namespace the backup was taken in. |
+| `--platform` | `<url>` | `https://open-meridian.com` | The platform the deployment reports to. Used by `doctor` and `up`. `up` passes it to the chart only when you give it. `plugin publish`, `plugin key` and `plugin download` sign in to it. |
 | `--image` | `<ref>` | `ghcr.io/open-meridian/meridian-runtime:latest` | The runtime image. Used by `doctor` and `up`. `up` passes it to the chart only when you give it. `plugin migrate` reads it as something else: the SDK image its steps run in (see [`meridian plugin migrate`](#plugin-migrate)). |
 | `-h`, `--help` | | | Print the usage text and exit 0. |
 | `-v` | | | Reserved for verbose output, which is not built yet. It prints a note saying so and is otherwise ignored. |
@@ -342,6 +348,55 @@ Each step is printed on stderr as it is done; on stdout, what was restored, its 
 | `1` | Refused or failed: the file does not open with the identity, a member's hash differs, the release is not the backup's, the namespace holds the release or anything a deployment keeps, the chart is older than the backup's, it was not approved, the database holds tables already, a table's count differs, Helm refused, or a wait timed out. Whatever was made is left, and the database's URL stays withheld if the database was not checked. |
 | `2` | Asked wrongly: no backup file, or more than one, no `--identity`, or a `--timeout` Helm would not read. Nothing was done. |
 
+## `meridian status`
+
+```text
+meridian status [--release <name>] [--json]
+```
+
+How the deployment is running, read only. For each of its components, each workload the chart runs, named by its `meridian.dev/component` label:
+
+- the image it runs;
+- how many of its pods are ready, of how many wanted;
+- how often they restarted, and why and when the last time (`OOMKilled`, `Error`);
+- the memory it uses against its limit, where the cluster serves metrics (metrics-server); without them it says memory in use is not known.
+
+Then **Book health**: per account in the book of record, how many of its journal's entries the book replays to answer it since the account's last snapshot, and when that snapshot was taken. Book health is the deployment's own answer, read through the session [`meridian connect`](#meridian-connect) keeps (`--deployment` names one); without a session it says why it was not read, and the components are still shown.
+
+```text
+Components:
+  bor         1/1 ready  no restarts  memory 201Mi of 512Mi (39%)  ghcr.io/open-meridian/meridian-runtime:…
+  conductor   1/1 ready  1 restart(s), the last OOMKilled at …  memory 96Mi of 256Mi (37%)  ghcr.io/…
+  ...
+
+Book health:
+  ACC-01JB8Z3K6Q  replays 120 of its 48210 entries, since its snapshot of … (3h ago)
+```
+
+The components are read through your own kubectl, as `doctor` and `backup` read the cluster; nothing is changed, and you never run kubectl yourself. A memory limit is set in the chart's values: change it with [`meridian upgrade-deployment -f`](#meridian-upgrade-deployment).
+
+| Flag | Argument | Default | Meaning |
+|---|---|---|---|
+| `--release` | `<name>` | `meridian` | The Helm release. |
+| `--json` | | off | One JSON object on stdout: `components`, each with `component`, `kind`, `images`, `ready`, `wanted`, `restarts`, `last_restart_reason`, `last_restart_at`, `memory_bytes` and `memory_limit_bytes`; `metrics`; and `book_health`, each account's `account_id`, `journal_entries`, `entries_since_snapshot` and `last_snapshot_at_ns`, or `not_read` with why. |
+
+**Exit codes:** `0` read; `1` no deployment of that release in the namespace, or kubectl failed; `2` asked wrongly.
+
+## `meridian logs`
+
+```text
+meridian logs <component> [--release <name>] [--since <span>]
+```
+
+What a component's pods printed, each line under its pod's name, every container's. `<component>` is a name `meridian status` lists, such as `bor` or `conductor`; any other is refused, naming the components there are. It reads the containers running now, through your own kubectl, and changes nothing.
+
+| Flag | Argument | Default | Meaning |
+|---|---|---|---|
+| `--release` | `<name>` | `meridian` | The Helm release. |
+| `--since` | `<span>` | all | Only what was printed in the last `30s`, `10m`, `2h` or `1d`. |
+
+**Exit codes:** `0` printed; `1` not a component of the release, or kubectl failed; `2` asked wrongly.
+
 ## `meridian connect`
 
 ```text
@@ -411,14 +466,15 @@ If the deployment can't be reached, the delegation is still forgotten here. It s
 meridian plugin new <name> [--into <dir>] [--role data|custody|operations|reporting]
 ```
 
-!!! note "CLI 0.1.45"
-    CLI 0.1.45, released 2026-10-15, pins SDK 0.28.0 (contract v24), whose
-    plugins need a runtime serving contract v24 (chart 0.1.305 or later).
-    Every template carries a CI-first `hooks/pre-push`; the custody suite's
-    test also runs on provisional records, and the custody and reporting
-    suites' tests answer their v24 cases.
+!!! note "CLI 0.1.46"
+    CLI 0.1.46, released 2026-10-17, pins SDK 0.29.0 (contract v25),
+    whose plugins need a runtime serving contract v25 (chart 0.1.306
+    or later). Every template carries a `docs/` folder, its whole
+    declaration (`Declaration(settings=, interface=, documentation=)`) named
+    in `[tool.meridian]`, and a CI workflow checking with the `meridian`
+    release that wrote it (`MERIDIAN_VERSION`).
 
-Writes a working plugin to start from: the Python SDK's reference plugin, renamed to `<name>`, or with `--role` that role's template. It needs no network, because the template is compiled into the binary. It writes the plugin's code and its pages, each a view function and a Jinja2 template declared with the levels it serves (a **Setup** page under Manage, at `admin`, and an **Accounts** page under Open and View, at `write` and `read`), its tests (`tests/test_page.py`), a `Dockerfile`, `pyproject.toml`, `.dockerignore`, `.gitignore`, `README.md`, `AGENTS.md`, `CLAUDE.md`, a `develop-live` skill for Claude Code, a CI workflow that runs `meridian plugin check --run-tests` (`.github/workflows/check.yaml`), and a pre-push hook, `hooks/pre-push`, then prints the next steps. The hook is CI-first: a branch's push runs nothing, its pull request's CI being the gate, and a push straight to `main` runs `meridian plugin check --run-tests` first. Turn it on in a fresh clone with `git config core.hooksPath hooks`. The plugin pins SDK 0.28.0, and needs a deployment whose sidecar accepts contract 24 (chart 0.1.305 or later). Its `AGENTS.md` teaches a coding agent the kinds of raw record a plugin at the edge declares and their windows, and that a custody plugin keeps each activity's raw record at least as long as the history it reported; how a data plugin records trades and quotes; that work the plugin does on its own changes something only by calling one of its acts as its role's service account (`meridian.runs_as`), each such act naming its check tool, and names the declared algorithm it runs (`meridian.runs_as(role, algorithm_id=...)`); and that a date is worked out in core (`compute_date`, `read_calendar`), never by hand. Which SDK each earlier CLI pinned is in [Moving a plugin to a new release](python-sdk.md#moving-a-plugin-to-a-new-release). See [Your first plugin](../getting-started/first-plugin.md).
+Writes a working plugin to start from: the Python SDK's reference plugin, renamed to `<name>`, or with `--role` that role's template. It needs no network, because the template is compiled into the binary. It writes the plugin's code and its pages, each a view function and a Jinja2 template declared with the levels it serves (a **Setup** page under Manage, at `admin`, and an **Accounts** page under Open and View, at `write` and `read`), its declaration (`src/<module>/declaration.py`, which `[tool.meridian]` names), its documentation (`docs/overview.md`, `setup.md`, `troubleshooting.md`, `terms.md` and `pages.md`, each a short prompt to replace; see [Write a plugin's documentation](../how-to/write-a-plugins-documentation.md)), its tests (`tests/test_page.py`), a `Dockerfile`, `pyproject.toml`, `.dockerignore`, `.gitignore`, `README.md`, `AGENTS.md`, `CLAUDE.md`, a `develop-live` skill for Claude Code, a CI workflow that runs `meridian plugin check --run-tests` (`.github/workflows/check.yaml`), and a pre-push hook, `hooks/pre-push`, then prints the next steps. The hook is CI-first: a branch's push runs nothing, its pull request's CI being the gate, and a push straight to `main` runs `meridian plugin check --run-tests` first. Turn it on in a fresh clone with `git config core.hooksPath hooks`. The plugin pins SDK 0.29.0, and needs a deployment whose sidecar accepts contract 25 (chart 0.1.306 or later). Its `AGENTS.md` teaches a coding agent the kinds of raw record a plugin at the edge declares and their windows, and that a custody plugin keeps each activity's raw record at least as long as the history it reported; how a data plugin records trades and quotes; that work the plugin does on its own changes something only by calling one of its acts as its role's service account (`meridian.runs_as`), each such act naming its check tool, and names the declared algorithm it runs (`meridian.runs_as(role, algorithm_id=...)`); and that a date is worked out in core (`compute_date`, `read_calendar`), never by hand. Which SDK each earlier CLI pinned is in [Moving a plugin to a new release](python-sdk.md#moving-a-plugin-to-a-new-release). See [Your first plugin](../getting-started/first-plugin.md).
 
 `<name>` must be lowercase letters, digits and single hyphens, starting with a letter. It becomes the package name, and, with hyphens as underscores, the module name.
 
@@ -441,14 +497,13 @@ Writes a working plugin to start from: the Python SDK's reference plugin, rename
 meridian plugin check [--dir <dir>] [--run-tests] [--verified] [--json]
 ```
 
-!!! note "CLI 0.1.45"
-    CLI 0.1.45, released 2026-10-15 with contract v24, warns on an
-    instrument ID kept in a plugin's code (`replaced-ids-followed`), and
-    fails nothing for it (see
-    [One ID per instrument](../concepts/one-id.md#for-a-plugins-author)).
-    Its `role-suite` and `roles-declared` read contract v24's roles and
-    suites; `tool-meridian` admits `reference`, which `--verified` does not
-    hold to a suite while its suite is in preview.
+!!! note "CLI 0.1.46"
+    CLI 0.1.46, with contract v25, holds a plugin's documentation:
+    `documentation-sections` and `documentation-safe`, and **advice**, a
+    line that fails nothing. Its `role-suite` and `roles-declared` read
+    contract v25's roles and suites (meridian-schema 3983435): connectivity
+    no longer reads whether orders may name a local record, and the
+    give-up's case is about `give-ups`.
 
 Holds the plugin in `--dir` to the framework's rules: the rules every plugin is built to, so that plugins written by different people and different coding agents look and behave alike, and a change to what plugins call can be applied to all of them. It needs no deployment and no session, changes nothing, and reads nothing outside the directory. Run it while you work, and in the plugin's own CI.
 
@@ -481,6 +536,8 @@ Each failure names the rule, the file and line, and what to write instead, so th
 | `secrets-kept` | No secret setting's value is logged or put in a page. | For each `meridian.Setting(…, secret=True)`, by its name or the constant that names it: its value (`values[NAME]`, `.get(NAME)`, `.name`, `{name}`) in a logging call, `print`, a `raise`, or a statement that writes HTML. Its name alone, as in "waiting for broker_api_key", is not its value. |
 | `through-the-sdk` | The deployment is reached only through the SDK. | Importing `nats`, `psycopg`, `psycopg2`, `asyncpg`, `sqlalchemy`, `pg8000`, `aiopg`, `grpc`, `kubernetes`, or the sidecar's raw `*_pb2_grpc` stubs; naming `nats://`, `postgres://`, a cluster service (`*.svc`, `*.svc.cluster.local`), `meridian.localhost`, a dashboard `/terminal/` path, or `MERIDIAN_SIDECAR_ADDRESS`. |
 | `replaced-ids-followed` | No instrument ID kept in the code is written after its record is replaced. A warning: it fails nothing, since the deployment accepts a replaced ID on every write, forever. Added in CLI 0.1.45. | Warns, with or without `--verified`, on a string in the plugin's Python, its tests not, holding an `INS-` or `LCL-` ID and nothing else, at its file and line: a provisional `LCL-` record is replaced once the platform answers, and an `INS-` record when the platform merges it. Resolve the instrument from an identifier it states (`resolve_identifier`), or follow the kept ID to the record it became before writing it, `ids.current("<id>")` with `meridian.CurrentIdMap`. An ID followed where it is written is not kept. With `--json`, each is in `warnings`. |
+| `documentation-sections` | The plugin's documentation is in `docs/`, and its declaration carries it. Added in CLI 0.1.46. | No `docs/overview.md` or `docs/setup.md`; with `--verified`, no `docs/troubleshooting.md` or `docs/terms.md` either; a `docs/` folder whose sections no declaration carries: `[tool.meridian]` naming no `declaration`, or one naming no `documentation=`. Advice, failing nothing: `troubleshooting.md` or `terms.md` missing without `--verified`; a file in `docs/` that is not a section, which is not uploaded. On a plugin pinning an SDK before 0.29.0, every finding is advice. See [Write a plugin's documentation](../how-to/write-a-plugins-documentation.md). |
+| `documentation-safe` | Each section is plain Markdown the Documentation tab shows as written. Added in CLI 0.1.46. | A section that is empty, not UTF-8, or over 64 KiB, or sections over 256 KiB in all; raw HTML; an image; a `javascript:`, `vbscript:`, `data:` or `file:` link; a link whose text names one host and whose target another; a character that hides text; and text the screen refuses, by the rules core and the platform name: override, acting for the reader, a claim of endorsement, verification or regulatory readiness, posing as Open Meridian, exfiltration, concealment, and claiming authority, which the deployment's upload and the platform's build refuse too. Advice, failing nothing: a level-two heading's text past one screen of the tab (200 words); a link the tab shows as plain text; and text matching the screen's shape rules (chat markup, answer-shaped text, instruction words beyond the contract's own allocation, trading, settlement, execution and handling instructions, text addressed to the reader, a tool's name, a role marker such as `system:`, talk of an agent's prompt), which the deployment and the platform show to people marked **Screened** and withhold from agents, never refusing it. |
 | `tests-exist` | The plugin has tests. | No `test_*.py` or `*_test.py` with a `def test_…` in it. |
 | `tests-pass` | Its tests pass. | With `--run-tests`: pytest exits non-zero, collects nothing, or is not installed. Without it the rule is reported as not run, and does not fail. |
 
@@ -542,6 +599,8 @@ With `--json`, one object. `line` is `null` when the failure is a whole file, or
 
 `outcome` is `passed`, `failed`, or `skipped` for `tests-pass` without `--run-tests`, and for `role-suite` without `--verified`, its line saying `--verified holds it`.
 
+**Advice** fails nothing: it is printed after the rules, each with its rule, file and line and what to write instead, and listed under `advice` in `--json`, in the same shape as `failures`. A missing `troubleshooting.md` or `terms.md`, a file in `docs/` that is not uploaded, a heading's text past one screen of the Documentation tab, a link shown as plain text, and text matching the screen's shape rules are advice; so is `role-pages` without `--verified`.
+
 !!! note "A freshly scaffolded plugin"
     The plugin `meridian plugin new` writes keeps every rule, with its own tests and a CI workflow (`.github/workflows/check.yaml`) that runs `meridian plugin check --run-tests`.
 
@@ -562,7 +621,7 @@ In order, it:
 1. finds the plugin's two pins, `open-meridian==<version>` in `pyproject.toml` and `ghcr.io/open-meridian/plugin-python:<version>` in the `Dockerfile`, which must name the same release;
 2. refuses, changing nothing, if the plugin's directory has changes git does not hold yet, or is not in a git repository at all, unless you pass `--force`. A migration rewrites files, and git is how you see what it did and take it back;
 3. picks the target: `--to`, or the latest release. It never goes backwards, and a `--to` that is not released is refused unless you name the image to use with `--image`;
-4. moves both pins to the target;
+4. moves both pins to the target, and `.github/workflows/check.yaml`'s `MERIDIAN_VERSION` to this `meridian`'s own version where it names an older one;
 5. runs each step between the two releases, in order, each over what the one before it wrote;
 6. writes every file that changed, all at once, after the last step;
 7. runs [`meridian plugin check`](#plugin-check) on the result;
@@ -583,7 +642,7 @@ A plugin already on the target is only checked.
 
 The migrations are the SDK's, released inside it: the `meridian.migrations` package in `open-meridian`, one directory per step, each holding a record, `migration.toml`, and the rewrite code the record names. So every `plugin-python:<version>` image holds the steps up to its own release.
 
-`plugin migrate` builds an image of its own from the SDK image, once, tagged `meridian-migrate:<the SDK image's name>`: the SDK image with the SDK's `migrate` extra installed, which is [libcst](https://libcst.readthedocs.io), the library the rewrites read Python with. A plugin's own image never carries it. It runs `python -m meridian.migrations --from <pinned> --to <target>` in that image with no network and a read-only filesystem, mounting nothing. The plugin's Python files and its `pyproject.toml`, pins already moved, go in on stdin; the steps, the new text of each file that changed, and what is left by hand come back on stdout. Only `meridian` writes the plugin's directory, and only once every step has run.
+`plugin migrate` builds an image of its own from the SDK image, once, tagged `meridian-migrate:<the SDK image's name>`: the SDK image with the SDK's `migrate` extra installed, which is [libcst](https://libcst.readthedocs.io), the library the rewrites read Python with. A plugin's own image never carries it. It runs `python -m meridian.migrations --from <pinned> --to <target>` in that image with no network and a read-only filesystem, mounting nothing. The plugin's Python files, its `pyproject.toml` and its `Dockerfile`, pins already moved, go in on stdin; the steps, the new text of each file that changed, and what is left by hand come back on stdout. Only `meridian` writes the plugin's directory, and only once every step has run.
 
 An SDK image released before migrations existed (open-meridian 0.7.0 and earlier) carries none. `plugin migrate` says so, and asks for an `--image` that does.
 
@@ -619,6 +678,7 @@ The rewrites keep a file's formatting and comments wherever they change nothing.
 | 0.25.0 to 0.26.0: the SDK declares contract v22, the order path's slice A and settlement calendars: the order path's typed operations and deliveries, its refusal codes and the transition table (`meridian/transitions.json`); `read_calendar` and `compute_date`; a version's algorithms (`Declaration(algorithms=)`, `AlgorithmDeclaration`, `runs_as(role, algorithm_id=)`, `Caller.algorithm_id`); the connectivity plugins a caller may route through (`Caller.connectivity_instance_ids`); a sleeve on positions, lots and movement lines; the suites' v22 cases. It needs chart 0.1.301 or later. See [0.25.0 to 0.26.0](python-sdk.md#0250-to-0260) | Nothing: only the pins move | a suite test meeting the settlement calendars' cases (`reads-a-calendar`, every role's; `asks-for-a-settlement-date`, every role's but `connectivity`'s and `operations`'): map each, or, where the plugin's work never uses calendars or settlement dates, name it in `not_presented` with why (see [A case not presented](python-sdk.md#a-case-not-presented)) |
 | 0.26.0 to 0.27.0: the SDK declares contract v23, venue-originated fills and the lake's outcomes: a fill on no placement (`report_execution`'s `instrument_id`, `side`, `venue_order_id`, `venue_client_order_id`), waiting unmatched (`Execution.state`); the `ems`'s accept and DK (`accept_execution`, `dont_know_execution`) and their refusal codes; a connectivity plugin hearing the executions it reported; `VenueCatalogue.execution_acknowledgement`; `list_orders(execution_state=)`; a value-date roll (`report_value_date_roll`), financing and commission fees, an order's `quote_currency`; an event contract's outcomes (`record_outcomes`, `receive(outcomes_recorded=)`, `list_outcomes`); the closed-day flag and counts; `meridian.account_currency()`; the suites' v23 cases, their `about` markers and `any_of`. See [0.26.0 to 0.27.0](python-sdk.md#0260-to-0270) | Nothing: only the pins move | |
 | 0.27.0 to 0.28.0: the SDK declares contract v24: booking (`book_order`, `hand_off_booking`, `correct_booking`, `set_allocation_instruction`, `record_sleeve_cross`, `report_give_up`, `raise_alert`, `acknowledge_alert`, `list_bookings`, `list_alerts`); every instrument named by the platform's `INS-` ID, a local `LCL-` record provisional (`ResolveIdentifierResult.provisional`); `list_replacements` and the current-ID map, `list_templates`, `read_template`, `offer_template_fields`; `read_local_record_orders`; the suites' v24 cases; `DatasetDeclaration.calendar_id`; `meridian.environment()` defaulting to `sandbox`. It needs chart 0.1.305 or later. See [0.27.0 to 0.28.0](python-sdk.md#0270-to-0280) | a record's `instrument_id.startswith("LCL-")` to its `provisional` (`lcl-prefix-provisional`); the platform's ID read from the `open_meridian` identifier to the record's `instrument_id`, or the read's default where the record is provisional (`open-meridian-instrument-id`); a test's `LCL-suite-n` to `INS-suite-n` (`suite-fixture-ins`) | an ID tested for the prefix `LCL-` with no record at hand (`lcl-prefix-tested`); the `open_meridian` identifier read or written another way (`open-meridian-read`); a plugin keeping instrument IDs in its own storage, which follows each replacement with `meridian.CurrentIdMap`; a plugin that was Live by default, which says `environment(default="live")` only where Live is meant; a suite test meeting v24's cases |
+| 0.28.0 to 0.29.0: the SDK declares contract v25, plugins shared through registries and carrying their own documentation: the whole declaration (`Declaration(interface=, reads_external_accounts=, documentation=, affirmation_deadline=)`), `meridian-declaration --documentation`, registration held to the version uploaded, `connect` refusing an interface its declaration does not name; `record_break(unresolved_identifiers=)`, `resolve_venue(venue_id=)`; the give-up cases about `give-ups`. Breaking: a plugin whose declaration does not carry its interface is refused at registration until it does. It needs chart 0.1.306 or later. See [0.28.0 to 0.29.0](python-sdk.md#0280-to-0290) | a connectivity plugin's `await plugin.read_local_record_orders()` removed (`escape-hatch-read-dropped`), and its test's mapping of `reads-whether-orders-may-name-local-records` (`escape-hatch-case-dropped`) | `connect` given an interface, settings or `reads_external_accounts`: declare them in the `Declaration`, the port fixed, and pass `connect(declaration=DECLARATION)` (`connect-names-the-declaration`); a `[tool.meridian]` naming no `declaration`: name one, and write `docs/overview.md` and `docs/setup.md` (`declaration-not-named`); a Dockerfile whose last stage copies no documentation into the image, such as one installing only the package: `COPY docs/ docs/`, or the whole context as the templates do (`docs-not-in-image`); a connectivity plugin's read of the escape hatch whose answer it uses (`escape-hatch-read-kept`) |
 
 `plugin migrate` adds two rules of its own: `pin-elsewhere`, for the old release still named in another file (a Makefile's base image, a workflow, a README), which it reports rather than moves because some of those are history; and `unreadable`, for a file that is not UTF-8, or that a step could not read as Python, which it leaves as it was.
 
@@ -704,11 +764,12 @@ Builds the plugin's image on this machine and puts it in the deployment's catalo
 
 1. Read `pyproject.toml` and check its [plugin manifest](plugin-manifest.md). A `[tool.meridian]` that declares `tags` is refused here, before anything is built: a plugin declares none, since a person's level on a plugin is `admin`, `read` or `write`, in the deployment's access groups.
 2. Build the image with `docker build`, tagged `meridian-plugin/<name>:<version>`.
-3. Read the image back with `docker save`.
-4. Push it into the deployment's registry through the dashboard. A layer the registry already holds is not sent again, and one another plugin's repository holds is mounted from there.
-5. Send the manifest's metadata with the image's digest. The deployment records the version.
+3. Run the SDK's `meridian-declaration` in the built image, with no network, for the version's declaration, as `[tool.meridian]`'s `declaration` names it; and, where the declaration names documentation, `meridian-declaration --documentation` for the texts, each held to the digest and size the declaration names before anything is sent.
+4. Read the image back with `docker save`.
+5. Push it into the deployment's registry through the dashboard. A layer the registry already holds is not sent again, and one another plugin's repository holds is mounted from there.
+6. Send the manifest's metadata, the declaration and the texts with the image's digest. The deployment records the version, and refuses texts that do not match the declaration: a text whose digest or size is not the declaration's, a section outside the five, or one past its bounds, and its screen refuses an upload whose documentation or declaration matches a refusing rule: override, acting for the reader, a claim of endorsement, verification or regulatory readiness, posing as Open Meridian, exfiltration, concealment, or claiming authority (see [Write a plugin's documentation](../how-to/write-a-plugins-documentation.md#what-the-tab-shows-as-written)). The texts are kept with the version and never replaced.
 
-A version is recorded once and never replaced: uploading a name and version already in the catalogue is refused. On success it prints `Uploaded to <address>, as sha256:<digest>.`
+A version is recorded once and never replaced: uploading a name and version already in the catalogue is refused. On success it prints `Uploaded to <address>, as sha256:<digest>.`, and, for a version carrying documentation, where a deployment admin reads it before launching it: the version's **Documentation** page, `<address>/admin/plugins/versions/<name>/<version>/documentation`.
 
 ### `meridian plugin list`
 
@@ -716,7 +777,7 @@ A version is recorded once and never replaced: uploading a name and version alre
 meridian plugin list [--deployment <addr>]
 ```
 
-Prints the catalogue: every version uploaded, with its roles, whether it serves a page, and the SDK version it pins, and every launch, with its instance, version and state (`launched`, `stopped` or `failed`, with the failure). Because it needs a live delegation, it is also the way to check you are connected: it exits 3 when you aren't.
+Prints the catalogue: every version uploaded, with its roles, whether it serves a page, and the SDK version it pins, and, where it carries documentation, its **Documentation** page, `<address>/admin/plugins/versions/<name>/<version>/documentation`; and every launch, with its instance, version and state (`launched`, `stopped` or `failed`, with the failure). Because it needs a live delegation, it is also the way to check you are connected: it exits 3 when you aren't.
 
 ### `meridian plugin launch`
 
@@ -724,7 +785,7 @@ Prints the catalogue: every version uploaded, with its roles, whether it serves 
 meridian plugin launch <name> <version> --instance <id> [--yes] [--deployment <addr>]
 ```
 
-Runs a recorded version as an instance. It first prints the roles the version declares, then asks `Launch it as <id>, with these?`. Anything but `y` or `yes` is no. With no terminal to ask at, it is refused unless you pass `--yes`.
+Runs a recorded version as an instance. `<name>` is a local plugin's name, or, for a version installed from a registry, its listing, `<organisation>/<plugin>`, as `meridian plugin list` names it. It first prints the roles the version declares, then asks `Launch it as <id>, with these?`. Anything but `y` or `yes` is no. With no terminal to ask at, it is refused unless you pass `--yes`.
 
 The deployment runs the instance with exactly the roles it declares; an approval that names anything else is refused. On success it prints the instance's page address, `<address>/plugins/<id>`. See [Plugins, roles and grants](../concepts/plugins.md).
 
@@ -859,6 +920,87 @@ With `--json`, one object:
 
 A body that is not UTF-8 text comes as `body_base64` instead of `body`.
 
+## The registries
+
+`plugin publish`, `plugin key` and `plugin download` act through a sign-in to the platform, `--platform`'s (default `https://open-meridian.com`), made in your browser the first time a command needs it and kept 30 days, never a password. Its access tokens live ten minutes and are good at the platform's publishing API alone; a publish uses one narrowed to its plugin. `meridian uninstall` forgets the sign-ins. What the registries are is in [Registries](../concepts/registries.md).
+
+These flags are shared among them:
+
+| Flag | Argument | Default | Used by | Meaning |
+|---|---|---|---|---|
+| `--organisation` | `<slug>` | the organisation the plugin's git remote names | `publish`, `key` | The organisation the listing or the key is its. A listing is `<organisation>/<plugin>`. Where the default is not known, the command says to name it. |
+| `--dir` | `<dir>` | `.` | `publish` | The plugin's directory. |
+
+### `meridian plugin publish`
+
+```text
+meridian plugin publish --registry community|verified --tag <vX.Y.Z> [--organisation <slug>] [--dir <dir>] [--timeout <d>]
+```
+
+Asks the platform to build a signed release tag of the plugin and list it. It builds, signs and pushes nothing itself. First it refuses here what the platform's builder would refuse:
+
+- a `--tag` that is not `v` and a SemVer 2.0 version, or not the version `pyproject.toml` holds;
+- the plugin failing [`meridian plugin check`](#plugin-check), with `--verified` for the verified registry;
+- a tag not signed with an SSH key (`git -c gpg.format=ssh tag -s v0.18.0`);
+- an `origin` that is not a repository on GitHub.
+
+Then it asks for the build, and follows it until the version is listed, in review, or refused, printing each check the platform names, `ok`, `warn` or `FAIL`, and the build's public log. `community` lists once the checks pass; `verified` queues the version for a person's review, and lists nothing until it is approved. See [Publish a plugin to a registry](../how-to/publish-a-plugin.md).
+
+| Flag | Argument | Default | Meaning |
+|---|---|---|---|
+| `--registry` | `community` or `verified` | none (required) | Where it is listed. `verified` is refused for an organisation without the verified grade. |
+| `--tag` | `<vX.Y.Z>` | none (required) | The release tag, signed with an SSH key registered on the organisation. The platform builds the commit it pins in the organisation's linked repository, so push it first. |
+| `--timeout` | `<d>` | `30m` | How long to follow the build. The build carries on after. |
+
+**Exit codes:** `0` listed or in review; `1` refused, here or by the platform, or failed; `2` asked wrongly.
+
+### `meridian plugin key`
+
+```text
+meridian plugin key register <file.pub> [--organisation <slug>]
+meridian plugin key revoke <key-id> --reason <text> [--not-trusted-after <time>] [--organisation <slug>]
+meridian plugin key list [--organisation <slug>]
+```
+
+The organisation's tag-signing keys at the platform, as its **Signing keys** page holds them. `register` sends an SSH public key (the platform holds public halves only), named by the key's comment or its file's name. `revoke` revokes one by its `SGK-` ID, with why; a tag it signed before `--not-trusted-after` still verifies. `list` reads them: each key's ID, name, fingerprint, when it was registered, and when it stopped being trusted.
+
+| Flag | Argument | Default | Meaning |
+|---|---|---|---|
+| `--reason` | `<text>` | none (required by `revoke`) | Why, as the revocation records it. |
+| `--not-trusted-after` | `<time>` | now | When the key stopped being trusted, as `2026-10-16T12:00Z`. Never later than now. |
+
+**Exit codes:** `0` done; `1` refused or failed; `2` asked wrongly, such as a file that is no SSH public key or an ID that is not a signing key's.
+
+### `meridian plugin download`
+
+!!! note "CLI 0.1.46 carries none of the platform's keys"
+    A bundle is verified against the platform's public keys the CLI release carries, and CLI
+    0.1.46 carries none yet. So `plugin download` writes no bundle and `plugin upload --bundle`
+    carries none in: each refuses, saying so.
+
+```text
+meridian plugin download <organisation>/<plugin>@<version> [--registry community|verified] [--to <file>]
+```
+
+On a connected machine, writes a **plugin bundle** of a listed version for a deployment that reaches nothing: the image, its provenance, bill of materials, scan results and listing statement, the declaration and its documentation, and a dated copy of the signing keys' status. It verifies every digest and signature against the platform's keys this release of the CLI carries, and writes nothing unless every one verifies.
+
+| Flag | Argument | Default | Meaning |
+|---|---|---|---|
+| `--registry` | `community` or `verified` | `community` | Which registry's version. |
+| `--to` | `<file>` | `<organisation>-<plugin>-<version>.plugin-bundle.tar` | Where the bundle goes. |
+
+**Exit codes:** `0` written; `1` refused, failed, or not verified; `2` asked wrongly.
+
+### `meridian plugin upload --bundle`
+
+```text
+meridian plugin upload --bundle <file> [--deployment <addr>]
+```
+
+Carries a plugin bundle into the deployment's catalogue, through the session `meridian connect` keeps. The deployment verifies it against the platform's keys its chart carries, as at an install, and records the version with its listing and registry. See [Install a plugin from a registry](../how-to/install-from-a-registry.md#a-deployment-that-reaches-nothing).
+
+**Exit codes:** as for the other [plugin commands on a deployment](#plugin-commands-on-a-deployment).
+
 ## `meridian upgrade`
 
 ```text
@@ -885,7 +1027,9 @@ Removes the command line. It lists what it will remove and asks first:
 
 1. Every delegation it holds, revoked at each deployment. One with a deployment it can't reach is forgotten here: it says when the delegation lapses, which you can bring forward by revoking it from Connected clients.
 2. The sessions directory.
-3. The binary.
+3. Its sign-ins to the platform's registries, forgotten here; each lapses at the platform within 30 days.
+4. This machine's certificate authority, where `meridian authority` made one.
+5. The binary.
 
 | Flag | Argument | Default | Meaning |
 |---|---|---|---|

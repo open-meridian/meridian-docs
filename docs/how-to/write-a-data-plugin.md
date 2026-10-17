@@ -8,9 +8,9 @@ plugins of a pair pass it unchanged. This page starts one from the template
 and holds it to the suite. How a person then uses it is
 [Using a data plugin](using-a-data-plugin.md).
 
-You need CLI 0.1.45 and SDK 0.28.0 (contract 24): `meridian plugin new
+You need CLI 0.1.46 and SDK 0.29.0 (contract 25): `meridian plugin new
 --role data` writes this template on the role's common part, for a runtime
-serving contract 24. A plugin made by an older CLI moves with
+serving contract 25. A plugin made by an older CLI moves with
 [`meridian plugin migrate`](../api/cli.md#plugin-migrate), then maps any new
 cases as [below](#hold-it-to-the-suite).
 
@@ -21,7 +21,7 @@ meridian plugin new my-prices --role data
 cd my-prices
 ```
 
-It writes a whole plugin holding `data`, pinned to `open-meridian==0.28.0`,
+It writes a whole plugin holding `data`, pinned to `open-meridian==0.29.0`,
 that puts a stand-in vendor's daily closes and bars into the lake:
 
 | File | What it is |

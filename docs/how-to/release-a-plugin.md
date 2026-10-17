@@ -101,8 +101,16 @@ firm's:
 
 The firm's deployment admin approves the roles at launch.
 
+## To share a plugin with other firms
+
+Each deployment's catalogue is its own. To make a version installable by any deployment, publish it
+to the platform's community registry from a signed release tag: see
+[Publish a plugin to a registry](publish-a-plugin.md).
+
 ## Related
 
+- [Write a plugin's documentation](write-a-plugins-documentation.md): what a deployment admin reads
+  before launching the version.
 - [Plugin manifest](../api/plugin-manifest.md): the keys in `[tool.meridian]`.
 - [Command line](../api/cli.md): every `meridian plugin` flag.
 - [Build with an AI agent](../getting-started/build-with-an-ai-agent.md): the live loop.

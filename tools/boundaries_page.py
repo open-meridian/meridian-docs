@@ -121,6 +121,12 @@ GUIDES = [
     ("concepts/booking.md", "Booking",
      "an order's executions booked to its accounts, the exact check, lots, the block, "
      "the error account, the hand-off, corrections, sleeves, give-ups and alerts"),
+    ("how-to/write-a-plugins-documentation.md", "Write a plugin's documentation",
+     "a plugin's docs/ sections, declared with its version (Declaration(documentation=)), "
+     "checked by plugin check, uploaded with the version and read before launch"),
+    ("concepts/registries.md", "Registries",
+     "the local, community and verified registries, their phases, who publishes, the platform's "
+     "build from a signed tag and its checks, what a deployment verifies, updates, pulls and counts"),
 ]
 
 # How llms.txt says which roles hold an operation.

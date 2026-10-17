@@ -13,6 +13,7 @@ piece of data lives.
 | [Plan your deployment](plan-your-deployment.md) | A firm's profile answered in three layers — core as its books and records, plugins by role, configuration — with what exists, what is planned and what to build, worked for three firms |
 | [Projects and deployments](projects-and-deployments.md) | How a deployment is registered on the platform, how it proves who it is, and the one-time codes it is set up with |
 | [Plugins, roles and grants](plugins.md) | What a plugin is, what it may do on the bus, how that is decided, and how people reach its pages, by Manage, Open and View |
+| [Registries](registries.md) | Where a plugin comes from: a deployment's own local registry and the platform's community and verified ones, the phases they open in, who publishes, how the platform builds and checks each version, and what a deployment verifies before it installs one |
 | [Roles](roles.md) | Each of the fourteen roles, `reference` among them: its persona, duties, what it leaves to another role and what it holds; the principles a plugin must fit, and how an idea maps to the least roles |
 | [Access](access.md) | How people sign in to a deployment, and how the dashboard decides what each of them may reach, per role of a plugin: the access levels and account access, and a person's own settings |
 | [Accounts](accounts.md) | The firm's accounts, how an account at a broker or custodian is tied to one, the accounts a plugin may link to and each account's attributes in the book |
@@ -51,5 +52,7 @@ piece of data lives.
     are tested against a simulated brokerage only. Booking books an order's
     executions to its accounts, and every
     instrument is named by the platform's `INS-` ID, a deployment keeping
-    local records, never priced, until the platform answers. Where a page
+    local records, never priced, until the platform answers. A plugin
+    carries its own documentation, read before it is launched, and the
+    platform's community registry lists Open Meridian's own plugins. Where a page
     describes something that is specified but not built, it says so.

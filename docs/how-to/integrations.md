@@ -27,7 +27,11 @@ by any service listed here.
 
 Only released plugins are listed. **Sample data** is a developer's setting,
 offered on a development deployment. **Version** is the plugin's release and
-the contract it is built on.
+the contract it is built on. Most are on contract 25. OANDA stays on its
+current release until it moves to contract 25; Kalshi, Polymarket and
+Polymarket US stay on contract 23 and move with contract 26, once core's
+plugin harness mints event contracts. A deployment on contract 25 runs
+plugins built on earlier contracts.
 
 **Request a plugin.** For a service not listed here, open an issue with
 **Suggest an improvement** on
