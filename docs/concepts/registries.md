@@ -75,6 +75,8 @@ The platform builds every version it lists itself. A publisher never pushes an i
 4. When every check passes, the platform signs a **listing statement** for the version and lists
    it. A community version is listed then; a verified one waits for a reviewer.
 
+<!-- TODO: the link to open-meridian/plugin-builder resolves only once that repository exists. -->
+
 Community copies are held in the platform's public registry,
 `ghcr.io/open-meridian/plugins/<organisation>/<plugin>`, and every reference to one is by digest.
 Community build logs are public. A version, once listed, never changes.
@@ -105,31 +107,39 @@ What these checks are, and are not, is in
 
 ## Installing, updating and pulls
 
-!!! note "TODO: core, not built yet"
-    Core's v25 branch has not landed the Plugins page's **Browse**, **Installed** and
-    **Registries** tabs, install and update, the conductor's verification, or the usage report.
-    This section is written from the accepted spec; check each sentence against core as built.
+A deployment admin works with the registries on the dashboard's **Plugins** page,
+`/admin/plugins/versions`, and its tabs **Installed**, **Browse** and **Registries**; see
+[Install a plugin from a registry](../how-to/install-from-a-registry.md).
 
-- **The catalogue.** Your deployment pulls the platform's catalogue hourly, and on demand from
-  **Browse**: listings, versions, pulls, withdrawals and the status of every signing key. The
+- **The catalogue.** Your deployment pulls the platform's catalogue hourly, and on demand with
+  **Pull now**: listings, versions, pulls, withdrawals and the status of every signing key. The
   dashboard reads that copy, so the platform is never reached while a page loads.
-- **Install** is a deployment admin's act, at **Browse** or through an agent's tool. The dashboard
-  checks the version's floor against your deployment's components first. The conductor then asks
-  the platform where to pull the version, pulls the image and its attachments by digest into the
-  local registry, and verifies them. Install launches nothing.
+- **The notice comes first.** The install and update sheets show the notice in full, word for
+  word, as a step of their own at every width, with **Cancel** and **Continue**; the form comes
+  after it, and an install or update not passed through it is refused. A listing's page shows the
+  notice in full, folded to its title on a phone; every list is headed by its title.
+- **Install** is a deployment admin's act, at a listing's page or through an agent's tool. The
+  dashboard checks the version's floor against your deployment first. The conductor then asks the
+  platform where to pull the version, pulls the image and its attachments by digest into the local
+  registry, and verifies them. The version is recorded under its listing, `organisation/plugin`,
+  so it never collides with a local one, with the install's note. Install launches nothing.
 - **Verification** is the conductor's, at download and again at every launch, offline, against
-  the platform's keys your chart carries: the digest, the provenance's and the listing statement's
+  the platform's keys your chart's values carry (`registries.platformKeys`, the current key and
+  the next, so the platform's key can rotate without a gap; with none, nothing is installed from a
+  registry and Browse says the deployment reaches none): the digest, the provenance's and the listing statement's
   signatures, the signing key's status at the build, and that the declaration it records is the
   built image's. A version failing any check is refused, naming it. There is no override.
-- **Launch** is as for any version: it shows the notice and the roles the version asks for, which
-  you approve. For a verified version, the roles its review approved, and no more.
-- **Updates** are offered from the registry a version came from, and applying one is always a
-  person's act. A version asking for more roles or scope waits for your approval, showing the
-  difference. An instance running a local version of the same plugin can be moved to the listed
+- **Launch** is as for any version, naming it by its listing: you approve the roles it asks
+  for. For a verified version, the roles its review approved, and no more.
+- **Updates** are offered from the registry a version came from, never a pre-release over a
+  release, and applying one is always a person's act. A version asking for more roles waits for a
+  deployment admin's approval, showing the difference; a plugin's admin may update where the roles
+  are unchanged. An instance running a local version of the same plugin can be moved to the listed
   one, checked the same way, keeping its state.
 - **A pull** removes a version from the catalogue, for a breach of the terms or a copyright
   notice. Installed copies are warned, never removed: the warning heads the instance's Summary and
-  the Installed list until a deployment admin stops the instance or keeps it, with a note.
+  the Installed list until a deployment admin stops the instance or keeps it (**Keep or stop**),
+  with a note.
 - **A withdrawal** is the publisher's own: the version is no longer offered, stays pullable by
   digest, and carries no warning.
 
@@ -140,7 +150,8 @@ bundle**: the image, its provenance, bill of materials, scan results and listing
 documentation and a dated copy of the signing keys' status, each verified against the platform's
 keys that CLI release carries before anything is written. `meridian plugin upload --bundle <file>`
 carries it into the air-gapped deployment, which verifies it again. Such a deployment reports
-nothing, and learns of a pull only from a later bundle. See
+nothing, and learns of a pull only from a later bundle. CLI 0.1.46 carries none of the platform's
+keys yet, so it writes and carries in no bundle, saying so. See
 [Install a plugin from a registry](../how-to/install-from-a-registry.md#a-deployment-that-reaches-nothing).
 
 ### What a deployment reaches

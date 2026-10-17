@@ -43,25 +43,23 @@ page's [release notes](docs/api/python-sdk.md#release-notes), and its
 with the CLI's `plugin migrate` step table. An upgrade fact a page drops
 goes there first.
 
-Today they describe contract v25 (TODO: released on the date): CLI 0.1.46,
-SDK 0.29.0 and chart `0.1.CHART25` (TODO: core's commit, its runtime and
+Today they describe contract v25, released 2026-10-17: CLI 0.1.46, SDK
+0.29.0 and chart 0.1.306 (core abf028f, merged as fc3f0d1, its runtime and
 harness pinned by digest), with `boundaries/` vendored from meridian-schema
 3983435. Contract v25 brings a plugin's own documentation (the whole
 declaration, `docs/` sections by digest, registration held to the version,
-`plugin check`'s `documentation-sections` and `documentation-safe` and its
-advice) and the platform's registries in Phase 0 (Open Meridian's own
-plugins in community; `meridian plugin publish`, `plugin key`, `plugin
-download` and `upload --bundle`); `meridian status` and `meridian logs`;
-the book's snapshots and its health; a version retired from the catalogue;
-the licensed schemes declared; and the carried items (a venue resolved by
-its ID, a listing's trading currency, a give-up naming nothing held kept
-unplaced, the trade date at the cut rolled past the weekend). Pages marked
-"TODO: core, not built yet" (the Documentation tab, the Plugins page's
-Browse, Installed and Registries, their tools, the usage report) wait on
-core's v25 branch. The plugins on contract v25: TODO at release (each
-plugin's move, step 8 of the v25 plan, and integrations/released.json
-refreshed). What each release added is in the Python SDK page's release
-notes.
+the Documentation tab and the versions pages, `plugin check`'s
+`documentation-sections` and `documentation-safe` and its advice) and the
+platform's registries in Phase 0 (Open Meridian's own plugins in community;
+the Plugins page's Installed, Browse and Registries; `meridian plugin
+publish`, `plugin key`, `plugin download` and `upload --bundle`); `meridian
+status` and `meridian logs`; the book's snapshots and its health; a version
+retired from the catalogue; the licensed schemes declared; and the carried
+items (a venue resolved by its ID, a listing's trading currency, a give-up
+naming nothing held kept unplaced, the trade date at the cut rolled past
+the weekend). The plugins on contract v25: TODO until they merge (each
+plugin's release, and integrations/released.json refreshed). What each
+release added is in the Python SDK page's release notes.
 The tutorials were walked on CLI 0.1.36 and SDK 0.21.0. A page describes
 what is built, and says so where something is specified and not built yet.
 

@@ -33,7 +33,7 @@ changes on the way, release by release, is in the
 [release notes](../api/python-sdk.md#release-notes).
 
 !!! note "Upgrading to contract 25"
-    The upgrade to contract 25 (chart `0.1.CHART25` or later) keeps a
+    The upgrade to contract 25 (chart 0.1.306 or later) keeps a
     snapshot of each account's book every `bor.snapshotInterval` entries
     (default 1,000), so a command replays only the journal's tail; the
     first snapshots are made as accounts are next written. Plugins keep
@@ -44,9 +44,11 @@ changes on the way, release by release, is in the
     Upgrading from a chart before contract 24 also runs that release's
     instrument migration; see
     [Review provisional records and the migration](review-provisional-records.md).
-    `meridian status` shows each component and the book's health after
-    the upgrade. (TODO: check against core's chart as released, and what
-    the Plugins page's new tabs need at the upgrade.)
+    The **Plugins** page gains **Browse** and **Registries**: the
+    conductor installs from the community registry where the chart's
+    values carry the platform's public keys (`registries.platformKeys`);
+    with none, Browse says the deployment reaches no registry. `meridian status`
+    shows each component and the book's health after the upgrade.
 
 ## To upgrade with the command line
 

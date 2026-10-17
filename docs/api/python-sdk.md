@@ -2015,7 +2015,7 @@ The package installs one command, `meridian-dev run`. On a development deploymen
 Each release of the SDK, the contract it declares, the runtime it needs, and the CLI whose `plugin new` writes a plugin on it. What a plugin's author does to move to it is in [Moving a plugin to a new release](#moving-a-plugin-to-a-new-release).
 
 !!! note "0.29.0: contract v25"
-    open-meridian 0.29.0, released on PyPI on TODO (the date), declares
+    open-meridian 0.29.0, released on PyPI on 2026-10-17, declares
     contract v25. A version's declaration is the whole of what it says
     about itself (`Declaration(interface=, reads_external_accounts=,
     documentation=)`): its settings, its interface and the tools its
@@ -2040,9 +2040,10 @@ Each release of the SDK, the contract it declares, the runtime it needs, and the
     kept unplaced, and an FX trade after Friday's cut dated Monday.
     [`meridian plugin migrate`](cli.md#plugin-migrate) rewrites what it
     can (see [0.28.0 to 0.29.0](#0280-to-0290)). It needs a runtime serving
-    contract v25 (chart `0.1.CHART25` or later), and CLI 0.1.46's
+    contract v25 (chart 0.1.306 or later), and CLI 0.1.46's
     `plugin new` writes a plugin on it. Its base image is
-    `ghcr.io/open-meridian/plugin-python:0.29.0` (TODO: its digest).
+    `ghcr.io/open-meridian/plugin-python:0.29.0`
+    (`sha256:f3b62d27899acb0c2c9a29f32fdb8d505b1628fbcaadd8a1052ac6af389279f0`).
 
 !!! note "0.28.0: contract v24"
     open-meridian 0.28.0, released on PyPI on 2026-10-15, declares
@@ -2304,7 +2305,7 @@ Move a plugin one release at a time or several at once: [`meridian plugin migrat
 
 | From | To | Contract | Runtime | `plugin new` writes it from | `plugin migrate` rewrites | Then by hand |
 |---|---|---|---|---|---|---|
-| 0.28.0 | 0.29.0 | 25 | chart `0.1.CHART25` or later | CLI 0.1.46 | a connectivity plugin's read of the escape hatch, and its test's mapping of the dropped case | see [0.28.0 to 0.29.0](#0280-to-0290) |
+| 0.28.0 | 0.29.0 | 25 | chart 0.1.306 or later | CLI 0.1.46 | a connectivity plugin's read of the escape hatch, and its test's mapping of the dropped case | see [0.28.0 to 0.29.0](#0280-to-0290) |
 | 0.27.0 | 0.28.0 | 24 | chart 0.1.305 or later | CLI 0.1.45 | a test of the `LCL-` prefix; a read of the `open_meridian` identifier; the suites' `LCL-suite-n` fixtures | see [0.27.0 to 0.28.0](#0270-to-0280) |
 | 0.26.0 | 0.27.0 | 23 | chart 0.1.303 or later | CLI 0.1.43 | nothing: only the pins move | see [0.26.0 to 0.27.0](#0260-to-0270) |
 | 0.25.0 | 0.26.0 | 22 | chart 0.1.301 or later | CLI 0.1.42 | nothing: only the pins move | see [0.25.0 to 0.26.0](#0250-to-0260) |
@@ -2320,11 +2321,11 @@ Before 0.19.0, `plugin new` pinned 0.18.0 from CLI 0.1.33, 0.17.0 from CLI 0.1.2
 
 ### 0.28.0 to 0.29.0 { #0280-to-0290 }
 
-Released TODO (the date). Breaking: a plugin declaring contract v25
+Released 2026-10-17. Breaking: a plugin declaring contract v25
 registers exactly the declaration its version was uploaded with, so a
 plugin whose declaration does not carry its interface is refused at
 registration until it does. `meridian plugin migrate --to 0.29.0` moves the
-pins and rewrites, in a plugin holding `connectivity` and no role that keeps
+pins, and the CI's `MERIDIAN_VERSION` in `.github/workflows/check.yaml`, and rewrites, in a plugin holding `connectivity` and no role that keeps
 the read (`compliance`, `ems`, `oms`, `portfolio`):
 
 - **A read of the escape hatch**, `await plugin.read_local_record_orders()`
@@ -2350,11 +2351,13 @@ Then, by hand where they apply:
   and `docs/setup.md` (`troubleshooting.md` and `terms.md` prompted,
   `pages.md` optional); `meridian plugin check` checks them. See
   [Write a plugin's documentation](../how-to/write-a-plugins-documentation.md).
-- **A Dockerfile that installs only the package**, such as one building
-  wheels in a stage of its own: add `COPY docs/ docs/` to its final stage,
-  so the image holds `/plugin/docs`, which `Declaration(documentation="docs")`
-  reads where the plugin runs. The template's Dockerfile copies the whole
-  project, `docs/` with it.
+- **A Dockerfile whose last stage copies no documentation into the image**,
+  such as one installing only the package from a mount or a stage of its
+  own (`docs-not-in-image`): add `COPY docs/ docs/` under `WORKDIR /plugin`
+  to its last stage, so the image holds `/plugin/docs`, which
+  `Declaration(documentation="docs")` reads where the plugin runs; without
+  it `meridian-declaration`, and the upload with it, fail. The templates'
+  Dockerfile copies the whole build context (`COPY . .`), `docs/` with it.
 - **A connectivity plugin's read of the escape hatch the migration cannot
   remove alone**, its answer used or the read inside another expression
   (`escape-hatch-read-kept`): remove the read and what depends on its

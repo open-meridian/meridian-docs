@@ -255,22 +255,17 @@ venue. The runner's `instrument` command takes `--ask-platform`, asking the plat
 record from its page as a deployment admin's button does, so a `compute_date` for that equity
 gives its settlement date in a harness run (T+1) rather than "rule not held".
 
-!!! note "TODO: contract v25's runtime and harness"
-    Replace the pins below with core's v25 runtime and harness, released in chart
-    `0.1.CHART25`, by commit and digest, and say what else the harness's stand-ins add for
-    contract v25 (any stand-in registry `e2e-plugin-area` gains), from core as released. Each
-    registration held to its declaration is in
-    [Hold each registration to its declaration](#hold-each-registration-to-its-declaration).
-
-Core 6eb6887's runtime and harness serve contract v24, released 2026-10-15 in chart 0.1.305,
+Core abf028f's runtime and harness serve contract v25, released 2026-10-17 in chart 0.1.306,
 pinned by digest as in [step 1](#1-pin-a-runtime-image-and-its-harness):
 
 ```makefile
-RUNTIME_IMAGE ?= ghcr.io/open-meridian/meridian-runtime:6eb6887@sha256:68d54f7b0218e3aec9d2c2aa899533a068c458b253c12ac3da08a6b573a76fab
-HARNESS_IMAGE ?= ghcr.io/open-meridian/meridian-harness:6eb6887@sha256:5eff46fe1ccc08ad380d9fbd27511bfa134f1277332667c50f8d2825c54849d5
+RUNTIME_IMAGE ?= ghcr.io/open-meridian/meridian-runtime:abf028f@sha256:67c765c3c8234d942fa18b95a2d18cbc96358853ed27a730a2f057a15625d3c9
+HARNESS_IMAGE ?= ghcr.io/open-meridian/meridian-harness:abf028f@sha256:bdc4325691084e2cbc5e4ba4c01bb9e3ea45be5264fb081682b1c48f1864b1e8
 ```
 
-Its stand-in for the platform answers contract v24's one-ID routes: the
+Its sidecars hold each plugin listed with a declaration to it (see
+[Hold each registration to its declaration](#hold-each-registration-to-its-declaration)). Its
+stand-in for the platform answers the one-ID routes: the
 matching and minting request, the template catalogue, the licence list,
 the replacement feed and the usage reports. It mints a record only for a
 FIGI its source confirms, so a record your plugin states with another

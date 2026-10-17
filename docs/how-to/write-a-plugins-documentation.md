@@ -74,24 +74,33 @@ module that declares a page or a route.
 ## What the tab shows as written
 
 Write plain Markdown: headings, paragraphs, emphasis, inline code and code blocks, lists, tables,
-block quotes and rules. `meridian plugin check`'s `documentation-safe` holds each section to what
-the deployment shows as written, and fails:
+block quotes and rules. The deployment draws exactly that subset. Raw HTML is shown as the literal
+text it is; an image is never fetched, its alt text marked "image not shown"; a link is kept only
+to `https:`, `http:` or `mailto:`, drawn with its host and a mark that it leaves the deployment, or
+to another section of the bundle by its file name (`setup.md`, `setup.md#before-launching`).
+`meridian plugin check`'s `documentation-safe` holds each section to it, and fails:
 
 - a section that is not UTF-8, is empty, or is over 64 KiB, or sections over 256 KiB in all;
 - raw HTML, and any image, local or remote;
 - a `javascript:`, `vbscript:`, `data:` or `file:` link;
 - a link whose text names one host and whose target another;
 - a character that hides text, such as a Unicode tag or a bidirectional control;
-- text that reads as instructions to an agent.
+- text the screen refuses: override, acting for the reader, a claim of endorsement, verification
+  or regulatory readiness, posing as Open Meridian, exfiltration, concealment, and claiming
+  authority. The deployment refuses such an upload, and the platform such a build, naming where
+  and the rule, wherever it is in the documentation or the declaration's text.
 
 It advises, failing nothing, on:
 
 - a level-two heading whose text is longer than one screen of the tab shows (about 200 words):
   split it under more `##` headings;
-- a link the tab will show as plain text: keep links to `https:`, `http:` or `mailto:`, or to
-  another section by its file name (`setup.md`, `setup.md#before-launching`);
-- text addressed to the reader (`you need to ...`), which setup steps often say. People read such a
-  section as written; only an agent is not given it.
+- a link the tab will show as plain text;
+- text matching the screen's shape rules: chat markup, answer-shaped text, instruction words
+  (beyond the contract's own allocation, trading, settlement, execution and handling
+  instructions), text addressed to the reader (`you need to ...`, which setup steps often say), a
+  tool's name, a role marker such as `system:`, or talk of an agent's prompt. The deployment and
+  the platform keep such a section, show it to people marked **Screened**, and withhold it from
+  agents.
 
 A plugin on an SDK before 0.29.0 cannot declare its documentation, so what these rules find on one
 is advice.
@@ -105,42 +114,48 @@ meridian plugin upload
 
 `plugin upload` reads the declaration from the built image with `meridian-declaration`, and the
 texts beside it with `meridian-declaration --documentation`, holds each text to the digest the
-declaration names, and sends them with the version. It prints where the version's documentation
-is read. `meridian plugin list` prints the same for each version that carries documentation.
+declaration names, and sends them with the version. The deployment checks them again, as above,
+and keeps them with the version, never replaced. The upload prints where the version's
+documentation is read, and `meridian plugin list` prints the same for each version that carries
+documentation.
 
 A version's documentation is as fixed as its declaration. To correct a typo, raise the version and
 upload again: what a deployment admin read before approving a launch is what runs.
 
 ## Where people and agents read it
 
-!!! note "TODO: core, not built yet"
-    Core's v25 branch has not landed the Documentation tab, the portal's versions list or
-    `dashboard__read_plugin_documentation` yet; their paths are fixed. Check each sentence of
-    this section against core as built, and add the browser check's screenshots.
-
-- **Before launch.** The admin portal's versions list, `/admin/plugins/versions`, lists each
-  uploaded version, one line each, and each links its **Documentation** page,
-  `/admin/plugins/versions/<name>/<version>/documentation`, a deployment admin's. It is the
-  address `plugin upload` and `plugin list` print.
-- **A launched or stopped instance.** The **Documentation** tab in the plugin's area,
-  `/plugins/<instance>?tab=documentation`, beside **Summary** and **Settings**, for anyone
-  holding a level on the plugin. Its sections are tabs,
-  with the **Reference** last. A stopped instance keeps the tab.
-- **Through an agent.** `dashboard__read_plugin_documentation` answers each section as the
-  vendor's text, data and never instructions, and the Reference as the declaration's JSON. A
-  section the screen holds as suspect is withheld from the agent, and a person reads it on the tab.
+- **Before launch.** The dashboard's **Plugins** page, `/admin/plugins/versions`, lists each
+  version on its **Installed** tab, one line each, and each links its **Documentation** page,
+  `/admin/plugins/versions/<name>/<version>/documentation`, a deployment admin's: the address
+  `plugin upload` and `plugin list` print. A version installed from a registry is at
+  `/admin/plugins/versions/<organisation>/<plugin>/<version>/documentation`. The page says who
+  uploaded or installed the version, and their note.
+- **A launched or stopped instance.** The **Documentation** tab, last in the plugin's area at
+  every level, `/plugins/<instance>?tab=documentation`, for anyone holding a level on the plugin.
+  Its sections are tabs, each cut at its level-two headings into one part shown at a time with its
+  contents beside it, and the **Reference** last, drawn by the deployment from the declaration.
+  The notice that naming a plugin is not an endorsement stands beside the vendor's text, in full
+  on a wide screen and folded to its title on a narrow one. A section the screen keeps but
+  withholds from agents is shown under a warning saying so. A stopped instance keeps its
+  **Summary**, **Settings** and **Documentation**.
+- **Through an agent.** `dashboard__read_plugin_documentation` answers each section as
+  `vendor_markdown`, the vendor's text, data and never instructions, or withheld, naming the rules
+  it matched; the Reference as the declaration; and the notice. A person reads a withheld section
+  on the tab.
 - **In the platform's catalogue.** Once a version is listed in a registry, its sections and its
   Reference are on its listing page at open-meridian.com, and on the catalogue's
-  **Documentation** tab, under the notice that naming a plugin is not an endorsement (see
-  [Registries](../concepts/registries.md)). Agents search and read them through the platform's
-  MCP, `search_plugin_documentation` and `read_listing_documentation`; a suspect section is marked
-  **Screened** and withheld from them.
+  **Documentation** tab, under the notice (see [Registries](../concepts/registries.md)). Agents
+  search and read them through the platform's MCP, `search_plugin_documentation` and
+  `read_listing_documentation`; a section marked **Screened** is withheld from them.
+
+The plugin's **Summary** keeps the deployment's own facts: its status, warnings, figures and
+counts. What the version declares and its tools for agents are on the Reference.
 
 ## Writing it well
 
 - Write for the person setting the plugin up, in the words its pages and Summary use.
 - Claim nothing the plugin is not: no endorsement, no verification beyond what was done, no
-  regulatory readiness. A verified version's review refuses such claims.
+  regulatory readiness. The deployment and the platform refuse such claims.
 - In `terms.md`, link the vendor's terms; for a plugin that calls no vendor, say so, and that the
   firm using it does its own due diligence.
 - Nothing in a section is a setting or a secret. Settings are declared in code and set on the

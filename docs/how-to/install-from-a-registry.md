@@ -9,55 +9,65 @@ plugins are unsupervised.
 
 You need to be a deployment admin.
 
-!!! note "TODO: core, not built yet"
-    Core's v25 branch has not landed the Plugins page's **Browse**, **Installed** and
-    **Registries** tabs, or their tools (`dashboard__search_registry_plugins`,
-    `dashboard__read_registry_plugin`, `dashboard__install_plugin`, `dashboard__update_plugin`,
-    `dashboard__acknowledge_pull`, `dashboard__read_registries`,
-    `dashboard__set_reports_plugin_usage`). The steps below are the accepted spec's; check every
-    label against core as built, and add the browser check's screenshots.
+Through an agent, the same is done with core's tools, at the same level and with a note on every
+act: see [The Plugins page's registries](../api/core-tools.md#the-plugins-pages-registries).
 
 ## Find it
 
-On the dashboard's **Plugins** page, **Browse** lists the catalogue your deployment last pulled:
-one line per listing, with its registry, latest version, roles, whether its floor fits your
-deployment, stars and installs. Search by words, or filter by registry and role. The notice's title
-heads the list and opens its full text.
+On the dashboard's **Plugins** page, `/admin/plugins/versions`, **Browse** lists the catalogue
+your deployment last pulled: one line per listing, with its registry (community labelled
+**Unsupervised**), latest version, roles, whether its floor fits your deployment, stars and
+installs ("Fewer than three deployments" below three). Search by words, or filter by registry and
+role. The notice's title heads the list.
 
-A listing opens on three tabs: **Overview** (the notice in full, the vendor and its attributes,
-the build's repository, commit, tag and signing key, the floor against your deployment, stars and
-installs), **Documentation** (the version's sections and its Reference) and **Versions**.
+A listing's page, `/admin/plugins/registry/<organisation>/<plugin>`, has three tabs:
+**Overview** (the notice in full, folded to its title on a phone; the build's repository, commit,
+tag and signing key; the floor against your deployment; the vendor's attributes and support
+contact, marked as stated by the vendor), **Documentation** (the version's Reference; its sections
+arrive, verified, with the install) and **Versions** (pulled and withdrawn marked).
 
 The catalogue is pulled hourly; **Pull now** on the **Registries** tab pulls it at once.
 
 ## Install it
 
-**Install** opens a dialog showing the notice, the roles the version asks for, the floor's result
-and the verification's result. Installing pulls the image and its attachments by digest into your
+**Install** on the listing's page opens a sheet. Its first step is the notice, in full, word for
+word, with **Cancel** and **Continue**; an install that has not passed through it is refused. After
+**Continue** the sheet shows the notice by its title, the roles the version asks for, the floor's
+result, that it is verified at the install, and the **Report plugin usage** setting, with a note to
+write and the act at its foot. Installing pulls the image and its attachments by digest into your
 deployment's registry, and the conductor verifies them against the platform's keys your chart
 carries. A version failing a check is refused, naming the check. Install launches nothing.
 
-Then launch it as any version, approving its roles (see
-[Launching, and approval](../concepts/plugins.md#launching-and-approval)). For a verified version
-you can approve no role beyond those its review approved. (TODO: how `meridian plugin launch` and
-`meridian plugin list` name a listed version, as core builds it.)
+The version is recorded under its listing, as `meridian plugin list` shows it. Launch it as any
+version, by that name, approving its roles (see
+[Launching, and approval](../concepts/plugins.md#launching-and-approval)):
+
+```bash
+meridian plugin launch open-meridian/snaptrade <version> --instance snaptrade
+```
+
+For a verified version you can approve no role beyond those its review approved. Each launch of a
+registry version is verified again.
 
 An instance already running a local version of the same plugin is offered **Move to this listing**
-in the same dialog. The move keeps the instance's state, is checked as an update, and is recorded.
+in the same sheet. The move is checked as an update, keeps the instance's ID, and is recorded.
 
 ## Update it
 
-**Installed** shows each version's registry and listing, and **Update to x.y.z** where a newer
-version is listed in the same registry. **Update** opens a dialog showing the difference and the
-notice; a version asking for more roles or scope shows **Needs approval** and waits for yours.
-Every update is a person's act: nothing updates by itself.
+**Installed** shows each version with its source registry, and each instance it runs with
+**Update to x.y.z** where a newer version is listed in the same registry, never a pre-release over
+a release. The **Update** sheet starts, like Install's, with the notice and **Continue**, then
+shows the roles now and the roles asked; a version asking for more roles shows **Needs approval**,
+a deployment admin's to approve. A plugin's admin may update where the roles are unchanged. Every
+update is a person's act: nothing updates by itself.
 
 ## A pulled version
 
 When the platform pulls a version, the next catalogue pull warns every deployment that installed
 it, with why (a breach of the terms, or a copyright notice), and the platform emails your project's
-Owners and Admins. The warning heads the instance's **Summary** and the **Installed** line. Nothing
-is removed: stop the instance, or keep it with a note, and either is recorded.
+Owners and Admins. The warning heads the instance's **Summary** and the **Installed** line, with
+**Keep or stop**. Nothing is removed: stop the instance (`meridian plugin stop`), or **Keep it**
+with a note, and either is recorded.
 
 ## Report plugin usage
 
@@ -68,6 +78,11 @@ naming no person, account or instrument. Each report sent is listed on the tab. 
 with a note.
 
 ## A deployment that reaches nothing
+
+!!! note "CLI 0.1.46 carries none of the platform's keys"
+    A bundle is verified against the platform's public keys the CLI release carries, and CLI
+    0.1.46 carries none yet. So `plugin download` writes no bundle and `plugin upload --bundle`
+    carries none in: each refuses, saying so.
 
 A deployment with no route to the platform installs from a **plugin bundle** carried in by hand.
 
@@ -90,8 +105,10 @@ On a machine connected to the air-gapped deployment (`meridian connect`):
 meridian plugin upload --bundle open-meridian-snaptrade-0.18.0.plugin-bundle.tar
 ```
 
-The deployment verifies the bundle again, as at install, and records the version with its listing
-and registry. The **Installed** list shows how old the key status it was checked against is. Such a
+The deployment verifies the bundle again, as at install, asking nothing of the platform, and records
+the version under its listing with its registry. The **Installed** list shows how old the key status
+it was checked against is, and the bundle's key status is kept as the newest the deployment holds,
+so each later launch verifies again without the platform. Such a
 deployment reports nothing, and learns of a pull only from a later bundle.
 
 ## Related

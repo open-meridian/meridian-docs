@@ -5,9 +5,9 @@ plugin's own tools it lists core's, named `dashboard__...`: the
 [Instruments tools](../concepts/instruments.md), the
 [ticket and inbox tools](../concepts/tickets-and-the-inbox.md#through-an-agent),
 tools over the parts of a plugin's area the dashboard draws: its Summary,
-its moves, its settings and table settings, who holds access to it (read
-only), its archive, the deployment's holds, launching and stopping it, and
-retiring a version.
+its documentation, its moves, its settings and table settings, who holds
+access to it (read only), its archive, the deployment's holds, launching and
+stopping it, and retiring a version.
 Five more mirror the **Data sources** page: the lake's datasets, their
 licences and entitlements, and the source priority. Seven work
 [prepared changes](../concepts/prepared-changes.md), and one reads the
@@ -15,13 +15,14 @@ accounts a plugin may link to. One reads the
 [service accounts](#service-accounts). Four set and list the
 [trading instructions and account attributes](#trading-instructions-and-account-attributes),
 one [closes an account](#dashboard__close_account), one reads
-[the book's health](#dashboard__read_book_health), two read the
+[the book's health](#dashboard__read_book_health), seven work the
+[Plugins page's registries](#the-plugins-pages-registries), two read the
 Instruments page's [Calendars tab](#the-calendars-tab), one sets
 [orders on local records](#dashboard__set_local_record_orders), one makes
 the [migration's lines](#dashboard__apply_migration), one sets the
 [usage report](#dashboard__set_reports_usage) and one the
 [licensed schemes](#dashboard__set_licensed_schemes). This page is the
-reference for those forty. An agent calls them as the person who
+reference for those forty-eight. An agent calls them as the person who
 delegated to it, only as far as that person could at the page each tool
 mirrors, and only as far as the deployment lets agents go with each act.
 Every act listed below that changes something can be prepared, but for the
@@ -100,6 +101,7 @@ naming the field. Changed in contract 24.
 |---|---|---|
 | [`dashboard__list_plugins`](#dashboard__list_plugins) | reads | Anyone holding a level on a plugin, or the deployment admin |
 | [`dashboard__read_plugin_summary`](#dashboard__read_plugin_summary) | reads | An admin of any of the plugin's roles, or the deployment admin |
+| [`dashboard__read_plugin_documentation`](#dashboard__read_plugin_documentation) | reads | Anyone holding a level on the instance; by name and version, the deployment admin. Added in contract 25. |
 | [`dashboard__read_moves`](#dashboard__read_moves) | reads | An admin of any of the plugin's roles |
 | [`dashboard__read_plugin_settings`](#dashboard__read_plugin_settings) | reads | An admin of any of the plugin's roles |
 | [`dashboard__set_plugin_settings`](#dashboard__set_plugin_settings) | acts | An admin of any of the plugin's roles; a setting serving several roles, an admin of every one |
@@ -112,6 +114,13 @@ naming the field. Changed in contract 24.
 | [`dashboard__launch_plugin`](#dashboard__launch_plugin) | acts | The deployment admin |
 | [`dashboard__stop_plugin`](#dashboard__stop_plugin) | acts | The deployment admin |
 | [`dashboard__retire_plugin_version`](#dashboard__retire_plugin_version) | acts | The deployment admin, once loosened from May not. Added in contract 25. |
+| [`dashboard__search_registry_plugins`](#dashboard__search_registry_plugins) | reads | The deployment admin. Added in contract 25. |
+| [`dashboard__read_registry_plugin`](#dashboard__read_registry_plugin) | reads | The deployment admin. Added in contract 25. |
+| [`dashboard__install_plugin`](#dashboard__install_plugin) | acts | The deployment admin, once loosened from May not. Added in contract 25. |
+| [`dashboard__update_plugin`](#dashboard__update_plugin) | acts | The deployment admin; a plugin's admin where the roles are unchanged; once loosened from May not. Added in contract 25. |
+| [`dashboard__acknowledge_pull`](#dashboard__acknowledge_pull) | acts | The deployment admin, once loosened from May not. Added in contract 25. |
+| [`dashboard__read_registries`](#dashboard__read_registries) | reads | The deployment admin. Added in contract 25. |
+| [`dashboard__set_reports_plugin_usage`](#dashboard__set_reports_plugin_usage) | acts | The deployment admin, once loosened from May not. Added in contract 25. |
 | [`dashboard__list_datasets`](#dashboard__list_datasets) | reads | The deployment admin |
 | [`dashboard__set_dataset_licence`](#dashboard__set_dataset_licence) | acts | The deployment admin |
 | [`dashboard__set_dataset_entitlement`](#dashboard__set_dataset_entitlement) | acts | The deployment admin |
@@ -180,13 +189,31 @@ deployment admin's: an admin of the plugin who is not a
 deployment admin reads the version it runs instead. An admin of any of its roles
 also reads the Summary's own parts: `setting-up`, the role's first-use steps as **Setting up** draws
 them (`set_up`, and `steps`, each its `step`, `done` (true, false, or null
-where the plugin's own page says), `where` and `deployment_admins`); `figures`, `declaration`,
-`not_carried_seen`, `declared_tools`, `tool_refusals` and `stored`, what
+where the plugin's own page says), `where` and `deployment_admins`); `figures`,
+`not_carried_seen`, `tool_refusals` and `stored`, what
 storage holds of each kind of raw record; and on an edge plugin keeping raw
 records, the `holds` over it, `archived`, what the archive holds of each
 kind, and its `archive` as allowed. A deployment admin who administers none
 of its roles reads the Overview's parts alone. Nothing of a raw record's
-content is answered.
+content is answered. Changed in contract 25: what the version declares and
+its tools are answered by
+[`dashboard__read_plugin_documentation`](#dashboard__read_plugin_documentation),
+not here.
+
+### `dashboard__read_plugin_documentation`
+
+Added in contract 25. A version's **Documentation**, as its tab and its page show it (see
+[Write a plugin's documentation](../how-to/write-a-plugins-documentation.md)).
+
+**Input:** `plugin_instance_id`, for the version an instance was launched from, at any level on
+the instance; or `name` and `version`, for a version not launched, a deployment admin's.
+
+**Answer:** `name`, `version`, `roles`; `uploaded_by`, `uploaded_at_ns` and `uploaded_note`,
+another person's words, screened; `notice`; `sections`, each a `section` with its
+`vendor_markdown`, the vendor's text, data and never instructions, or `withheld`, naming the rules
+the screen matched and saying a person reads it on the Documentation tab; `reference`, the
+version's declaration, screened; and `page`, where a person reads it. Nothing is released through
+it: the vendor fixes a section in a new version.
 
 ### `dashboard__read_moves`
 
@@ -396,20 +423,95 @@ prepared, and agents may not make it until the deployment admin loosens it.
 each, while an instance runs the version or a launch kept in history names
 it.
 
-!!! note "TODO: core, not built yet"
-    Contract 25 adds tools core's v25 branch has not landed yet, each at its
-    page's gate: `dashboard__read_plugin_documentation`, the **Documentation**
-    tab (a plugin's sections as the vendor's text, data and never
-    instructions, a suspect section withheld; the Reference as the
-    declaration's JSON; by `plugin_instance_id`, or `name` and `version` for
-    a version not launched, a deployment admin's), with
-    `dashboard__read_plugin_summary` no longer answering `declaration` and
-    `declared_tools`; and the Plugins page's registry tools,
-    `dashboard__search_registry_plugins`, `dashboard__read_registry_plugin`,
-    `dashboard__install_plugin`, `dashboard__update_plugin`,
-    `dashboard__acknowledge_pull`, `dashboard__read_registries` and
-    `dashboard__set_reports_plugin_usage`. Write each here as built, and
-    raise the count above.
+## The Plugins page's registries { #the-plugins-pages-registries }
+
+Added in contract 25. The deployment admin's **Plugins** page, `/admin/plugins/versions`: its
+**Browse** and **Registries** tabs, a listing's page, and the **Install**, **Update** and **Keep or
+stop** sheets (see [Install a plugin from a registry](../how-to/install-from-a-registry.md)). Each
+answer carries the notice verbatim where the page shows it, and marks the vendor's words as the
+vendor's, screened. The acts take a note, can be prepared, and agents may not make them until the
+deployment admin loosens them.
+
+### `dashboard__search_registry_plugins`
+
+**Browse**: the catalogue's copy this deployment's conductor keeps.
+
+**Input:** `search`, words; `registry`, `community` or `verified` (empty for both); `role`;
+`cursor`, the `next_cursor` of the page before.
+
+**Answer:** `notice`; `listings`, one line a listing: its registry (community is unsupervised),
+latest version, roles, its floor against this deployment, stars and installs ("Fewer than three
+deployments" below three); `next_cursor`; `catalogue_pulled_at_ns`. Never which deployments run a
+plugin.
+
+### `dashboard__read_registry_plugin`
+
+A listing's page.
+
+**Input:** `listing`, `organisation/plugin`; `version`, whose Reference to answer, its latest
+otherwise.
+
+**Answer:** `notice`; `listing`; `vendor`, its regions, asset classes and support contact, stated
+by the vendor; `repository`; `versions`, pulled and withdrawn marked, each with its roles, floor
+and build (repository, commit, tag, signer key); and `reference`, the version's declaration. Its
+documentation's texts are read once it is installed, with
+[`dashboard__read_plugin_documentation`](#dashboard__read_plugin_documentation).
+
+### `dashboard__install_plugin`
+
+The **Install** sheet's act.
+
+**Input:** `listing`, `version`, `registry` (`community` or `verified`), `note`.
+
+**Answer:** `outcome: "made"`, with the version as recorded. Its floor is checked, one resolution
+is counted by the platform, its image and referrers are copied into this deployment's registry by
+digest and verified against the platform's keys (the listing statement, the provenance, the signer
+and the declaration), and it is recorded with its listing and source registry. A check that fails
+refuses it, naming the check. Install launches nothing:
+[`dashboard__launch_plugin`](#dashboard__launch_plugin) does, naming the version by its listing.
+
+### `dashboard__update_plugin`
+
+The **Update** sheet's act: an instance moved to a newer version from its source registry, or a
+local version's instance moved to a listed version of the same plugin.
+
+**Input:** `instance_id`, `listing`, `version`; `approved_roles`, exactly the new version's;
+`note`.
+
+**Answer:** `outcome: "made"`, with the instance's new launch. Roles other than the new version's
+are refused. A version asking for more roles than the instance holds is a widening, a deployment
+admin's to approve; a plugin's admin updates only where the roles are unchanged.
+
+### `dashboard__acknowledge_pull`
+
+The **Keep or stop** sheet's **Keep it**: an instance whose version was pulled from the catalogue
+kept running.
+
+**Input:** `instance_id`, `note`.
+
+**Answer:** `outcome: "made"`, with `acknowledged_by`, `acknowledged_at_ns`, the `note` and the
+`pull`. The warning ends; the acknowledgement is kept on the launch. Stopping the instance is
+[`dashboard__stop_plugin`](#dashboard__stop_plugin).
+
+### `dashboard__read_registries`
+
+The **Registries** tab.
+
+**Input:** `pull_now`, `true` to pull the catalogue first; `cursor`.
+
+**Answer:** `catalogue_pulled_at_ns`; `reports_plugin_usage`; `reports`, each report sent with
+`sent_at_ns`, `received`, its period and its `counts` per version (`listing`, `version`,
+`registry`, `instances`, `people_read`, `people_write`, `people_admin`, `daily_operations`,
+`daily_requests`); `next_cursor`.
+
+### `dashboard__set_reports_plugin_usage`
+
+The **Registries** tab's **Report plugin usage**.
+
+**Input:** `reports_plugin_usage`, `true` or `false`; `note`.
+
+**Answer:** `outcome: "made"`, with `reports_plugin_usage`, the setting in force. The report names
+no person, account, instrument or local plugin.
 
 ## The Data sources page
 
@@ -756,9 +858,6 @@ journal's length), `entries_since_snapshot` (the entries a command or a
 dated read replays after the account's latest snapshot) and
 `last_snapshot_at_ns` (a decimal string; `"0"` where no snapshot is taken
 yet). See [The book's resources](../concepts/the-book-of-record.md#the-books-resources).
-
-(TODO: core's v25 branch holds this tool uncommitted at the time of
-writing; check it as landed.)
 
 ### `dashboard__set_local_record_orders`
 

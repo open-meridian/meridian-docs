@@ -280,11 +280,15 @@ is cut with an ellipsis. See
 [Inside the dashboard's frame](../how-to/build-a-plugin-page.md#inside-the-dashboards-frame).
 
 Under Manage the dashboard draws tabs of its own before the plugin's, and
-Manage opens on the first (the **Documentation** tab is beside them at every
-level; see [Where people and agents read it](../how-to/write-a-plugins-documentation.md#where-people-and-agents-read-it)):
+Manage opens on the first. At every level the dashboard also draws the
+**Documentation** tab, last: the vendor's sections and the Reference drawn
+from the version's declaration (see
+[Where people and agents read it](../how-to/write-a-plugins-documentation.md#where-people-and-agents-read-it)).
+A stopped instance keeps Summary, Settings and Documentation.
 
 - **Summary**: the plugin's status, which is core's to say (its health and
-  why, the version running and the contract it registered with), then the
+  why, the version running and the contract it registered with, any
+  warnings, and what it received and did not carry), then the
   figures the plugin reports about its own work, each a tile, such as
   SnapTrade's Connections, Accounts reached and Last read. A figure is a
   count, a decimal, a text or a time, with an optional as-of, a state (ok,
