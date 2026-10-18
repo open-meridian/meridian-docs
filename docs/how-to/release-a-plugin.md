@@ -104,7 +104,7 @@ The firm's deployment admin approves the roles at launch.
 ## To share a plugin with other firms
 
 Each deployment's catalogue is its own. To make a version installable by any deployment, publish it
-to the platform's community registry from a signed release tag: see
+to the platform's Community registry from a signed release tag: see
 [Publish a plugin to a registry](publish-a-plugin.md).
 
 ## Related

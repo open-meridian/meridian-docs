@@ -33,19 +33,19 @@ changes on the way, release by release, is in the
 [release notes](../api/python-sdk.md#release-notes).
 
 !!! note "Upgrading to contract 25"
-    The upgrade to contract 25 (chart 0.1.306 or later) keeps a
+    The upgrade to contract 25 (chart 0.1.307 or later) keeps a
     snapshot of each account's book every `bor.snapshotInterval` entries
     (default 1,000), so a command replays only the journal's tail; the
     first snapshots are made as accounts are next written. Plugins keep
     running as they are: a plugin on an SDK before 0.29.0 registers as
-    before, and one moved to SDK 0.29.0 carries its whole declaration and
+    before, and one moved to SDK 0.29.0 or later carries its whole declaration and
     its documentation (see
     [Moving a plugin to a new release](../api/python-sdk.md#moving-a-plugin-to-a-new-release)).
     Upgrading from a chart before contract 24 also runs that release's
     instrument migration; see
     [Review provisional records and the migration](review-provisional-records.md).
     The **Plugins** page gains **Browse** and **Registries**: the
-    conductor installs from the community registry where the chart's
+    conductor installs from the Community registry where the chart's
     values carry the platform's public keys (`registries.platformKeys`);
     with none, Browse says the deployment reaches no registry. `meridian status`
     shows each component and the book's health after the upgrade.

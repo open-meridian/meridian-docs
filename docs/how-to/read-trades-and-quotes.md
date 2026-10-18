@@ -7,7 +7,7 @@ orders in real time. This page writes a plugin holding one of them that
 reads a day's trades, hears each new one, catches up what it missed, and
 reads the latest quotes, then holds it to its role's suite.
 
-You need CLI 0.1.46 and SDK 0.29.0 (contract 25). The lake's trades and
+You need CLI 0.1.46 and SDK 0.29.0 or later (contract 25). The lake's trades and
 quotes operations are `preview`.
 
 ## Which role

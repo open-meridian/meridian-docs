@@ -428,7 +428,7 @@ it.
 Added in contract 25. The deployment admin's **Plugins** page, `/admin/plugins/versions`: its
 **Browse** and **Registries** tabs, a listing's page, and the **Install**, **Update** and **Keep or
 stop** sheets (see [Install a plugin from a registry](../how-to/install-from-a-registry.md)). Each
-answer carries the notice verbatim where the page shows it, and marks the vendor's words as the
+answer carries the page's `notice` where the page shows one, and marks the vendor's words as the
 vendor's, screened. The acts take a note, can be prepared, and agents may not make them until the
 deployment admin loosens them.
 
@@ -439,7 +439,7 @@ deployment admin loosens them.
 **Input:** `search`, words; `registry`, `community` or `verified` (empty for both); `role`;
 `cursor`, the `next_cursor` of the page before.
 
-**Answer:** `notice`; `listings`, one line a listing: its registry (community is unsupervised),
+**Answer:** `notice`; `listings`, one line a listing: its registry and its label,
 latest version, roles, its floor against this deployment, stars and installs ("Fewer than three
 deployments" below three); `next_cursor`; `catalogue_pulled_at_ns`. Never which deployments run a
 plugin.
@@ -448,7 +448,7 @@ plugin.
 
 A listing's page.
 
-**Input:** `listing`, `organisation/plugin`; `version`, whose Reference to answer, its latest
+**Input:** `listing`, `namespace/plugin`; `version`, whose Reference to answer, its latest
 otherwise.
 
 **Answer:** `notice`; `listing`; `vendor`, its regions, asset classes and support contact, stated

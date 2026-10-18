@@ -183,9 +183,9 @@ already recorded is refused. To change a plugin, raise its version. A deployment
 admin may **retire** a version nothing runs or names: it is no longer listed or
 launchable, its image is released from the deployment's registry, and its record is kept.
 
-The deployment's own registry is the **local** one. A plugin may also come from the
-platform's **community** or **verified** registry, listed there as
-`organisation/plugin`, and is then pulled into the local registry by digest and
+The deployment's own registry is the **Local** one. A plugin may also come from the
+platform's **Community** or **Verified** registry, listed there as
+`namespace/plugin`, and is then pulled into the Local registry by digest and
 verified before it is recorded. See [Registries](registries.md).
 
 ## Launching, and approval

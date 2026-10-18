@@ -44,13 +44,15 @@ with the CLI's `plugin migrate` step table. An upgrade fact a page drops
 goes there first.
 
 Today they describe contract v25, released 2026-10-17: CLI 0.1.46, SDK
-0.29.0 and chart 0.1.306 (core abf028f, merged as fc3f0d1, its runtime and
-harness pinned by digest), with `boundaries/` vendored from meridian-schema
+0.30.0 (each role's common logic, released 2026-10-18 on the same contract)
+and chart 0.1.307 (core 15f6b22, merged as c3ef476, its runtime and harness
+pinned by digest), with `boundaries/` vendored from meridian-schema
 3983435. Contract v25 brings a plugin's own documentation (the whole
 declaration, `docs/` sections by digest, registration held to the version,
 the Documentation tab and the versions pages, `plugin check`'s
 `documentation-sections` and `documentation-safe` and its advice) and the
-platform's registries in Phase 0 (Open Meridian's own plugins in community;
+platform's registries in Phase 0 (Open Meridian's own plugins in Community,
+the first `open-meridian/snaptrade` 0.18.0;
 the Plugins page's Installed, Browse and Registries; `meridian plugin
 publish`, `plugin key`, `plugin download` and `upload --bundle`); `meridian
 status` and `meridian logs`; the book's snapshots and its health; a version

@@ -35,7 +35,7 @@ Short recipes for one task each. They assume you have a deployment; if not, star
 | [Working your tickets](work-your-tickets.md) | Run an agent on a schedule that reads your inbox, advises where a change needs it, and tells you what waits for you, and the prompt to paste. |
 | [Write a plugin's documentation](write-a-plugins-documentation.md) | The sections a deployment admin reads before launching a plugin, declared with the version, checked by `plugin check` and uploaded with it. |
 | [Release a plugin version](release-a-plugin.md) | Ship a change to a plugin as a new version. |
-| [Publish a plugin to a registry](publish-a-plugin.md) | Sign a release tag, and have the platform build, check and list it in the community registry as `organisation/plugin`. |
+| [Publish a plugin to a registry](publish-a-plugin.md) | Sign a release tag, and have the platform build, check and list it in the Community registry as `namespace/plugin`. |
 | [Install a plugin from a registry](install-from-a-registry.md) | Find a listed plugin, install it by digest, update it, and carry one into a deployment that reaches nothing. |
 | [Upgrade a deployment](upgrade-a-deployment.md) | Move a deployment to a newer chart, with the command line or your own pipeline. |
 | [Review provisional records and the migration](review-provisional-records.md) | See each provisional record and why it waits on the Instruments page's Provisional tab, apply the upgrade's migration and hold a line back, and set the usage report. |

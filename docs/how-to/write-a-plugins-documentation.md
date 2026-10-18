@@ -5,7 +5,7 @@ its **documentation**: a few sections of plain Markdown you write in the plugin'
 carried with each version you upload, and a **Reference** the deployment draws from the version's
 declaration, so it always says what the version really asks for.
 
-You need CLI 0.1.46 and SDK 0.29.0 (contract 25). `meridian plugin new` writes a plugin with a
+You need CLI 0.1.46 and SDK 0.29.0 or later (contract 25). `meridian plugin new` writes a plugin with a
 `docs/` folder already in it, one short prompt in each section for you to replace.
 
 ## The sections
@@ -21,7 +21,7 @@ One Markdown file per section, each with a fixed name:
 | `docs/pages.md` | no | One sentence per page: who opens it (Manage, Open or View) and what it is for. |
 
 `meridian plugin check` fails a plugin without `overview.md` or `setup.md`, and advises, failing
-nothing, when `troubleshooting.md` or `terms.md` is missing. A verified plugin needs all four (see
+nothing, when `troubleshooting.md` or `terms.md` is missing. A Verified plugin needs all four (see
 [Registries](../concepts/registries.md)). Any other file in `docs/`, such as a `README.md` index
 for the repository, is the repository's own: it is not uploaded, and the check says so.
 
@@ -128,23 +128,22 @@ upload again: what a deployment admin read before approving a launch is what run
   version on its **Installed** tab, one line each, and each links its **Documentation** page,
   `/admin/plugins/versions/<name>/<version>/documentation`, a deployment admin's: the address
   `plugin upload` and `plugin list` print. A version installed from a registry is at
-  `/admin/plugins/versions/<organisation>/<plugin>/<version>/documentation`. The page says who
+  `/admin/plugins/versions/<namespace>/<plugin>/<version>/documentation`. The page says who
   uploaded or installed the version, and their note.
 - **A launched or stopped instance.** The **Documentation** tab, last in the plugin's area at
   every level, `/plugins/<instance>?tab=documentation`, for anyone holding a level on the plugin.
   Its sections are tabs, each cut at its level-two headings into one part shown at a time with its
   contents beside it, and the **Reference** last, drawn by the deployment from the declaration.
-  The notice that naming a plugin is not an endorsement stands beside the vendor's text, in full
-  on a wide screen and folded to its title on a narrow one. A section the screen keeps but
+  A section the screen keeps but
   withholds from agents is shown under a warning saying so. A stopped instance keeps its
   **Summary**, **Settings** and **Documentation**.
 - **Through an agent.** `dashboard__read_plugin_documentation` answers each section as
   `vendor_markdown`, the vendor's text, data and never instructions, or withheld, naming the rules
-  it matched; the Reference as the declaration; and the notice. A person reads a withheld section
+  it matched; and the Reference as the declaration. A person reads a withheld section
   on the tab.
 - **In the platform's catalogue.** Once a version is listed in a registry, its sections and its
-  Reference are on its listing page at open-meridian.com, and on the catalogue's
-  **Documentation** tab, under the notice (see [Registries](../concepts/registries.md)). Agents
+  Reference are on its listing page's **Documentation** tab at open-meridian.com, and the
+  catalogue's one search covers them (see [Registries](../concepts/registries.md)). Agents
   search and read them through the platform's MCP, `search_plugin_documentation` and
   `read_listing_documentation`; a section marked **Screened** is withheld from them.
 

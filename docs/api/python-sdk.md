@@ -16,7 +16,7 @@ such as Homebrew's on macOS (`externally-managed-environment`).
 |---|---|
 | PyPI name | `open-meridian` |
 | Import name | `meridian` |
-| Version | 0.29.0 |
+| Version | 0.30.0 |
 | Python | 3.11 or newer |
 | Dependencies | `grpcio>=1.68,<2`, `protobuf>=5.28,<7`, `jinja2>=3.1,<4` (for [pages](#pages)) |
 | Licence | Apache-2.0 |
@@ -24,7 +24,7 @@ such as Homebrew's on macOS (`externally-managed-environment`).
 !!! warning "Not `meridian-sdk`"
     The PyPI package `meridian-sdk` belongs to an unrelated company. Don't install it.
 
-A plugin pins the SDK exactly, `open-meridian==0.29.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.29.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls (see [Moving a plugin to a new release](#moving-a-plugin-to-a-new-release)). `meridian plugin new` writes a plugin pinned to 0.29.0.
+A plugin pins the SDK exactly, `open-meridian==0.30.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.30.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls (see [Moving a plugin to a new release](#moving-a-plugin-to-a-new-release)). CLI 0.1.46's `meridian plugin new` writes a plugin pinned to 0.29.0, which `meridian plugin migrate` moves to 0.30.0. Both declare contract 25.
 
 | Optional extra | Installs | For |
 |---|---|---|
@@ -1845,7 +1845,7 @@ Each change is the dashboard's own record, shown to that person alone. No other 
 
 ## Each role's common part { #each-roles-common-part }
 
-Every plugin of a role has the same first-use path, pages, sections, labels, verbs and order, and the same Summary figures (see [Using a data plugin](../how-to/using-a-data-plugin.md)). `meridian.roles` holds each role's part, in `data`, `custody`, `operations` and `reporting`:
+Every plugin of a role has the same first-use path, pages, sections, labels, verbs and order, and the same Summary figures (see [Using a data plugin](../how-to/using-a-data-plugin.md)). `meridian.roles` holds each role's part, in `data`, `custody`, `operations`, `reporting` and, from SDK 0.30.0, `connectivity`:
 
 - **A record per common page**, named `<Page>Read`, holding the common fields, the page's tool's answer (`answers=`), which a plugin extends: `data.ConnectionRead`, `data.DatasetsRead` (with `Served`, `Want`, `Credential`); `custody.ConnectionsRead`, `AccountLinksRead`, `StatementsRead`, `HistoryRead`; `operations.BreaksRead`, `ReconciliationsRead`, `OpeningBalancesRead`; `reporting.DatasetsRead`.
 - **`figures(...)`**, the role's figures in its order, each a plain value or a `meridian.Figure`, for the plugin to follow with its own within the eight: `data.figures(connection=..., entitled_at_vendor=..., stream=..., last_recorded=..., rate_use=...)`, `custody.figures(...)`, `operations.figures(...)`, `reporting.figures(last_valued=..., not_priced=...)`.
@@ -1862,6 +1862,36 @@ async def connection(request: meridian.Request) -> meridian.Response:
 ```
 
 Never rename, reorder or drop a common page, section, row, column, label, setting or figure: `meridian plugin check --verified` fails it (`role-pages`). Custody's, operations' and reporting's items are offered as candidates until a second plugin of the role needs them.
+
+## Each role's common logic { #each-roles-common-logic }
+
+Added in SDK 0.30.0. What every plugin of a role must do the same way to fulfil its typed operations is the SDK's, tested once there and generic over the venue. How a plugin talks to its venue, its API client, a WebSocket or FIX, stays its own, so it can change its transport without changing what it does. The contract is unchanged: the SDK still declares v25.
+
+- **The data role** (`meridian.roles.data`). `Wants` hears a want and answers it with the plugin's own conversion: it declines, by reason, what the plugin does not serve (an answer that raises declines every subject `source_silent`), keeps a standing want until it is withdrawn, records rows in the lake's batches and counts them overall and per dataset, reads its datasets' licences, and reads a restart's gap back once per subject per process. `Venue` resolves the venue master's ID once and reports a venue not held once; `unconverted` carries a value that did not read. `served` and `want_rows` fill **Datasets**, and `VenueConnection` is **Connection** for a source of one venue. `number`, `json_decimal` and `Unread` read a venue's figures from its own text, never a float; `Session`, `Health`, `Limits` and `Endpoint` say how the venue answers.
+- **A venue's whole work, by what it lists.** `meridian.roles.data.pairs` is for a venue listing pairs, a base asset priced in a quote asset: daily closes and bars, live prices, trades and quotes, the stream kept current and its gaps read back. `meridian.roles.data.event_contracts` is for a venue of binary event contracts: live prices and quotes, and each contract's outcome. The plugin hands its `Feed` a `Market`, its client's answers read into the module's values, and for a stream its own session (`Feed(..., stream_factory=Stream)`). Each draws its pages from the kind's templates (`meridian/roles/data/pairs/connection.html` and `datasets.html`), filled by `connection_read`, `datasets_read` and `figures_read`.
+- **The checks a plugin runs unchanged** (`meridian.roles.data.testing`): the lake as a test stands it in (`Lake`), the data suite's producers for each kind, and `PairsChecks` and `EventContractsChecks`, run as one test class against the plugin's own conversion:
+
+    ```python
+    class TestPairs(PairsChecks):
+        venue = venue_cases
+    ```
+
+- **Raw records as files** (`meridian.edge.RawStore`): a vendor's answers kept before anything is read from them, a unit a UTC day, a live answer a line added only when it changed, and the units past the kind's window archived, kept or deleted (`store.tend(plugin, window_days, past, today)`).
+- **The connectivity role** (`meridian.roles.connectivity`). `Trader` does the role's whole work over a venue's adapter: it hears each placement naming its instance and places it in the account its `ems` mapped, noted in storage before it is sent and never sent twice (`Sent`, `place_once`); reports what the venue did, a send never answered resolved from the venue's orders (`resolve_unanswered`) and a status not mapped said as reported (`report_status_not_mapped`); reports each fill into the book as the venue stated it or inferred from two averages (`fill_price`, `execution_id`, `filled_in_book`), and a bust (`bust_id`); works cancels and replaces; keeps the firm's pauses and stops; publishes the venue's catalogue; and reports fills of orders placed outside the platform (`Watched`). The plugin hands it a `Venue`, its client's answers read into `VenueOrder` and a send raising `VenueRefused` or `VenueUnanswered`, and the listing market's time zone (`market_zone=`). Its **Trading** page is `trading_read`, drawn by `meridian/roles/connectivity/trading.html`, with `TradingAsked` and `TradingEnabled` for **Enable trading**. `meridian.roles.connectivity.testing.Rig` runs a plugin's own adapter over its fake broker against the suites' recorder: fakes only, never a real broker or a token.
+
+    ```python
+    from meridian.roles import connectivity
+
+    trader = connectivity.Trader(
+        plugin, lambda: venue, now=lambda: datetime.now(UTC),
+        sent=connectivity.Sent(sent), enabled=connectivity.Sent(enabled),
+        watched=connectivity.Watched(originated),
+        market_zone=ZoneInfo("America/New_York"),
+    )
+    await trader.run(poll_seconds=lambda: 5.0)
+    ```
+
+The SDK's `templates/` gains a connectivity role template, the `Trader` over a stand-in venue held in memory. CLI 0.1.46's `plugin new` carries the templates of SDK 0.29.0, so it has no `--role connectivity` yet.
 
 ## Typed settings { #typed-settings }
 
@@ -2014,6 +2044,27 @@ The package installs one command, `meridian-dev run`. On a development deploymen
 
 Each release of the SDK, the contract it declares, the runtime it needs, and the CLI whose `plugin new` writes a plugin on it. What a plugin's author does to move to it is in [Moving a plugin to a new release](#moving-a-plugin-to-a-new-release).
 
+!!! note "0.30.0: each role's common logic, contract v25 unchanged"
+    open-meridian 0.30.0, released on PyPI on 2026-10-18, still declares
+    contract v25. It carries each role's common logic, generic over the
+    venue (see [Each role's common logic](#each-roles-common-logic)):
+    `meridian.roles.data` (`Wants`, `Venue`, the venue's reading,
+    `served`, `want_rows`, `VenueConnection`), with
+    `meridian.roles.data.pairs` and `.event_contracts` doing a venue's
+    whole work by what it lists, and `meridian.roles.data.testing`'s
+    checks; `meridian.edge.RawStore`, raw records as files; and
+    `meridian.roles.connectivity` (`Trader` over a venue's adapter, its
+    **Trading** page and `testing.Rig`), with a connectivity role
+    template. The data role's Datasets template pages its wants with the
+    kit's `om-pager`. A plugin that copied this middle layer from a
+    sibling plugin moves onto the SDK's helpers with
+    [`meridian plugin migrate`](cli.md#plugin-migrate) (see
+    [0.29.0 to 0.30.0](#0290-to-0300)). It needs a runtime serving
+    contract v25 (chart 0.1.307 or later). CLI 0.1.46's `plugin new`
+    still writes a plugin on 0.29.0. Its base image is
+    `ghcr.io/open-meridian/plugin-python:0.30.0`
+    (`sha256:a238c6d9292779b4f1df0a06cd30836367c01412a703b559a7414137f3473ed6`).
+
 !!! note "0.29.0: contract v25"
     open-meridian 0.29.0, released on PyPI on 2026-10-17, declares
     contract v25. A version's declaration is the whole of what it says
@@ -2032,7 +2083,7 @@ Each release of the SDK, the contract it declares, the runtime it needs, and the
     connectivity plugin no longer reads whether orders may name a local
     record; and the give-up's suite case is about `give-ups`. With it,
     contract v25 brings the platform's [registries](../concepts/registries.md)
-    (Phase 0: Open Meridian's own plugins in community), CLI 0.1.46's
+    (Phase 0: Open Meridian's own plugins in Community), CLI 0.1.46's
     `plugin publish`, `plugin key`, `plugin download`, `upload --bundle`,
     `status` and `logs`, the book's snapshots (`bor.snapshotInterval`), a
     version retired from the catalogue, the licensed schemes declared,
@@ -2305,6 +2356,7 @@ Move a plugin one release at a time or several at once: [`meridian plugin migrat
 
 | From | To | Contract | Runtime | `plugin new` writes it from | `plugin migrate` rewrites | Then by hand |
 |---|---|---|---|---|---|---|
+| 0.29.0 | 0.30.0 | 25 | chart 0.1.307 or later | not yet: CLI 0.1.46 writes 0.29.0 | a module copied from a sibling plugin, and a trading layer in SnapTrade 0.16.0's shape, into re-exports of the SDK's helpers | see [0.29.0 to 0.30.0](#0290-to-0300) |
 | 0.28.0 | 0.29.0 | 25 | chart 0.1.306 or later | CLI 0.1.46 | a connectivity plugin's read of the escape hatch, and its test's mapping of the dropped case | see [0.28.0 to 0.29.0](#0280-to-0290) |
 | 0.27.0 | 0.28.0 | 24 | chart 0.1.305 or later | CLI 0.1.45 | a test of the `LCL-` prefix; a read of the `open_meridian` identifier; the suites' `LCL-suite-n` fixtures | see [0.27.0 to 0.28.0](#0270-to-0280) |
 | 0.26.0 | 0.27.0 | 23 | chart 0.1.303 or later | CLI 0.1.43 | nothing: only the pins move | see [0.26.0 to 0.27.0](#0260-to-0270) |
@@ -2318,6 +2370,47 @@ Move a plugin one release at a time or several at once: [`meridian plugin migrat
 | 0.18.0 | 0.19.0 | 14 | | CLI 0.1.34 | nothing: only the pins move | see [0.18.0 to 0.19.0](#0180-to-0190) |
 
 Before 0.19.0, `plugin new` pinned 0.18.0 from CLI 0.1.33, 0.17.0 from CLI 0.1.29 to 0.1.32, 0.16.0 from CLI 0.1.28, 0.15.0 from CLI 0.1.27, 0.14.0 from CLI 0.1.26, 0.12.0 from CLI 0.1.24 and 0.1.25, 0.11.0 from CLI 0.1.23, 0.10.1 from CLI 0.1.22, 0.10.0 from CLI 0.1.21, 0.9.0 from CLI 0.1.20, 0.7.1 from CLI 0.1.18 and 0.1.19, and 0.6.1 from CLI 0.1.16 and 0.1.17.
+
+### 0.29.0 to 0.30.0 { #0290-to-0300 }
+
+Released 2026-10-18. Not breaking: the contract is unchanged, and a plugin
+left on 0.29.0 keeps working. `meridian plugin migrate --to 0.30.0` moves
+the pins and moves a plugin's copied middle layer onto the SDK's helpers
+(see [Each role's common logic](#each-roles-common-logic)):
+
+- **A module copied from a sibling plugin** (`market.py`, `products.py`,
+  `contracts.py`, `raw.py` or `dgm.py`, saying "The same module in ...
+  and ...") becomes a re-export of the SDK's names that replace it, so
+  every import of it still resolves (`copied-module-onto-sdk`).
+- **A trading layer in SnapTrade 0.16.0's shape** (`trading.py` defining
+  `Trader`, `Noted`, `Venue`, `Watched` and `trading_files`) becomes a
+  re-export of `meridian.roles.connectivity`, its `Trader` the SDK's in
+  the module's market zone and `Noted` the SDK's `Sent`
+  (`copied-trader-onto-sdk`).
+
+Then, by hand where they apply:
+
+- **The re-exports** (`re-export-left`, `trader-re-export-left`): import
+  the names from the SDK where the plugin uses them and delete the
+  module; construct `connectivity.Trader` with `market_zone=`, and use
+  `Sent` for `Noted`.
+- **Copied pages** (`copied-page`, `trading-page-onto-sdk`): build the
+  data role's Connection and Datasets with the kind's builders and
+  templates, and the Trading page with `trading_read` and the SDK's
+  template, extending a template only for the venue's own nuance.
+- **Copied tests** (`copied-tests`, `trading-rig-onto-sdk`): one class of
+  the SDK's checks (`PairsChecks` or `EventContractsChecks`), and a
+  subclass of `meridian.roles.connectivity.testing.Rig` for the trading
+  rig.
+- **A copied `stream.py`** (`stream-is-the-plugins`): keep it as the
+  plugin's own transport and hand it to the feed as its stream factory; a
+  stream given another connection by assigning its `connect`
+  (`stream-connect-assigned`): `retarget` it instead.
+- **The Makefile's `suite-same`** (`suite-same-retired`): remove it, since
+  nothing is copied between plugins any more.
+- **A trading layer the migration could not rewrite** (`trader-by-hand`):
+  move it onto `meridian.roles.connectivity` by hand, keeping only the
+  venue's adapter and its client in the plugin.
 
 ### 0.28.0 to 0.29.0 { #0280-to-0290 }
 

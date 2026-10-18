@@ -255,12 +255,12 @@ venue. The runner's `instrument` command takes `--ask-platform`, asking the plat
 record from its page as a deployment admin's button does, so a `compute_date` for that equity
 gives its settlement date in a harness run (T+1) rather than "rule not held".
 
-Core abf028f's runtime and harness serve contract v25, released 2026-10-17 in chart 0.1.306,
+Core 15f6b22's runtime and harness serve contract v25, released 2026-10-17 in chart 0.1.307,
 pinned by digest as in [step 1](#1-pin-a-runtime-image-and-its-harness):
 
 ```makefile
-RUNTIME_IMAGE ?= ghcr.io/open-meridian/meridian-runtime:abf028f@sha256:67c765c3c8234d942fa18b95a2d18cbc96358853ed27a730a2f057a15625d3c9
-HARNESS_IMAGE ?= ghcr.io/open-meridian/meridian-harness:abf028f@sha256:bdc4325691084e2cbc5e4ba4c01bb9e3ea45be5264fb081682b1c48f1864b1e8
+RUNTIME_IMAGE ?= ghcr.io/open-meridian/meridian-runtime:15f6b22@sha256:f2d7604aaab7a2149b35ec8b2093a6ccdd850a038692c97739d3ecd5a41b78c8
+HARNESS_IMAGE ?= ghcr.io/open-meridian/meridian-harness:15f6b22@sha256:353a9a2520b754756afdaa858c73844e89c810b66b1cbf6fcc8e2f919ac51705
 ```
 
 Its sidecars hold each plugin listed with a declaration to it (see
