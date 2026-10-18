@@ -21,7 +21,7 @@ meridian plugin new my-prices --role data
 cd my-prices
 ```
 
-It writes a whole plugin holding `data`, pinned to `open-meridian==0.29.0`,
+It writes a whole plugin holding `data`, pinned to `open-meridian==0.30.0`,
 that puts a stand-in vendor's daily closes and bars into the lake:
 
 | File | What it is |
@@ -33,12 +33,14 @@ that puts a stand-in vendor's daily closes and bars into the lake:
 | `tests/test_suite.py` | The data suite, each case mapped to one of the vendor's responses. |
 | `tests/test_page.py` | Its pages' tests. |
 
-SDK 0.30.0, the latest release, carries more of the data role's common
-work: `meridian.roles.data.Wants` hears and answers wants with your
-conversion, and `meridian.roles.data.pairs` and `.event_contracts` do a
-venue's whole work for a venue listing pairs or binary event contracts, with
-their pages and the checks a plugin runs (`meridian.roles.data.testing`).
-`meridian plugin migrate` moves the plugin to 0.30.0; see
+On SDK 0.30.0 the template leaves more of the data role's common work to
+the SDK: `meridian.roles.data.Wants` hears and answers wants with your
+conversion, and the Datasets page fills its rows from what it kept
+(`data.served`, `data.want_rows`). `meridian.roles.data.pairs` and
+`.event_contracts` do a venue's whole work for a venue listing pairs or
+binary event contracts, with their pages and the checks a plugin runs
+(`meridian.roles.data.testing`). A plugin made by an older CLI moves to
+0.30.0 with `meridian plugin migrate`; see
 [Each role's common logic](../api/python-sdk.md#each-roles-common-logic).
 
 `AGENTS.md` teaches a coding agent the role's rules beside the template's

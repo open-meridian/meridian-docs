@@ -20,7 +20,7 @@ whoever works on it next has them too. `.dockerignore` keeps them out of the plu
 - A deployment installed **for development**. Development deployments run unreviewed code, so
   never use one your firm depends on. See
   [Development deployments](../concepts/development-deployments.md).
-- The `meridian` CLI 0.1.46, whose `plugin new` builds on SDK 0.29.0 (contract 25). Check with
+- The `meridian` CLI 0.1.47, whose `plugin new` builds on SDK 0.30.0 (contract 25). Check with
   `meridian --version`; update with `meridian upgrade`.
 - Docker on this machine. The first run builds the plugin's image.
 - A coding agent that can run shell commands in the plugin's directory.
@@ -165,8 +165,8 @@ Every command exits with a code an agent can act on:
 | 2 | Asked wrongly |
 | 3 | Not connected, or the delegation was revoked or has lapsed |
 
-On exit 3 the agent should stop and ask you to run the `meridian connect` the command printed. There
-is no `meridian status`; `meridian plugin list` shows whether you are connected. Within a week of the
+On exit 3 the agent should stop and ask you to run the `meridian connect` the command printed.
+`meridian plugin list` shows whether you are connected. Within a week of the
 lapse, every command says when; `meridian connect` renews it.
 
 ## 7. Release it

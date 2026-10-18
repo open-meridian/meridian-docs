@@ -25,7 +25,7 @@ Allow 30 minutes.
 - A deployment installed with `meridian up --development`, and you are a deployment admin on it.
   See [Install a deployment](../getting-started/installation.md).
 - CLI 0.1.46 and SDK 0.29.0 or later (contract 25): `meridian --version` says which CLI you have, and
-  `meridian upgrade` updates it. Its `meridian plugin new` builds on SDK 0.29.0 and writes the
+  `meridian upgrade` updates it. CLI 0.1.47's `meridian plugin new` builds on SDK 0.30.0 and writes the
   **Setup** page that links accounts, which this tutorial uses.
 - Docker on this machine.
 - To have done [Change your plugin's page, live](change-the-page-live.md), or be comfortable with

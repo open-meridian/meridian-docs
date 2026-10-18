@@ -1891,7 +1891,7 @@ Added in SDK 0.30.0. What every plugin of a role must do the same way to fulfil 
     await trader.run(poll_seconds=lambda: 5.0)
     ```
 
-The SDK's `templates/` gains a connectivity role template, the `Trader` over a stand-in venue held in memory. CLI 0.1.46's `plugin new` carries the templates of SDK 0.29.0, so it has no `--role connectivity` yet.
+The SDK's `templates/` gains a connectivity role template, the `Trader` over a stand-in venue held in memory. CLI 0.1.47 writes it: `meridian plugin new <name> --role connectivity`.
 
 ## Typed settings { #typed-settings }
 
@@ -2060,8 +2060,8 @@ Each release of the SDK, the contract it declares, the runtime it needs, and the
     sibling plugin moves onto the SDK's helpers with
     [`meridian plugin migrate`](cli.md#plugin-migrate) (see
     [0.29.0 to 0.30.0](#0290-to-0300)). It needs a runtime serving
-    contract v25 (chart 0.1.307 or later). CLI 0.1.46's `plugin new`
-    still writes a plugin on 0.29.0. Its base image is
+    contract v25 (chart 0.1.307 or later). CLI 0.1.47's `plugin new`
+    writes a plugin on it, `--role connectivity` among its templates. Its base image is
     `ghcr.io/open-meridian/plugin-python:0.30.0`
     (`sha256:a238c6d9292779b4f1df0a06cd30836367c01412a703b559a7414137f3473ed6`).
 
@@ -2356,7 +2356,7 @@ Move a plugin one release at a time or several at once: [`meridian plugin migrat
 
 | From | To | Contract | Runtime | `plugin new` writes it from | `plugin migrate` rewrites | Then by hand |
 |---|---|---|---|---|---|---|
-| 0.29.0 | 0.30.0 | 25 | chart 0.1.307 or later | not yet: CLI 0.1.46 writes 0.29.0 | a module copied from a sibling plugin, and a trading layer in SnapTrade 0.16.0's shape, into re-exports of the SDK's helpers | see [0.29.0 to 0.30.0](#0290-to-0300) |
+| 0.29.0 | 0.30.0 | 25 | chart 0.1.307 or later | CLI 0.1.47 | a module copied from a sibling plugin, and a trading layer in SnapTrade 0.16.0's shape, into re-exports of the SDK's helpers | see [0.29.0 to 0.30.0](#0290-to-0300) |
 | 0.28.0 | 0.29.0 | 25 | chart 0.1.306 or later | CLI 0.1.46 | a connectivity plugin's read of the escape hatch, and its test's mapping of the dropped case | see [0.28.0 to 0.29.0](#0280-to-0290) |
 | 0.27.0 | 0.28.0 | 24 | chart 0.1.305 or later | CLI 0.1.45 | a test of the `LCL-` prefix; a read of the `open_meridian` identifier; the suites' `LCL-suite-n` fixtures | see [0.27.0 to 0.28.0](#0270-to-0280) |
 | 0.26.0 | 0.27.0 | 23 | chart 0.1.303 or later | CLI 0.1.43 | nothing: only the pins move | see [0.26.0 to 0.27.0](#0260-to-0270) |

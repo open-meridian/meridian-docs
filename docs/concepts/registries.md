@@ -140,8 +140,8 @@ bundle**: the image, its provenance, bill of materials, scan results and listing
 documentation and a dated copy of the signing keys' status, each verified against the platform's
 keys that CLI release carries before anything is written. `meridian plugin upload --bundle <file>`
 carries it into the air-gapped deployment, which verifies it again. Such a deployment reports
-nothing, and learns of a pull only from a later bundle. CLI 0.1.46 carries none of the platform's
-keys yet, so it writes and carries in no bundle, saying so. See
+nothing, and learns of a pull only from a later bundle. CLI 0.1.47 carries the platform's
+registry-signing key, version 1. See
 [Install a plugin from a registry](../how-to/install-from-a-registry.md#a-deployment-that-reaches-nothing).
 
 ### What a deployment reaches

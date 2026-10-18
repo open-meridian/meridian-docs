@@ -43,7 +43,12 @@ page's [release notes](docs/api/python-sdk.md#release-notes), and its
 with the CLI's `plugin migrate` step table. An upgrade fact a page drops
 goes there first.
 
-Today they describe contract v25, released 2026-10-17: CLI 0.1.46, SDK
+Today they describe contract v25, released 2026-10-17: CLI 0.1.47
+(released 2026-10-18: `plugin key setup` and `plugin release`, `plugin
+publish --details`, `rollback-deployment`, `plugin gc`, `status`'s release
+and plugins, `logs --previous` and a Job's or plugin's logs, `plugin new
+--role connectivity`, new plugins on SDK 0.30.0, and the platform's
+registry-signing key for bundles), SDK
 0.30.0 (each role's common logic, released 2026-10-18 on the same contract)
 and chart 0.1.307 (core 15f6b22, merged as c3ef476, its runtime and harness
 pinned by digest), with `boundaries/` vendored from meridian-schema

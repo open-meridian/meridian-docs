@@ -18,9 +18,8 @@ You need:
 
 - A Kubernetes cluster, with `kubectl` already pointing at it. A laptop cluster (k3s, Rancher
   Desktop, kind, Docker Desktop) is fine for trying Open Meridian.
-- `helm` 3.14 or newer. `meridian doctor` passes 3.12, which installs, and an upgrade needs 3.14
-  (`meridian upgrade-deployment` checks it). The CLI drives your own `helm` and `kubectl`; you do
-  not run them yourself.
+- `helm` 3.14 or newer, which `meridian doctor` checks: an upgrade needs it. The CLI drives your
+  own `helm` and `kubectl`; you do not run them yourself.
 - An account on the platform, in a project where you are an **Owner** or **Admin**. Signing up and
   creating a project is free. In someone else's project, its owner can make you an admin.
 

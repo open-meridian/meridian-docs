@@ -12,9 +12,9 @@ It works on any deployment. For the faster loop where each save runs at once, se
 
 - A deployment you installed with [Install a deployment](installation.md).
 - You hold **deployment admin** on it. Only a deployment admin brings plugins in.
-- The `meridian` CLI 0.1.46 (`meridian --version`; update with `meridian upgrade`). Its
-  `plugin new` writes a plugin on SDK 0.29.0, so the deployment must serve contract 25. SDK
-  0.30.0, the latest, declares the same contract; `meridian plugin migrate` moves a plugin to it.
+- The `meridian` CLI 0.1.47 (`meridian --version`; update with `meridian upgrade`). Its
+  `plugin new` writes a plugin on SDK 0.30.0, so the deployment must serve contract 25 (chart
+  0.1.307 or later).
 - Docker on this machine. `meridian plugin upload` builds the plugin's image here, from its own
   `Dockerfile`.
 
@@ -54,6 +54,10 @@ On a deployment installed for development, run it as you write it instead:
 
   meridian plugin dev --instance my-plugin
 
+Its docs/ is what a deployment admin reads on its Documentation tab before
+launching it: replace each section's prompt with the plugin's own words.
+`meridian plugin check` requires overview.md and setup.md.
+
 AGENTS.md teaches your coding agent that loop, whichever agent it is;
 CLAUDE.md and the develop-live skill lead Claude Code to it. Commit them
 with the plugin, so whoever works on it next has them too.
@@ -61,6 +65,10 @@ with the plugin, so whoever works on it next has them too.
 
 A plugin name is lowercase letters, digits and single hyphens, starting with a letter. `--into <dir>`
 writes it somewhere other than `./my-plugin`. It never writes over a directory that exists.
+
+Where git has no SSH key to sign release tags with yet, it then offers `meridian plugin key setup`
+and asks `Set up a signing key now?`. You need it only to release to the platform's registry, and
+may run it later; see [Publish a plugin to a registry](../how-to/publish-a-plugin.md).
 
 ## 3. Look at what you got
 
@@ -71,8 +79,8 @@ writes it somewhere other than `./my-plugin`. It never writes over a directory t
 | `src/my_plugin/__main__.py` | Connects to the sidecar with its declaration, logs who it was launched as and what it may do, serves the pages, and reports itself healthy. |
 | `src/my_plugin/page.py` | The pages people see through the dashboard, each a view function declared with the levels it serves: **Setup** (`/setup`), at `admin`, says what the plugin is and what the deployment lets it do, shows no account's data, and is where an admin links the external account the plugin reports to one of the deployment's accounts; **Accounts** (`/`), at `write` and `read`, shows the accounts the person may read and write through the plugin, and under Open an **Open a statement** button, in the page's header (its `head_actions` block) above the table. |
 | `src/my_plugin/templates/` | The pages' Jinja2 templates, `setup.html` and `accounts.html`, each extending the kit's base template. |
-| `pyproject.toml` | The package, pinned exactly to the SDK, `open-meridian==0.29.0`. Its `[tool.meridian]` table declares the plugin's `roles`, whether it serves a page, and names its `declaration`. |
-| `Dockerfile` | Builds on the SDK's base image of the same version, `ghcr.io/open-meridian/plugin-python:0.29.0`. |
+| `pyproject.toml` | The package, pinned exactly to the SDK, `open-meridian==0.30.0`. Its `[tool.meridian]` table declares the plugin's `roles`, whether it serves a page, and names its `declaration`. |
+| `Dockerfile` | Builds on the SDK's base image of the same version, `ghcr.io/open-meridian/plugin-python:0.30.0`. |
 | `tests/test_page.py` | Tests of the pages, run by `meridian plugin check --run-tests`: each page under each level, no account data under Manage, linking on Setup, and the statement button under Open, including what the page says while nothing is linked. |
 | `.github/workflows/check.yaml` | A CI workflow that runs `meridian plugin check --run-tests` on a push to `main`, on each pull request, and when run by hand (`workflow_dispatch`). |
 | `hooks/pre-push` | A pre-push hook, CI-first: a branch's push runs nothing, its pull request's CI being the gate, and a push straight to `main` runs `meridian plugin check --run-tests` first. Turn it on with `git config core.hooksPath hooks`. |
@@ -167,7 +175,7 @@ meridian plugin list
 
 ```text
 Versions:
-  my-plugin 0.1.0  roles: none  page: yes  SDK 0.29.0
+  my-plugin 0.1.0  roles: none  page: yes  SDK 0.30.0
     documentation: https://meridian.localhost/admin/plugins/versions/my-plugin/0.1.0/documentation
 Launches:
   my-plugin  my-plugin 0.1.0  launched

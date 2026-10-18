@@ -9,6 +9,23 @@ A new version is also the only way to change what a plugin **may** do, or what i
 - New roles in `[tool.meridian]`. The person launching it approves them again.
 - New packages in `dependencies`. Live code runs on the image it was launched from.
 
+## To release it to the Community registry
+
+A release that any deployment can install is a signed tag the platform builds. With CLI 0.1.47 it
+is two commands, from the plugin's directory:
+
+- **Once:** `meridian plugin key setup`. It makes your SSH signing key ready, sets git to sign tags
+  with it, and registers its public half if you are an Owner or Admin of the organisation;
+  otherwise it tells you to ask one.
+- **Each release:** `meridian plugin release 0.2.0`. It checks, opens the release pull request
+  (`pyproject.toml`'s version and the CHANGELOG heading) and waits for its CI. The merge stays a
+  person's. Once merged, it signs `v0.2.0` on the merge commit, pushes it and publishes it.
+
+`--no-wait` stops once the pull request is open; run it again after the merge to go on. Tagging
+with `git tag -s`, pushing the tag and running `meridian plugin publish` yourself is the other way.
+See [Publish a plugin to a registry](publish-a-plugin.md), which also says who can publish today:
+the registries are in Phase 0.
+
 ## To release from a development deployment
 
 Use this when the plugin is running live under `meridian plugin dev`.
@@ -103,9 +120,8 @@ The firm's deployment admin approves the roles at launch.
 
 ## To share a plugin with other firms
 
-Each deployment's catalogue is its own. To make a version installable by any deployment, publish it
-to the platform's Community registry from a signed release tag: see
-[Publish a plugin to a registry](publish-a-plugin.md).
+Each deployment's catalogue is its own. To make a version installable by any deployment, release it
+to the platform's Community registry, [above](#to-release-it-to-the-community-registry).
 
 ## Related
 
