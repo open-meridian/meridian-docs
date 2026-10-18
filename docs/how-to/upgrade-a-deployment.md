@@ -24,6 +24,7 @@ the cluster, and the dashboard does not upgrade itself.
 |---|---|
 | Upgrade to the latest published chart | `meridian upgrade-deployment` |
 | Upgrade to a particular version | `meridian upgrade-deployment --chart-version <v>` |
+| Return to an earlier revision | `meridian rollback-deployment` |
 | Upgrade from your own pipeline | Plain Helm, Argo CD or Flux, below |
 | Upgrade the command line itself | `meridian upgrade`, which is a different thing |
 
@@ -48,7 +49,7 @@ changes on the way, release by release, is in the
     conductor installs from the Community registry where the chart's
     values carry the platform's public keys (`registries.platformKeys`);
     with none, Browse says the deployment reaches no registry. `meridian status`
-    shows each component and the book's health after the upgrade.
+    shows the release, each component and plugin, and the book's health after the upgrade.
 
 ## To upgrade with the command line
 
@@ -122,12 +123,10 @@ Old ReplicaSets are left to the chart's revisionHistoryLimit.
 ```
 
 A container that restarted while the upgrade ran is listed with the reason Kubernetes gives and the
-`kubectl logs … --previous` that shows why. That is worth reading, and it is not a failure: a
-component that starts before its migration has finished exits and is restarted. `meridian status`
-shows each component's restarts and the last one's reason at any time, and `meridian logs
-<component>` what its running containers have printed.
-<!-- TODO(CLI 0.1.47): meridian logs reading a restarted container's last output (the CLI audit's D2,
-not yet named); then name it here in place of kubectl, as the upgrade's own message will (C3). -->
+`meridian logs <component> --previous` that shows why. That is worth reading, and it is not a
+failure: a component that starts before its migration has finished exits and is restarted.
+`meridian status` shows each component's restarts and the last one's reason at any time, and
+`meridian logs <component>` what its running containers have printed.
 
 ### While it runs
 
@@ -199,17 +198,43 @@ is left as `<version>`: `meridian plugin list` gives it. It relaunches nothing i
 
 ### If it stops
 
-<!-- TODO(CLI 0.1.47): the table's three helm and kubectl rows swap helm and kubectl for meridian commands when they ship:
-a Release line in meridian status (D3), a rollback command (D4, not yet named),
-and meridian logs reading the release's Jobs (D5). Not covered by 0.1.46. -->
+Where it stops, it names what to run next, in `meridian` commands alone.
 
 | It says | What to do |
 |---|---|
 | a check `stops` | Nothing was changed. Each one says what to do. |
-| the release is `failed` | `helm history meridian -n meridian` says why. Fix the cause, then `helm rollback meridian -n meridian` returns it to its last deployed revision, and you can upgrade again. |
-| the release is `pending-upgrade` or `pending-install` | Another Helm operation is running, or one was interrupted. If none is running, `helm rollback meridian -n meridian` clears it. |
-| the migration failed | It names the Job. Read its log with `kubectl logs -n meridian job/<name> --all-containers`. The new revision stays applied. Read the log before rolling back: a migration that got part of the way may have changed what the older version reads. |
-| still waiting after the timeout | It lists what it was waiting for, each with why. Nothing is rolled back. Run it again with a longer `--timeout`: it is at the new version already, so it only waits. |
+| the release is `failed` | `meridian status` says why, in Helm's words, on its **Release** line. Fix the cause, then `meridian rollback-deployment` returns it to its last deployed revision, and you can upgrade again. |
+| the release is `pending-upgrade` or `pending-install` | Another Helm operation is running, or one was interrupted. If none is running, `meridian rollback-deployment` clears it. |
+| the migration failed | It names the Job. Read its log with `meridian logs migrate`. The new revision stays applied. Read the log before rolling back: a migration that got part of the way may have changed what the older version reads. |
+| still waiting after the timeout | It lists what it was waiting for, each with why. Nothing is rolled back. `meridian status` shows where each component is. Run it again with a longer `--timeout`: it is at the new version already, so it only waits. |
+
+## To roll back
+
+```bash
+meridian rollback-deployment
+```
+
+It returns the release to the last revision deployed before the newest; `--to-revision <n>` names
+another, as `meridian status` numbers them. It checks first, and changes nothing if a check fails.
+Then it shows the revision it rolls back from and the one it returns to, and asks:
+
+```text
+This rolls meridian in meridian back:
+  from revision 8, failed, chart meridian-runtime-0.1.… (app …)
+  to   revision 7, chart meridian-runtime-0.1.… (app …), as a new revision
+  Helm says of 8: …
+The database is not rolled back with it. …
+Roll it back? [y/N]
+```
+
+**The database is not rolled back.** What the newer revision's migration changed stays, and the
+older runtime may refuse a schema it does not know. Read `meridian logs migrate` first. If the data
+must go back too, restore the backup you took before the upgrade (see
+[Restore a backup](back-up-and-restore.md#restore-a-backup)).
+
+Answer `y`. It rolls back, then waits, up to `--timeout`, for that revision's migration if it runs
+one and for every component on its template, as an upgrade does. `--yes` answers for a script. See
+[`meridian rollback-deployment`](../api/cli.md#meridian-rollback-deployment).
 
 !!! note "Not checked yet"
     Two checks are planned and not built, and the command says so each time rather than passing

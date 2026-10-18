@@ -78,14 +78,9 @@ with a note.
 
 ## A deployment that reaches nothing
 
-!!! note "CLI 0.1.46 carries none of the platform's keys"
-    A bundle is verified against the platform's public keys the CLI release carries, and CLI
-    0.1.46 carries none yet. So `plugin download` writes no bundle and `plugin upload --bundle`
-    carries none in: each refuses, saying so.
-
 A deployment with no route to the platform installs from a **plugin bundle** carried in by hand.
 
-On a connected machine with CLI 0.1.46:
+On a connected machine with CLI 0.1.47:
 
 ```bash
 meridian plugin download open-meridian/snaptrade@0.18.0
@@ -93,7 +88,8 @@ meridian plugin download open-meridian/snaptrade@0.18.0
 
 It signs in to the platform in your browser the first time, asks where the version is, pulls it,
 and verifies the image, its provenance, bill of materials, scan results and listing statement
-against the platform's keys this CLI release carries. Only then does it write
+against the platform's keys this CLI release carries: from CLI 0.1.47, the platform's
+registry-signing key, version 1. Only then does it write
 `open-meridian-snaptrade-0.18.0.plugin-bundle.tar` (`--to` names another file), with the
 version's documentation and a dated copy of the signing keys' status. `--registry` names the
 registry, community by default.
@@ -104,7 +100,8 @@ On a machine connected to the air-gapped deployment (`meridian connect`):
 meridian plugin upload --bundle open-meridian-snaptrade-0.18.0.plugin-bundle.tar
 ```
 
-The deployment verifies the bundle again, as at install, asking nothing of the platform, and records
+The CLI verifies the bundle first, as `plugin download` did. The deployment verifies it again, as at
+install, against the platform's keys its chart carries, asking nothing of the platform, and records
 the version under its listing with its registry. The **Installed** list shows how old the key status
 it was checked against is, and the bundle's key status is kept as the newest the deployment holds,
 so each later launch verifies again without the platform. Such a

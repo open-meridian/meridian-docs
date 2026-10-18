@@ -5,6 +5,14 @@ Publishing lists a version of your plugin in the platform's Community registry, 
 you sign a release tag, and the platform builds it, checks it and lists it. What the registries
 are, and what each checks, is in [Registries](../concepts/registries.md).
 
+In short:
+
+- **Once:** `meridian plugin key setup`.
+- **Each release:** `meridian plugin release X.Y.Z`.
+
+Merging the release's pull request stays a person's. Signing the tag yourself and running
+`meridian plugin publish` is the other way, [below](#or-tag-and-publish-by-hand).
+
 !!! note "Who can publish today"
     The registries are in Phase 0: only Open Meridian's own plugins, under the `open-meridian/`
     namespace, are published. Outside publishers can't publish yet: the platform refuses their
@@ -12,7 +20,10 @@ are, and what each checks, is in [Registries](../concepts/registries.md).
 
 ## Before you start
 
-- CLI 0.1.46, and git 2.34 or later, which signs tags with SSH keys.
+- CLI 0.1.47, and git 2.34 or later, which signs tags with SSH keys.
+- To release in one command, your GitHub sign-in: `GH_TOKEN` or `GITHUB_TOKEN`, or the credential
+  git keeps for github.com (`gh auth setup-git` gives git one). It must be able to open pull
+  requests and read checks on the plugin's repository.
 - The plugin passes `meridian plugin check`, with its documentation (see
   [Write a plugin's documentation](write-a-plugins-documentation.md)).
 - Its repository is on GitHub and public, and the plugin's own code is under Apache-2.0.
@@ -33,40 +44,87 @@ An Owner or Admin does these on the organisation's publishing pages at open-meri
 2. **Connect GitHub.** On the **Repositories** page, **Connect GitHub** signs you in with GitHub,
    then links the platform's GitHub App, **Open Meridian Registry**, or installs it on the
    repositories you choose. The first publish fixes the listing's repository.
-3. **Register a signing key.** On the **Signing keys** page, **Register a key**, and paste the
-   public half of the key you will sign release tags with. The platform holds public halves only.
+3. **Register a signing key.** `meridian plugin key setup`, below, does it from your computer. Or,
+   on the **Signing keys** page, **Register a key**, and paste the public half of the key you will
+   sign release tags with. The platform holds public halves only.
 
 ### The signing key
 
-Any SSH key works. The usual choice is a key on your own computer, protected by a passphrase:
+Once, from the plugin's directory:
 
 ```bash
-ssh-keygen -t ed25519 -f ~/.ssh/release -C "acme release signing"
+meridian plugin key setup
 ```
 
-A hardware security key is optional, and works the same way:
+It makes the key ready in one step:
 
-```bash
-ssh-keygen -t ed25519-sk -f ~/.ssh/release -C "acme release signing"
-```
+- **The key.** Where git already signs with an SSH key, that key is used. Otherwise `ssh-keygen`
+  makes one on your computer, `~/.ssh/id_ed25519_meridian` (`ed25519`), and asks you for its
+  passphrase itself. With `--hardware`, the key is held on a FIDO security key instead
+  (`ed25519-sk`), and `ssh-keygen` asks you to touch it.
+- **git** is set to sign with it (`gpg.format ssh`, `user.signingkey`). Where git already signs
+  with a GPG key, only in the plugin's repository.
+- **The platform.** If you are an Owner or Admin, it registers the public half on the
+  organisation. If you are not, it tells you to ask one, with the line to give them.
+
+The first command that needs the platform signs you in in your browser; the sign-in is kept 30
+days. `--organisation` takes the organisation's namespace. It defaults to the organisation the
+plugin's git remote names, where the platform knows it; otherwise the command says to name it.
+`meridian plugin new` offers `key setup` where git has no SSH signing key yet.
 
 A signing key stays with a person or a device. Never put it in CI. An organisation can register
 several keys, one for each person or device that signs releases.
 
-The CLI registers and lists keys too:
+To register a key you already have, or to list the organisation's keys:
 
 ```bash
 meridian plugin key register ~/.ssh/release.pub --organisation acme
 meridian plugin key list --organisation acme
 ```
 
-The first command that needs the platform signs you in in your browser; the sign-in is kept 30
-days. `--organisation` takes the organisation's namespace. It defaults to the organisation the
-plugin's git remote names, where the platform knows it; otherwise the command says to name it.
-
 ## Each release
 
-Point git at your signing key, once per repository:
+From the plugin's directory, on its default branch, clean and up to date:
+
+```bash
+meridian plugin release 0.18.0
+```
+
+It checks, then opens the release pull request, waits, and publishes:
+
+1. **Checks.** The checkout is on the default branch, clean and up to date with `origin`; that
+   branch's last CI run is green; and the version is higher than the last release tag.
+2. **The release PR.** `pyproject.toml`'s version and the CHANGELOG heading,
+   `## 0.18.0 (<date>)`, on a branch `release/v0.18.0`. Your checkout is never switched.
+3. **The merge is yours.** It waits for the pull request's CI, then for a person to merge it.
+4. **The tag.** It signs `v0.18.0` on the merge commit with your key, and pushes it.
+5. **Publishing.** It asks the platform to build the tag, and follows the build, as
+   `meridian plugin publish` does.
+
+`--no-wait` stops once the pull request is open. Run the same command again after the merge: it
+resumes from wherever the release is. If it stops waiting after `--timeout` (default 30 minutes),
+it says so, and running it again goes on from there.
+
+While the build runs it prints one line a check, cut to your terminal's width, until the version is
+listed or refused, then the listing's address:
+
+```text
+acme/venue-desk 0.18.0 (community): listed
+  image: sha256:…
+  ok    <check>: <what it found>
+  warn  <check>: <what it found>
+  …
+  (--details prints each check's full text)
+  log: https://github.com/open-meridian/plugin-builder/actions/runs/…
+  listing: https://open-meridian.com/plugins/acme/venue-desk
+```
+
+`--details` prints each check's full text. The build carries on if you stop following it.
+
+### Or tag and publish by hand
+
+The same release, step by step. Any SSH key registered on the organisation signs it. Point git at
+it once, if `meridian plugin key setup` has not:
 
 ```bash
 git config gpg.format ssh
@@ -94,20 +152,8 @@ The tag's version must equal the `version` in `pyproject.toml`. Before it asks f
 `plugin publish` refuses here what the builder would refuse: a tag that is not `v` and that
 version, a tag not signed with an SSH key, an `origin` that is not a GitHub repository, or a
 plugin failing `meridian plugin check`. Then it asks the platform to build the tag, with a token
-good for that one plugin, and follows the build, printing each check as the platform names it,
-until the version is listed or refused:
-
-```text
-acme/venue-desk 0.18.0 (community): listed
-  image: sha256:…
-  ok    <check>: <what it found>
-  warn  <check>: <what it found>
-  …
-  log: https://github.com/open-meridian/plugin-builder/actions/runs/…
-```
-
-`--timeout` sets how long it follows the build (default 30 minutes); the build carries on either
-way.
+good for that one plugin, and follows the build, printing its report as above. `--timeout` sets
+how long it follows the build (default 30 minutes).
 
 ## What the platform checks
 
@@ -151,5 +197,5 @@ catalogue pull.
 ## Related
 
 - [Registries](../concepts/registries.md): the phases, the checks and what a deployment verifies.
-- [Command line](../api/cli.md#meridian-plugin-publish): `plugin publish` and `plugin key`.
+- [Command line](../api/cli.md#meridian-plugin-release): `plugin release`, `plugin publish` and `plugin key`.
 - [Release a plugin version](release-a-plugin.md): to your own deployment.

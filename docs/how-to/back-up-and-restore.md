@@ -7,7 +7,7 @@ them. A backup is one file that holds what a restore needs to bring the deployme
 that only you can open it.
 
 Backups are made in an image of their own, `ghcr.io/open-meridian/meridian-backup`, which the
-published chart pins to the image built with it. You need CLI 0.1.46.
+published chart pins to the image built with it. You need CLI 0.1.47.
 
 | To | Run or do |
 |---|---|
@@ -17,9 +17,9 @@ published chart pins to the image built with it. You need CLI 0.1.46.
 | Back up now and copy the file here | `meridian backup --to <dir>` |
 | Restore a backup | `meridian restore <file> --identity <file>` |
 
-You back up and restore with your own cluster rights, through `kubectl` and, to restore, `helm`.
-The backup itself runs in the cluster, as a Job that holds no rights there and changes nothing in
-it. Nothing in the deployment restores itself.
+You back up and restore with your own cluster rights: the CLI drives your own `kubectl` and, to
+restore, `helm`, and you never run them yourself. The backup itself runs in the cluster, as a Job
+that holds no rights there and changes nothing in it. Nothing in the deployment restores itself.
 
 ## What a backup holds
 
@@ -224,14 +224,15 @@ It says each step on stderr as it goes:
    what was written, is refused.
 2. **Check where.** It names the cluster and namespace, and refuses, changing nothing, if the
    namespace holds the release or anything a deployment keeps or would take up: the backup's
-   Secrets and ConfigMaps, the key's Secret, the claims the database the chart brings and its
-   registry would take, or a backup volume a deleted namespace left. One refusal lists them all.
+   Secrets and ConfigMaps, the key's Secret, or the claims the database the chart brings and its
+   registry would take. One refusal lists them all. A backup volume a deleted namespace left is
+   not a refusal: the plan says restore deletes it.
    It reads the chart at the version the backup was taken on, or `--chart-version`, and refuses
    one older than the backup's; a newer one is said, the restore then being an upgrade.
 3. **Ask.** It shows the backup, the cluster and namespace, the chart and version, what it will
    make and what it will do with the database, and asks `Restore it here?`. `--yes` answers for a
-   script; with no terminal and no `--yes`, nothing is changed. Then it makes the namespace if
-   there is none.
+   script; with no terminal and no `--yes`, nothing is changed. Then it deletes a backup volume a
+   deleted namespace left, where there is one, and makes the namespace if there is none.
 4. **Put the keys back.** It makes every Secret the backup holds, with the database's URL left empty
    so that nothing starts against the database yet. Where the deployment made its own key, the key
    goes into a Secret, `<release>-meridian-runtime-key`; where you gave it one
@@ -292,15 +293,13 @@ again. Empty the namespace, or restore into another with `-n`.
 ### Restoring on the same cluster
 
 After a namespace is deleted, the volume made from `backup.path` is left behind, `Released`.
-Delete it before you restore; restore refuses while it is there, naming the command. The directory and the backups in it are
-kept:
+Restore deletes it within its own approval: the plan says so before it asks, and the release makes
+the volume again. The volume is kept with `Retain`, so the node's directory and the backups in it
+stay where they are:
 
-```bash
-kubectl delete pv <namespace>-<release>-meridian-runtime-backup
+```text
+  First it deletes the backup volume <namespace>-<release>-meridian-runtime-backup, which a deleted namespace left and the release makes again. It is kept with Retain, so the node's directory, with its backups, stays where it is.
 ```
-
-<!-- TODO(CLI 0.1.47): meridian restore offers to delete the left-behind volume in its own
-confirmation (the CLI audit's D6); then this step and the kubectl line go. -->
 
 A reset of Rancher Desktop leaves no such volume.
 

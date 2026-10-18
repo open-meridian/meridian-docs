@@ -37,6 +37,7 @@ Find what you see in the left column. Each row says what it means and what to do
 | What you see | What it means | What to do |
 |---|---|---|
 | `street`, `instrument` or `migrate` still in error | They may not have retried yet | Give them two minutes. If they stay, read the message: a key still missing there means the apply did not write the database Secret. |
+| A component keeps restarting | `meridian status` says how often, and why the last time (`OOMKilled`, `Error`) | `meridian logs <component> --previous` prints what it said before its last restart. A memory limit is raised in the chart's values, with `meridian upgrade-deployment -f`. |
 | "the directory did not say when this person authenticated" | Your OpenID Connect provider returned no `auth_time` | See [Choose how people sign in](choose-sign-in.md). On Entra ID, add `auth_time` as an optional claim. Nothing in the deployment changes. |
 | You sign in but see no gear (**Settings**) at the top right | You are not in the administrators' group, or it was misspelt | See [Recover administration](recover-administration.md). |
 | The only administrator lost their password | Nobody else can sign in to reset it | See [Reset a lost password](reset-a-lost-password.md). |
@@ -48,7 +49,7 @@ Every `meridian plugin` command exits with a code that says what kind of failure
 | Exit | Means | What to do |
 |---|---|---|
 | 1 | Refused or failed | Read the message. It names the cause. |
-| 2 | Asked wrongly | Check the command and its flags against `meridian --help`. |
+| 2 | Asked wrongly | Check the command and its flags against `meridian plugin <command> --help`. |
 | 3 | Not connected, or the delegation was revoked or has lapsed | Run the `meridian connect` it prints. A delegation lasts up to 90 days. |
 
 | What you see | What to do |
