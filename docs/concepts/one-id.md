@@ -217,9 +217,10 @@ usage** for the last whole week, Monday to Sunday: per identifier scheme,
 - how many misses arrived with it as their only identifier;
 
 with the period. **Counts only**: never an identifier's value, a holding, a
-quantity or an account. The report has room for the schemes the deployment
-declares it is licensed for, but a deployment cannot declare them yet, so
-that list is sent empty. The first weekly report after the upgrade's
+quantity or an account. It also carries the schemes the deployment
+declares it is licensed for, which a deployment admin sets on the same tab:
+a box for each licensed scheme (CUSIP, ISIN, SEDOL) and any declared beyond
+them, with a note (`dashboard__set_licensed_schemes` through an agent). The first weekly report after the upgrade's
 migration carries its effect; a report the platform did not receive is not
 sent again, the next week's replacing it.
 

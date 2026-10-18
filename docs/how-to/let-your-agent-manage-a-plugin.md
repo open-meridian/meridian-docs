@@ -42,8 +42,9 @@ agent stricter than the deployment's own levels, never looser.
 Ask the agent to find the plugin and read it. It calls
 `dashboard__list_plugins` for the instance's name, then:
 
-- `dashboard__read_plugin_summary` for its status, figures, raw records,
-  what it declares and its tools;
+- `dashboard__read_plugin_summary` for its status, figures and raw records;
+- `dashboard__read_plugin_documentation` for its vendor's documentation and
+  its Reference: what it declares, and its tools;
 - `dashboard__read_plugin_settings` for each setting that is not secret,
   each table's rows, which secrets are set and by whom, and `may_set` on
   each setting, saying whether you may change it.

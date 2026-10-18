@@ -226,7 +226,8 @@ make an instrument record -- less than an identifier, a description and a
 currency -- is kept in the street as a placeholder, outside the book. The
 `operations` plugin records it as a break of its own category,
 `BREAK_CATEGORY_UNRECOGNIZED_SECURITY`, naming no instrument and the street
-record by its identifiers, brought up to date while it persists. A local
+record by its identifiers, carried in the break's own field
+(`unresolved_identifiers`), brought up to date while it persists. A local
 line, a position under a provisional record, is reconciled as any position.
 See [One ID per instrument](one-id.md#why-a-thinly-described-security-stays-unrecognised).
 
@@ -295,13 +296,16 @@ own pages to the people granted access to them.
 ## The book's resources { #the-books-resources }
 
 The book replays an account's journal for each command and each dated
-read, so its pod is given more room than core's other components. The
+read, from the account's latest snapshot, so its pod is given more room
+than core's other components. `meridian status` shows each account's
+replay length and when its snapshot was taken, under **Book health**. The
 chart sets it apart, under `bor` in its values:
 
 | Value | Default | What it does |
 |---|---|---|
 | `bor.resources` | a request of 50m CPU and 128Mi of memory, a limit of 512Mi of memory | The book's own requests and limits, in place of the shared `resources` |
 | `bor.mallocArenaMax` | `2` | Sets `MALLOC_ARENA_MAX` in the book's container: at most this many of the allocator's arenas, so a burst of requests answered on many threads does not keep an arena's memory per thread |
+| `bor.snapshotInterval` | `1000` | How many entries an account's journal grows by between **snapshots** of its book, 10 to 100,000. A command or a dated read starts from the latest snapshot at or before the entry it needs and replays only the tail, never the whole journal. A snapshot is core's own working, derived and never edited: one that does not read is passed over, and the latest three are kept |
 
 Each of core's components answers at most 16 requests at once; the rest
 wait their turn. A component's environment variable

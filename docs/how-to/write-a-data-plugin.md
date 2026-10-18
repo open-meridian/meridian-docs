@@ -8,9 +8,9 @@ plugins of a pair pass it unchanged. This page starts one from the template
 and holds it to the suite. How a person then uses it is
 [Using a data plugin](using-a-data-plugin.md).
 
-You need CLI 0.1.45 and SDK 0.28.0 (contract 24): `meridian plugin new
+You need CLI 0.1.46 and SDK 0.29.0 or later (contract 25): `meridian plugin new
 --role data` writes this template on the role's common part, for a runtime
-serving contract 24. A plugin made by an older CLI moves with
+serving contract 25. A plugin made by an older CLI moves with
 [`meridian plugin migrate`](../api/cli.md#plugin-migrate), then maps any new
 cases as [below](#hold-it-to-the-suite).
 
@@ -21,7 +21,7 @@ meridian plugin new my-prices --role data
 cd my-prices
 ```
 
-It writes a whole plugin holding `data`, pinned to `open-meridian==0.28.0`,
+It writes a whole plugin holding `data`, pinned to `open-meridian==0.29.0`,
 that puts a stand-in vendor's daily closes and bars into the lake:
 
 | File | What it is |
@@ -32,6 +32,14 @@ that puts a stand-in vendor's daily closes and bars into the lake:
 | `src/my_prices/page.py`, `templates/` | Its two pages under Manage, **Connection** and **Datasets**, the data role's common pages built on `meridian.roles.data`, each also a read tool for an agent, `read_connection` and `read_datasets`. Neither shows a price. Each template extends the role's and adds the vendor's nuance only at its blocks: see [The role's common pages](#the-roles-common-pages). |
 | `tests/test_suite.py` | The data suite, each case mapped to one of the vendor's responses. |
 | `tests/test_page.py` | Its pages' tests. |
+
+SDK 0.30.0, the latest release, carries more of the data role's common
+work: `meridian.roles.data.Wants` hears and answers wants with your
+conversion, and `meridian.roles.data.pairs` and `.event_contracts` do a
+venue's whole work for a venue listing pairs or binary event contracts, with
+their pages and the checks a plugin runs (`meridian.roles.data.testing`).
+`meridian plugin migrate` moves the plugin to 0.30.0; see
+[Each role's common logic](../api/python-sdk.md#each-roles-common-logic).
 
 `AGENTS.md` teaches a coding agent the role's rules beside the template's
 own. Use the SDK's `meridian` package and nothing of any vendor's: the SDK

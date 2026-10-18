@@ -43,25 +43,31 @@ page's [release notes](docs/api/python-sdk.md#release-notes), and its
 with the CLI's `plugin migrate` step table. An upgrade fact a page drops
 goes there first.
 
-Today they describe contract v24, released 2026-10-15: CLI 0.1.45, SDK
-0.28.0 and chart 0.1.305 (core 6eb6887, its runtime and harness pinned by
-digest), with `boundaries/` vendored from meridian-schema a6a0af7. Contract
-v24 brings booking (allocations, the block, the error account, the
-hand-off, corrections, sleeves, give-ups and alerts, and cash lots outside
-the base currency); the one-ID model (`INS-` records minted by the
-platform, local `LCL-` records never priced, the Provisional tab and the
-upgrade's migration lines, orders on local records, the licence list and
-the weekly usage report); closing an account still attached; the book's
-own resources; `meridian plugin migrate`'s v24 rewrites and `plugin
-check`'s `replaced-ids-followed` warning; and `meridian.environment()`
-defaulting to the sandbox. The plugins on contract v24: Tiingo 0.5.0, the
-sample operations plugin 0.13.0 and its bookings, and the sample reporting
-plugin 0.6.0 and its Bookings tab; on contract v23, Alpaca 0.9.0 and
-Tradier 0.8.0, each now starting on its sandbox, Kalshi 0.5.0, Polymarket
-0.5.0, Polymarket US 0.1.0, SnapTrade 0.17.0 and OANDA 0.2.0 (TODO: 0.3.0,
-picking the account by its ID, pending its merge); on contract v22, Fed H.10 0.4.0,
-Coinbase 0.5.0 and Kraken 0.5.0. What each release added is in the Python
-SDK page's release notes.
+Today they describe contract v25, released 2026-10-17: CLI 0.1.46, SDK
+0.30.0 (each role's common logic, released 2026-10-18 on the same contract)
+and chart 0.1.307 (core 15f6b22, merged as c3ef476, its runtime and harness
+pinned by digest), with `boundaries/` vendored from meridian-schema
+3983435. Contract v25 brings a plugin's own documentation (the whole
+declaration, `docs/` sections by digest, registration held to the version,
+the Documentation tab and the versions pages, `plugin check`'s
+`documentation-sections` and `documentation-safe` and its advice) and the
+platform's registries in Phase 0 (Open Meridian's own plugins in Community,
+the first `open-meridian/snaptrade` 0.18.0;
+the Plugins page's Installed, Browse and Registries; `meridian plugin
+publish`, `plugin key`, `plugin download` and `upload --bundle`); `meridian
+status` and `meridian logs`; the book's snapshots and its health; a version
+retired from the catalogue; the licensed schemes declared; and the carried
+items (a venue resolved by its ID, a listing's trading currency, a give-up
+naming nothing held kept unplaced, the trade date at the cut rolled past
+the weekend). The plugins on contract v25: SnapTrade 0.18.0, the sample
+operations plugin 0.14.0, the sample reporting plugin 0.7.0, Alpaca 0.10.0,
+Tradier 0.9.0, Tiingo 0.6.0, Coinbase 0.6.0, Kraken 0.6.0 and Fed H.10
+0.5.0 (integrations/released.json refreshed). Still on their current
+releases: OANDA 0.2.0 on contract v23, which moves to v25 after its
+pending change merges; and Kalshi 0.5.0, Polymarket 0.5.0 and Polymarket
+US 0.1.0 on contract v23, which move with v26, once core's harness mints
+event contracts. What each release added is in the Python SDK page's
+release notes.
 The tutorials were walked on CLI 0.1.36 and SDK 0.21.0. A page describes
 what is built, and says so where something is specified and not built yet.
 

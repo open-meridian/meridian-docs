@@ -7,7 +7,7 @@ written from the contract alone reconciles any custodian the same way. This page
 custody plugin does for each, with [plugin-snaptrade](https://github.com/open-meridian/plugin-snaptrade)
 as the worked example.
 
-You need CLI 0.1.45 and SDK 0.28.0 (contract 24).
+You need CLI 0.1.46 and SDK 0.29.0 or later (contract 25).
 
 A custody plugin also reports each activity on an account, each with a raw
 record of its own: see [Report the custodian's activity](report-the-custodians-activity.md).
@@ -23,6 +23,9 @@ from meridian.declaration import Declaration, NotCarried, Storage
 
 DECLARATION = Declaration(
     settings=SETTINGS,  # its secret settings' names are declared, never their values
+    interface=INTERFACE,
+    reads_external_accounts=True,
+    documentation="docs",
     not_carried=(
         NotCarried("custody", "myvendor:position", "open_pnl", "no_contract_meaning"),
     ),
@@ -39,7 +42,7 @@ declaration = "my_plugin.declaration:DECLARATION"
 ```
 
 ```python
-async with await meridian.connect(settings=SETTINGS, declaration=DECLARATION) as plugin:
+async with await meridian.connect(declaration=DECLARATION) as plugin:
     ...
 ```
 

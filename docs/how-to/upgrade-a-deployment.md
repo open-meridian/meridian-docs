@@ -32,20 +32,23 @@ backups set up. See [Back up and restore a deployment](back-up-and-restore.md). 
 changes on the way, release by release, is in the
 [release notes](../api/python-sdk.md#release-notes).
 
-!!! note "Upgrading to contract 24"
-    The upgrade to contract 24 (chart 0.1.305 or later) also migrates the
-    deployment's instrument records to the platform's IDs: every `LCL-`
-    record is sent as a matching request, and the answers wait on the
-    Instruments page's **Provisional** tab as lines for a deployment admin
-    to make. Nothing is rewritten, and nothing is applied without the
-    admin, but what the platform mints is recorded for good, so take the
-    backup first. See
+!!! note "Upgrading to contract 25"
+    The upgrade to contract 25 (chart 0.1.307 or later) keeps a
+    snapshot of each account's book every `bor.snapshotInterval` entries
+    (default 1,000), so a command replays only the journal's tail; the
+    first snapshots are made as accounts are next written. Plugins keep
+    running as they are: a plugin on an SDK before 0.29.0 registers as
+    before, and one moved to SDK 0.29.0 or later carries its whole declaration and
+    its documentation (see
+    [Moving a plugin to a new release](../api/python-sdk.md#moving-a-plugin-to-a-new-release)).
+    Upgrading from a chart before contract 24 also runs that release's
+    instrument migration; see
     [Review provisional records and the migration](review-provisional-records.md).
-    The setting **Allow orders on local records** is on after the upgrade,
-    and so is the weekly usage report. The book's pod has resources of its
-    own from this chart, `bor.resources` (a request of 128Mi of memory and
-    a limit of 512Mi), in place of the shared `resources`; see
-    [The book's resources](../concepts/the-book-of-record.md#the-books-resources).
+    The **Plugins** page gains **Browse** and **Registries**: the
+    conductor installs from the Community registry where the chart's
+    values carry the platform's public keys (`registries.platformKeys`);
+    with none, Browse says the deployment reaches no registry. `meridian status`
+    shows each component and the book's health after the upgrade.
 
 ## To upgrade with the command line
 
@@ -120,7 +123,11 @@ Old ReplicaSets are left to the chart's revisionHistoryLimit.
 
 A container that restarted while the upgrade ran is listed with the reason Kubernetes gives and the
 `kubectl logs … --previous` that shows why. That is worth reading, and it is not a failure: a
-component that starts before its migration has finished exits and is restarted.
+component that starts before its migration has finished exits and is restarted. `meridian status`
+shows each component's restarts and the last one's reason at any time, and `meridian logs
+<component>` what its running containers have printed.
+<!-- TODO(CLI 0.1.47): meridian logs reading a restarted container's last output (the CLI audit's D2,
+not yet named); then name it here in place of kubectl, as the upgrade's own message will (C3). -->
 
 ### While it runs
 
@@ -191,6 +198,10 @@ is left as `<version>`: `meridian plugin list` gives it. It relaunches nothing i
 `meridian doctor` warns about the same plugins, as `worth`, at any time.
 
 ### If it stops
+
+<!-- TODO(CLI 0.1.47): the table's three helm and kubectl rows swap helm and kubectl for meridian commands when they ship:
+a Release line in meridian status (D3), a rollback command (D4, not yet named),
+and meridian logs reading the release's Jobs (D5). Not covered by 0.1.46. -->
 
 | It says | What to do |
 |---|---|

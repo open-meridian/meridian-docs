@@ -13,34 +13,21 @@ it.
     releases still to come carry no dates. Where a page elsewhere on this site describes something that is
     specified but not built, it says so too.
 
-<!-- DRAFT for the product owner's review (2026-10-05): the wording of
-"Who checks a plugin" and the Registry column. Published 2026-10-05 without a section number; when the Terms' plugins section (meridian-platform branch terms-third-party-plugins) goes live, name it here. Not to be rephrased elsewhere
-until reviewed. -->
-
 ## Who checks a plugin
 
-!!! warning "Naming a plugin here is not an endorsement"
-    **Local and community plugins are completely unsupervised.** The platform
-    checks nothing about them, and whoever installs one carries its risk.
-
-    **Verified plugins are checked at best effort**: the platform's review and a
-    version floor. That is not an audit, a warranty, or due diligence on the vendor.
-
-    **In every case the firm carries its own vendor due diligence**: the
-    vendor's terms and licences, its security, its regulatory status, and
-    whether the plugin is fit for the firm's purpose.
-
-    This is a summary. The [Platform Terms](https://open-meridian.com/terms)
-    govern.
-
-Every table below marks each plugin with its **registry**:
+Every table below marks each plugin with its **registry**, which says where
+it comes from and what was checked before it reached you:
 
 | Registry | What it is |
 |---|---|
-| **Local** | Your deployment's own registry, which you or your agent upload to. Unsupervised. Every plugin installed today is local, SnapTrade, the sample plugins and the data plugins included |
-| **Community** | The platform's shared registry, for anyone's plugins. Unsupervised. Not open yet |
-| **Verified** | The platform's registry of plugins checked at best effort, as above. Not open yet |
+| **Local** | Your deployment's own registry, which you or your agent upload to. The platform checks nothing here. Open Meridian's plugins not yet listed in Community are marked Local, as uploaded from their releases |
+| **Community** | The platform's shared registry. The platform builds each version itself and runs its automatic checks before listing it. Open to Open Meridian's own plugins first; SnapTrade is listed there. See [Registries](registries.md) |
+| **Verified** | The platform's shared registry for plugins that pass the automatic checks and a person's review. Not open yet |
 | **Planned** | The plugin does not exist yet |
+
+Whichever registry a plugin comes from, your firm does its own vendor due
+diligence: the vendor's terms and licences, its security, and whether the
+plugin fits your purpose.
 
 ## A deployment in three layers
 
@@ -131,17 +118,17 @@ value. No trading yet.
 
 | Need | Role | Plugin | Registry | Status |
 |---|---|---|---|---|
-| Holdings and cash from Fidelity, daily | [`custody`](roles.md#custody) | SnapTrade | Local | Exists |
-| Dividends, reinvestments, splits and transfers, back to the start of the history SnapTrade holds | [`custody`](roles.md#custody) | SnapTrade | Local | Exists |
-| A 401(k) plan's own fund codes linked to their instruments | [`custody`](roles.md#custody) | SnapTrade, its Plan-code links table | Local | Exists |
-| The IRA's core position, an FDIC-insured deposit, counted as cash | [`custody`](roles.md#custody) | SnapTrade, by its own flag or its Cash links table | Local | Exists |
+| Holdings and cash from Fidelity, daily | [`custody`](roles.md#custody) | SnapTrade | Community | Exists |
+| Dividends, reinvestments, splits and transfers, back to the start of the history SnapTrade holds | [`custody`](roles.md#custody) | SnapTrade | Community | Exists |
+| A 401(k) plan's own fund codes linked to their instruments | [`custody`](roles.md#custody) | SnapTrade, its Plan-code links table | Community | Exists |
+| The IRA's core position, an FDIC-insured deposit, counted as cash | [`custody`](roles.md#custody) | SnapTrade, by its own flag or its Cash links table | Community | Exists |
 | An opening balance per account, with its lots, and daily reconciliation, each break explained | [`operations`](roles.md#operations) | The sample operations plugin | Local | Exists |
 | Daily closes for stocks and ETFs | [`data`](roles.md#data) | Alpaca and Tradier | Local | Exists: see [Using a data plugin](../how-to/using-a-data-plugin.md#alpaca-and-tradier) |
 | US dollar exchange rates | [`data`](roles.md#data) | The Federal Reserve's H.10 rates | Local | Exists: see [Using a data plugin](../how-to/using-a-data-plugin.md#the-federal-reserves-h10) |
 | A mutual fund's daily NAV | [`data`](roles.md#data) | Tiingo | Local | Exists: see [Using a data plugin](../how-to/using-a-data-plugin.md#tiingo-mutual-funds-daily-navs) |
 | The book valued, by account and in total | [`reporting`](roles.md#reporting) | The sample reporting plugin | Local | Exists: see [Value the book](../how-to/value-the-book.md) |
-| A plan-only fund valued at the custodian's own mark | [`data`](roles.md#data) | SnapTrade | Local | Planned, not scheduled |
-| Trading from the deployment | [`connectivity`](roles.md#connectivity) | SnapTrade | Local | Exists: trading enabled per connection, tested against a simulated brokerage only; see [Trading through SnapTrade](../how-to/using-a-custody-plugin.md#trading-through-snaptrade) |
+| A plan-only fund valued at the custodian's own mark | [`data`](roles.md#data) | SnapTrade | Community | Planned, not scheduled |
+| Trading from the deployment | [`connectivity`](roles.md#connectivity) | SnapTrade | Community | Exists: trading enabled per connection, tested against a simulated brokerage only; see [Trading through SnapTrade](../how-to/using-a-custody-plugin.md#trading-through-snaptrade) |
 
 **Configuration.** The person is their own deployment admin and the only
 person with access. SnapTrade's key is a secret setting on its form. Accounts
@@ -162,7 +149,7 @@ reports to its investors, and trades through the order path.
 
 | Need | Role | Plugin | Registry | Status |
 |---|---|---|---|---|
-| Holdings, cash and activity from the brokerages SnapTrade reaches | [`custody`](roles.md#custody) | SnapTrade | Local | Exists |
+| Holdings, cash and activity from the brokerages SnapTrade reaches | [`custody`](roles.md#custody) | SnapTrade | Community | Exists |
 | Holdings, cash and activity from a custodian or prime broker with no plugin | [`custody`](roles.md#custody) | Yours | Local | Build your own |
 | Holdings and activity read directly from Alpaca or Tradier | [`custody`](roles.md#custody) | Alpaca, Tradier | Local | Exists: see [Using a custody plugin](../how-to/using-a-custody-plugin.md) |
 | Opening balances, daily reconciliation, breaks resolved by people | [`operations`](roles.md#operations) | The sample operations plugin, or yours | Local | Exists |
@@ -177,7 +164,7 @@ reports to its investors, and trades through the order path.
 | An agent drafting an adjustment that a person makes | any | Any | — | Exists: [Prepared changes](prepared-changes.md) |
 | A nightly job running as a named account | any | Any | — | Exists: [Service accounts](service-accounts.md) |
 | Orders decided, worked and sent | [`portfolio`](roles.md#portfolio), [`oms`](roles.md#oms), [`ems`](roles.md#ems) | Yours | Local | Build your own: the contract carries it; see [The order lifecycle](the-order-lifecycle.md) |
-| Orders placed at a broker | [`connectivity`](roles.md#connectivity) | SnapTrade; Alpaca and Tradier | Local | Exists, each tested against a simulated brokerage only: see [Route orders through a connectivity plugin](../how-to/route-orders-through-a-connectivity-plugin.md) |
+| Orders placed at a broker | [`connectivity`](roles.md#connectivity) | SnapTrade; Alpaca and Tradier | Community; Local | Exists, each tested against a simulated brokerage only: see [Route orders through a connectivity plugin](../how-to/route-orders-through-a-connectivity-plugin.md) |
 
 **Configuration.** Accounts carry an owner label per fund or sleeve, and
 account groups follow them: operations staff hold `write` on the accounts
