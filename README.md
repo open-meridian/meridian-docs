@@ -56,10 +56,10 @@ unset and listed in `Settings.refused`; the pricing template declaring no
 storage; the event-contract fixes) after SDK 0.31.0 (contract v26: the
 analytics component, the `pricing` role, event groups, the agents'
 demo-only guard and the lake's bounded query), with `boundaries/` vendored
-from meridian-schema 309e093. The concept and how-to pages for the
-analytics component, event groups and the agents' guard are still to
-come; the API reference lists contract 26's typed operations and the
-analytics component's data dictionary. The plugins on contract v25:
+from meridian-schema 309e093. The concept pages for the analytics
+component, event groups and the agents' guard, and the how-to for a
+pricing plugin, describe them; the API reference lists contract 26's typed
+operations and the analytics component's data dictionary. The plugins on contract v25:
 SnapTrade 0.18.0, the sample operations plugin 0.14.0, the sample
 reporting plugin 0.7.0, Alpaca 0.10.0, Tradier 0.9.0, Tiingo 0.6.0,
 Coinbase 0.6.0, Kraken 0.6.0 and Fed H.10 0.5.0 (integrations/released.json

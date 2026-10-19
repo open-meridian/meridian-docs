@@ -22,8 +22,10 @@ piece of data lives.
 | [The archive](the-archive.md) | An edge plugin's raw records: each kind's window, archived, kept or deleted past it, the deployment admin's archive, bound and holds, restore, and the record every move leaves. |
 | [Instruments](instruments.md) | Instrument identity, the security master, and the copy a deployment keeps of it; each identifier's window, binary event contracts, and an ID never reused |
 | [One ID per instrument](one-id.md) | Every instrument named by the platform's `INS-` ID, minted from the platform's own source; local `LCL-` records until it answers, never priced; why a thin statement line stays unrecognised; the licence list, usage reporting and orders on local records |
+| [Event groups](event-groups.md) | A venue's event contracts grouped by event in the instrument master: mutually exclusive and exhaustive as stated or not stated, every version kept, reported by a data plugin and minted by the platform |
 | [The lake](the-lake.md) | Where a deployment keeps what its data sources say, prices and bars, by dataset: versions, reads as of a recorded time, the source priority, wants, kept or served; trades and quotes, streamed, caught up after a watermark; event contracts' outcomes; and who reads them |
 | [Licences and entitlements](licences-and-entitlements.md) | The terms a dataset is kept on, the one-person warning, which plugins may read it and which fields, and who changed what |
+| [The analytics component](the-analytics-component.md) | Figures over the book and the lake for the plugins that ask: jobs, the measures and the pricing models, the `pricing` role's seam, provenance and the answer hash, what is not evaluated and why, and its current limits |
 | [Money and instruments](money-and-instruments.md) | Why every amount names a cash instrument, fiat and tokens alike, and a fiat code resolved by core |
 | [Venues](venues.md) | The platform's venue master: a venue ID, its MIC and vendors' codes, pulled one at a time, and where a deployment names a venue |
 | [Dates and time](dates-and-time.md) | Moments and plain dates, a daily price keyed by its business date, a dataset's day, and a date checked at both ends |
@@ -31,6 +33,7 @@ piece of data lives.
 | [Prepared changes](prepared-changes.md) | An agent or a person prepares a change and a person makes it; what agents may do with each act, set by the deployment admin and a plugin's admin; the second pair of eyes; lapse |
 | [Service accounts](service-accounts.md) | A user of the deployment that is not a person, which a plugin's autonomous work runs as: its owner, prepare only or act, granted per role, what binds it and what is recorded |
 | [The order lifecycle](the-order-lifecycle.md) | How an order reaches a venue through the book: who does what by role, the states and the transition table, child orders, the release gate and waiting for compliance, connectivity plugins linked to an `ems`, fills moving positions, venue-originated fills, and trading instructions |
+| [The agents' guard](the-agents-guard.md) | Agents place orders on demo connections only: what the book refuses and records, how a connection's environment is decided from its setting and its session, and the Demo and Live badges |
 | [Booking](booking.md) | An order's executions booked to its accounts, the block, the error account, the hand-off, corrections, sleeves, give-ups and alerts, and which currency has lots |
 | [Settlement calendars](settlement-calendars.md) | Business-day calendars and date rules the platform keeps and a deployment pulls; a settlement, spot or tenor date worked out one way in core, with its basis; coverage, and the Calendars tab |
 | [Development deployments](development-deployments.md) | A deployment installed for writing plugins, and why a firm's own deployment is never one |
@@ -52,7 +55,10 @@ piece of data lives.
     are tested against a simulated brokerage only. Booking books an order's
     executions to its accounts, and every
     instrument is named by the platform's `INS-` ID, a deployment keeping
-    local records, never priced, until the platform answers. A plugin
+    local records, never priced, until the platform answers. The analytics
+    component answers plugins' jobs over the book and the lake, each answer
+    naming its inputs; venues' event contracts are grouped by event; and
+    agents place orders on demo connections only. A plugin
     carries its own documentation, read before it is launched, and the
     platform's Community registry lists Open Meridian's own plugins. Where a page
     describes something that is specified but not built, it says so.

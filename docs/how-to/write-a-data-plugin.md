@@ -39,7 +39,8 @@ conversion, and the Datasets page fills its rows from what it kept
 (`data.served`, `data.want_rows`). `meridian.roles.data.pairs` and
 `.event_contracts` do a venue's whole work for a venue listing pairs or
 binary event contracts, with their pages and the checks a plugin runs
-(`meridian.roles.data.testing`). A plugin made by an older CLI moves to
+(`meridian.roles.data.testing`); a venue of event contracts also reports
+how it groups them by event (see [Event groups](../concepts/event-groups.md)). A plugin made by an older CLI moves to
 0.31.1 with `meridian plugin migrate`; see
 [Each role's common logic](../api/python-sdk.md#each-roles-common-logic).
 
@@ -370,7 +371,7 @@ the plugin has a `.venv`.
 
 `--verified` fails `role-suite` where no test runs the data suite, and
 `--run-tests` runs it; see [`plugin check`](../api/cli.md#plugin-check). It
-holds only the `custody`, `data` and `connectivity` suites: a reading role
+holds only the `custody`, `data`, `connectivity` and `pricing` suites: a reading role
 the plugin also holds is not checked for its suite. It also fails
 `role-pages` where the plugin's Connection and Datasets pages,
 their tools and its settings are not the role's, in the role's order (see
