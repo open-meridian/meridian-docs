@@ -5,7 +5,7 @@ its **documentation**: a few sections of plain Markdown you write in the plugin'
 carried with each version you upload, and a **Reference** the deployment draws from the version's
 declaration, so it always says what the version really asks for.
 
-You need CLI 0.1.46 and SDK 0.29.0 or later (contract 25). `meridian plugin new` writes a plugin with a
+You need CLI 0.1.50 and SDK 0.31.1 or later (contract 26). `meridian plugin new` writes a plugin with a
 `docs/` folder already in it, one short prompt in each section for you to replace.
 
 ## The sections

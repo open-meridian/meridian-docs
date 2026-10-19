@@ -43,36 +43,31 @@ page's [release notes](docs/api/python-sdk.md#release-notes), and its
 with the CLI's `plugin migrate` step table. An upgrade fact a page drops
 goes there first.
 
-Today they describe contract v25, released 2026-10-17: CLI 0.1.47
-(released 2026-10-18: `plugin key setup` and `plugin release`, `plugin
-publish --details`, `rollback-deployment`, `plugin gc`, `status`'s release
-and plugins, `logs --previous` and a Job's or plugin's logs, `plugin new
---role connectivity`, new plugins on SDK 0.30.0, and the platform's
-registry-signing key for bundles), SDK
-0.30.0 (each role's common logic, released 2026-10-18 on the same contract)
-and chart 0.1.307 (core 15f6b22, merged as c3ef476, its runtime and harness
-pinned by digest), with `boundaries/` vendored from meridian-schema
-3983435. Contract v25 brings a plugin's own documentation (the whole
-declaration, `docs/` sections by digest, registration held to the version,
-the Documentation tab and the versions pages, `plugin check`'s
-`documentation-sections` and `documentation-safe` and its advice) and the
-platform's registries in Phase 0 (Open Meridian's own plugins in Community,
-the first `open-meridian/snaptrade` 0.18.0;
-the Plugins page's Installed, Browse and Registries; `meridian plugin
-publish`, `plugin key`, `plugin download` and `upload --bundle`); `meridian
-status` and `meridian logs`; the book's snapshots and its health; a version
-retired from the catalogue; the licensed schemes declared; and the carried
-items (a venue resolved by its ID, a listing's trading currency, a give-up
-naming nothing held kept unplaced, the trade date at the cut rolled past
-the weekend). The plugins on contract v25: SnapTrade 0.18.0, the sample
-operations plugin 0.14.0, the sample reporting plugin 0.7.0, Alpaca 0.10.0,
-Tradier 0.9.0, Tiingo 0.6.0, Coinbase 0.6.0, Kraken 0.6.0 and Fed H.10
-0.5.0 (integrations/released.json refreshed). Still on their current
-releases: OANDA 0.2.0 on contract v23, which moves to v25 after its
-pending change merges; and Kalshi 0.5.0, Polymarket 0.5.0 and Polymarket
-US 0.1.0 on contract v23, which move with v26, once core's harness mints
-event contracts. What each release added is in the Python SDK page's
-release notes.
+Today they describe contract v26, released 2026-10-19 in chart 0.1.308
+(core 17a13a2): CLI 0.1.50 (released 2026-10-19: new plugins on SDK
+0.31.1, and `plugin check`'s `role-pages` counting the pages an SDK helper
+declares, such as `meridian.roles.custody.account_pages`), after CLI
+0.1.49 (`meridian plugin release` checks, signs the tag on main's head and
+publishes, opening no pull request and changing no file, the version bump
+and CHANGELOG entry going in the change's own pull request; the `pricing`
+role, fifteen in all, v26's suites, and `plugin new --role pricing`), and
+SDK 0.31.1 (a saved setting value no longer among its choices delivered
+unset and listed in `Settings.refused`; the pricing template declaring no
+storage; the event-contract fixes) after SDK 0.31.0 (contract v26: the
+analytics component, the `pricing` role, event groups, the agents'
+demo-only guard and the lake's bounded query), with `boundaries/` vendored
+from meridian-schema 309e093. The concept and how-to pages for the
+analytics component, event groups and the agents' guard are still to
+come; the API reference lists contract 26's typed operations and the
+analytics component's data dictionary. The plugins on contract v25:
+SnapTrade 0.18.0, the sample operations plugin 0.14.0, the sample
+reporting plugin 0.7.0, Alpaca 0.10.0, Tradier 0.9.0, Tiingo 0.6.0,
+Coinbase 0.6.0, Kraken 0.6.0 and Fed H.10 0.5.0 (integrations/released.json
+refreshed). Still on their current releases: OANDA 0.2.0 on contract v23,
+which moves to v25 after its pending change merges; and Kalshi 0.5.0,
+Polymarket 0.5.0 and Polymarket US 0.1.0 on contract v23, which move with
+v26, once core's harness mints event contracts. What each release added is
+in the Python SDK page's release notes.
 The tutorials were walked on CLI 0.1.36 and SDK 0.21.0. A page describes
 what is built, and says so where something is specified and not built yet.
 
@@ -80,8 +75,8 @@ what is built, and says so where something is specified and not built yet.
 
 These pages are generated at every build, never written by hand:
 `concepts/roles.md`; one page per store under `boundaries/` -- the street, the
-instrument store, the book, the conductor's accounts, the sidecar, the
-envelope and the shared types -- each that store's data dictionary at the
+instrument store, the book, the conductor's accounts, the dashboard's records,
+the analytics component, the sidecar, the envelope and the shared types -- each that store's data dictionary at the
 contract version these docs describe, its records first and every entry
 anchored by its name; and `llms.txt`, served at the site's root for agents. An
 MkDocs hook, `tools/boundaries_page.py`, writes them from `boundaries/`, a copy

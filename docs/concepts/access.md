@@ -289,7 +289,7 @@ plugin**: an access entry names a plugin, one role it holds, and a
 level.
 
 Roles are not a plugin's parts. They are the deployment's fixed list of
-fourteen, approved when the plugin is launched (see
+fifteen, approved when the plugin is launched (see
 [Plugins, roles and grants](plugins.md#roles-what-a-plugin-is-for)), so a
 grant naming one keeps access decided by the deployment, never by the plugin.
 

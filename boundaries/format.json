@@ -79,7 +79,8 @@
       "meridian/v1/bus.proto": "envelope",
       "meridian/v1/amounts.proto": "shared",
       "meridian/v1/journal.proto": "shared",
-      "meridian/v1/lake.proto": "lake"
+      "meridian/v1/lake.proto": "lake",
+      "meridian/v1/analytics.proto": "analytics"
     },
     "messages": {
       "meridian.v1.Decimal": "shared",

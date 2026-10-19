@@ -51,7 +51,7 @@ see [The archive](the-archive.md).
 
 A **role** says what a plugin is for, and it is the only thing that decides
 what the plugin may publish and subscribe to on the bus. Roles come from a
-fixed list of fourteen, and a plugin declares a *set* of them. An order and
+fixed list of fifteen, and a plugin declares a *set* of them. An order and
 execution management system is `oms` and `ems`; a fully automated trading
 system might be `signal`, `portfolio`, `oms` and `ems`. A plugin holding
 several roles still has one sidecar and one credential, and holds the union of
@@ -68,6 +68,7 @@ their grants. A person is granted a level on each of its roles apart; see [Acces
 | `oms` | Order management, including tax-lot selection |
 | `operations` | The post-trade pipeline: matching, servicing, reconciliation, settlement |
 | `portfolio` | Portfolio construction |
+| `pricing` | Pricing models: answers the analytics component's batches for the models its version declares, from exactly the market objects each model declares |
 | `reference` | Reference and terms data: a security's terms gathered from sources, reconciled, and offered to the instrument store with their provenance |
 | `reporting` | Reporting, analytics and valuation |
 | `servicing` | Non-trading transactions: corporate actions, lifecycle events, coupons |
@@ -152,7 +153,7 @@ A plugin declares its roles in its own `pyproject.toml`, where
 
 ```toml
 [tool.meridian]
-roles = []          # a set, from the fourteen above
+roles = []          # a set, from the fifteen above
 interface = true    # it serves a page
 ```
 

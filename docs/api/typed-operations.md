@@ -15,7 +15,7 @@ The operations are generated, not written by hand. One generator reads the contr
 - the sidecar's side of it;
 - the Python methods on [`Plugin`](python-sdk.md#plugin).
 
-This page lists every operation in SDK 0.29.0, which declares contract 25: holdings ingestion and [the custodian's activity](../concepts/the-custodians-activity.md), the [book of record](../concepts/the-book-of-record.md)'s commands and reads, instrument and venue resolution, [the lake](../concepts/the-lake.md)'s records and reads, [the order path](#the-order-path), [booking](../concepts/booking.md), the [settlement calendars' reads](#settlement-calendars-reads), and the [one-ID model](../concepts/one-id.md)'s reads, [`list_replacements`](#list_replacements), [`list_templates`](#list_templates) and [`read_template`](#read_template), with `reference`'s [`offer_template_fields`](#offer_template_fields). A resolve answers whether its record is provisional. The book refuses an entry missing what it requires, `REFUSAL_REASON_INCOMPLETE`, naming each missing field (see [What the book requires](#what-the-book-requires)). A command naming an order, a placement, a change request or a locate by its ID is admitted on the role's grant and held by the book to the plugin's write scope (see [The order lifecycle](../concepts/the-order-lifecycle.md#a-command-naming-a-record-by-its-id)).
+This page lists every operation in SDK 0.31.1, which declares contract 26: holdings ingestion and [the custodian's activity](../concepts/the-custodians-activity.md), the [book of record](../concepts/the-book-of-record.md)'s commands and reads, instrument and venue resolution, [the lake](../concepts/the-lake.md)'s records and reads, [the order path](#the-order-path), [booking](../concepts/booking.md), the [settlement calendars' reads](#settlement-calendars-reads), and the [one-ID model](../concepts/one-id.md)'s reads, [`list_replacements`](#list_replacements), [`list_templates`](#list_templates) and [`read_template`](#read_template), with `reference`'s [`offer_template_fields`](#offer_template_fields); and contract 26's [analytics component, event groups, bounded lake query and agents' guard](#contract-v26s-operations). A resolve answers whether its record is provisional. The book refuses an entry missing what it requires, `REFUSAL_REASON_INCOMPLETE`, naming each missing field (see [What the book requires](#what-the-book-requires)). A command naming an order, a placement, a change request or a locate by its ID is admitted on the role's grant and held by the book to the plugin's write scope (see [The order lifecycle](../concepts/the-order-lifecycle.md#a-command-naming-a-record-by-its-id)).
 
 Three calls every plugin may make are in the Python SDK rather than here: reading the [prepared change](python-sdk.md#prepared) a page was opened from (`ReadPreparedCall`), saving [a person's own settings](python-sdk.md#own_settings) (`SetOwnSettings`), and calling one of the plugin's own acts as the [service account](../concepts/service-accounts.md) its role runs as (`CallAsServiceAccount`, offered as [`meridian.runs_as`](python-sdk.md#runs_as)). Where the dashboard makes such an act, its route is reached with a service account's claims and sends what it sends for a person, `acting_for` the header it received (see [Acting for a person](#acting-for-a-person)); the book records the service account and its owner as the entry's actor.
 
@@ -105,6 +105,16 @@ Three calls every plugin may make are in the Python SDK rather than here: readin
 | [`offer_template_fields`](#offer_template_fields) | `OfferTemplateFields` | W3.23 Offer a template's fields | command | `reference` (added in contract 24) | `OfferTemplateFieldsResult` |
 | [`read_calendar`](#read_calendar) | `ReadCalendar` | W3.19 Read a calendar | query | every role | `ReadCalendarResult` |
 | [`compute_date`](#compute_date) | `ComputeDate` | W3.20 Work out a date | query | every role | `ComputeDateResult` |
+| [`report_event_group`](#report_event_group) | `ReportEventGroup` | W3.29 Report an event group | command | `data` (added in contract 26) | `ReportEventGroupResult` |
+| [`list_event_groups`](#list_event_groups) | `ListEventGroups` | W3.30 Read event groups, and hear each change | query | every role but `pricing` (added in contract 26) | `ListEventGroupsResult` |
+| [`query_lake`](#query_lake) | `QueryLake` | W10.10 Query the lake within bounds | query | `compliance`, `data`, `ems`, `operations`, `portfolio`, `reporting`, `signal` (added in contract 26) | `QueryLakeResult` |
+| [`read_agent_orders_demo_only`](#read_agent_orders_demo_only) | `ReadAgentOrdersDemoOnly` | W11.39 Read whether agents' orders are kept to demo connections | query | `compliance`, `ems`, `oms`, `portfolio` (added in contract 26) | `ReadAgentOrdersDemoOnlyResult` |
+| [`run_job`](#run_job) | `RunJob` | W12.1 Run a job | query | `compliance`, `portfolio`, `reporting`, `signal` (added in contract 26) | `RunJobResult` |
+| [`list_measure_definitions`](#list_measure_definitions) | `ListMeasureDefinitions` | W12.1 Run a job | query | `compliance`, `portfolio`, `reporting`, `signal` (added in contract 26) | `ListMeasureDefinitionsResult` |
+| [`list_price_batches`](#list_price_batches) | `ListPriceBatches` | W12.3 Price a batch | query | `pricing` (added in contract 26) | `ListPriceBatchesResult` |
+| [`answer_price_batch`](#answer_price_batch) | `AnswerPriceBatch` | W12.3 Price a batch | command | `pricing` (added in contract 26) | `AnswerPriceBatchResult` |
+| [`list_finished_jobs`](#list_finished_jobs) | `ListFinishedJobs` | W12.4 Finish a job later, and read its answer | query | `compliance`, `portfolio`, `reporting`, `signal` (added in contract 26) | `ListFinishedJobsResult` |
+| [`read_job_answer`](#read_job_answer) | `ReadJobAnswer` | W12.4 Finish a job later, and read its answer | query | `compliance`, `portfolio`, `reporting`, `signal` (added in contract 26) | `ReadJobAnswerResult` |
 
 **Role** is the plugin role that publishes the step, or the roles that may ask the query, from the contract's matrix. A plugin can call an operation only if it holds one of them, approved when it was launched. Otherwise the call raises `NotGranted`. See [Plugins, roles and grants](../concepts/plugins.md) and [Plugin manifest](plugin-manifest.md).
 
@@ -2653,6 +2663,108 @@ question; otherwise the outcome says why nothing was computed:
 `DATE_OUTCOME_RULE_NOT_HELD`. A malformed question is refused `invalid`,
 naming the field; a cut's zone the deployment does not hold is refused,
 naming `spot.at_ns`.
+
+## Contract 26's operations { #contract-v26s-operations }
+
+Added in SDK 0.31.0 (contract 26). Every one is `preview`. The Python SDK
+wraps most of them: `meridian.analytics` builds and runs a job,
+`meridian.roles.pricing.Pricer` answers a pricing plugin's batches,
+`meridian.EventGroups` keeps the event groups read and heard, and
+`plugin.query_lake` is the bounded query. Three events come with them,
+heard through [`receive`](python-sdk.md#receive): `event_group_changed`
+(every role but `pricing`), `job_finished` (the roles that run jobs) and
+`price_batch` (`pricing`).
+
+### `report_event_group` { #report_event_group }
+
+A venue's data plugin reports the grouping its venue states for an event:
+`venue_id`, `venue_event_ref`, `title` (the venue's words, data, never
+instructions), `member_instrument_ids` (each resolved before it is sent;
+one the store does not hold is refused, naming it), `mutually_exclusive`
+and `exhaustive` (each as stated, or not stated where the venue says
+nothing, never false), `series_id`, `valid_from_ns` and the `raw_record`
+it was read from. **Returns** the `event_group` at its version, under its
+`EVG-` ID or the deployment's own `LCL-` ID, and `pending_review`, true
+while the deployment keeps its own `LCL-` group.
+
+### `list_event_groups` { #list_event_groups }
+
+The groups holding given instruments (`instrument_ids`, each followed
+through its replacement) or given groups (`event_group_ids`), each at the
+version in force at `as_of_ns`, or caught up after a `sequence`
+(`after_sequence`); paged by `page_size` (at most 500) and `cursor`.
+**Returns** `event_groups`, the `sequence` read to and `next_cursor`.
+
+### `query_lake` { #query_lake }
+
+One read-only query over one of the lake's kinds, within the asking
+instance's entitlements and its roles' kinds: `kind` (`prices`, `bars`,
+`trades`, `quotes` or `outcomes`; one the role does not read is refused,
+naming it), `subjects` (at most 500), `sources`, a range by moment
+(`valid_from_ns` inclusive, `valid_until_ns` exclusive) or by date
+(`from_date`, `to_date`, both inclusive), `as_of_ns`, the `fields` wanted,
+each by its dictionary entry, and `row_limit`, 1 to 10,000. **Returns**
+the rows of that kind, each with only the fields named; `unanswered`, per
+subject, dataset and field; the `datasets`; the `watermark`; and
+`truncated`, true when more rows matched. It is never paged: narrow the
+query instead.
+
+### `read_agent_orders_demo_only` { #read_agent_orders_demo_only }
+
+Takes nothing. **Returns** `agent_orders_demo_only`, the agents' guard in
+force: true when the book refuses a placement, or an accept to a new
+order, made through a delegation or by a service account on a connection
+that is not demo (`REFUSAL_REASON_AGENT_LIVE_ORDER`). A plugin reads it so
+it can tell a person before sending; the SDK's `Caller.agent_refused`
+says the same of a caller.
+
+### `run_job` { #run_job }
+
+Asks the analytics component for a `job`: the `account_ids`, each in the
+caller's read scope and all read at one watermark; its `inputs` (the
+book's watermark, the lake's as-of and source choice, one for the whole
+job); its `measures`, each a definition and version the component serves,
+with its breakdowns; and an optional `what_if`, trades answered before and
+after. **Returns** `answered_inline`, the `job_id` (`JOB-` and a ULID)
+and, when answered inline, the `answer`: its `figures`, what was
+`not_evaluated` and why (never answered as zero), and its `provenance`,
+the inputs by reference, the implementations and versions, and the
+answer's hash. A job not answered within the request's deadline is
+answered later: see [`list_finished_jobs`](#list_finished_jobs).
+
+### `list_measure_definitions` { #list_measure_definitions }
+
+Takes nothing. **Returns** `definitions`: each measure definition and
+version the component ships, its fixed `parameters`, its `breakdowns`,
+its `scale` and a `description` for people.
+
+### `list_price_batches` { #list_price_batches }
+
+A pricing plugin reads the batches waiting for it after a sequence
+(`after_sequence`), as after a restart. **Returns** `batches`, each as
+delivered (its `batch_id`, `model_id` and `model_version`, its `units`,
+each an instrument with its scenario and the market objects it is priced
+from, its `deadline_ns` and `batch_hash`), and the `sequence` read to.
+
+### `answer_price_batch` { #answer_price_batch }
+
+A pricing plugin answers a batch whole: `batch_id` and `values`, one
+`PricedUnit` per unit the batch named, each a `value_per_unit` naming the
+asset it is in. `sensitivities` come with v28: a v26 plugin sends none.
+**Returns** the `batch_id`. A batch answered twice is harmless.
+
+### `list_finished_jobs` { #list_finished_jobs }
+
+The jobs the asking instance ran that finished after a sequence
+(`after_sequence`). **Returns** `finished`, each as its `job_finished`
+event carried it (`job_id`, `answer_hash`, `finished_at_ns`, `sequence`),
+and the `sequence` read to.
+
+### `read_job_answer` { #read_job_answer }
+
+The answer to a job the asking instance ran, by `job_id`; another
+instance's job is not found. **Returns** the answer as `run_job` returns
+it inline.
 
 ## Types { #types }
 
