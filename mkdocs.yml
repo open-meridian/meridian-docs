@@ -118,8 +118,10 @@ nav:
       - The archive: concepts/the-archive.md
       - Instruments: concepts/instruments.md
       - One ID per instrument: concepts/one-id.md
+      - Event groups: concepts/event-groups.md
       - The lake: concepts/the-lake.md
       - Licences and entitlements: concepts/licences-and-entitlements.md
+      - The analytics component: concepts/the-analytics-component.md
       - Money and instruments: concepts/money-and-instruments.md
       - Venues: concepts/venues.md
       - Dates and time: concepts/dates-and-time.md
@@ -127,6 +129,7 @@ nav:
       - Prepared changes: concepts/prepared-changes.md
       - Service accounts: concepts/service-accounts.md
       - The order lifecycle: concepts/the-order-lifecycle.md
+      - The agents' guard: concepts/the-agents-guard.md
       - Booking: concepts/booking.md
       - Settlement calendars: concepts/settlement-calendars.md
       - Development deployments: concepts/development-deployments.md
@@ -150,6 +153,7 @@ nav:
       - Using a reporting plugin: how-to/using-a-reporting-plugin.md
       - Add a prediction-market plugin: how-to/add-a-prediction-market-plugin.md
       - Write a data plugin against its suite: how-to/write-a-data-plugin.md
+      - Write a pricing plugin: how-to/write-a-pricing-plugin.md
       - Read trades and quotes: how-to/read-trades-and-quotes.md
       - Value the book: how-to/value-the-book.md
       - Watch the market on the Board: how-to/watch-the-board.md

@@ -165,6 +165,10 @@ the lake as the contract's
 determination and settlement value, so no field says which side a token
 pays on.
 
+Which contracts belong to one of the venue's events, and whether they are
+mutually exclusive and exhaustive, is an [event group](event-groups.md),
+kept beside the records it groups.
+
 ## The instrument store: your deployment's copy
 
 Each deployment has an **instrument store**, and it answers every instrument

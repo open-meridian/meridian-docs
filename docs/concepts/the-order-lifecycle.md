@@ -329,6 +329,12 @@ plugin learns which connectivity plugins the user may choose, **never the
 user's groups**. The `ems`'s sidecar checks each placement against that set,
 whatever the page drew, and the book refuses on its verdict.
 
+**Agents' orders go to demo connections only.** A placement, or an accept
+of fills to a new order, made through a delegation or by a service account
+on a connection that is not demo is refused
+`REFUSAL_REASON_AGENT_LIVE_ORDER`, and recorded the same way: see
+[The agents' guard](the-agents-guard.md).
+
 **Unlinking or withdrawing** leaves the placements already made as they
 are; a new placement through it is refused. A connectivity plugin linked to
 no `ems`, or withdrawn, reaches no account and hears nothing.
@@ -743,6 +749,7 @@ whole history from its first entry.
 | `REFUSAL_REASON_EXECUTIONS_DIFFER` | An accept naming fills of more than one account, instrument, side, connectivity plugin or trade date, or a fill whose side is the order's opposite |
 | `REFUSAL_REASON_CONNECTIVITY_NOT_ALLOWED` | A placement at a connectivity plugin not linked to the placing `ems`, or not made available to whoever it acts for; recorded. Also an `ems`'s mapping at a connectivity plugin not linked to it |
 | `REFUSAL_REASON_CONNECTIVITY_LINKED` | A connectivity plugin linked to a second `ems` |
+| `REFUSAL_REASON_AGENT_LIVE_ORDER` | A placement, or an accept of fills to a new order, made through a delegation or by a service account on a connection that is not demo, while [the agents' guard](the-agents-guard.md) is on; recorded |
 | `REFUSAL_REASON_ACCOUNT_NOT_LINKABLE` | An `ems`'s mapping naming an account not granted to it (`FAILED_PRECONDITION`) |
 | `REFUSAL_REASON_IDENTIFIER_IN_USE` | An identifier already used for another record |
 | `REFUSAL_REASON_ACTOR_REQUIRED` | A command other than a fact report with no person or service account behind it, an accept or a DK among them; an approval or override with no person |
@@ -787,6 +794,8 @@ and a `PERMISSION_DENIED` a `NotGranted` (see
 - [Set trading instructions and whether releases wait](../how-to/set-trading-instructions.md).
 - [Settlement calendars](settlement-calendars.md): how a settlement date
   is worked out when the venue states none.
+- [The agents' guard](the-agents-guard.md): agents' orders on demo
+  connections only.
 - [The book of record](the-book-of-record.md): positions, lots and
   reconciliation.
 - [The order path in the Python SDK](../api/python-sdk.md#the-order-path)

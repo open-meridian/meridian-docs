@@ -124,6 +124,19 @@ GUIDES = [
     ("how-to/write-a-plugins-documentation.md", "Write a plugin's documentation",
      "a plugin's docs/ sections, declared with its version (Declaration(documentation=)), "
      "checked by plugin check, uploaded with the version and read before launch"),
+    ("concepts/the-analytics-component.md", "The analytics component",
+     "figures over the book and the lake for the plugins that ask: a job by reference, answered inline "
+     "or later; the measures and the pricing models; the pricing role's seam; provenance and the answer "
+     "hash; what is not evaluated and why; the current limits"),
+    ("how-to/write-a-pricing-plugin.md", "Write a pricing plugin",
+     "a pricing plugin from plugin new --role pricing: a model over a batch's market objects, the "
+     "pricing suite, and routing a model id to it"),
+    ("concepts/event-groups.md", "Event groups",
+     "a venue's event contracts grouped by event in the instrument master: the two flags as stated or "
+     "not stated, versions, reported by a data plugin and minted by the platform, and read by every role"),
+    ("concepts/the-agents-guard.md", "The agents' guard",
+     "agents place orders on demo connections only: what the book refuses and records, how a "
+     "connection's environment is decided from its setting and its session, and the badges"),
     ("concepts/registries.md", "Registries",
      "the local, community and verified registries, their phases, who publishes, the platform's "
      "build from a signed tag and its checks, what a deployment verifies, updates, pulls and counts"),

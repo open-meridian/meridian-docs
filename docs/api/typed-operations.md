@@ -285,6 +285,7 @@ The sidecar sends the code beside the status: a `meridian.v1.Refusal`, encoded, 
 | `REFUSAL_REASON_UNSPECIFIED` | 0 | | Never sent. A refusal the status already says everything about carries no code. |
 | `REFUSAL_REASON_EXTERNAL_ACCOUNT_NOT_LINKED` | 1 | `FAILED_PRECONDITION` | The operation named an external account nobody has linked to an account. Nothing was recorded, and the next statement after a link records it. |
 | `REFUSAL_REASON_ACTOR_REQUIRED` … `REFUSAL_REASON_INCOMPLETE` | 2 to 11 | `ABORTED` | The book's refusals. See [The book's refusals](#the-books-refusals). |
+| `REFUSAL_REASON_AGENT_LIVE_ORDER` | 31 | `ABORTED` | The book's refusal of an agent's order on a connection that is not demo, added in contract 26. See [The book's refusals](#the-books-refusals). |
 
 A reason is never reused for another cause, and a retired one's number stays reserved. [`record_holding`](#record_holding) can be refused this way, as can [`record_holdings_statement`](#record_holdings_statement), which names its external account too, and [`record_activity`](#record_activity); `report_sync_status` for an unlinked account is not refused.
 
@@ -319,6 +320,11 @@ The book of record refuses with a code, which the sidecar carries beside `ABORTE
 | `REFUSAL_REASON_LATER_ENTRIES_STAND` | 9 | A reversal of an opening balance while a later entry moving the account's positions stands. |
 | `REFUSAL_REASON_IDEMPOTENCY_CONFLICT` | 10 | A key the account's book holds for a different command. |
 | `REFUSAL_REASON_INCOMPLETE` | 11 | An opening balance, or an adjustment opening a lot, missing a field the book requires, nothing applied. Each missing field is in `fields`. See [What the book requires](#what-the-book-requires). |
+| `REFUSAL_REASON_AGENT_LIVE_ORDER` | 31 | Added in contract 26. A placement, or an accept of venue-originated fills to a new order, made through a delegation or by a service account on a connection that is not demo, while [the agents' guard](../concepts/the-agents-guard.md) is on. Refused and recorded: an entry on the order names the `ems`, the connection and the actor, and a refused accept leaves the fills unmatched. A person's own act, and one a person makes from an agent's prepared change, are never refused by it. Check before sending with `Caller.agent_refused`, and offer the person a prepared change rather than retrying. |
+
+The order path's other codes, and booking's, are on
+[The order lifecycle](../concepts/the-order-lifecycle.md#refusals) and
+[Booking](../concepts/booking.md#refusals).
 
 ```python
 try:
@@ -2412,8 +2418,12 @@ values, the broker's strategies with their parameters (each a name, a type,
 whether it is required, its range or allowed values and its default), and
 eligibility for the instruments it states; and
 `execution_acknowledgement` (added in contract 23), what its venue takes of an accept or a DK
-(`none`, `bn` or `dont_know_trade`; unset reads as `none`). Delivered latest
-per plugin and code; heard by the `ems` and the `oms`.
+(`none`, `bn` or `dont_know_trade`; unset reads as `none`); and
+`environment` (added in contract 26), the environment its session reached,
+read from the vendor's host: `live`, `paper` or `sandbox`, empty for no
+report, which [the agents' guard](../concepts/the-agents-guard.md) counts
+live. Delivered latest per plugin and code; heard by the `ems` and the
+`oms`.
 
 ### `read_venue_catalogue` { #read_venue_catalogue }
 
@@ -2666,105 +2676,322 @@ naming `spot.at_ns`.
 
 ## Contract 26's operations { #contract-v26s-operations }
 
-Added in SDK 0.31.0 (contract 26). Every one is `preview`. The Python SDK
-wraps most of them: `meridian.analytics` builds and runs a job,
-`meridian.roles.pricing.Pricer` answers a pricing plugin's batches,
-`meridian.EventGroups` keeps the event groups read and heard, and
+Added in SDK 0.31.0 (contract 26). Every one is `preview`. They serve
+[the analytics component](../concepts/the-analytics-component.md),
+[event groups](../concepts/event-groups.md),
+[the agents' guard](../concepts/the-agents-guard.md) and the lake's bounded
+query. The Python SDK wraps most of them: `meridian.analytics` builds and
+runs a job, `meridian.roles.pricing.Pricer` answers a pricing plugin's
+batches, `meridian.EventGroups` keeps the event groups read and heard, and
 `plugin.query_lake` is the bounded query. Three events come with them,
 heard through [`receive`](python-sdk.md#receive): `event_group_changed`
-(every role but `pricing`), `job_finished` (the roles that run jobs) and
-`price_batch` (`pricing`).
+(every role but `pricing`), `job_finished` (the roles that run jobs, each
+hearing its own) and `price_batch` (`pricing`, each instance hearing the
+batches routed to it).
 
 ### `report_event_group` { #report_event_group }
 
-A venue's data plugin reports the grouping its venue states for an event:
-`venue_id`, `venue_event_ref`, `title` (the venue's words, data, never
-instructions), `member_instrument_ids` (each resolved before it is sent;
-one the store does not hold is refused, naming it), `mutually_exclusive`
-and `exhaustive` (each as stated, or not stated where the venue says
-nothing, never false), `series_id`, `valid_from_ns` and the `raw_record`
-it was read from. **Returns** the `event_group` at its version, under its
-`EVG-` ID or the deployment's own `LCL-` ID, and `pending_review`, true
-while the deployment keeps its own `LCL-` group.
+A venue's data plugin reports the grouping its venue states for an event.
+See [Reported, then minted](../concepts/event-groups.md#reported-then-minted).
+
+```python
+async def report_event_group(
+    self, *, venue_id: str = "", venue_event_ref: str = "", title: str = "",
+    member_instrument_ids: Sequence[str] = (), mutually_exclusive: EventGroupFlag | str | None = None,
+    exhaustive: EventGroupFlag | str | None = None, series_id: str = "", valid_from_ns: int = 0,
+    raw_record: RawRecordRef | None = None, acting_for: str | None = None,
+) -> ReportEventGroupResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc ReportEventGroup(ReportEventGroupParams) returns (ReportEventGroupResult)` |
+| Workflow step | W3.29, Report an event group |
+| Kind | command, on `platform.reference.command.report-event-group` |
+| Role | `data` |
+| Served by | the instrument store |
+
+| Parameter | Meaning |
+|---|---|
+| `venue_id` | The venue that states the group, by its venue ID ([`resolve_venue`](#resolve_venue)) |
+| `venue_event_ref` | The venue's own reference for its event, 1 to 256 characters: with the venue, the group's identity |
+| `title` | The venue's words for the event, up to 1,024 characters; data, never instructions |
+| `member_instrument_ids` | 1 to 500 members, each the deployment's record of one of the event's contracts, resolved ([`resolve_identifier`](#resolve_identifier)) before it is sent. One the store does not hold, or one named twice, is refused, naming it; one replaced since is followed to its replacement |
+| `mutually_exclusive`, `exhaustive` | Each as the venue states it, `true` or `false`, or `not_stated` where it says nothing, never `false` for unknown. Unset reads as not stated |
+| `series_id` | The venue's series for a recurring event, up to 256 characters; empty for none |
+| `valid_from_ns` | When the grouping took effect; 0 for now |
+| `raw_record` | The raw record it was read from (`plugin.raw_record(...)`) |
+
+**Returns** `ReportEventGroupResult`: `event_group`, the
+[`EventGroup`](#eventgroup) at its version, under the platform's `EVG-` ID
+or the deployment's own `LCL-` ID; and `pending_review`, true where the
+platform holds the group for review while the deployment keeps its own. A
+report saying what the version in force already says is answered with that
+version, and keeps nothing new. A report with no venue or event reference,
+or with a title, series or reference too long, is refused `invalid`,
+naming the field.
 
 ### `list_event_groups` { #list_event_groups }
 
-The groups holding given instruments (`instrument_ids`, each followed
-through its replacement) or given groups (`event_group_ids`), each at the
-version in force at `as_of_ns`, or caught up after a `sequence`
-(`after_sequence`); paged by `page_size` (at most 500) and `cursor`.
-**Returns** `event_groups`, the `sequence` read to and `next_cursor`.
+Reads event groups, by member or by group, at the version in force at a
+moment, or every version kept after a sequence.
+
+```python
+async def list_event_groups(
+    self, *, instrument_ids: Sequence[str] = (), event_group_ids: Sequence[str] = (),
+    as_of_ns: int = 0, after_sequence: int = 0, page_size: int = 0, cursor: str = "",
+) -> ListEventGroupsResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc ListEventGroups(ListEventGroupsParams) returns (ListEventGroupsResult)` |
+| Workflow step | W3.30, Read event groups, and hear each change |
+| Kind | query, on `platform.reference.query.list-event-groups` |
+| Role | every role but `pricing` |
+| Served by | the instrument store |
+
+| Parameter | Meaning |
+|---|---|
+| `instrument_ids` | The groups holding these instruments, each followed through its replacement |
+| `event_group_ids` | Or these groups |
+| `as_of_ns` | The version in force at this moment; 0 for now |
+| `after_sequence` | Or every version kept after this sequence, to catch up after a gap |
+| `page_size`, `cursor` | Up to 500 a page; the `next_cursor` of the page before |
+
+**Returns** `ListEventGroupsResult`: `event_groups`, each an
+[`EventGroup`](#eventgroup); the `sequence` read to; and `next_cursor`,
+empty on the last page. Each new version is also delivered whole, as
+`event_group_changed`. Reference data, answered whatever the plugin's
+accounts.
 
 ### `query_lake` { #query_lake }
 
 One read-only query over one of the lake's kinds, within the asking
-instance's entitlements and its roles' kinds: `kind` (`prices`, `bars`,
-`trades`, `quotes` or `outcomes`; one the role does not read is refused,
-naming it), `subjects` (at most 500), `sources`, a range by moment
-(`valid_from_ns` inclusive, `valid_until_ns` exclusive) or by date
-(`from_date`, `to_date`, both inclusive), `as_of_ns`, the `fields` wanted,
-each by its dictionary entry, and `row_limit`, 1 to 10,000. **Returns**
-the rows of that kind, each with only the fields named; `unanswered`, per
-subject, dataset and field; the `datasets`; the `watermark`; and
-`truncated`, true when more rows matched. It is never paged: narrow the
-query instead.
+instance's entitlements and its roles' kinds.
+
+```python
+async def query_lake(
+    self, *, kind: str = "", subjects: Sequence[SubjectRef] = (), sources: SourceChoice | None = None,
+    valid_from_ns: int = 0, valid_until_ns: int = 0, from_date: date | str = "", to_date: date | str = "",
+    as_of_ns: int = 0, fields: Sequence[str] = (), row_limit: int = 0,
+) -> QueryLakeResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc QueryLake(QueryLakeParams) returns (QueryLakeResult)` |
+| Workflow step | W10.10, Query the lake within bounds |
+| Kind | query, on `platform.lake.query.query-lake` |
+| Role | `reporting`, `portfolio`, `compliance`, `signal`, `ems`, `operations`, `data` |
+| Served by | the lake |
+
+| Parameter | Meaning |
+|---|---|
+| `kind` | `prices`, `bars`, `trades`, `quotes` or `outcomes`. One the asking role does not read is refused, naming it (see [Who reads what](../concepts/the-lake.md#who-reads-what)) |
+| `subjects` | At most 500 |
+| `sources` | A [`SourceChoice`](#sourcechoice); none set is the deployment's source priority |
+| `valid_from_ns`, `valid_until_ns` | A range of valid times, from inclusive, until exclusive |
+| `from_date`, `to_date` | Or a range of business dates, both inclusive. Neither range set reads the latest |
+| `as_of_ns` | The recorded-time cut-off; 0 for now |
+| `fields` | The fields wanted, each by its [data dictionary](../boundaries/lake.md) entry, such as `meridian.v1.Price.price`; none names every field the plugin may read |
+| `row_limit` | 1 to 10,000; 0 reads 1,000 |
+
+**Returns** `QueryLakeResult`: the rows of the kind asked, in `prices`,
+`bars`, `trades`, `quotes` or `outcomes`, each with only the fields named,
+the other lists empty; `unanswered`, per subject, dataset and field, each
+an [`Unanswered`](#unanswered); the `datasets` read; the `watermark`; and
+`truncated`, true when more rows matched than `row_limit`. It is never
+paged: narrow the query instead.
 
 ### `read_agent_orders_demo_only` { #read_agent_orders_demo_only }
 
-Takes nothing. **Returns** `agent_orders_demo_only`, the agents' guard in
-force: true when the book refuses a placement, or an accept to a new
-order, made through a delegation or by a service account on a connection
-that is not demo (`REFUSAL_REASON_AGENT_LIVE_ORDER`). A plugin reads it so
-it can tell a person before sending; the SDK's `Caller.agent_refused`
-says the same of a caller.
+Reads [the agents' guard](../concepts/the-agents-guard.md) in force.
+
+```python
+async def read_agent_orders_demo_only(self) -> ReadAgentOrdersDemoOnlyResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc ReadAgentOrdersDemoOnly(ReadAgentOrdersDemoOnlyParams) returns (ReadAgentOrdersDemoOnlyResult)` |
+| Workflow step | W11.39, Read whether agents' orders are kept to demo connections |
+| Kind | query, on `platform.book.query.read-agent-orders-demo-only` |
+| Role | `oms`, `ems`, `portfolio`, `compliance` |
+| Served by | the book |
+
+Takes nothing. **Returns** `agent_orders_demo_only`: true when the book
+refuses a placement, or an accept of fills to a new order, made through a
+delegation or by a service account on a connection that is not demo,
+`REFUSAL_REASON_AGENT_LIVE_ORDER`. It is true in every deployment of this
+release. A plugin reads it so it can tell a person before sending;
+`Caller.agent_refused(connectivity_instance_id, guard_on=...)` says the
+same of a caller and a connection.
 
 ### `run_job` { #run_job }
 
-Asks the analytics component for a `job`: the `account_ids`, each in the
-caller's read scope and all read at one watermark; its `inputs` (the
-book's watermark, the lake's as-of and source choice, one for the whole
-job); its `measures`, each a definition and version the component serves,
-with its breakdowns; and an optional `what_if`, trades answered before and
-after. **Returns** `answered_inline`, the `job_id` (`JOB-` and a ULID)
-and, when answered inline, the `answer`: its `figures`, what was
-`not_evaluated` and why (never answered as zero), and its `provenance`,
-the inputs by reference, the implementations and versions, and the
-answer's hash. A job not answered within the request's deadline is
-answered later: see [`list_finished_jobs`](#list_finished_jobs).
+Asks the analytics component for a job, answered inline or later. See
+[A job](../concepts/the-analytics-component.md#a-job).
+
+```python
+async def run_job(self, *, job: Job | None = None) -> RunJobResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc RunJob(RunJobParams) returns (RunJobResult)` |
+| Workflow step | W12.1, Run a job |
+| Kind | query, on `platform.analytics.query.run-job` |
+| Role | `reporting`, `portfolio`, `compliance`, `signal` |
+| Served by | the analytics component |
+
+`job` is a `Job`, best built with `meridian.analytics.job(...)`:
+
+| Field | Meaning |
+|---|---|
+| `account_ids` | The accounts it is over, one or more, even for a job asking only `implied_distribution`; each in the plugin's read scope, all read at one watermark. One outside it raises `NotGranted`, naming `job.account_ids[n]` |
+| `inputs` | The book's watermark (`book_at`), the lake's as-of (`lake_as_of_ns`) and the source choice (`sources`), one for the whole job; unset, now and the deployment's source priority |
+| `measures` | Each a `MeasureRef`: a `definition` and `version` the component serves, its `breakdowns`, and for `resolution_payoff` and `implied_distribution` its `event_group_id` |
+| `what_if` | Optionally, trades added to one of the job's accounts (`account_id`, `trades`: each an instrument, a side, a quantity and an assumed price or none), answered beside the base |
+
+A job the component cannot answer at all is refused `invalid`, naming the
+field under `job.`: no account, no measure, a definition or version not
+served (`job.measures[0].version`), an event measure naming no group or
+another measure naming one, a what-if over an account the job is not
+over, or a what-if trade with no instrument, quantity or side. A breakdown
+by a scheme the deployment does not hold is not refused: it is answered
+not evaluated. **Returns** `RunJobResult`: `answered_inline`; the `job_id`,
+`JOB-` and a ULID; and, when answered inline, the `answer`: its `figures`,
+each a `Figure` (its measure, account, breakdown, `scenario_key`, `value`
+or a weight's `numerator` and `denominator`, `currency_instrument_id` and
+`computed_as`); what was `not_evaluated` and why, each a `NotEvaluated`
+naming its account, instrument, measure, `NotEvaluatedReason` and detail,
+never answered as zero; and its `provenance`, the inputs by reference, the
+implementations and versions, and the `answer_hash`. A job not answered
+within the request's window is answered later: see
+[`list_finished_jobs`](#list_finished_jobs).
 
 ### `list_measure_definitions` { #list_measure_definitions }
 
-Takes nothing. **Returns** `definitions`: each measure definition and
-version the component ships, its fixed `parameters`, its `breakdowns`,
-its `scale` and a `description` for people.
+Reads the measure definitions the component serves.
+
+```python
+async def list_measure_definitions(self) -> ListMeasureDefinitionsResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc ListMeasureDefinitions(ListMeasureDefinitionsParams) returns (ListMeasureDefinitionsResult)` |
+| Workflow step | W12.1, Run a job |
+| Kind | query, on `platform.analytics.query.list-measure-definitions` |
+| Role | `reporting`, `portfolio`, `compliance`, `signal` |
+| Served by | the analytics component |
+
+Takes nothing. **Returns** `definitions`, each a `MeasureDefinition`: its
+`definition` and `version`, its `parameters` fixed by the version (each a
+name and its value as written, such as `confidence` `0.99`), the
+`breakdowns` it allows, the `scale` its values are rounded to, and a
+`description` for people. `meridian.analytics.measures_of(...)` keys them
+by name, so a plugin checks a breakdown is allowed before it asks. See
+[The measures](../concepts/the-analytics-component.md#the-measures).
 
 ### `list_price_batches` { #list_price_batches }
 
-A pricing plugin reads the batches waiting for it after a sequence
-(`after_sequence`), as after a restart. **Returns** `batches`, each as
-delivered (its `batch_id`, `model_id` and `model_version`, its `units`,
-each an instrument with its scenario and the market objects it is priced
-from, its `deadline_ns` and `batch_hash`), and the `sequence` read to.
+A pricing plugin reads the batches waiting for it after a sequence, as
+after a restart.
+
+```python
+async def list_price_batches(self, *, after_sequence: int = 0) -> ListPriceBatchesResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc ListPriceBatches(ListPriceBatchesParams) returns (ListPriceBatchesResult)` |
+| Workflow step | W12.3, Price a batch |
+| Kind | query, on `platform.analytics.query.list-price-batches` |
+| Role | `pricing` |
+| Served by | the analytics component |
+
+**Returns** `ListPriceBatchesResult`: `batches`, only the asking
+instance's, each a `PriceBatchRequest` as `price_batch` delivered it (its
+`batch_id`, `model_id` and `model_version`, its `units`, each a
+`PricingUnit`: an instrument and its template version, a `scenario_key`
+and the market objects it is priced from, its `deadline_ns`, `batch_hash`
+and `sequence`); and the `sequence` read to. See
+[What a batch carries](../how-to/write-a-pricing-plugin.md#what-a-batch-carries).
 
 ### `answer_price_batch` { #answer_price_batch }
 
-A pricing plugin answers a batch whole: `batch_id` and `values`, one
-`PricedUnit` per unit the batch named, each a `value_per_unit` naming the
-asset it is in. `sensitivities` come with v28: a v26 plugin sends none.
-**Returns** the `batch_id`. A batch answered twice is harmless.
+A pricing plugin answers a batch whole.
+
+```python
+async def answer_price_batch(
+    self, *, batch_id: str = "", values: Sequence[PricedUnit] = (),
+    sensitivities: Sequence[Sensitivity] = (), acting_for: str | None = None,
+) -> AnswerPriceBatchResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc AnswerPriceBatch(AnswerPriceBatchParams) returns (AnswerPriceBatchResult)` |
+| Workflow step | W12.3, Price a batch |
+| Kind | command, on `platform.analytics.command.answer-price-batch` |
+| Role | `pricing` |
+| Served by | the analytics component |
+
+| Parameter | Meaning |
+|---|---|
+| `batch_id` | The batch answered. One not waiting for this instance is refused `invalid`, naming it |
+| `values` | One `PricedUnit` per unit the batch named: its `instrument_id`, its `scenario_key`, and its `value_per_unit`, a `Money` in the base currency the unit's inputs convert to |
+| `sensitivities` | None: no model in this release declares one |
+
+**Returns** the `batch_id`. A batch answered twice is harmless, and an
+answer after the batch's deadline is not taken: the figures through it are
+then not evaluated, `IMPLEMENTATION_UNAVAILABLE`.
 
 ### `list_finished_jobs` { #list_finished_jobs }
 
-The jobs the asking instance ran that finished after a sequence
-(`after_sequence`). **Returns** `finished`, each as its `job_finished`
-event carried it (`job_id`, `answer_hash`, `finished_at_ns`, `sequence`),
-and the `sequence` read to.
+The jobs the asking instance ran that finished later, after a sequence.
+
+```python
+async def list_finished_jobs(self, *, after_sequence: int = 0) -> ListFinishedJobsResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc ListFinishedJobs(ListFinishedJobsParams) returns (ListFinishedJobsResult)` |
+| Workflow step | W12.4, Finish a job later, and read its answer |
+| Kind | query, on `platform.analytics.query.list-finished-jobs` |
+| Role | `reporting`, `portfolio`, `compliance`, `signal` |
+| Served by | the analytics component |
+
+**Returns** `ListFinishedJobsResult`: `finished`, each a
+`JobFinishedEvent` as `job_finished` delivered it (`job_id`,
+`answer_hash`, `finished_at_ns`, `sequence`), and the `sequence` read to.
+`meridian.analytics.Jobs` catches up with it after a gap.
 
 ### `read_job_answer` { #read_job_answer }
 
-The answer to a job the asking instance ran, by `job_id`; another
-instance's job is not found. **Returns** the answer as `run_job` returns
-it inline.
+The answer to a job the asking instance ran, by its ID.
+
+```python
+async def read_job_answer(self, *, job_id: str = "") -> ReadJobAnswerResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc ReadJobAnswer(ReadJobAnswerParams) returns (ReadJobAnswerResult)` |
+| Workflow step | W12.4, Finish a job later, and read its answer |
+| Kind | query, on `platform.analytics.query.read-job-answer` |
+| Role | `reporting`, `portfolio`, `compliance`, `signal` |
+| Served by | the analytics component |
+
+**Returns** the answer as `run_job` returns it inline: `figures`,
+`not_evaluated` and `provenance`. Another instance's job raises
+`NotGranted`, naming `job_id`. A job still running, or one whose answer
+has left the component's memory, is a `CallFailed` of kind
+`"handler error"` saying so: run the job again, and its answer hash says
+whether the figures are the same.
 
 ## Types { #types }
 
@@ -3517,6 +3744,25 @@ Added in SDK 0.27.0 (contract 23). An event contract's outcome, `meridian.Outcom
 | `settlement_value` | A `Money` per contract in the payout's asset, always set |
 | `settled_at_ns` | When the venue paid out; 0 until then |
 | `determination_as_reported` | The venue's own word, an `AsReported` |
+
+### `EventGroup` { #eventgroup }
+
+Added in contract 26. An event group at one version, as
+[`report_event_group`](#report_event_group) and
+[`list_event_groups`](#list_event_groups) answer it and
+`event_group_changed` delivers it:
+
+| Field | Meaning |
+|---|---|
+| `event_group_id` | `EVG-` and a ULID, the platform's; or the deployment's own `LCL-` ID |
+| `venue_id`, `venue_event_ref` | The venue and its reference for the event |
+| `title` | The venue's words |
+| `member_instrument_ids` | The members, sorted |
+| `mutually_exclusive`, `exhaustive` | Each an `EventGroupFlag`: `EVENT_GROUP_FLAG_TRUE`, `_FALSE` or `_NOT_STATED` |
+| `series_id` | The venue's series, or empty |
+| `version`, `valid_from_ns`, `record_time_ns` | Its version, when it took effect and when it was kept |
+| `provisional` | True for the deployment's own `LCL-` group |
+| `sequence` | Its place in the store's sequence of event groups, which `after_sequence` reads after |
 
 ### `VenueRecord` { #venuerecord }
 

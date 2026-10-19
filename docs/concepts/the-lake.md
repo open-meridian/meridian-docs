@@ -176,7 +176,10 @@ are: outcomes are rare, and a missed dispute would mislead. A reader reads
 them by subject, the version in force or as of a recorded time, and catches
 up after a gap from the watermark it last saw. See
 [Add a prediction-market plugin](../how-to/add-a-prediction-market-plugin.md#outcomes)
-for what Kalshi and Polymarket record.
+for what Kalshi and Polymarket record. Which contracts belong to one
+event, and whether they are mutually exclusive and exhaustive, is not an
+observation: it is an [event group](event-groups.md), kept in the
+instrument master.
 
 ## Reading it, point in time
 
