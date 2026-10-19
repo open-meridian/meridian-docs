@@ -8,9 +8,9 @@ plugins of a pair pass it unchanged. This page starts one from the template
 and holds it to the suite. How a person then uses it is
 [Using a data plugin](using-a-data-plugin.md).
 
-You need CLI 0.1.46 and SDK 0.29.0 or later (contract 25): `meridian plugin new
+You need CLI 0.1.50 and SDK 0.31.1 or later (contract 26): `meridian plugin new
 --role data` writes this template on the role's common part, for a runtime
-serving contract 25. A plugin made by an older CLI moves with
+serving contract 26. A plugin made by an older CLI moves with
 [`meridian plugin migrate`](../api/cli.md#plugin-migrate), then maps any new
 cases as [below](#hold-it-to-the-suite).
 
@@ -21,7 +21,7 @@ meridian plugin new my-prices --role data
 cd my-prices
 ```
 
-It writes a whole plugin holding `data`, pinned to `open-meridian==0.30.0`,
+It writes a whole plugin holding `data`, pinned to `open-meridian==0.31.1`,
 that puts a stand-in vendor's daily closes and bars into the lake:
 
 | File | What it is |
@@ -33,14 +33,14 @@ that puts a stand-in vendor's daily closes and bars into the lake:
 | `tests/test_suite.py` | The data suite, each case mapped to one of the vendor's responses. |
 | `tests/test_page.py` | Its pages' tests. |
 
-On SDK 0.30.0 the template leaves more of the data role's common work to
+The template leaves much of the data role's common work to
 the SDK: `meridian.roles.data.Wants` hears and answers wants with your
 conversion, and the Datasets page fills its rows from what it kept
 (`data.served`, `data.want_rows`). `meridian.roles.data.pairs` and
 `.event_contracts` do a venue's whole work for a venue listing pairs or
 binary event contracts, with their pages and the checks a plugin runs
 (`meridian.roles.data.testing`). A plugin made by an older CLI moves to
-0.30.0 with `meridian plugin migrate`; see
+0.31.1 with `meridian plugin migrate`; see
 [Each role's common logic](../api/python-sdk.md#each-roles-common-logic).
 
 `AGENTS.md` teaches a coding agent the role's rules beside the template's

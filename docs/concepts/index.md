@@ -14,7 +14,7 @@ piece of data lives.
 | [Projects and deployments](projects-and-deployments.md) | How a deployment is registered on the platform, how it proves who it is, and the one-time codes it is set up with |
 | [Plugins, roles and grants](plugins.md) | What a plugin is, what it may do on the bus, how that is decided, and how people reach its pages, by Manage, Open and View |
 | [Registries](registries.md) | Where a plugin comes from: a deployment's own Local registry and the platform's Community and Verified ones, the phases they open in, who publishes, how the platform builds and checks each version, and what a deployment verifies before it installs one |
-| [Roles](roles.md) | Each of the fourteen roles, `reference` among them: its persona, duties, what it leaves to another role and what it holds; the principles a plugin must fit, and how an idea maps to the least roles |
+| [Roles](roles.md) | Each of the fifteen roles, `reference` and `pricing` among them: its persona, duties, what it leaves to another role and what it holds; the principles a plugin must fit, and how an idea maps to the least roles |
 | [Access](access.md) | How people sign in to a deployment, and how the dashboard decides what each of them may reach, per role of a plugin: the access levels and account access, and a person's own settings |
 | [Accounts](accounts.md) | The firm's accounts, how an account at a broker or custodian is tied to one, the accounts a plugin may link to and each account's attributes in the book |
 | [The book of record](the-book-of-record.md) | The firm's own record of what each account holds, how it differs from the street and the edge, and how operations opens and reconciles it |

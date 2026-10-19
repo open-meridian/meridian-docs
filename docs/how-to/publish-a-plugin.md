@@ -8,10 +8,11 @@ are, and what each checks, is in [Registries](../concepts/registries.md).
 In short:
 
 - **Once:** `meridian plugin key setup`.
-- **Each release:** `meridian plugin release X.Y.Z`.
+- **Each release:** raise the version in the change's own pull request, merge it, then
+  `meridian plugin release X.Y.Z`.
 
-Merging the release's pull request stays a person's. Signing the tag yourself and running
-`meridian plugin publish` is the other way, [below](#or-tag-and-publish-by-hand).
+Signing the tag yourself and running `meridian plugin publish` is the other way,
+[below](#or-tag-and-publish-by-hand).
 
 !!! note "Who can publish today"
     The registries are in Phase 0: only Open Meridian's own plugins, under the `open-meridian/`
@@ -20,10 +21,10 @@ Merging the release's pull request stays a person's. Signing the tag yourself an
 
 ## Before you start
 
-- CLI 0.1.47, and git 2.34 or later, which signs tags with SSH keys.
+- CLI 0.1.50, and git 2.34 or later, which signs tags with SSH keys.
 - To release in one command, your GitHub sign-in: `GH_TOKEN` or `GITHUB_TOKEN`, or the credential
-  git keeps for github.com (`gh auth setup-git` gives git one). It must be able to open pull
-  requests and read checks on the plugin's repository.
+  git keeps for github.com (`gh auth setup-git` gives git one). It must be able to read checks on
+  the plugin's repository.
 - The plugin passes `meridian plugin check`, with its documentation (see
   [Write a plugin's documentation](write-a-plugins-documentation.md)).
 - Its repository is on GitHub and public, and the plugin's own code is under Apache-2.0.
@@ -84,26 +85,36 @@ meridian plugin key list --organisation acme
 
 ## Each release
 
-From the plugin's directory, on its default branch, clean and up to date:
+The version goes up in the change itself. The pull request that makes the change also raises
+`version` in `pyproject.toml` and adds the change to `CHANGELOG.md` under a heading for that
+version, with no date and no "(unreleased)": the date lives on the tag and the listing.
+
+```markdown
+## 0.18.0
+
+- The Statements page pages by month.
+```
+
+Once that pull request is merged and main's CI is green, from the plugin's directory, on main,
+clean and up to date:
 
 ```bash
 meridian plugin release 0.18.0
 ```
 
-It checks, then opens the release pull request, waits, and publishes:
+It checks, signs and publishes. It opens no pull request and changes no file:
 
-1. **Checks.** The checkout is on the default branch, clean and up to date with `origin`; that
-   branch's last CI run is green; and the version is higher than the last release tag.
-2. **The release PR.** `pyproject.toml`'s version and the CHANGELOG heading,
-   `## 0.18.0 (<date>)`, on a branch `release/v0.18.0`. Your checkout is never switched.
-3. **The merge is yours.** It waits for the pull request's CI, then for a person to merge it.
-4. **The tag.** It signs `v0.18.0` on the merge commit with your key, and pushes it.
-5. **Publishing.** It asks the platform to build the tag, and follows the build, as
+1. **Checks.** The checkout is on the default branch, clean and up to date with `origin`; the
+   version is higher than the last release tag; `pyproject.toml` says `0.18.0`; `CHANGELOG.md`
+   has the heading `## 0.18.0`, undated; and main's last CI run is green. Each refusal says what
+   to do next: a version not yet raised, for example, is raised in a pull request, merged, and the
+   command run again.
+2. **The tag.** It signs `v0.18.0` on main's head with your key, and pushes it.
+3. **Publishing.** It asks the platform to build the tag, and follows the build, as
    `meridian plugin publish` does.
 
-`--no-wait` stops once the pull request is open. Run the same command again after the merge: it
-resumes from wherever the release is. If it stops waiting after `--timeout` (default 30 minutes),
-it says so, and running it again goes on from there.
+If it stops following after `--timeout` (default 30 minutes), the build carries on. Running the
+same command again finds the tag on `origin` and publishes it.
 
 While the build runs it prints one line a check, cut to your terminal's width, until the version is
 listed or refused, then the listing's address:

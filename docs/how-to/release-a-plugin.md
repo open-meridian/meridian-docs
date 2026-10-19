@@ -11,18 +11,21 @@ A new version is also the only way to change what a plugin **may** do, or what i
 
 ## To release it to the Community registry
 
-A release that any deployment can install is a signed tag the platform builds. With CLI 0.1.47 it
-is two commands, from the plugin's directory:
+A release that any deployment can install is a signed tag the platform builds. It is two commands,
+from the plugin's directory:
 
 - **Once:** `meridian plugin key setup`. It makes your SSH signing key ready, sets git to sign tags
   with it, and registers its public half if you are an Owner or Admin of the organisation;
   otherwise it tells you to ask one.
-- **Each release:** `meridian plugin release 0.2.0`. It checks, opens the release pull request
-  (`pyproject.toml`'s version and the CHANGELOG heading) and waits for its CI. The merge stays a
-  person's. Once merged, it signs `v0.2.0` on the merge commit, pushes it and publishes it.
+- **Each release:** `meridian plugin release 0.2.0`, once the change is merged and main's CI is
+  green. It checks, signs `v0.2.0` on main's head, pushes it and publishes it. It opens no pull
+  request and changes no file.
 
-`--no-wait` stops once the pull request is open; run it again after the merge to go on. Tagging
-with `git tag -s`, pushing the tag and running `meridian plugin publish` yourself is the other way.
+The version goes up in the change's own pull request: it raises `version` in `pyproject.toml` to
+`0.2.0` and adds a `## 0.2.0` heading to `CHANGELOG.md`, with the change under it and no date.
+`meridian plugin release` refuses a version that `pyproject.toml` does not say, or whose heading is
+missing or dated, and says what to do. Tagging with `git tag -s`, pushing the tag and running
+`meridian plugin publish` yourself is the other way.
 See [Publish a plugin to a registry](publish-a-plugin.md), which also says who can publish today:
 the registries are in Phase 0.
 

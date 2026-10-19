@@ -55,7 +55,7 @@ and nothing in it is specific to one broker, region or market:
 ### Plugins, by role
 
 Everything that reaches outside the deployment, or decides something, is a
-[plugin](plugins.md), and each plugin holds one or more of fourteen fixed
+[plugin](plugins.md), and each plugin holds one or more of fifteen fixed
 [roles](roles.md). A plan names, for each need, the role that meets it and a
 plugin that holds that role. Each plugin is one of three things:
 

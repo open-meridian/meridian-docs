@@ -80,7 +80,7 @@ with a note.
 
 A deployment with no route to the platform installs from a **plugin bundle** carried in by hand.
 
-On a connected machine with CLI 0.1.47:
+On a connected machine with CLI 0.1.50:
 
 ```bash
 meridian plugin download open-meridian/snaptrade@0.18.0
@@ -88,7 +88,7 @@ meridian plugin download open-meridian/snaptrade@0.18.0
 
 It signs in to the platform in your browser the first time, asks where the version is, pulls it,
 and verifies the image, its provenance, bill of materials, scan results and listing statement
-against the platform's keys this CLI release carries: from CLI 0.1.47, the platform's
+against the platform's keys this CLI release carries: CLI 0.1.50 carries the platform's
 registry-signing key, version 1. Only then does it write
 `open-meridian-snaptrade-0.18.0.plugin-bundle.tar` (`--to` names another file), with the
 version's documentation and a dated copy of the signing keys' status. `--registry` names the

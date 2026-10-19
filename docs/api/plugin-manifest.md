@@ -14,7 +14,7 @@ name = "reference-plugin"
 version = "0.1.0"
 description = "A Meridian plugin"
 requires-python = ">=3.11"
-dependencies = ["open-meridian==0.29.0"]
+dependencies = ["open-meridian==0.31.1"]
 
 [project.scripts]
 reference-plugin = "reference_plugin.__main__:main"
@@ -51,7 +51,7 @@ The deployment checks these again when it records the version, and also refuses:
 
 ### Roles
 
-A plugin's roles come from this list of fourteen, from the deployment's contract. The template's comment lists them.
+A plugin's roles come from this list of fifteen, from the deployment's contract. The template's comment lists them.
 
 | Role | For |
 |---|---|
@@ -64,6 +64,7 @@ A plugin's roles come from this list of fourteen, from the deployment's contract
 | `oms` | order management, including tax-lot selection |
 | `operations` | the post-trade pipeline: matching, servicing, reconciliation, settlement |
 | `portfolio` | portfolio construction |
+| `pricing` | pricing models: answers the analytics component's batches for the models its version declares. Added in contract 26. |
 | `reference` | reference and terms data: a security's terms gathered, reconciled and offered to the instrument store. Added in contract 24. |
 | `reporting` | reporting, analytics and valuation |
 | `servicing` | non-trading transactions: corporate actions, lifecycle events, coupons |

@@ -150,6 +150,9 @@ STORES = {
     "dashboard": ("The dashboard's records", "tickets, their notes and the inbox's notices, a setting as the "
                   "settings tool shows it, what agents may do with each act and a "
                   "person's own settings, as the dashboard keeps them"),
+    "analytics": ("The analytics component", "a job asked of it and its answer, each figure with how it was "
+                  "computed and what was not evaluated, the measures it defines, and the batches it routes to "
+                  "a pricing plugin"),
     "sidecar": ("The sidecar", "registration, settings, access, scope, figures, refusals and the delivery stream"),
     "envelope": ("The envelope", "what every bus message carries about itself"),
     "shared": ("Shared types", "a number, an amount of currency, and where a change sits in a store's record"),

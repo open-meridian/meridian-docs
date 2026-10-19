@@ -187,6 +187,7 @@ nav:
           - The book of record: boundaries/bor.md
           - The conductor's accounts: boundaries/conductor.md
           - The dashboard's records: boundaries/dashboard.md
+          - The analytics component: boundaries/analytics.md
           - The sidecar: boundaries/sidecar.md
           - The envelope: boundaries/envelope.md
           - Shared types: boundaries/shared.md

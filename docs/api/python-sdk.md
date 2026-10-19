@@ -16,7 +16,7 @@ such as Homebrew's on macOS (`externally-managed-environment`).
 |---|---|
 | PyPI name | `open-meridian` |
 | Import name | `meridian` |
-| Version | 0.30.0 |
+| Version | 0.31.1 |
 | Python | 3.11 or newer |
 | Dependencies | `grpcio>=1.68,<2`, `protobuf>=5.28,<7`, `jinja2>=3.1,<4` (for [pages](#pages)) |
 | Licence | Apache-2.0 |
@@ -24,7 +24,7 @@ such as Homebrew's on macOS (`externally-managed-environment`).
 !!! warning "Not `meridian-sdk`"
     The PyPI package `meridian-sdk` belongs to an unrelated company. Don't install it.
 
-A plugin pins the SDK exactly, `open-meridian==0.30.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.30.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls (see [Moving a plugin to a new release](#moving-a-plugin-to-a-new-release)). CLI 0.1.46's `meridian plugin new` writes a plugin pinned to 0.29.0, which `meridian plugin migrate` moves to 0.30.0. Both declare contract 25.
+A plugin pins the SDK exactly, `open-meridian==0.31.1`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.31.1`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls (see [Moving a plugin to a new release](#moving-a-plugin-to-a-new-release)). CLI 0.1.50's `meridian plugin new` writes a plugin pinned to 0.31.1, which declares contract 26; one pinned to 0.30.0 or earlier moves with `meridian plugin migrate`.
 
 | Optional extra | Installs | For |
 |---|---|---|
@@ -100,10 +100,14 @@ A version registers exactly the declaration it was uploaded with (see [The whole
 | `DateBasis`, `DateCheck`, `DateRuleRef`, `SettlementDateInputs`, `SpotDateInputs`, `TenorDateInputs`, `Tenor`, `RollInputs`, `BusinessDayInputs` | frozen dataclasses and generated protobuf messages | [Settlement calendars](#settlement-calendars) |
 | `Outcome`, `OutcomeDetermination`, `OutcomeStage` | frozen dataclass, generated protobuf enums | [Outcomes](#outcomes). Added in SDK 0.27.0 |
 | `settings`, `setting`, `environment`, `sample_data` | decorator, functions | [Typed settings](#typed-settings); `account_currency` added in SDK 0.27.0 |
+| `RefusedSetting` | frozen dataclass | [`Settings`](#settings): a saved value this version cannot read. Added in SDK 0.31.1 |
+| `analytics`, `Job`, `WhatIf`, `WhatIfTrade`, `ComputedAs`, `NotEvaluatedReason`, `ScenarioKey`, `ScenarioKind`, `PricedUnit`, `Sensitivity` | module, generated protobuf messages and enums | The analytics component and a pricing plugin's answers; see [Contract 26's operations](typed-operations.md#contract-v26s-operations). Added in SDK 0.31.0 |
+| `EventGroups`, `EventGroup`, `EventGroupFlag` | class, generated protobuf message and enum | Event groups; see [`list_event_groups`](typed-operations.md#list_event_groups). Added in SDK 0.31.0 |
+| `reached_environment`, `is_demo`, `connection_badge` | functions | The agents' demo-only guard; see [Typed settings](#typed-settings). Added in SDK 0.31.0 |
 | `CallerMiddleware` | ASGI middleware | [`CallerMiddleware`](#callermiddleware) |
 | `MeridianError`, `Refused`, `NoSidecar`, `NotRegistered`, `NotGranted`, `CallFailed`, `NotLinked`, `CommandRefused` | exceptions | [Exceptions](#exceptions) |
 | `DEFAULT_ADDRESS` | `str` | `"127.0.0.1:9191"`, where a sidecar listens |
-| `SCHEMA_VERSION` | `str` | the contract version sent at registration, `"v25"`; each SDK release's is in the [release notes](#release-notes) |
+| `SCHEMA_VERSION` | `str` | the contract version sent at registration, `"v26"`; each SDK release's is in the [release notes](#release-notes) |
 
 The module `meridian.testing` holds [`PageClient`](#testing) and [`heartbeat`](#testing), for a plugin's own tests.
 
@@ -1475,7 +1479,10 @@ plugin = await meridian.connect(
 | Field | Type | Meaning |
 |---|---|---|
 | `values` | `dict` of `str` to `str`, `int`, `bool` or `list` | Each declared setting the deployment holds a value for, typed by its declaration, and the `default` of each that has one and no value. A table's is a `list` of rows, each a `dict` of text by column name with `changed_by` and `changed_at`. |
-| `missing_required` | `tuple[str, ...]` | Required settings with no value yet. |
+| `missing_required` | `tuple[str, ...]` | Required settings with no value yet, a refused one among them. |
+| `refused` | `tuple[RefusedSetting, ...]` | The saved values this version cannot read, each delivered unset. Added in SDK 0.31.1. |
+
+**A saved value this version cannot read** is never raised and never mapped to another value. A value no longer among the setting's choices, as one a plugin's new release renamed, or one not of its kind, is delivered unset: a required setting holds nothing, not even its default, and is in `missing_required`, so the plugin's own not-ready path names it; an optional one holds its default. Each is in `refused`, a `meridian.RefusedSetting`: its `name`, its `label`, the `value` as saved (empty for a secret) and its `reason`, `NOT_A_CHOICE` or `NOT_ITS_KIND`. Its `message` is what a page shows: "Environment was saved as 'practice', which this version no longer offers; save it again". A typed settings class says the same in `.refused`, and a person's own values refused are in `request.own_settings_refused`. An `environment` so refused is empty: not `live`, so the plugin still reaches the demo host, and not demo, so the agents' guard counts it live until a person saves it again.
 
 ### `AccountScope`
 
@@ -1839,13 +1846,13 @@ its page each call by its act and outcome, never its arguments.
 A setting declared `per_person=True` is each person's own: a watchlist, a chart's choices. It is not on the Settings form and has no value for the whole deployment.
 
 - **Save** a person's values from a page under Open, acting for them: `await plugin.set_own_settings({"watchlist": rows}, for_caller=request.caller)`. It names 1 to 64 settings, each typed as declared (a table as its rows); an empty text clears one; those not named keep theirs. It answers the person's values as they now stand. The sidecar (`SetOwnSettings`) admits it only for a person holding `write` on a role each setting serves, never as the plugin itself; a setting not declared per person is refused before anything is sent.
-- **Read** them from each of the person's requests, typed: `request.own_settings`, under Open and View, at most 32 KiB, never under Manage. A stateless plugin serves each person theirs this way, keeping nothing.
+- **Read** them from each of the person's requests, typed: `request.own_settings`, under Open and View, at most 32 KiB, never under Manage. A stateless plugin serves each person theirs this way, keeping nothing. A value this version cannot read is delivered unset and listed in `request.own_settings_refused` (see [`Settings`](#settings)).
 
 Each change is the dashboard's own record, shown to that person alone. No other person reads them, a deployment admin included, and no tool reads them; an agent saves a person's own through your plugin's tool for the page, as the person.
 
 ## Each role's common part { #each-roles-common-part }
 
-Every plugin of a role has the same first-use path, pages, sections, labels, verbs and order, and the same Summary figures (see [Using a data plugin](../how-to/using-a-data-plugin.md)). `meridian.roles` holds each role's part, in `data`, `custody`, `operations`, `reporting` and, from SDK 0.30.0, `connectivity`:
+Every plugin of a role has the same first-use path, pages, sections, labels, verbs and order, and the same Summary figures (see [Using a data plugin](../how-to/using-a-data-plugin.md)). `meridian.roles` holds each role's part, in `data`, `custody`, `operations`, `reporting`, `connectivity` and, from SDK 0.31.0, `pricing`:
 
 - **A record per common page**, named `<Page>Read`, holding the common fields, the page's tool's answer (`answers=`), which a plugin extends: `data.ConnectionRead`, `data.DatasetsRead` (with `Served`, `Want`, `Credential`); `custody.ConnectionsRead`, `AccountLinksRead`, `StatementsRead`, `HistoryRead`; `operations.BreaksRead`, `ReconciliationsRead`, `OpeningBalancesRead`; `reporting.DatasetsRead`.
 - **`figures(...)`**, the role's figures in its order, each a plain value or a `meridian.Figure`, for the plugin to follow with its own within the eight: `data.figures(connection=..., entitled_at_vendor=..., stream=..., last_recorded=..., rate_use=...)`, `custody.figures(...)`, `operations.figures(...)`, `reporting.figures(last_valued=..., not_priced=...)`.
@@ -1865,7 +1872,7 @@ Never rename, reorder or drop a common page, section, row, column, label, settin
 
 ## Each role's common logic { #each-roles-common-logic }
 
-Added in SDK 0.30.0. What every plugin of a role must do the same way to fulfil its typed operations is the SDK's, tested once there and generic over the venue. How a plugin talks to its venue, its API client, a WebSocket or FIX, stays its own, so it can change its transport without changing what it does. The contract is unchanged: the SDK still declares v25.
+What every plugin of a role must do the same way to fulfil its typed operations is the SDK's, tested once there and generic over the venue. How a plugin talks to its venue, its API client, a WebSocket or FIX, stays its own, so it can change its transport without changing what it does.
 
 - **The data role** (`meridian.roles.data`). `Wants` hears a want and answers it with the plugin's own conversion: it declines, by reason, what the plugin does not serve (an answer that raises declines every subject `source_silent`), keeps a standing want until it is withdrawn, records rows in the lake's batches and counts them overall and per dataset, reads its datasets' licences, and reads a restart's gap back once per subject per process. `Venue` resolves the venue master's ID once and reports a venue not held once; `unconverted` carries a value that did not read. `served` and `want_rows` fill **Datasets**, and `VenueConnection` is **Connection** for a source of one venue. `number`, `json_decimal` and `Unread` read a venue's figures from its own text, never a float; `Session`, `Health`, `Limits` and `Endpoint` say how the venue answers.
 - **A venue's whole work, by what it lists.** `meridian.roles.data.pairs` is for a venue listing pairs, a base asset priced in a quote asset: daily closes and bars, live prices, trades and quotes, the stream kept current and its gaps read back. `meridian.roles.data.event_contracts` is for a venue of binary event contracts: live prices and quotes, and each contract's outcome. The plugin hands its `Feed` a `Market`, its client's answers read into the module's values, and for a stream its own session (`Feed(..., stream_factory=Stream)`). Each draws its pages from the kind's templates (`meridian/roles/data/pairs/connection.html` and `datasets.html`), filled by `connection_read`, `datasets_read` and `figures_read`.
@@ -1891,7 +1898,12 @@ Added in SDK 0.30.0. What every plugin of a role must do the same way to fulfil 
     await trader.run(poll_seconds=lambda: 5.0)
     ```
 
-The SDK's `templates/` gains a connectivity role template, the `Trader` over a stand-in venue held in memory. CLI 0.1.47 writes it: `meridian plugin new <name> --role connectivity`.
+- **Custody's pages** (`meridian.roles.custody.account_pages`, added in SDK 0.31.0): **Account links**, **Statements** and **History**, each the same answer as its tool, declared for a plugin that hands it its `CustodySource`, the vendor's own reads. `meridian plugin check` counts the pages the helper declares as the plugin's own.
+- **A broker's US equity listings** (`meridian.roles.data.listings`, added in SDK 0.31.0): the lake layer for a broker's listings, a plugin subclassing `listings.Feed` and converting only its broker's trade conditions.
+- **The Trader**, from SDK 0.31.0, also reports the charges a venue states apart from its orders (`VenueCharge`) and a fill's settlement date where the venue states it, awaits an async adapter, and dates a fill in its order's own zone. Its adapter says which environment its session reached (`environment`, read with `meridian.reached_environment`), which the Trader publishes on its catalogue.
+- **The pricing role** (`meridian.roles.pricing.Pricer`, added in SDK 0.31.0): each batch the analytics component routes to the plugin answered whole, from exactly the market objects each unit carries, and the batches still waiting read after a restart from the last sequence answered, kept in memory, since `pricing` holds no storage.
+
+The SDK's `templates/` holds a role template for `connectivity`, `custody`, `data`, `operations`, `pricing` and `reporting`. CLI 0.1.50 writes each: `meridian plugin new <name> --role <role>`.
 
 ## Typed settings { #typed-settings }
 
@@ -1914,10 +1926,10 @@ async for current in plugin.settings(Settings):
 ```
 
 - **`meridian.setting(label, ...)`** takes `Setting`'s fields by keyword, and `at_least` and `at_most` to bound an integer.
-- **`meridian.environment()`**: the setting `environment`, a required choice labelled "Environment", **Live** (`live`) or **Sandbox** (`sandbox`, the default), declared first, for a vendor with more than one environment; a credential differing by it is gated with `applies_when=("environment", "sandbox")`. A plugin is Live only where a person chose Live, or where its own code says `environment(default="live")`; a plugin reading the value treats anything but `live` as the sandbox. Changed in SDK 0.28.0, where the default became Sandbox.
+- **`meridian.environment()`**: the setting `environment`, a required choice labelled "Environment", **Live** (`live`) or **Sandbox** (`sandbox`, the default), declared first, for a vendor with more than one environment; a credential differing by it is gated with `applies_when=("environment", "sandbox")`. A plugin is Live only where a person chose Live, or where its own code says `environment(default="live")`; a plugin reading the value treats anything but `live` as the sandbox. `environment(demo="paper")` offers **Paper** (`paper`) in place of Sandbox, for a vendor that calls its demo that, and `demo_label=` names it as the vendor does. Added in SDK 0.31.0. For the agents' demo-only guard, a connection is demo only where both keys say so: `meridian.reached_environment(address, live=..., paper=..., sandbox=...)` names the environment a session reached from the host it called, `meridian.is_demo(setting, reported)` is true only where the setting and the session both say `sandbox` or `paper`, and `meridian.connection_badge(setting, reported)` draws **Demo**, **Live** or **Live (environment not confirmed)**. No report, or a disagreement, counts live.
 - **`meridian.sample_data()`**: the setting `sample_data`, "Sample data", off, a developer setting, last; the one convention for a plugin answering from made-up data on a development deployment, in place of each plugin's own `synthetic`.
 - **`meridian.account_currency()`**, added in SDK 0.27.0: the setting `account_currency`, a table labelled "Account currency", each row a linked account, or none for every linked account without a row of its own, and its currency, an ISO 4217 code. A plugin whose source states no currency for an account's securities declares it, and `meridian.edge.supplied_currency(rows, external_account_id, field)` answers the account's code with its provenance, supplied by the person who set the row (`PROVENANCE_KIND_SUPPLIED`), or `None` while no row covers it; until then the plugin reports nothing that needs the currency, never a guess.
-- The class is a frozen dataclass of the values, with `declared()`, `label(name)` and `.missing`; `plugin.settings(Settings)` delivers an instance at each change, `plugin.first_settings(Settings)` the first.
+- The class is a frozen dataclass of the values, with `declared()`, `label(name)`, `.missing` and `.refused`; `plugin.settings(Settings)` delivers an instance at each change, `plugin.first_settings(Settings)` the first.
 
 Every page's template loader also holds the kit's macros, `meridian/kit.html` (`facts` among them).
 
@@ -2043,6 +2055,46 @@ The package installs one command, `meridian-dev run`. On a development deploymen
 ## Release notes { #release-notes }
 
 Each release of the SDK, the contract it declares, the runtime it needs, and the CLI whose `plugin new` writes a plugin on it. What a plugin's author does to move to it is in [Moving a plugin to a new release](#moving-a-plugin-to-a-new-release).
+
+!!! note "0.31.1: refused settings, the pricing template without storage"
+    open-meridian 0.31.1, released on PyPI on 2026-10-19, declares contract
+    v26, as 0.31.0 does. A saved setting value that is no longer one of its
+    choices, or not of its kind, is delivered unset and listed in
+    `Settings.refused` (`meridian.RefusedSetting`), never raised and never
+    mapped to another value (see [`Settings`](#settings)). An
+    event-contract venue's contract map keeps a range market's bounds, and
+    `event_contracts.Feed.stated_identifiers`, by which
+    `EventContractsChecks` holds a record complete, is public. The pricing
+    template declares no storage, since `pricing` is no edge role; every
+    template's `AGENTS.md` says how a version is published to a registry,
+    and its pre-push hook says a tag push runs nothing. Only the pins move
+    (see [0.31.0 to 0.31.1](#0310-to-0311)). CLI 0.1.50's `plugin new`
+    writes a plugin on it. Its base image is
+    `ghcr.io/open-meridian/plugin-python:0.31.1`
+    (`sha256:67781f140800652d7b8052f685355738901cd7f8dab20c13473c2142a3535b39`).
+
+!!! note "0.31.0: contract v26"
+    open-meridian 0.31.0, released on PyPI on 2026-10-19, declares
+    contract v26: the analytics component, asked through
+    `meridian.analytics` (a job's typed builders, its answer and every
+    figure with how it was computed, and a job answered later caught up by
+    sequence), with the reference computations its engine equals exactly;
+    the `pricing` role, `meridian.roles.pricing.Pricer`, and its template;
+    event groups (`meridian.EventGroups`, `event_contracts.Feed.report_event`);
+    the agents' demo-only guard (`environment(demo="paper")`,
+    `reached_environment`, `connection_badge`, `Caller.agent_refused`);
+    `plugin.query_lake`, one bounded query of the lake, and
+    `plugin.count_model_tokens`. It also carries more of each role's common
+    logic: custody's pages (`custody.account_pages`), a broker's listings
+    (`roles.data.listings`), and the Trader's stated charges and settlement
+    dates. Its typed operations are in
+    [Contract 26's operations](typed-operations.md#contract-v26s-operations).
+    Breaking: every role's suite holds new cases a plugin's suite test must
+    map (see [0.30.0 to 0.31.0](#0300-to-0310)). It needs a runtime serving
+    contract v26 (chart 0.1.308 or later). CLI 0.1.49's `plugin new` writes
+    a plugin on it, `--role pricing` among its templates. Its base image is
+    `ghcr.io/open-meridian/plugin-python:0.31.0`
+    (`sha256:e041f83c89cfcd020f1406bf918aba88c1ff68978874a5de52399d46824cf5d2`).
 
 !!! note "0.30.0: each role's common logic, contract v25 unchanged"
     open-meridian 0.30.0, released on PyPI on 2026-10-18, still declares
@@ -2356,6 +2408,8 @@ Move a plugin one release at a time or several at once: [`meridian plugin migrat
 
 | From | To | Contract | Runtime | `plugin new` writes it from | `plugin migrate` rewrites | Then by hand |
 |---|---|---|---|---|---|---|
+| 0.31.0 | 0.31.1 | 26 | chart 0.1.308 or later | CLI 0.1.50 | nothing: only the pins move | nothing |
+| 0.30.0 | 0.31.0 | 26 | chart 0.1.308 or later | CLI 0.1.49 | a base pinned by digest, moved with its digest dropped where it cannot be read | see [0.30.0 to 0.31.0](#0300-to-0310) |
 | 0.29.0 | 0.30.0 | 25 | chart 0.1.307 or later | CLI 0.1.47 | a module copied from a sibling plugin, and a trading layer in SnapTrade 0.16.0's shape, into re-exports of the SDK's helpers | see [0.29.0 to 0.30.0](#0290-to-0300) |
 | 0.28.0 | 0.29.0 | 25 | chart 0.1.306 or later | CLI 0.1.46 | a connectivity plugin's read of the escape hatch, and its test's mapping of the dropped case | see [0.28.0 to 0.29.0](#0280-to-0290) |
 | 0.27.0 | 0.28.0 | 24 | chart 0.1.305 or later | CLI 0.1.45 | a test of the `LCL-` prefix; a read of the `open_meridian` identifier; the suites' `LCL-suite-n` fixtures | see [0.27.0 to 0.28.0](#0270-to-0280) |
@@ -2370,6 +2424,52 @@ Move a plugin one release at a time or several at once: [`meridian plugin migrat
 | 0.18.0 | 0.19.0 | 14 | | CLI 0.1.34 | nothing: only the pins move | see [0.18.0 to 0.19.0](#0180-to-0190) |
 
 Before 0.19.0, `plugin new` pinned 0.18.0 from CLI 0.1.33, 0.17.0 from CLI 0.1.29 to 0.1.32, 0.16.0 from CLI 0.1.28, 0.15.0 from CLI 0.1.27, 0.14.0 from CLI 0.1.26, 0.12.0 from CLI 0.1.24 and 0.1.25, 0.11.0 from CLI 0.1.23, 0.10.1 from CLI 0.1.22, 0.10.0 from CLI 0.1.21, 0.9.0 from CLI 0.1.20, 0.7.1 from CLI 0.1.18 and 0.1.19, and 0.6.1 from CLI 0.1.16 and 0.1.17.
+
+### 0.31.0 to 0.31.1 { #0310-to-0311 }
+
+Released 2026-10-19. Not breaking: nothing a plugin calls changed shape,
+and `meridian plugin migrate --to 0.31.1` moves the pins and changes no
+code. What changes is how a saved setting value this version cannot read
+arrives: unset, never raised, and listed in `Settings.refused`, a typed
+class's `.refused` and `request.own_settings_refused` (see
+[`Settings`](#settings)). A plugin that renamed a choice can show each
+refused value's `message` on its page, asking the person to save the
+setting again.
+
+### 0.30.0 to 0.31.0 { #0300-to-0310 }
+
+Released 2026-10-19. Breaking: the SDK declares contract v26, and every
+role's suite holds new cases, so a plugin running its role's suite is not
+verified until its test maps them. Nothing a plugin called is removed.
+`meridian plugin migrate --to 0.31.0` moves the pins; a base pinned by
+digest moves with its tag, the new digest read from its registry, or with
+its digest dropped where it cannot be read (`base-digest-dropped`).
+
+Then, by hand where they apply:
+
+- **The base's digest** (`base-digest`): pin it again,
+  `ghcr.io/open-meridian/plugin-python:0.31.0@sha256:<digest>`.
+- **The suites' v26 cases** (`suite-cases-v26`): map each to the plugin's
+  own producer, or name one about something its source never presents in
+  `not_presented`, with why. A reading role (`reporting`, `portfolio`,
+  `compliance`, `signal`) runs a job and reads its answer, catches up
+  finished jobs and queries the lake within bounds; `oms`, `portfolio`,
+  `compliance` and `ems` read the agents' guard, and the `ems` meets the
+  guard's five cases; `data`, `ems` and `operations` query the lake within
+  bounds; and the data suite reports an event group and a flag the venue
+  does not state. Every role's `hears-and-reads-an-event-group` is
+  answered by the SDK unless the plugin maps it.
+- **A connectivity adapter's environment**
+  (`venue-reports-no-environment`): give the adapter an `environment`,
+  read from the host its session called with
+  `meridian.reached_environment(...)`. From contract v26 the catalogue
+  carries it, and a connection with no report counts live, so an agent's
+  placement on it is refused while the agents' guard is on.
+- **Custody pages, a listings layer or a trader of the plugin's own**
+  (`custody-pages-onto-sdk`, `lake-onto-sdk`, `trading-onto-sdk`): keep
+  only what is the vendor's, and call `custody.account_pages`, subclass
+  `listings.Feed`, or construct `connectivity.Trader` over the adapter
+  (see [Each role's common logic](#each-roles-common-logic)).
 
 ### 0.29.0 to 0.30.0 { #0290-to-0300 }
 
