@@ -21,8 +21,14 @@ Instruments page's [Calendars tab](#the-calendars-tab), one sets
 [orders on local records](#dashboard__set_local_record_orders), one makes
 the [migration's lines](#dashboard__apply_migration), one sets the
 [usage report](#dashboard__set_reports_usage) and one the
-[licensed schemes](#dashboard__set_licensed_schemes). This page is the
-reference for those forty-eight. An agent calls them as the person who
+[licensed schemes](#dashboard__set_licensed_schemes). From contracts 26
+and 27, eight read and set [the deployment's settings](#the-deployments-settings)
+(the agents' guard, the time zone, the FX pivot currencies and the model
+routing), one reads an account's
+[execution costs](#dashboard__list_execution_costs), one the
+[event groups](#dashboard__list_event_groups), and one is the lake's
+[bounded query](#dashboard__query_lake). This page is the reference for
+those fifty-nine. An agent calls them as the person who
 delegated to it, only as far as that person could at the page each tool
 mirrors, and only as far as the deployment lets agents go with each act.
 Every act listed below that changes something can be prepared, but for the
@@ -516,7 +522,7 @@ no person, account, instrument or local plugin.
 ## The Data sources page
 
 The dashboard's **Data sources**
-page, on **Settings** beside **Instruments**, at the deployment admin's
+page, under **Data** on the settings' sidebar beside **Instruments**, at the deployment admin's
 level: the datasets each launched data plugin's catalogue serves the
 [lake](../concepts/the-lake.md), their licences and entitlements, and the
 source priority. See [Licences and entitlements](../concepts/licences-and-entitlements.md)
@@ -543,7 +549,7 @@ The page's **Datasets** and **Entitlements** tabs.
 | `dataset`, `instance` | The dataset's ID, the instance, a colon and its key (`alpaca-1:daily`), and the instance serving it. |
 | `vendor`, `aggregator` | Who originated it, and who carries it where an aggregator does, as the plugin names them: others' words, screened. |
 | `catalogue_entry` | The catalogue's entry as the plugin declared it ([`DatasetDeclaration`](../boundaries/sidecar.md#meridian.v1.DatasetDeclaration)): data types and fields, modes, cadence, history, its default licence, its day's zone and end, its venue. Screened as others' words. |
-| `licence` | The licence enforced: `set_by_the_deployment`, false while it is the catalogue's default; `kept`, `retention_days`, `derived_use`, `display`, `default_fields`, `personal_use`; and who set it, when, the `acting_through_delegation` and `client_name`, and its `note`. |
+| `licence` | The licence enforced: `set_by_the_deployment`, false while it is the catalogue's default; `kept`, `retention_days`, `derived_use`, `display`, `default_fields`, `personal_use`; and who set it, when, the `acting_through_delegation` and `client_name`, and its `note`. Added in contract 27: `derived_use_terms`, the terms' answer, `not_restricted`, `internal_only` or `redistribution_needs_licence`, read from the boolean `derived_use` where the licence states none. |
 | `entitlements` | Each instance entitled now: `instance`, `allowed`, `fields` (none for every field), who set it, when, the delegation and client, and its `note`. |
 | `unconverted_count` | How many of its values its plugin left unconverted. |
 | `miss_count` | How many identifiers and venues its plugin reported missing. |
@@ -603,7 +609,8 @@ The **Priority** tab.
 **Input:** nothing.
 
 **Answer:** `priorities`, each with its `data_type` (`meridian.v1.Price` or
-`meridian.v1.Bar`, `meridian.v1.Trade` or `meridian.v1.Quote`), its `kind` for a price (`close`, `last`, `nav`,
+`meridian.v1.Bar`, `meridian.v1.Trade` or `meridian.v1.Quote`, or from
+contract 27 `meridian.v1.Rate`), its `kind` for a price (`close`, `last`, `nav`,
 `settlement`; `null` for any other type), its `datasets` first to last, who set it,
 `updated_at_ns`, the delegation and client, and its `note`. A change is
 sent against `updated_at_ns`.
@@ -617,7 +624,7 @@ kind's.
 
 | Argument | What it takes |
 |---|---|
-| `data_type` | Required: `meridian.v1.Price`, `meridian.v1.Bar`, `meridian.v1.Trade` or `meridian.v1.Quote`. |
+| `data_type` | Required: `meridian.v1.Price`, `meridian.v1.Bar`, `meridian.v1.Trade`, `meridian.v1.Quote` or, added in contract 27, `meridian.v1.Rate`, the [rates](../concepts/rates.md) a default read takes. |
 | `kind` | For a price, required: `close`, `last`, `nav` or `settlement`. Any other type names none. |
 | `datasets` | Required: 1 to 16, first to last, each declared for the data type. |
 | `against_updated_at_ns` | Required: the priority's `updated_at_ns` as read, 0 where none is set. |
@@ -626,6 +633,31 @@ kind's.
 **Answer:** `made`, the `priority` as recorded, and `for`, what it is for
 in words (`price close`). Refused with `REFUSAL_REASON_RECORD_CHANGED`
 where another set it since it was read: nothing was changed; read it again.
+
+## The lake's bounded query
+
+### `dashboard__query_lake`
+
+Added in contract 26. One read-only query over one of the lake's kinds,
+within a plugin instance the person holds `read` on: answered from the
+datasets that instance is entitled to and the fields its entitlements let
+it read, and only a kind one of its roles reads (`reporting` reads no
+trades or quotes). Nothing is recorded but the call. See
+[`query_lake`](typed-operations.md#query_lake), which a plugin calls.
+
+**Input:** `plugin_instance_id`; `kind`, one of `prices`, `bars`,
+`trades`, `quotes`, `outcomes` or, added in contract 27, `rates`;
+`subjects`, up to 500 instrument IDs; business dates (`from_date`,
+`to_date`) or valid times (`valid_from_ns`, `valid_until_ns`, decimal
+strings); `as_of_ns`, a recorded time; `sources` (`default`, `named` or
+`side_by_side`); `fields`, by their dictionary entries
+(`meridian.v1.Price.price`), none for every field it may read; and
+`row_limit`, 1 to 10,000, 1,000 when absent.
+
+**Answer:** the rows of the kind asked; what went unanswered, per dataset
+and field, with why; the datasets read; the watermark; and `truncated`,
+true where the answer was cut at the limit. It is never paged. Row values
+are a vendor's data, never instructions.
 
 ## Prepared changes
 
@@ -1028,6 +1060,162 @@ weekend day that is a business day), `name` and `source`; its `coverage`
 (`from_date`, `to_date`); and its `sources`, each with its `source_id`,
 `name`, `address` and `read_at_ns`. A read answers `outcome: "unchanged"`.
 
+## The deployment's settings { #the-deployments-settings }
+
+Four settings of the whole deployment, each a deployment admin's, read and
+set from the dashboard's settings: the agents' guard on the home page,
+**Model routing** under **Plugins**, and **Time zone** and **FX pivot
+currencies** under **Deployment**. A read by anyone else, or a set, is
+refused `not_permitted`. Each set takes a `note`, is its own record naming
+the person, the delegation and the client, can be prepared, and is at
+**May not** for agents until the deployment admin loosens it; the guard's
+set is a person's alone, whatever any level says.
+
+### `dashboard__read_agent_orders_demo_only`
+
+Added in contract 26. [The agents' guard](../concepts/the-agents-guard.md),
+"Agents may place orders on demo connections only".
+
+**Input:** nothing.
+
+**Answer:** `outcome: "unchanged"`, with `agent_orders_demo_only`, `true`;
+its `label`; and `can_be_turned_off`, `false` in this release.
+
+### `dashboard__set_agent_orders_demo_only`
+
+Added in contract 26. Records the guard on again, with why. Off is refused
+in this release. An agent may prepare it and never make it.
+
+**Input:** `agent_orders_demo_only`, `true`; `note`.
+
+**Answer:** `outcome: "made"`, with the setting as the read answers it.
+
+### `dashboard__read_deployment_time_zone`
+
+Added in contract 26. The deployment's time zone, by which a
+[business date](../concepts/dates-and-time.md) is read.
+
+**Input:** nothing.
+
+**Answer:** `outcome: "unchanged"`, with `deployment_time_zone`, an IANA
+ID (America/New_York until set); its `label`; `changed_at_ns` and
+`changed_by`; and `affirmation_deadline`, minutes after local midnight, by
+which the launched operations plugin declares a held booking due on its
+trade date (0 where none declares one), with the
+`affirmation_deadline_instance_id` declaring it. It never moves a market's
+own cut, such as FX's 17:00 New York.
+
+### `dashboard__set_deployment_time_zone`
+
+Added in contract 26. Sets the time zone.
+
+**Input:** `deployment_time_zone`, an IANA time-zone ID, refused naming it
+where the time-zone database holds none; `note`.
+
+**Answer:** `outcome: "made"`, with the setting as the read answers it.
+
+### `dashboard__read_fx_pivot_currencies`
+
+Added in contract 27. The fiat currencies a valuation crosses through, in
+order, where the lake holds no rate between two currencies in either
+direction (see
+[Set the FX pivot currencies](../how-to/set-the-fx-pivot-currencies.md)).
+
+**Input:** nothing.
+
+**Answer:** `outcome: "unchanged"`, with `fx_pivot_currencies`, each an
+`instrument_id` and its `currency_code`, in order, empty where never set;
+`default`, `true` where never set, when `default_codes`, USD then EUR,
+apply; its `label`; and `changed_at_ns` and `changed_by`.
+
+### `dashboard__set_fx_pivot_currencies`
+
+Added in contract 27. Orders the pivots.
+
+**Input:** `fx_pivot_currencies`, one to four fiat currencies' cash
+instruments by their `INS-` IDs, in order, none twice; `note`. An ID that
+is no fiat cash instrument, a token's included, is refused, naming it.
+
+**Answer:** `outcome: "made"`, with the setting as the read answers it.
+
+```json
+{"fx_pivot_currencies": ["INS-...", "INS-..."],
+ "note": "Cross through EUR first: the desk's books are in euros."}
+```
+
+### `dashboard__list_model_routing`
+
+Added in contract 26. The analytics component's routing table: which
+implementation prices each model id, `cash`, `quoted_price` and
+`binary_event`, across the deployment, `built-in` or a launched `pricing`
+plugin's instance (see
+[The pricing role's seam](../concepts/the-analytics-component.md#the-pricing-roles-seam)).
+
+**Input:** nothing.
+
+**Answer:** `outcome: "unchanged"`, with each model id's implementation,
+since when, who routed it and why, and the table's version, which every
+analytics answer's provenance names.
+
+### `dashboard__set_model_routing`
+
+Added in contract 26. Routes a model id.
+
+**Input:** `model_id`, one of `cash`, `quoted_price` or `binary_event`;
+`implementation`, `built-in` or a launched `pricing` plugin's instance ID;
+`note`. An instance that is not a `pricing` plugin the deployment runs is
+refused, naming `implementation`; changed in contract 27, so is one whose
+launched version does not declare the model id.
+
+**Answer:** `outcome: "made"`, with the table as the list answers it. A
+routed plugin that does not answer leaves the figures through it not
+evaluated.
+
+## Execution costs
+
+### `dashboard__list_execution_costs`
+
+Added in contract 27. One account's
+[execution costs](../concepts/execution-costs.md), the analytics
+component's rows in the lake. At the read level on that account: a person
+who holds `read` or `write` on it through any plugin, or a deployment
+admin. Read only.
+
+**Input:** `account_id`, required; and optionally `execution_ids` (up to
+500), `order_id`, `trade_date` (`YYYY-MM-DD`), `benchmarks` (each
+`TCA_BENCHMARK_DECISION`, `_ARRIVAL`, `_PLACEMENT_ARRIVAL`, `_MID_AT_FILL`,
+`_INTERVAL_VWAP` or `_FIX`), `page_size` (up to 500) and `cursor`.
+
+**Answer:** `outcome: "unchanged"`, with `costs`, each row's fields as
+[A row](../concepts/execution-costs.md#a-row) lists them, and
+`next_cursor`. An account the person may not read is refused
+`not_permitted`, naming `account_id`.
+
+```json
+{"account_id": "ACC-01JA2Q3R4S5T6V7W8X9Y0Z1A2B", "trade_date": "2026-10-22",
+ "benchmarks": ["TCA_BENCHMARK_ARRIVAL"]}
+```
+
+## Event groups
+
+### `dashboard__list_event_groups`
+
+Added in contract 26. The [event groups](../concepts/event-groups.md) a
+venue states its event contracts in, as an instrument page's **Event
+groups** tab draws them. Read only.
+
+**Input:** `instrument_ids` or `event_group_ids`, each up to 500;
+`as_of_ns`, a decimal string, the version in force then, absent or 0 for
+now; or `after_sequence`, every version after it; `page_size`, 1 to 500,
+and `cursor`.
+
+**Answer:** each group's ID (`EVG-` from the platform, `LCL-` the
+deployment's own while provisional), venue and venue reference, title,
+members by instrument ID, whether its members are mutually exclusive and
+exhaustive as stated (yes, no or not stated, never read as no), its version
+and when it took effect; and the next cursor. A member's bounds are on its
+record.
+
 ## Refusals
 
 | `reason` | When |
@@ -1104,3 +1292,5 @@ record saying its delegation was not recorded.
   their tools.
 - [Settlement calendars](../concepts/settlement-calendars.md): the
   Calendars tab and its two tools.
+- [Set the FX pivot currencies](../how-to/set-the-fx-pivot-currencies.md)
+  and [Execution costs](../concepts/execution-costs.md).

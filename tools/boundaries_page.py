@@ -101,10 +101,30 @@ GUIDES = [
      "launching and stopping -- each at its page's role and level, a note on every change, "
      "never a secret's value and never a change to who holds access; and the Data sources page's "
      "five, its datasets' licences, entitlements and source priority, at the deployment admin's level; "
-     "the prepared changes' seven and the accounts a plugin may link to"),
+     "the prepared changes' seven and the accounts a plugin may link to; the deployment's settings "
+     "(the agents' guard, the time zone, the FX pivot currencies, the model routing), an account's "
+     "execution costs, event groups and the lake's bounded query"),
     ("concepts/the-lake.md", "The lake",
      "prices and bars by dataset from data plugins: versions, reads by business date and as of a "
      "recorded time, the source priority, wants, kept or served"),
+    ("concepts/rates.md", "Rates",
+     "the lake's rates: fixings, averages, index levels and curves' points, each a value with its "
+     "unit, convention and tenor, about a referential record, read point in time and by publication time"),
+    ("how-to/record-rates.md", "Record rates in a data plugin",
+     "a rates publisher's plugin on meridian.roles.data.rates: subjects, curves, row keys and "
+     "revisions, and the data suite's rates cases"),
+    ("concepts/data-age-and-liveness.md", "Data age and liveness",
+     "a dataset's liveness, declared delay and staleness threshold, trading sessions, the ems's "
+     "stale-reference hold or warning, and latency recorded but not yet reported"),
+    ("concepts/placement-types-and-rfq-quotes.md", "Placement types and RFQ quotes",
+     "dma, algo, care, rfq and manual placements; a manual placement's evidence; the dealers' "
+     "quotes on the buy side's RFQ placement and the ems's pick"),
+    ("concepts/execution-costs.md", "Execution costs",
+     "TCA: each execution's cost in bps against the mid at four moments, from the job's chosen "
+     "sources, recorded as the lake's account-scoped ExecutionCost rows"),
+    ("concepts/fx-netting.md", "FX netting",
+     "opposite FX orders on one pair and one value date netted by the oms, the offset crossed "
+     "internally at a recorded rate, and booked as a block"),
     ("how-to/write-a-data-plugin.md", "Write a data plugin against its suite",
      "a data plugin from plugin new --role data: its catalogue, conversion at the edge, wants, "
      "and the data suite"),

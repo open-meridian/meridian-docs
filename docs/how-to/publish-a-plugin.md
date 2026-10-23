@@ -21,7 +21,7 @@ Signing the tag yourself and running `meridian plugin publish` is the other way,
 
 ## Before you start
 
-- CLI 0.1.50, and git 2.34 or later, which signs tags with SSH keys.
+- CLI 0.1.52, and git 2.34 or later, which signs tags with SSH keys.
 - To release in one command, your GitHub sign-in: `GH_TOKEN` or `GITHUB_TOKEN`, or the credential
   git keeps for github.com (`gh auth setup-git` gives git one). It must be able to read checks on
   the plugin's repository.
@@ -179,6 +179,16 @@ materials. An agent you connect reads the same with `read_plugin_build`.
 
 A refused build does not hold its version: once you have fixed what it names, that version is
 still free to publish.
+
+**The display name.** From CLI 0.1.51 a publish sends the display name your code declares,
+`meridian.Interface(title=...)`, and the builder refuses a build whose image declares another,
+saying both names: make the two agree in the tagged code and publish a new tag. Your listing's row
+shows the name while the version builds.
+
+**Queued, not refused.** While two of your organisation's builds are running, a third publish is
+queued, and `meridian plugin publish` says so once and follows it until it settles. A publish
+refused with status 429 has met the organisation's daily cap of publishes: nothing was built, and
+the next goes ahead once a day has passed since the earliest of them.
 
 ## Look after a listing
 

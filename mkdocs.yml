@@ -4,7 +4,11 @@ site_url: https://open-meridian.dev
 repo_url: https://github.com/open-meridian/meridian-core
 repo_name: open-meridian/meridian-core
 edit_uri: https://github.com/open-meridian/meridian-docs/edit/main/docs/
-copyright: © Open Meridian
+# The docs licence (ruling 534): the prose CC BY 4.0, the code samples
+# Apache-2.0, in LICENSE and LICENSE-CODE. No copyright holder is named yet.
+copyright: >-
+  Text licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>;
+  code samples under <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache-2.0</a>.
 
 # The theme's fonts are fetched at build time and served from this site, so a
 # visitor's browser asks no third party for anything (the privacy plugin).
@@ -120,8 +124,11 @@ nav:
       - One ID per instrument: concepts/one-id.md
       - Event groups: concepts/event-groups.md
       - The lake: concepts/the-lake.md
+      - Rates: concepts/rates.md
+      - Data age and liveness: concepts/data-age-and-liveness.md
       - Licences and entitlements: concepts/licences-and-entitlements.md
       - The analytics component: concepts/the-analytics-component.md
+      - Execution costs: concepts/execution-costs.md
       - Money and instruments: concepts/money-and-instruments.md
       - Venues: concepts/venues.md
       - Dates and time: concepts/dates-and-time.md
@@ -129,6 +136,8 @@ nav:
       - Prepared changes: concepts/prepared-changes.md
       - Service accounts: concepts/service-accounts.md
       - The order lifecycle: concepts/the-order-lifecycle.md
+      - Placement types and RFQ quotes: concepts/placement-types-and-rfq-quotes.md
+      - FX netting: concepts/fx-netting.md
       - The agents' guard: concepts/the-agents-guard.md
       - Booking: concepts/booking.md
       - Settlement calendars: concepts/settlement-calendars.md
@@ -154,6 +163,10 @@ nav:
       - Add a prediction-market plugin: how-to/add-a-prediction-market-plugin.md
       - Write a data plugin against its suite: how-to/write-a-data-plugin.md
       - Write a pricing plugin: how-to/write-a-pricing-plugin.md
+      - Record rates in a data plugin: how-to/record-rates.md
+      - Set staleness thresholds and the stale-reference action: how-to/set-staleness-thresholds.md
+      - Set the FX pivot currencies: how-to/set-the-fx-pivot-currencies.md
+      - Run a TCA job and read its costs: how-to/read-execution-costs.md
       - Read trades and quotes: how-to/read-trades-and-quotes.md
       - Value the book: how-to/value-the-book.md
       - Watch the market on the Board: how-to/watch-the-board.md
@@ -162,6 +175,8 @@ nav:
       - Run a plugin's work as a service account: how-to/run-a-plugins-work-as-a-service-account.md
       - Route orders through a connectivity plugin: how-to/route-orders-through-a-connectivity-plugin.md
       - Answer a venue-originated fill: how-to/answer-a-venue-originated-fill.md
+      - Place manually or by RFQ: how-to/place-manually-or-by-rfq.md
+      - Net FX orders: how-to/net-fx-orders.md
       - Set trading instructions: how-to/set-trading-instructions.md
       - Advising on tickets: how-to/advise-on-tickets.md
       - Working your tickets: how-to/work-your-tickets.md

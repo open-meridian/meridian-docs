@@ -33,33 +33,35 @@ backups set up. See [Back up and restore a deployment](back-up-and-restore.md). 
 changes on the way, release by release, is in the
 [release notes](../api/python-sdk.md#release-notes).
 
-!!! note "Upgrading to contract 26"
-    The upgrade to contract 26 (chart 0.1.308 or later) adds
+!!! note "Upgrading to contract 27"
+    The upgrade to contract 27 (chart 0.1.309 or later) rebuilds each
+    account's projection from its journal once, as the book's snapshots
+    change format, so every lot relieved before it gains its
+    [proceeds](../concepts/the-book-of-record.md#a-closed-lots-proceeds);
+    the journal is not rewritten. The dashboard's settings move from a row
+    of tabs to a grouped sidebar, every address unchanged, with **FX pivot
+    currencies** under **Deployment**, reading USD, then EUR, until a
+    deployment admin sets them. Placements made before it have no type and
+    read as DMA. Plugins keep running as they are: one built on an older
+    SDK registers and sends what it did, and one moved to SDK 0.32.0 or
+    later records and reads [rates](../concepts/rates.md), liveness and
+    [execution costs](../concepts/execution-costs.md), and places by
+    [type](../concepts/placement-types-and-rfq-quotes.md) (see
+    [Moving a plugin to a new release](../api/python-sdk.md#moving-a-plugin-to-a-new-release)).
+    Upgrading from a chart before contract 26 also adds
     [the analytics component](../concepts/the-analytics-component.md): two
     Deployments, a coordinator and a worker, on an image of its own,
-    `ghcr.io/open-meridian/meridian-analytics`, from the same commit as the
-    runtime's, sized by the chart's `analytics.coordinator` and
-    `analytics.worker` values. It is stateless, with no database and no
-    volume. Every pricing model stays built-in until a deployment admin
-    routes one on **Settings**, **Model routing**. The book records
-    [the agents' guard](../concepts/the-agents-guard.md) on, once, as its own
-    entry: agents place orders on demo connections only, and the setting
-    cannot be turned off. The home page shows it, and each connectivity
-    plugin's badge, **Demo** or **Live**; a connectivity plugin that reports
-    no environment for its session, as one built before SDK 0.31.0 does, is
-    live for agents. The deployment's time zone reads America/New_York until
-    a deployment admin sets it. Plugins keep running as they are: one built
-    on an older SDK registers and sends what it did, and one moved to SDK
-    0.31.0 or later reaches the analytics component, event groups and the
-    guard's read (see
-    [Moving a plugin to a new release](../api/python-sdk.md#moving-a-plugin-to-a-new-release)).
-    Upgrading from a chart before contract 25 also starts the book's
-    snapshots, one every `bor.snapshotInterval` entries (default 1,000),
-    made as accounts are next written, and gives the **Plugins** page
-    **Browse** and **Registries**, reaching the Community registry where the
-    chart's values carry the platform's keys (see
-    [Registries](../concepts/registries.md)); from one before contract 24, it runs that
-    release's instrument migration (see
+    `ghcr.io/open-meridian/meridian-analytics`, sized by the chart's
+    `analytics.coordinator` and `analytics.worker` values, stateless, with
+    no database and no volume, every pricing model built-in until a
+    deployment admin routes one; and the book records
+    [the agents' guard](../concepts/the-agents-guard.md) on, once, as its
+    own entry, a connectivity plugin reporting no environment for its
+    session being live for agents. From one before contract 25, it starts
+    the book's snapshots, one every `bor.snapshotInterval` entries (default
+    1,000), and gives the **Plugins** page **Browse** and **Registries**
+    (see [Registries](../concepts/registries.md)); from one before contract
+    24, it runs that release's instrument migration (see
     [Review provisional records and the migration](review-provisional-records.md)).
     `meridian status` shows the release, each component and plugin, and the
     book's health after the upgrade.

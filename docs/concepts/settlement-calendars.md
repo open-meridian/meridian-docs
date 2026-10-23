@@ -16,13 +16,14 @@ spot FX connectivity plugin has run on them.
 
 A calendar is a platform record under its own ID, `CAL-` and 26 letters and
 digits, minted by the platform, never changed and never reused. It is one
-of three kinds:
+of four kinds:
 
 | Kind | Its days | Its subject |
 |---|---|---|
 | A currency's | The currency's settlement days | The currency's cash instrument |
 | A trading calendar | A venue's trading days | The venues that follow it, by their venue IDs |
 | A securities settlement calendar | A securities settlement system's days | The settlement system, by its name and country |
+| Trading sessions (contract 27) | A venue's sessions within its days | The venues that follow it, by their venue IDs |
 
 **It says which days are not business days, as data:** its weekend, a set
 of weekdays dated so that a change of weekend takes effect on its day; each
@@ -280,10 +281,39 @@ ID, so a pair named by a provisional `LCL-` record is answered rule not
 held. A plugin names a pair by the platform's `INS-` IDs of its currencies'
 cash instruments (see [One ID per instrument](one-id.md)).
 
+## Trading sessions { #trading-sessions }
+
+Added in contract 27. A calendar of the kind
+`CALENDAR_KIND_TRADING_SESSIONS` holds the hours a venue trades, the
+minimum that [staleness](data-age-and-liveness.md) needs, since a price's
+age counts only in session:
+
+- **its time zone**, an IANA ID;
+- **its sessions**, each the weekdays it runs on, its start and end in
+  minutes after local midnight, and whether it is an extended session.
+  Several a day where a venue breaks for lunch;
+- **its early closes**, each a dated day with that day's sessions, none
+  for a day closed. An early close announced later is a new version, as any
+  closure is.
+
+FX is a calendar of its own, by the convention: Sunday 17:00 to Friday
+17:00 New York. Halts are not here: they stay a quote's `halted`
+characteristic. Trading sessions are curated and approved on the
+platform as every calendar is.
+
+[`read_calendar`](../api/typed-operations.md#read_calendar) answers them
+as `trading_sessions`, with the early closes falling in the range asked;
+every other calendar answers it unset. In a plugin,
+`meridian.roles.in_session(sessions, at_ns, extended=False)` says whether a
+moment falls in a session, a dated day's sessions in place of its
+weekday's.
+
 ## Known limits
 
-- **Closed days only.** A trading calendar records closed days; early
-  closes and special sessions are not recorded.
+- **Closed days and sessions.** A trading calendar records closed days,
+  and a trading-sessions calendar a venue's hours and early closes; special
+  sessions beyond those are not recorded. A venue's sessions come by
+  curation, venue by venue.
 - **Plugins do not hear a new version yet.** A plugin asks when it uses a
   calendar, and `operations` re-checks by reading, so a stale read can miss
   an unscheduled closure for a day. Hearing reference data is a later

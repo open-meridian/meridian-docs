@@ -4,7 +4,7 @@
 
 Nothing in a cloud install depends on it. A marketplace listing's form and the deployment's own wizard are the whole path there; `meridian` makes the same things convenient from a terminal. Where it drives `helm` or `kubectl`, it drives your own, and what it tells you to run next is a `meridian` command, never `helm` or `kubectl`: you never run them yourself.
 
-This page describes release 0.1.50 of the command line, released 2026-10-19. `meridian --version` says which one you have. For installing it, see [Install a deployment](../getting-started/installation.md).
+This page describes release 0.1.52 of the command line, released 2026-10-23. `meridian --version` says which one you have. For installing it, see [Install a deployment](../getting-started/installation.md).
 
 ## Synopsis
 
@@ -38,6 +38,8 @@ meridian plugin key setup [--hardware] [--organisation <namespace>] [--dir <dir>
 meridian plugin key register <file.pub> | revoke <key-id> --reason <text> [--not-trusted-after <time>] | list [--organisation <namespace>]
 meridian plugin download <namespace>/<plugin>@<version> [--registry community|verified] [--to <file>]
 meridian plugin upload --bundle <file> [--deployment <addr>]
+meridian plugin install <organisation>/<plugin>[@<version>] --note <why> [--registry community|verified]
+meridian plugin install --pack <pack> --note <why> [--with <plugin>]... [--without <plugin>]... [--yes]
 meridian plugin gc [--release <name>] [--timeout <d>] [--yes]
 meridian upgrade [--to <version>]
 meridian uninstall [--yes]
@@ -520,16 +522,19 @@ If the deployment can't be reached, the delegation is still forgotten here. It s
 meridian plugin new <name> [--into <dir>] [--role connectivity|custody|data|operations|pricing|reporting]
 ```
 
-!!! note "CLI 0.1.50"
-    CLI 0.1.50, released 2026-10-19, pins SDK 0.31.1 (contract v26),
-    whose plugins need a runtime serving contract v26 (chart 0.1.308
-    or later), and carries SDK 0.31.1's templates, the pricing
-    template among them (`--role pricing`, added in CLI 0.1.49). Every template carries a `docs/` folder, its whole
+!!! note "CLI 0.1.52"
+    CLI 0.1.52, released 2026-10-23, pins SDK 0.32.1 (contract v27),
+    whose plugins need a runtime serving contract v27 (chart 0.1.309
+    or later), and carries SDK 0.32.1's templates, the pricing
+    template among them (`--role pricing`, added in CLI 0.1.49). The data,
+    reporting and connectivity templates' suites meet contract v27's cases,
+    the three latency reports' cases (`about: latency`) marked not
+    presented, with why, until core receives them in contract 28. Every template carries a `docs/` folder, its whole
     declaration (`Declaration(settings=, interface=, documentation=)`) named
     in `[tool.meridian]`, and a CI workflow checking with the `meridian`
     release that wrote it (`MERIDIAN_VERSION`).
 
-Writes a working plugin to start from: the Python SDK's reference plugin, renamed to `<name>`, or with `--role` that role's template. It needs no network, because the template is compiled into the binary. It writes the plugin's code and its pages, each a view function and a Jinja2 template declared with the levels it serves (a **Setup** page under Manage, at `admin`, and an **Accounts** page under Open and View, at `write` and `read`), its declaration (`src/<module>/declaration.py`, which `[tool.meridian]` names), its documentation (`docs/overview.md`, `setup.md`, `troubleshooting.md`, `terms.md` and `pages.md`, each a short prompt to replace; see [Write a plugin's documentation](../how-to/write-a-plugins-documentation.md)), its tests (`tests/test_page.py`), a `Dockerfile`, `pyproject.toml`, `.dockerignore`, `.gitignore`, `README.md`, `AGENTS.md`, `CLAUDE.md`, a `develop-live` skill for Claude Code, a CI workflow that runs `meridian plugin check --run-tests` (`.github/workflows/check.yaml`), and a pre-push hook, `hooks/pre-push`, then prints the next steps. Where git has no SSH key to sign release tags with, it then offers [`meridian plugin key setup`](#meridian-plugin-key-setup) at a terminal, asking `Set up a signing key now?`, and only says so where there is no terminal. The hook is CI-first: a branch's push runs nothing, its pull request's CI being the gate; a tag push runs nothing either, since [`plugin release`](#meridian-plugin-release) checked main's CI before signing it; and a push straight to `main` runs `meridian plugin check --run-tests` first. Turn it on in a fresh clone with `git config core.hooksPath hooks`. The plugin pins SDK 0.31.1, and needs a deployment whose sidecar accepts contract 26 (chart 0.1.308 or later). Its `AGENTS.md` teaches a coding agent the kinds of raw record a plugin at the edge declares and their windows, and that a custody plugin keeps each activity's raw record at least as long as the history it reported; how a data plugin records trades and quotes; that work the plugin does on its own changes something only by calling one of its acts as its role's service account (`meridian.runs_as`), each such act naming its check tool, and names the declared algorithm it runs (`meridian.runs_as(role, algorithm_id=...)`); and that a date is worked out in core (`compute_date`, `read_calendar`), never by hand; and that a change raises `version` and adds its `CHANGELOG.md` entry, `## X.Y.Z` with no date, in its own pull request, and a version is then published to a registry with `meridian plugin release`. Which SDK each earlier CLI pinned is in [Moving a plugin to a new release](python-sdk.md#moving-a-plugin-to-a-new-release). See [Your first plugin](../getting-started/first-plugin.md).
+Writes a working plugin to start from: the Python SDK's reference plugin, renamed to `<name>`, or with `--role` that role's template. It needs no network, because the template is compiled into the binary. It writes the plugin's code and its pages, each a view function and a Jinja2 template declared with the levels it serves (a **Setup** page under Manage, at `admin`, and an **Accounts** page under Open and View, at `write` and `read`), its declaration (`src/<module>/declaration.py`, which `[tool.meridian]` names), its documentation (`docs/overview.md`, `setup.md`, `troubleshooting.md`, `terms.md` and `pages.md`, each a short prompt to replace; see [Write a plugin's documentation](../how-to/write-a-plugins-documentation.md)), its tests (`tests/test_page.py`), a `Dockerfile`, `pyproject.toml`, `.dockerignore`, `.gitignore`, `README.md`, `AGENTS.md`, `CLAUDE.md`, a `develop-live` skill for Claude Code, a CI workflow that runs `meridian plugin check --run-tests` (`.github/workflows/check.yaml`), and a pre-push hook, `hooks/pre-push`, then prints the next steps. Where git has no SSH key to sign release tags with, it then offers [`meridian plugin key setup`](#meridian-plugin-key-setup) at a terminal, asking `Set up a signing key now?`, and only says so where there is no terminal. The hook is CI-first: a branch's push runs nothing, its pull request's CI being the gate; a tag push runs nothing either, since [`plugin release`](#meridian-plugin-release) checked main's CI before signing it; and a push straight to `main` runs `meridian plugin check --run-tests` first. Turn it on in a fresh clone with `git config core.hooksPath hooks`. The plugin pins SDK 0.32.1, and needs a deployment whose sidecar accepts contract 27 (chart 0.1.309 or later). Its `AGENTS.md` teaches a coding agent the kinds of raw record a plugin at the edge declares and their windows, and that a custody plugin keeps each activity's raw record at least as long as the history it reported; how a data plugin records trades and quotes; that work the plugin does on its own changes something only by calling one of its acts as its role's service account (`meridian.runs_as`), each such act naming its check tool, and names the declared algorithm it runs (`meridian.runs_as(role, algorithm_id=...)`); and that a date is worked out in core (`compute_date`, `read_calendar`), never by hand; and that a change raises `version` and adds its `CHANGELOG.md` entry, `## X.Y.Z` with no date, in its own pull request, and a version is then published to a registry with `meridian plugin release`. Which SDK each earlier CLI pinned is in [Moving a plugin to a new release](python-sdk.md#moving-a-plugin-to-a-new-release). See [Your first plugin](../getting-started/first-plugin.md).
 
 `<name>` must be lowercase letters, digits and single hyphens, starting with a letter. It becomes the package name, and, with hyphens as underscores, the module name.
 
@@ -556,13 +561,18 @@ Writes a working plugin to start from: the Python SDK's reference plugin, rename
 meridian plugin check [--dir <dir>] [--run-tests] [--verified] [--json]
 ```
 
-!!! note "CLI 0.1.50"
-    CLI 0.1.50 reads contract v26's roles and suites: `pricing` is a
-    role, not at the edge, with its suite (added in CLI 0.1.49), and v26's
-    event-group, job, bounded lake query and agents' guard cases are in the
-    suites that hold them. `role-pages` counts the pages, routes and tools
-    an SDK helper declares for the plugin, such as
-    `meridian.roles.custody.account_pages` (changed in CLI 0.1.50).
+!!! note "CLI 0.1.52"
+    CLI 0.1.52 reads contract v27's roles and suites: the v27 cases are in
+    the suites that hold them, with the `about` markers `rates`, `streams`,
+    `rfqs` and `latency`, and the data suite's `an-exact-price` and
+    `a-want-recorded-against` about `closes` (changed in CLI 0.1.52), so a
+    data plugin recording only rates names them not presented and passes
+    `--verified`. `role-pages` counts the pages, routes and tools an SDK
+    helper declares for the plugin, such as
+    `meridian.roles.custody.account_pages` and connectivity's
+    `trading_pages`, `connection_pages` and `raw_records_page` (changed in
+    CLI 0.1.51): a plugin holding data and connectivity on one Connection,
+    from `connection_pages`, needs no Trading page of its own.
 
 Holds the plugin in `--dir` to the framework's rules: the rules every plugin is built to, so that plugins written by different people and different coding agents look and behave alike, and a change to what plugins call can be applied to all of them. It needs no deployment and no session, changes nothing, and reads nothing outside the directory. Run it while you work, and in the plugin's own CI.
 
@@ -583,7 +593,7 @@ Each failure names the rule, the file and line, and what to write instead, so th
 | `tool-meridian` | `[tool.meridian]` names roles from the fixed list, and no tags. | No `[tool.meridian]`; a role not in the deployment's list (`compliance`, `confirmation`, `connectivity`, `custody`, `data`, `ems`, `oms`, `operations`, `portfolio`, `pricing`, `reference`, `reporting`, `servicing`, `settlement`, `signal`); `tags`, empty or not; an `interface` that is not true or false. |
 | `edge-storage` | Only a plugin at the edge asks for storage in its declaration. | A plugin holding no edge role asking for storage. See [Keep what your custody plugin converts](../how-to/keep-what-the-edge-converts.md). |
 | `role-suite` | A verified plugin holding a role with a suite runs the suite in its tests. | With `--verified`: a plugin holding `custody`, `data`, `connectivity` or `pricing` with no test running that role's suite, which `--run-tests` then runs. Without `--verified` it is reported skipped: a plugin not passing its role's suite is not verified for it, and breaks no rule, so the reference plugin given `custody` keeps every rule. Only the `custody`, `data`, `connectivity` and `pricing` suites are held: a plugin holding `reporting`, `signal`, `oms`, `ems`, `portfolio`, `operations` or `compliance` is not checked for its role's suite, which its own tests may still run. The connectivity suite's cases include sending nothing new on a pause and cancelling at the venue on a stop, which no connectivity plugin may name not presented. It also holds the test to the outcome `--run-tests` then trusts (changed in CLI 0.1.43). Any skip or expected failure where a suite is run fails it at its line: a marker (`pytest.mark.xfail`, strict or not, `skip`, `skipif`, unittest's `skip` and `expectedFailure`), a call (`pytest.xfail()`, `pytest.skip()`, `importorskip`) or a `pytestmark`, in the module running it or a `conftest.py` over it, since only the contract's `closed_list`, `about` and `about_field` excuse a case. And, since the SDK's runner reports rather than raises, a collected test (`test_*` in a `test_*.py`) binds the run and asserts it passed in the very next statement, `report = run("<role>", producers, ...)` then `assert report.passed, report.failures`, under no `try`, `with`, `if` or loop: a test asserting a count or one case, catching the failure, or changing the report first fails it at the suite's first run. Tests that expect the suite to fail may stand beside that one. See [Keep what your custody plugin converts](../how-to/keep-what-the-edge-converts.md) and [Write a data plugin against its suite](../how-to/write-a-data-plugin.md#hold-it-to-the-suite). |
-| `role-pages` | A plugin holding a role with a common part keeps its common pages, tools and settings, in the role's order, and every act names its check tool. | With `--verified`, for each of `data`, `custody`, `operations` and `reporting` the plugin holds: a common page missing, retitled, at another path or level, or after a page of the plugin's own; a common page's read tool missing or renamed, or its record (`meridian.roles.<role>`'s `<Page>Read`, or the plugin's own) lacking a common field; a common setting missing or out of order (`environment` first, `sample_data` last); a page, setting or figure of the plugin's own taking a common title or label; and an act, a route that changes something and is a tool, naming no check tool (`checked_by=`), or one no read route declares; where a tool replaces the route (`@pages.tool(replaces=...)`), the tool is held to it instead, unless it or the route it replaces reads. Without `--verified` each is said as advice and fails nothing. A page, route or tool one of the SDK's helpers declares counts as the plugin's own, placed where the helper is called, however the module imports it: `meridian.roles.custody.account_pages` declares **Account links**, `check_link_account`, `link_account`, **Statements** and **History**. A missing common page or act names the helper that declares it. Changed in CLI 0.1.50. Candidates (custody's, operations' and reporting's items from one plugin) are not held. See [Using a data plugin](../how-to/using-a-data-plugin.md) and [The role's common pages](../how-to/write-a-data-plugin.md#the-roles-common-pages). |
+| `role-pages` | A plugin holding a role with a common part keeps its common pages, tools and settings, in the role's order, and every act names its check tool. | With `--verified`, for each of `data`, `custody`, `operations` and `reporting` the plugin holds: a common page missing, retitled, at another path or level, or after a page of the plugin's own; a common page's read tool missing or renamed, or its record (`meridian.roles.<role>`'s `<Page>Read`, or the plugin's own) lacking a common field; a common setting missing or out of order (`environment` first, `sample_data` last); a page, setting or figure of the plugin's own taking a common title or label; and an act, a route that changes something and is a tool, naming no check tool (`checked_by=`), or one no read route declares; where a tool replaces the route (`@pages.tool(replaces=...)`), the tool is held to it instead, unless it or the route it replaces reads. Without `--verified` each is said as advice and fails nothing. A page, route or tool one of the SDK's helpers declares counts as the plugin's own, placed where the helper is called, however the module imports it: `meridian.roles.custody.account_pages` declares **Account links**, `check_link_account`, `link_account`, **Statements** and **History**. A missing common page or act names the helper that declares it. Changed in CLI 0.1.51: connectivity's page helpers count too. Candidates (custody's, operations' and reporting's items from one plugin) are not held. See [Using a data plugin](../how-to/using-a-data-plugin.md) and [The role's common pages](../how-to/write-a-data-plugin.md#the-roles-common-pages). |
 | `runs-as-checked` | Every act the plugin's own work calls through `runs_as` names its check tool. | With or without `--verified`: in the plugin's Python, its tests not, a call in the block of `async with meridian.runs_as(...) as act:` (`runs_as` however it is reached: `meridian.runs_as`, imported, imported as another name, or a name the module binds to it) to one of the plugin's acts, by its tool's name as written or through a constant bound at the top of a module, that declares no check tool (`checked_by=`), at the call's file and line, naming the act and where it is declared, since a service account set to prepare only is refused such an act at run time. A tool named some way the text cannot read, or none of the plugin's acts, is passed over. See [A service account runs the plugin's autonomous work](python-sdk.md#runs_as). |
 | `kit-linked` | Every page links the kit from `/.meridian/ui/`, and the plugin holds no copy of it. | A file that writes a document (`<!doctype html>`, `<html>` or `<head>`) with no link to `/.meridian/ui/…/meridian.css`; a file named `meridian.css` or `meridian.js` in the plugin. |
 | `no-raw-colour` | No raw colour in a page or its styles. | A hex colour where a colour goes, `rgb()`, `rgba()`, `hsl()`, `hsla()`, `hwb()`, `oklch()` or `oklab()`, or a CSS colour name as the value of a colour property (`color`, `background`, `border`, `fill`, `stroke` and the like), a colour attribute (`fill="…"`) or a script's `.style.…Color`. A fallback in `var(--x, #fff)` is a raw colour too. |
@@ -740,6 +750,8 @@ The rewrites keep a file's formatting and comments wherever they change nothing.
 | 0.28.0 to 0.29.0: the SDK declares contract v25, plugins shared through registries and carrying their own documentation: the whole declaration (`Declaration(interface=, reads_external_accounts=, documentation=, affirmation_deadline=)`), `meridian-declaration --documentation`, registration held to the version uploaded, `connect` refusing an interface its declaration does not name; `record_break(unresolved_identifiers=)`, `resolve_venue(venue_id=)`; the give-up cases about `give-ups`. Breaking: a plugin whose declaration does not carry its interface is refused at registration until it does. It needs chart 0.1.306 or later. See [0.28.0 to 0.29.0](python-sdk.md#0280-to-0290) | a connectivity plugin's `await plugin.read_local_record_orders()` removed (`escape-hatch-read-dropped`), and its test's mapping of `reads-whether-orders-may-name-local-records` (`escape-hatch-case-dropped`) | `connect` given an interface, settings or `reads_external_accounts`: declare them in the `Declaration`, the port fixed, and pass `connect(declaration=DECLARATION)` (`connect-names-the-declaration`); a `[tool.meridian]` naming no `declaration`: name one, and write `docs/overview.md` and `docs/setup.md` (`declaration-not-named`); a Dockerfile whose last stage copies no documentation into the image, such as one installing only the package: `COPY docs/ docs/`, or the whole context as the templates do (`docs-not-in-image`); a connectivity plugin's read of the escape hatch whose answer it uses (`escape-hatch-read-kept`) |
 | 0.29.0 to 0.30.0: each role's common logic in the SDK, contract v25 unchanged: `meridian.roles.data` (`Wants`, `Venue`, the venue's reading, `served`, `want_rows`, `VenueConnection`), `meridian.roles.data.pairs` and `.event_contracts`, `meridian.roles.data.testing`, `meridian.edge.RawStore`, and `meridian.roles.connectivity` (`Trader`, its Trading page, `testing.Rig`); a connectivity role template. It needs chart 0.1.307 or later. See [0.29.0 to 0.30.0](python-sdk.md#0290-to-0300) | a module copied from a sibling plugin (`market.py`, `products.py`, `contracts.py`, `raw.py`, `dgm.py`) into a re-export of the SDK's names (`copied-module-onto-sdk`); a trading layer in SnapTrade 0.16.0's shape into a re-export of `meridian.roles.connectivity` (`copied-trader-onto-sdk`) | import from the SDK and delete the re-exports, constructing `Trader` with `market_zone=` and `Sent` for `Noted` (`re-export-left`, `trader-re-export-left`); the copied pages onto the kind's builders and templates and `trading_read` (`copied-page`, `trading-page-onto-sdk`); the copied tests onto one class of the SDK's checks and `testing.Rig` (`copied-tests`, `trading-rig-onto-sdk`); a copied `stream.py` kept as the plugin's own transport (`stream-is-the-plugins`), `retarget` for an assigned `connect` (`stream-connect-assigned`); the Makefile's `suite-same` removed (`suite-same-retired`); a trading layer not rewritten, moved by hand (`trader-by-hand`) |
 | 0.30.0 to 0.31.0: the SDK declares contract v26, the analytics component, the `pricing` role, event groups and the agents' guard: `meridian.analytics` (a job's typed builders, `Answer`, `Jobs`) and its reference computations; `meridian.roles.pricing.Pricer` and a pricing role template; `meridian.EventGroups` and `event_contracts.Feed.report_event`; `environment(demo="paper")`, `reached_environment`, `connection_badge` and `Caller.agent_refused`; `plugin.query_lake` and `plugin.count_model_tokens`; and custody's pages (`custody.account_pages`), a broker's listings (`roles.data.listings`) and the Trader's charges and stated settlement dates. Breaking: every role's suite holds new cases. It needs chart 0.1.308 or later. See [0.30.0 to 0.31.0](python-sdk.md#0300-to-0310) | a base pinned by digest at an older release moved to 0.31.0, its digest dropped where it cannot be read (`base-digest-dropped`) | pin the base's digest again (`base-digest`); map each role suite's v26 cases, or name one the source never presents with why (`suite-cases-v26`); give a connectivity adapter its `environment`, read with `meridian.reached_environment` (`venue-reports-no-environment`); move custody pages, a listings layer or a trader of the plugin's own onto the SDK (`custody-pages-onto-sdk`, `lake-onto-sdk`, `trading-onto-sdk`) |
+| 0.31.1 to 0.32.0: the SDK declares contract v27: the analytics component's `pnl` version 2 and `execution_cost`, a job's business date and reporting currency; the lake's rates (`meridian.roles.data.rates`); latency recorded and not yet reported (`roles.Latency`), a dataset's liveness and declared delay; the session ceilings', dataset thresholds' and stale-reference settings; the `ems`'s reference check and an RFQ placement's quotes; the `Trader`'s placement types and RFQs; connectivity's pages declared by the SDK; `Feed.keep_events`. Breaking: every role's suite holds new cases. It needs chart 0.1.309 or later. See [0.31.1 to 0.32.0](python-sdk.md#0311-to-0320) | a base pinned by digest at an older release moved to 0.32.0, its digest dropped where it cannot be read (`base-digest-dropped`) | pin the base's digest again (`base-digest`); map each role suite's v27 cases, or name one the source never presents with why, and the three about `latency` until contract 28 (`suite-cases-v27`); a data plugin recording no trades names `queries-the-lake-within-bounds` not presented (`lake-query-without-trades`); move a connectivity plugin's own Trading page onto the SDK's (`trading-page-onto-sdk`) and an event-contract plugin's own events loop onto `keep_events` (`events-onto-sdk`); upload the e2e logs with hidden files (`e2e-hidden-files`) |
+| 0.32.0 to 0.32.1: the data suite's `an-exact-price` and `a-want-recorded-against` are about `closes`, and `meridian.roles.data.testing.RATES_NOT_PRESENTED` names every case a rates-only plugin never presents. See [0.32.0 to 0.32.1](python-sdk.md#0320-to-0321) | Nothing: only the pins move | a data plugin recording only rates names the two cases not presented |
 | 0.31.0 to 0.31.1: a saved setting value no longer among its choices, or not of its kind, is delivered unset rather than raised (`Settings.refused`, `meridian.RefusedSetting`, `request.own_settings_refused`); an event-contract venue's map keeps a range market's bounds, and `event_contracts.Feed.stated_identifiers`; the pricing template declares no storage; the templates' `AGENTS.md` on publishing to a registry. See [0.31.0 to 0.31.1](python-sdk.md#0310-to-0311) | Nothing: only the pins move | |
 
 `plugin migrate` adds three rules of its own: `base-digest`, for a base pinned by digest whose new digest could not be read, with the `docker buildx imagetools inspect` that names it; `pin-elsewhere`, for the old release still named in another file (a Makefile's base image, a workflow, a README), which it reports rather than moves because some of those are history; and `unreadable`, for a file that is not UTF-8, or that a step could not read as Python, which it leaves as it was.
@@ -1056,7 +1068,7 @@ Asks the platform to build a signed release tag of the plugin and list it. It bu
 - a tag not signed with an SSH key (`git -c gpg.format=ssh tag -s v0.18.0`);
 - an `origin` that is not a repository on GitHub.
 
-Then it asks for the build, and follows it until the version is listed, in review, or refused. It prints one line a check the platform names, `ok`, `warn` or `FAIL`, cut to the terminal's width (`--details` prints each check's full text), the build's public log, and the listing's address once it is listed. `community` lists once the checks pass; `verified` queues the version for a person's review, and lists nothing until it is approved. See [Publish a plugin to a registry](../how-to/publish-a-plugin.md).
+Then it asks for the build, and follows it until the version is listed, in review, or refused. From CLI 0.1.51 it sends the display name the plugin's code declares (`meridian.Interface(title=...)`, written out or through a constant), and the platform's builder refuses a build whose image declares another: the refusal says so plainly, with both names, and the fix is to make the two agree and publish a new tag. A publish while two of the organisation's builds are running is **queued**, not refused: it says `queued` once, and is followed until it settles. A refusal with status 429 is the organisation's daily cap of publishes: nothing was built. It prints one line a check the platform names, `ok`, `warn` or `FAIL`, cut to the terminal's width (`--details` prints each check's full text), the build's public log, and the listing's address once it is listed. `community` lists once the checks pass; `verified` queues the version for a person's review, and lists nothing until it is approved. See [Publish a plugin to a registry](../how-to/publish-a-plugin.md).
 
 | Flag | Argument | Default | Meaning |
 |---|---|---|---|
@@ -1088,7 +1100,7 @@ The organisation's tag-signing keys at the platform, as its **Signing keys** pag
 meridian plugin download <namespace>/<plugin>@<version> [--registry community|verified] [--to <file>]
 ```
 
-On a connected machine, writes a **plugin bundle** of a listed version for a deployment that reaches nothing: the image, its provenance, bill of materials, scan results and listing statement, the declaration and its documentation, and a dated copy of the signing keys' status. It verifies every digest and signature against the platform's keys this release of the CLI carries, and writes nothing unless every one verifies. CLI 0.1.50 carries the platform's registry-signing key, version 1.
+On a connected machine, writes a **plugin bundle** of a listed version for a deployment that reaches nothing: the image, its provenance, bill of materials, scan results and listing statement, the declaration and its documentation, and a dated copy of the signing keys' status. It verifies every digest and signature against the platform's keys this release of the CLI carries, and writes nothing unless every one verifies. CLI 0.1.52 carries the platform's registry-signing key, version 1.
 
 | Flag | Argument | Default | Meaning |
 |---|---|---|---|
@@ -1106,6 +1118,66 @@ meridian plugin upload --bundle <file> [--deployment <addr>]
 Carries a plugin bundle into the deployment's catalogue, through the session `meridian connect` keeps. It verifies the bundle here first, against the platform's keys this release carries, as `plugin download` does; then the deployment verifies it against the platform's keys its chart carries, as at an install, and records the version with its listing and registry. See [Install a plugin from a registry](../how-to/install-from-a-registry.md#a-deployment-that-reaches-nothing).
 
 **Exit codes:** as for the other [plugin commands on a deployment](#plugin-commands-on-a-deployment).
+
+### `meridian plugin install` { #meridian-plugin-install }
+
+```text
+meridian plugin install <organisation>/<plugin>[@<version>] --note <why> [--registry community|verified]
+meridian plugin install --pack <pack> --note <why> [--with <plugin>]... [--without <plugin>]... [--yes]
+```
+
+Added in CLI 0.1.51. Installs a version the registries list into the
+connected deployment, as the dashboard's **Browse** does, as its
+deployment admin, through the session `meridian connect` keeps
+(`--deployment` names another). It **launches nothing**: launch each
+version afterwards with [`meridian plugin launch`](#meridian-plugin-launch),
+approving the roles it asks for.
+
+- **A listing.** `<organisation>/<plugin>@<version>` installs that version,
+  from `--registry` where given, the Community registry otherwise. Without
+  `@version` it installs the one Browse shows: the newest offered release,
+  verified first.
+- **A starter pack.** `--pack <pack>` installs the pack's members, each its
+  own install. A bare name is `open-meridian`'s: `crypto` is
+  `open-meridian/crypto`. Each member resolves to its newest offered release
+  at or above the pack's minimum for it; one with none offered is
+  **unavailable** and left out. The members the pack's curator preselected
+  are installed, and the members to choose are not: `--with <plugin>` adds
+  one, and `--without <plugin>` leaves out a preselected one, each
+  repeatable, by its listing or its plugin part. A name that is not a member
+  is refused before anything is installed.
+- **Asked first.** The plan is shown version by version, and asked about
+  before anything is installed. At a terminal, each member to choose that
+  you did not name is asked about too. `--yes` approves the plan without
+  asking, and installs no member to choose you did not name; where there is
+  no terminal, nothing is installed without it.
+- **A member already held** is never moved: at or above the pack's version
+  it counts as installed, and below it the line says
+  `Installed 0.3.0; 0.5.1 offered`.
+- **`--note` is required**: the deployment keeps it with each install.
+
+Each member's line says installed or why it failed, and the rest go on past
+a failure. The end lists `meridian plugin launch` for each version ready to
+launch. `--pack`, and a listing without `@version`, read the platform's
+catalogue through your platform sign-in; a platform that does not yet let
+the CLI read its catalogue says so in one line.
+
+```console
+$ meridian plugin install --pack crypto --with plugin-coinbase --note "the crypto desk"
+```
+
+| Flag | Argument | Meaning |
+|---|---|---|
+| `--note` | `<why>` | Why, kept with each install. Required. |
+| `--registry` | `community` or `verified` | A listing's registry. Default: with `@version`, `community`; without, the one Browse shows. Not with `--pack`, whose members name their own. |
+| `--pack` | `<pack>` | A starter pack, `organisation/pack`, or a bare name for `open-meridian`'s. |
+| `--with` | `<plugin>` | With `--pack`: also install this member to choose. Repeatable. |
+| `--without` | `<plugin>` | With `--pack`: leave out this preselected member. Repeatable. |
+| `--yes` | | Install without being asked. |
+
+Exits 0 when every member asked for is installed or held; 1 when one
+failed, each named, or nothing was approved. See
+[Install a plugin from a registry](../how-to/install-from-a-registry.md).
 
 ## `meridian plugin gc`
 

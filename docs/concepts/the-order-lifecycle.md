@@ -77,13 +77,17 @@ Beside its state an order holds any of **nine conditions**, each with its
 reason and the actor that set it: **change requested**, **approval
 required**, **awaiting check**, **claimed**, **held**, **paused**,
 **outcome unknown**, **does not tie out** (an overfill or a restatement)
-and **late fact**.
+and **late fact**. From contract 27 a **held** condition may carry a typed
+cause, `HOLD_CAUSE_REFERENCE_PRICE_STALE`, set by an `ems` whose
+pre-trade check found its reference price too old (see
+[Data age and liveness](data-age-and-liveness.md#the-ems-checks-its-reference-price)).
 
 A **placement** -- the part of an order sent to one connectivity plugin --
 is in one of eight states, **queued**, **sent**, **working**, **done for
 day**, **filled**, **cancelled**, **expired** or **rejected**, with the
 conditions **change requested**, **outcome unknown**, **suspended** and
-**awaiting trigger**.
+**awaiting trigger**, and from contract 27 **sent on stale reference**, the
+record of an `ems`'s warning.
 
 ### Status is derived from the journal
 
@@ -352,7 +356,15 @@ sent, by the venue's plugin, never refused by core. It also
 says which acknowledgement the venue takes of an accepted or DK'd
 venue-originated fill (`execution_acknowledgement`; see
 [What the venue is told](#what-the-venue-is-told)), unspecified reading as
-none.
+none. From contract 27 it lists the
+[placement types](placement-types-and-rfq-quotes.md) each code takes.
+
+**How a placement is executed.** From contract 27 every placement states
+its type, set once by the `ems`: `dma`, `algo`, `care`, `rfq` or `manual`.
+A manual placement, a trade agreed by phone, reaches no connectivity
+plugin; an RFQ placement carries the dealers' quotes received and the one
+the `ems` picks. See
+[Placement types and RFQ quotes](placement-types-and-rfq-quotes.md).
 
 ### Cancelling or replacing a placement
 
@@ -767,14 +779,16 @@ and a `PERMISSION_DENIED` a `NotGranted` (see
 
 ## Not built yet { #not-built-yet }
 
-- **RFQs and axes**: their references are carried empty on the order and
-  the placement until the RFQ revision (slice C); an order of 0 quantity, a
-  pass, is refused until then.
+- **The sell side's RFQs and axes**: their references are carried empty
+  on the order and the placement, and an order of 0 quantity, a pass, is
+  refused. The buy side's RFQ is built: see
+  [RFQ placements](placement-types-and-rfq-quotes.md#rfq-placements).
 - **Confirming an allocation with a client**, non-order transactions and
   settlement: see [Booking](booking.md#not-built-yet).
 - **Other named links** between orders -- street orders, two-way quotes,
-  alternatives, baskets -- wait for their slices. The split link and the
-  block are the ones there are.
+  alternatives, baskets -- wait for their slices. The split link, the
+  block and, from contract 27, the [net](fx-netting.md) are the ones there
+  are.
 - **A trading instruction on a user group**, until groups are resolved to
   their people.
 - **Derivative terms** on an execution, which come with the instrument

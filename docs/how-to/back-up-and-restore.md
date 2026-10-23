@@ -7,7 +7,7 @@ them. A backup is one file that holds what a restore needs to bring the deployme
 that only you can open it.
 
 Backups are made in an image of their own, `ghcr.io/open-meridian/meridian-backup`, which the
-published chart pins to the image built with it. You need CLI 0.1.50.
+published chart pins to the image built with it. You need CLI 0.1.52.
 
 | To | Run or do |
 |---|---|
