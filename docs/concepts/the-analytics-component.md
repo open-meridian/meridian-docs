@@ -25,6 +25,21 @@ A job names four things:
 | **Inputs, by reference** | The book's watermark, the lake's recorded-time cut-off (its as-of) and the source choice, one of each for the whole job. Unset, each is now and the deployment's source priority, resolved and named in the answer. |
 | **A what-if** | Optionally, trades added to one account's positions, answered beside the base. Never a book record. |
 
+From contract 27 a job may also name:
+
+- **A business date**, an ISO 8601 date in the deployment's
+  [time zone](dates-and-time.md), in place of the watermark and the as-of:
+  the book at that date's end, the last watermark recorded on or before
+  it, and the lake at that date's closes, the daily rows whose business
+  date it is, each in its dataset's own day. Naming a watermark or an as-of
+  beside it, or a date after today, is refused, naming `business_date`.
+  Without one a job reads the book and the lake now, and says "as of" the
+  time read.
+- **A reporting currency**, a currency's cash instrument by its `INS-` ID:
+  each account's figures are converted to it, each leg named in the
+  provenance. Without one each account is answered in its base currency,
+  and an account with none is not evaluated, `CONVERSION_MISSING`.
+
 A plugin holding `reporting`, `portfolio`, `compliance` or `signal` runs
 one with [`run_job`](../api/typed-operations.md#run_job). Asking is a
 read at the plugin's own role: the component reads the book within the
@@ -40,6 +55,8 @@ job = analytics.job(
     analytics.measure("exposure", by=["asset_class", "currency"]),
     analytics.measure("historical_var"),
     accounts=["ACC-12"],
+    business_date="2026-10-22",           # contract 27: the book at its end, the lake at its closes
+    reporting_currency="INS-...",         # contract 27: USD's cash instrument, say
 )
 answer = await analytics.Jobs().run(plugin, job)        # inline, or waited for
 for figure in answer.figures("exposure"):
@@ -66,18 +83,27 @@ The component ships each measure's **definition** at a version, every
 parameter that changes its number fixed by that version.
 [`list_measure_definitions`](../api/typed-operations.md#list_measure_definitions)
 answers them, with their parameters, the breakdowns each allows and the
-scale it rounds to. Each is served at version 1:
+scale it rounds to. Each is served at version 1, and `pnl` at version 2
+too (from contract 27):
 
 | Definition | What it answers | Breakdowns | Scale |
 |---|---|---|---|
 | `market_value` | Each position's quantity times its model's value per unit, net | account, asset class, currency, instrument, sleeve, country | 2 |
 | `exposure` | Each bucket's market value two ways, under the breakdown `component`: `gross`, without its sign, and `net`, long minus short | as `market_value` | 2 |
 | `concentration` | Each instrument's market value as a weight of its account's market value | instrument | 2 |
-| `pnl` | Unrealized P&L: each bucket's market value less its open lots' cost, under `component` as `unrealized` | as `market_value` | 2 |
+| `pnl` | Version 1: unrealized P&L, each bucket's market value less its open lots' cost, under `component` as `unrealized`. Version 2: realized P&L beside it, under `component` as `realized` | as `market_value` | 2 |
 | `historical_var` | Historical value at risk by full revaluation over the lake's daily closes: 99%, one day, a 500-day window, relative returns, the daily cut 16:00 New York | account, asset class, currency, sleeve | 2 |
 | `expected_shortfall` | The mean loss beyond historical value at risk, on the same terms | as `historical_var` | 2 |
 | `resolution_payoff` | Each account's P&L if each member of an event group resolves YES | account | 2 |
 | `implied_distribution` | Each outcome's price over the sum of the group's prices, as a numerator and a denominator, beside the raw sum | none | 18 |
+| `execution_cost` | Added in contract 27. Each execution's cost against each standard benchmark, in basis points, and each account's notional-weighted mean per benchmark; under the breakdown `benchmark`; each result recorded in the lake. See [Execution costs](execution-costs.md) | account | 4 |
+
+**Realized P&L** (`pnl` version 2) is each closed lot's proceeds less the
+cost of the quantity relieved, as the book records them on the lot (see
+[The book of record](the-book-of-record.md#a-closed-lots-proceeds)). A lot
+whose cost the book does not record, such as an opening balance stated
+without one, leaves the figure not evaluated, `COST_MISSING`, never zero.
+Ask it with `analytics.measure("pnl", 2)`; version 1 is unchanged.
 
 A breakdown by any other name is a classification scheme the deployment
 holds; one it holds none of leaves the position not evaluated,
@@ -116,13 +142,31 @@ Each model id has a built-in implementation, so a deployment with no
 | Model id | Templates | Value per unit |
 |---|---|---|
 | `cash` | Cash and currency, fiat and token cash instruments alike | Exactly 1 in the account's base currency; any other cash instrument at its own conversion, a stablecoin's included, never at par by assumption |
-| `quoted_price` | Equity, fund, money market fund, crypto asset | The price of the template's kind, times its conversion. A fund listed on a venue is marked at its close, one listed nowhere at its NAV; a money market fund at its NAV as published, never assumed to be 1.00 |
+| `quoted_price` | Equity, fund, money market fund, crypto asset | The price of the template's kind, times its conversion, rounded half to even to 18 decimal places per unit; the market value is that rounded value times the quantity, exact. A fund listed on a venue is marked at its close, one listed nowhere at its NAV; a money market fund at its NAV as published, never assumed to be 1.00 |
 | `binary_event` | Binary event contract | Before the venue's final determination, its price times its conversion. After it, the settlement value per contract the [outcome](the-lake.md#an-event-contracts-outcome) states, times the conversion of the payout's currency. A proposed or disputed outcome keeps the price |
 
-**A conversion** to the account's base currency goes leg by leg: each leg
-a price in the lake of the currency in hand in another instrument, of kind
-`close`, then `mid`, then `last`; the shortest chain, at most three legs,
-each named in the answer. A position under a local `LCL-` record is
+**A conversion** to the account's base currency, or the job's reporting
+currency, goes leg by leg: each leg a price in the lake of the currency in
+hand in another instrument, of kind `close`, then `mid`, then `last`; the
+shortest chain, at most three legs, each named in the answer.
+
+**Inverted and crossed fiat legs** (contract 27). Data plugins publish a
+market's own direction only, and the lake never inverts or crosses. Where a
+**fiat** cash leg has no direct rate in the direction needed, the component
+derives one:
+
+- **inverted**, 1 ÷ the rate the other way, rounded half to even to 18
+  decimal places, where the lake holds that;
+- **crossed** through a **pivot currency**, where it holds neither: through
+  the first of the deployment's **FX pivot currencies** that both legs
+  reach, USD's and then EUR's where a deployment admin has set none (see
+  [Set the FX pivot currencies](../how-to/set-the-fx-pivot-currencies.md)).
+
+A direct or inverted rate is always taken before a cross. A crypto asset's
+or a stablecoin's leg is never inverted or crossed: a token is converted
+only by its own price in the lake. Each derived leg is named in the
+provenance, so an answer through another pivot is another answer, with
+another hash. A position under a local `LCL-` record is
 [never priced](one-id.md#a-local-line-is-never-priced): it is not
 evaluated, `LOCAL_RECORD`, never zero.
 
@@ -130,13 +174,22 @@ evaluated, `LOCAL_RECORD`, never zero.
 
 A deployment admin may route a model id to a plugin holding the
 [`pricing` role](roles.md#pricing), deployment-wide, on the dashboard's
-**Settings**, **Model routing** tab: each model id on one line, its
+settings, **Model routing** (under **Plugins**): each model id on one line, its
 implementation (`built-in`, or a launched `pricing` instance), since when
 and by whom, and the measures the component serves beside them. **Change**
 takes the model id, the implementation and why, and each change is its own
-record. Through an agent, `dashboard__list_model_routing` reads the table
-and `dashboard__set_model_routing` sets it, with a note; the set can be
-prepared for a person to make.
+record. Through an agent,
+[`dashboard__list_model_routing`](../api/core-tools.md#dashboard__list_model_routing)
+reads the table and
+[`dashboard__set_model_routing`](../api/core-tools.md#dashboard__set_model_routing)
+sets it, with a note; the set can be prepared for a person to make.
+
+**Routed only to a model it declares** (contract 27). A `pricing` plugin's
+version declares the model ids and versions it answers, 1 to 32, in its
+declaration (`PluginDeclaration.pricing_models`). Routing a model id to an
+instance whose launched version does not list it is refused
+`FAILED_PRECONDITION`, naming `implementation`. A version built before
+contract 27 declares none, and routing to it is not checked.
 
 When a job needs a routed model, the component sends that plugin alone a
 **price batch**: one per model id, its units each an instrument under one
@@ -161,7 +214,12 @@ lake's as-of it read at; each dataset read; each instrument, with its
 record's version, its template and template version and its calculation
 version; each model with the implementation that answered it; the measures
 asked; each event group at the version read; the routing table's version;
-the component's version; and the **answer hash**.
+the component's version; and the **answer hash**. From contract 27 it also
+names the job's `business_date`; `input_prices`, each position's input
+price (its instrument, price, dataset, row key, version and source time);
+and `conversion_legs`, each leg from one cash instrument to another, its
+rate, how it was derived (`direct`, `inverted` or `crossed`), the pivot of a
+cross and its dataset. Each enters the hash.
 
 The hash is `sha256:` and the SHA-256 of the job's inputs written out as
 canonical JSON (RFC 8785): the component's version, the job, the watermark
@@ -195,7 +253,7 @@ A position or a measure the component cannot answer is listed under
 | Reason | When |
 |---|---|
 | `NOT_EVALUATED_REASON_PRICE_MISSING` | No price of the kind its model declares at the as-of |
-| `NOT_EVALUATED_REASON_PRICE_STALE` | A price older than the asking plugin's bound for its source |
+| `NOT_EVALUATED_REASON_PRICE_STALE` | A price older than its bound for its source; no job sets a bound yet (see below) |
 | `NOT_EVALUATED_REASON_CONVERSION_MISSING` | No chain of conversion legs to the account's base currency |
 | `NOT_EVALUATED_REASON_NOT_ENTITLED` | A dataset the asking plugin is not entitled to, named in `detail` |
 | `NOT_EVALUATED_REASON_LOCAL_RECORD` | A position under a local `LCL-` record, never priced |
@@ -203,24 +261,19 @@ A position or a measure the component cannot answer is listed under
 | `NOT_EVALUATED_REASON_SCHEME_NOT_HELD` | A breakdown by a scheme the deployment does not hold, named in `detail` |
 | `NOT_EVALUATED_REASON_GROUP_NOT_EXHAUSTIVE` | An implied distribution over a group not stated exhaustive; the raw prices and their sum are still answered |
 | `NOT_EVALUATED_REASON_HISTORY_INSUFFICIENT` | Too few closes for the definition's window |
+| `NOT_EVALUATED_REASON_COST_MISSING` | Added in contract 27. A lot's cost the book does not record, which realized P&L needs |
 
 ## Current limits
 
-- **No rate is inverted or crossed.** A conversion leg is a price the lake
-  holds of the currency in hand in another. Where a source quotes a pair
-  only the other way, or two pairs would have to be crossed, the figure is
-  not evaluated, `CONVERSION_MISSING`.
-- **No business dates.** A job is asked at a moment, the book at a
-  watermark and the lake at a recorded time, never for a business date's
-  close. The historical window's days are the business dates the lake's
-  closes carry, not a settlement calendar's days.
 - **No staleness bound.** The component sets no maximum age per source, so
   the latest price valid at the as-of is used however old it is, and
-  `PRICE_STALE` does not arise from a job.
-- **The account's base currency.** Every value is in its account's base
-  currency: a job names no reporting currency.
-- **Unrealized P&L only.** `pnl` version 1 is market value less the open
-  lots' cost.
+  `PRICE_STALE` does not arise from a job. The check at use, against the
+  dataset's threshold in session, comes with contract 28 (see
+  [Data age and liveness](data-age-and-liveness.md#not-built-yet)).
+- **The historical window's days** are the business dates the lake's
+  closes carry, not a settlement calendar's days.
+- **Interval VWAP and a fixing** are not measured by `execution_cost`
+  version 1.
 - **Exact figures only.** The three models are arithmetic: no figure is
   computed by a model in floating point, and no model declares a
   sensitivity.
@@ -230,8 +283,9 @@ A position or a measure the component cannot answer is listed under
 ## Where you see it
 
 Core draws no page of figures: a plugin that runs jobs shows them on its
-own pages. The **Model routing** tab is the component's one place on the
-dashboard. What a job and its answer carry, field by field, is in
+own pages. On the dashboard's settings, **Model routing** (under
+**Plugins**) and **FX pivot currencies** (under **Deployment**) are the
+component's places. What a job and its answer carry, field by field, is in
 [the analytics component's data dictionary](../boundaries/analytics.md).
 
 ## Related

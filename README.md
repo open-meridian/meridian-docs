@@ -43,31 +43,40 @@ page's [release notes](docs/api/python-sdk.md#release-notes), and its
 with the CLI's `plugin migrate` step table. An upgrade fact a page drops
 goes there first.
 
-Today they describe contract v26, released 2026-10-19 in chart 0.1.308
-(core 17a13a2): CLI 0.1.50 (released 2026-10-19: new plugins on SDK
-0.31.1, and `plugin check`'s `role-pages` counting the pages an SDK helper
-declares, such as `meridian.roles.custody.account_pages`), after CLI
-0.1.49 (`meridian plugin release` checks, signs the tag on main's head and
-publishes, opening no pull request and changing no file, the version bump
-and CHANGELOG entry going in the change's own pull request; the `pricing`
-role, fifteen in all, v26's suites, and `plugin new --role pricing`), and
-SDK 0.31.1 (a saved setting value no longer among its choices delivered
-unset and listed in `Settings.refused`; the pricing template declaring no
-storage; the event-contract fixes) after SDK 0.31.0 (contract v26: the
-analytics component, the `pricing` role, event groups, the agents'
-demo-only guard and the lake's bounded query), with `boundaries/` vendored
-from meridian-schema 309e093. The concept pages for the analytics
-component, event groups and the agents' guard, and the how-to for a
-pricing plugin, describe them; the API reference lists contract 26's typed
-operations and the analytics component's data dictionary. The plugins on contract v25:
-SnapTrade 0.18.0, the sample operations plugin 0.14.0, the sample
-reporting plugin 0.7.0, Alpaca 0.10.0, Tradier 0.9.0, Tiingo 0.6.0,
-Coinbase 0.6.0, Kraken 0.6.0 and Fed H.10 0.5.0 (integrations/released.json
-refreshed). Still on their current releases: OANDA 0.2.0 on contract v23,
-which moves to v25 after its pending change merges; and Kalshi 0.5.0,
-Polymarket 0.5.0 and Polymarket US 0.1.0 on contract v23, which move with
-v26, once core's harness mints event contracts. What each release added is
-in the Python SDK page's release notes.
+Today they describe contract v27, released 2026-10-22 in chart 0.1.309
+(core 06e988b), as served by chart 0.1.312: chart 0.1.311
+takes the licence's attribution terms at registration and hands the
+licence list to an instrument store started after it, and from chart
+0.1.310 an administrator's own code reaches the platform where the licence
+list names its administrator. CLI 0.1.52 (released 2026-10-23: new plugins
+on SDK 0.32.1), after CLI 0.1.51 (`meridian plugin install
+<listing>[@version]` and `--pack`, with `--with`, `--without`, `--yes` and a
+required `--note`; publish sending the declared display name, and a publish
+over the organisation's concurrent builds queued). SDK 0.32.3 (a rate's
+convention required, a missed rates subject asked again the same day, a
+listings feed's liveness, an outcome's challenge deadline, the
+not-affiliated notice, the merged Connection tabbed) after SDK 0.32.2 (the
+licence's attribution terms, Sessions only once measured, `RecordRates` in
+the testing `Recorder`), SDK 0.32.1 (the data suite's `an-exact-price` and
+`a-want-recorded-against` about closes, and `RATES_NOT_PRESENTED`) and SDK
+0.32.0 (contract v27: the placement type and RFQ quotes, execution costs,
+FX netting, realized P&L, fiat legs inverted and crossed through the
+deployment's pivots, the lake's rates, liveness, declared delay and dataset
+thresholds, the `ems`'s stale-reference hold or warning, and trading
+sessions; latency recorded, not yet reported), with kit 0.13.0
+(`om-sidebar`, the dashboard's settings sidebar) and `boundaries/` vendored
+from meridian-schema df06531. The concept pages for placement types,
+execution costs, FX netting, rates and data age, and their how-tos,
+describe them; the API reference lists contract 27's typed operations and
+core's tools through contract 27. The plugins, as the Integrations page
+lists them (integrations/released.json as refreshed on 2026-10-24), all on
+contract v27: SnapTrade 0.20.0, Alpaca 0.13.1, Tradier 0.12.0, OANDA 0.6.0,
+Tiingo 0.8.0, TrueFX 0.3.0, Coinbase 0.9.0, Kraken 0.9.0, Kalshi 0.9.0,
+Polymarket 0.9.0, Polymarket US 0.4.0, the Federal Reserve Board 1.0.0
+(plugin-fed-board, which was plugin-fed-h10), the New York Fed 0.1.0, US
+Treasury 0.1.0, FRED 0.1.0 and the ECB 0.2.0. The platform lists each in
+its Community registry, with five starter packs. What each SDK release
+added is in the Python SDK page's release notes.
 The tutorials were walked on CLI 0.1.36 and SDK 0.21.0. A page describes
 what is built, and says so where something is specified and not built yet.
 
@@ -119,3 +128,8 @@ python tools/integrations_page.py refresh
 
 It reads each row's repository at `main`, and `meridian-python` at the tag of
 each SDK release pinned, and says which rows now differ.
+
+## Licence
+
+The prose is licensed under [CC BY 4.0](LICENSE), and the code samples under
+[Apache-2.0](LICENSE-CODE).

@@ -36,21 +36,82 @@
   assets: [fund]
   environments: [live, sample-data]
   status: released
-  version: "0.6.0"
-  contract: 25
+  version: "0.8.0"
+  contract: 27
   guide: how-to/using-a-data-plugin.md#tiingo-mutual-funds-daily-navs
 
-# Data: the H.10 release's FX rates against the US dollar (README). No key;
-# sample_data. README: "not released yet".
-- service: Federal Reserve Board (H.10)
-  plugin: plugin-fed-h10
+# Data: H.10's FX rates against the US dollar as prices, and H.15's rates and
+# the Board's zero curve as rates (README). It was plugin-fed-h10 until 0.6.0.
+# No key; sample_data. Rates are no asset class here: fx for H.10.
+- service: Federal Reserve Board
+  plugin: plugin-fed-board
   roles: [data]
   assets: [fx]
   environments: [live, sample-data]
   status: released
-  version: "0.5.0"
-  contract: 25
-  guide: how-to/using-a-data-plugin.md#the-federal-reserves-h10
+  version: "1.0.0"
+  contract: 27
+  guide: how-to/using-a-data-plugin.md#the-federal-reserve-board
+
+# Data: the NY Fed's reference rates, the SOFR averages and the SOFR Index,
+# as rates (README). No key; sample_data. Rates are no asset class here.
+- service: Federal Reserve Bank of New York
+  plugin: plugin-ny-fed
+  roles: [data]
+  assets: []
+  environments: [live, sample-data]
+  status: released
+  version: "0.1.0"
+  contract: 27
+  guide: how-to/using-a-data-plugin.md#the-new-york-fed-the-us-treasury-and-fred
+
+# Data: Treasury's par, real par and bill rates curves, as rates (README). No
+# key; sample_data. Rates are no asset class here.
+- service: US Treasury
+  plugin: plugin-us-treasury
+  roles: [data]
+  assets: []
+  environments: [live, sample-data]
+  status: released
+  version: "0.1.0"
+  contract: 27
+  guide: how-to/using-a-data-plugin.md#the-new-york-fed-the-us-treasury-and-fred
+
+# Data: FRED's interest-rate series, each against its publisher's record, as
+# rates (README). An optional API key; sample_data. Rates are no asset class
+# here.
+- service: FRED
+  plugin: plugin-fred
+  roles: [data]
+  assets: []
+  environments: [live, sample-data]
+  status: released
+  version: "0.1.0"
+  contract: 27
+  guide: how-to/using-a-data-plugin.md#the-new-york-fed-the-us-treasury-and-fred
+
+# Data: the ECB's euro reference rates as prices, and €STR, its averages and
+# its index as rates (README). No key; sample_data.
+- service: European Central Bank
+  plugin: plugin-ecb
+  roles: [data]
+  assets: [fx]
+  environments: [live, sample-data]
+  status: released
+  version: "0.2.0"
+  contract: 27
+  guide: how-to/using-a-data-plugin.md#the-european-central-bank
+
+# Data: TrueFX's indicative FX rates, top of book and each pair's day (README).
+# An optional username; sample_data.
+- service: TrueFX
+  plugin: plugin-truefx
+  roles: [data]
+  assets: [fx]
+  environments: [live, sample-data]
+  status: released
+  version: "0.3.0"
+  contract: 27
 
 # Data: Coinbase Exchange's public crypto market data (README). No key;
 # sample_data. README: "Not released, uploaded or launched anywhere."
@@ -60,8 +121,8 @@
   assets: [crypto]
   environments: [live, sample-data]
   status: released
-  version: "0.6.0"
-  contract: 25
+  version: "0.9.0"
+  contract: 27
   guide: how-to/using-a-data-plugin.md#coinbase-and-kraken
 
 # Data: Kraken's public crypto market data (README). No key; sample_data.
@@ -72,8 +133,8 @@
   assets: [crypto]
   environments: [live, sample-data]
   status: released
-  version: "0.6.0"
-  contract: 25
+  version: "0.9.0"
+  contract: 27
   guide: how-to/using-a-data-plugin.md#coinbase-and-kraken
 
 # Data: binary event contracts' prices, quotes and outcomes (README). No key;
@@ -84,8 +145,8 @@
   assets: [event-contract]
   environments: [live, sample-data]
   status: released
-  version: "0.5.0"
-  contract: 23
+  version: "0.9.0"
+  contract: 27
   guide: how-to/add-a-prediction-market-plugin.md
 
 # Data: the international Polymarket's outcome tokens, each a binary event
@@ -97,8 +158,8 @@
   assets: [event-contract]
   environments: [live, sample-data]
   status: released
-  version: "0.5.0"
-  contract: 23
+  version: "0.9.0"
+  contract: 27
   guide: how-to/add-a-prediction-market-plugin.md
 
 # Data: Polymarket US's event contracts, each a binary event contract
@@ -110,8 +171,8 @@
   assets: [event-contract]
   environments: [live, sample-data]
   status: released
-  version: "0.1.0"
-  contract: 23
+  version: "0.4.0"
+  contract: 27
   guide: how-to/add-a-prediction-market-plugin.md#polymarket-us
 
 # All three roles on US equities and ETFs (ETFs are funds), the account's
@@ -124,8 +185,8 @@
   assets: [equity, fund, cash]
   environments: [sandbox, live, sample-data]
   status: released
-  version: "0.10.0"
-  contract: 25
+  version: "0.13.1"
+  contract: 27
   guide: how-to/using-a-data-plugin.md#alpaca-and-tradier
 
 # All three roles on US equities and ETFs, each account's positions and cash
@@ -138,8 +199,8 @@
   assets: [equity, fund, cash]
   environments: [sandbox, live, sample-data]
   status: released
-  version: "0.9.0"
-  contract: 25
+  version: "0.12.0"
+  contract: 27
   guide: how-to/using-a-data-plugin.md#alpaca-and-tradier
 
 # Custody and connectivity through SnapTrade's brokerages: positions and cash
@@ -153,19 +214,19 @@
   assets: [equity, fund, debt, derivative, crypto, cash]
   environments: [live, sample-data]
   status: released
-  version: "0.18.0"
-  contract: 25
+  version: "0.20.0"
+  contract: 27
   guide: how-to/using-a-custody-plugin.md
 
 # Spot FX: connectivity and custody, each open trade shown as two cash legs
-# and the balance in the account's currency (README). Settings: environment
-# (practice, OANDA's practice host: sandbox here; live), sample_data.
-# CHANGELOG: 0.2.0 on SDK 0.27.0 and contract v23.
+# and the balance in the account's currency, and from 0.5.0 data, OANDA's
+# prices and quotes (README). Settings: environment (paper, labelled
+# Practice, OANDA's practice host: sandbox here; live), sample_data.
 - service: OANDA
   plugin: plugin-oanda
-  roles: [custody, connectivity]
+  roles: [custody, connectivity, data]
   assets: [fx, cash]
   environments: [sandbox, live, sample-data]
   status: released
-  version: "0.2.0"
-  contract: 23
+  version: "0.6.0"
+  contract: 27

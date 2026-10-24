@@ -51,6 +51,35 @@ registry version is verified again.
 An instance already running a local version of the same plugin is offered **Move to this listing**
 in the same sheet. The move is checked as an update, keeps the instance's ID, and is recorded.
 
+## From the command line, or a starter pack
+
+[`meridian plugin install`](../api/cli.md#meridian-plugin-install), from
+CLI 0.1.51, does the same through the session `meridian connect` keeps, as
+the deployment admin, and launches nothing:
+
+```bash
+meridian plugin install open-meridian/snaptrade@0.20.0 --note "the family office's brokerage"
+meridian plugin install open-meridian/snaptrade --note "the newest offered, as Browse shows it"
+```
+
+A **starter pack** is a curated list of plugins for an asset class, each
+member installed as its own version. `--pack` installs the members the
+pack's curator preselected, and none of those you choose: add one with
+`--with`, leave a preselected one out with `--without`. The plan is shown
+version by version and asked about first; `--yes` approves it without
+asking. A member your deployment already holds is never moved.
+
+The platform publishes five, by `open-meridian`: `equities-options`, `fx`,
+`crypto`, `event-contracts` and `multi-asset`. Each pack's page on the
+platform, under [its plugins](https://open-meridian.com/plugins), lists
+its members and which are preselected.
+
+```bash
+meridian plugin install --pack crypto --with plugin-coinbase --note "the crypto desk"
+```
+
+Then launch each member it lists, approving the roles each asks for.
+
 ## Update it
 
 **Installed** shows each version with its source registry, and each instance it runs with
@@ -80,24 +109,24 @@ with a note.
 
 A deployment with no route to the platform installs from a **plugin bundle** carried in by hand.
 
-On a connected machine with CLI 0.1.50:
+On a connected machine with CLI 0.1.52:
 
 ```bash
-meridian plugin download open-meridian/snaptrade@0.18.0
+meridian plugin download open-meridian/snaptrade@0.20.0
 ```
 
 It signs in to the platform in your browser the first time, asks where the version is, pulls it,
 and verifies the image, its provenance, bill of materials, scan results and listing statement
-against the platform's keys this CLI release carries: CLI 0.1.50 carries the platform's
+against the platform's keys this CLI release carries: CLI 0.1.52 carries the platform's
 registry-signing key, version 1. Only then does it write
-`open-meridian-snaptrade-0.18.0.plugin-bundle.tar` (`--to` names another file), with the
+`open-meridian-snaptrade-0.20.0.plugin-bundle.tar` (`--to` names another file), with the
 version's documentation and a dated copy of the signing keys' status. `--registry` names the
 registry, community by default.
 
 On a machine connected to the air-gapped deployment (`meridian connect`):
 
 ```bash
-meridian plugin upload --bundle open-meridian-snaptrade-0.18.0.plugin-bundle.tar
+meridian plugin upload --bundle open-meridian-snaptrade-0.20.0.plugin-bundle.tar
 ```
 
 The CLI verifies the bundle first, as `plugin download` did. The deployment verifies it again, as at

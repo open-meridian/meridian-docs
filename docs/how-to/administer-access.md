@@ -25,19 +25,32 @@ Only a deployment admin sees the button. In Settings it is a house, named **Home
 back to your plugins. The breadcrumb beside the mark reads **Settings**, and in a plugin's view
 **Settings / Plugins /** and the plugin's name.
 
-Settings' tabs are **Plugins**, **Permissions**, **User groups**, **Account groups**,
-**Access groups**, **Accounts**, **Holds**, **Agents**, **Service accounts**, and **Connected
-clients**. Each lists its
+Settings' sections are on a sidebar at the left, in five groups:
+
+| Group | Sections |
+|---|---|
+| **Plugins** | **Plugins**, **Versions · Browse · Registries**, **Model routing** |
+| **People and access** | **Permissions**, **User groups**, **Access groups**, **Service accounts**, **Agents**, **Connected clients** |
+| **Accounts** | **Accounts**, **Account groups**, **Holds**, **Trading instructions** |
+| **Data** | **Data sources**, **Instruments** |
+| **Deployment** | **Time zone**, **FX pivot currencies** |
+
+The section you are on is highlighted, and each keeps its own address, so a
+link to one still works. On a desktop the sidebar collapses to its icons and
+back, and your browser remembers which you chose; on a phone it is a bar
+reading **Menu** and the section you are on, and **Menu** opens it as a
+drawer. A plugin's own page under Settings keeps its tabs beside the
+sidebar, with **Plugins** highlighted. Each section lists its
 records in a table with a search box above it, which keeps the rows holding every word you type,
-and headings that sort it. On the three group tabs the section is headed **User**, **Account** or
-**Access**. Where a tab makes records, **+ Add** beside its heading opens a dialog headed with what it makes, such as **New
+and headings that sort it. On the three group sections the heading is **User**, **Account** or
+**Access**. Where a section makes records, **+ Add** beside its heading opens a dialog headed with what it makes, such as **New
 account**. A record is changed with **Edit** on its own row, in a dialog that already holds it;
 nobody types an identifier. Every change is recorded with who made it. If a change is refused, the
 page says why; choose **Back** to return to what you typed.
 
 ## To add an account
 
-1. Open the **Accounts** tab and choose **+ Add**. The dialog is headed **New account**.
+1. Open **Accounts** and choose **+ Add**. The dialog is headed **New account**.
 2. Enter a **Name**. Optionally, describe it:
     - **Custodian:** where it is held, such as `Fidelity`.
     - **Type:** what it is, such as `Roth IRA`.
@@ -218,7 +231,7 @@ unless granted.
 
 ## To withdraw a permission
 
-On the **Permissions** tab, choose **Withdraw** on its row and confirm. The people in the user group
+On **Permissions**, choose **Withdraw** on its row and confirm. The people in the user group
 lose what it gave them.
 
 ## To grant a plugin accounts to link
@@ -226,7 +239,7 @@ lose what it gave them.
 A plugin that links external accounts links them only to the accounts a deployment admin granted it, and a new plugin instance is granted none. To grant
 some:
 
-1. On the **Plugins** tab, open the plugin, then its **Accounts** tab, **Accounts it may link to**.
+1. On **Plugins**, open the plugin, then its **Accounts** tab, **Accounts it may link to**.
 2. Under **Grant**, choose an account, say why, and choose **Grant**. Grant each account its admins
    may link one of the source's accounts to.
 3. To take one back, choose **Withdraw** on its row and confirm. Its link, if one was made, is kept;
@@ -245,7 +258,7 @@ venue account codes, nothing by default; see
 A plugin's autonomous work, such as the sample operations plugin's sweep, changes something only as a
 [service account](../concepts/service-accounts.md), a user of the deployment that is not a person:
 
-1. On the **Service accounts** tab, choose **+ Add**: its name, purpose, owner (a person who
+1. On **Service accounts**, choose **+ Add**: its name, purpose, owner (a person who
    answers for it) and setting, **Prepare only** (the default) or **Act**.
 2. Grant it `write` on the plugin's role, over the account groups it is to act on, as anyone is
    granted: its `SA-` ID in a user group's logins, that user group granted an access group.
@@ -278,7 +291,7 @@ search finds, and links those you keep in one go.
 
 A new account's custodian starts as the connection's brokerage and its type as the account type
 SnapTrade reports; change or clear either before you create it. Give it an owner or a note
-afterwards, with **Edit** on the **Accounts** tab.
+afterwards, with **Edit** on **Accounts**.
 
 The plugin sends the link for you. The deployment checks that you opened the plugin by **Manage**,
 that the plugin reported that account, and, for a new account, that you are a deployment admin.

@@ -326,7 +326,7 @@ are one instrument (see [One ID per instrument](one-id.md)).
 
 - **Confirming an allocation with a client** (`confirmation`), and matching
   a trade's confirmation to a booking.
-- **RFQs**, non-order transactions and settlement; an allocation's settled
+- **Non-order transactions** and settlement; an allocation's settled
   quantity and dates.
 - **Period close**, and an event contract's payout.
 
@@ -338,3 +338,5 @@ are one instrument (see [One ID per instrument](one-id.md)).
   reconciliation.
 - [Accounts](accounts.md#in-the-book): the error and allocation account
   marks, and the base currency.
+- [FX netting](fx-netting.md): a net order on one pair and value date,
+  booked as a block is.

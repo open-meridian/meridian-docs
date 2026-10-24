@@ -23,8 +23,9 @@ recorded: the plugin reports the miss, and the Data sources page counts it.
 
 ## What it holds
 
-Five data types, each one message per row: prices, bars, trades, quotes
-and an event contract's outcome.
+Seven data types, each one message per row: prices, bars, trades, quotes,
+an event contract's outcome, and from contract 27 rates and execution
+costs.
 
 | Type | What one row is |
 |---|---|
@@ -33,12 +34,20 @@ and an event contract's outcome.
 | **Trade** | One trade as its source reported it: its price, a [Money](money-and-instruments.md) naming its cash instrument; its quantity, more than zero; its **trade attributes**; the side that took liquidity, where the source says it; the source's own number for it. |
 | **Quote** | The best bid and offer, on a venue or consolidated, each with its quantity, both sides in one asset; a side the source left empty is unset, never zero. In force until the next quote for the same subject, dataset, venue and asset. |
 | **Outcome** | What an event contract pays, as its venue determined it, at one stage: see [An event contract's outcome](#an-event-contracts-outcome). |
+| **Rate** | A reference rate's fixing, an average, an index level or a curve's point, its value with its unit, convention and tenor: see [Rates](rates.md). |
+| **Execution cost** | One execution's cost against one benchmark, recorded by the analytics component, the lake's first row scoped to an account: see [Execution costs](execution-costs.md). |
 
 **An FX rate is a price**: the price of one currency's cash instrument in
-another, EUR at 1.0842 USD, of kind `mid`, `bid`, `ask` or `close`. A fixing
-is a dataset of closes. The lake never inverts or crosses a rate: a reader
-converting the other way reads the rate a source quotes that way, or
-inverts it itself, so the lake never holds a value no source stated.
+another, EUR at 1.0842 USD, of kind `mid`, `bid`, `ask` or `close`. An FX
+fixing is a dataset of closes; an interest rate is a [rate](rates.md). The
+lake never inverts or crosses an FX rate: a reader converting the other
+way reads the rate a source quotes that way, or inverts it itself, as the
+[analytics component](the-analytics-component.md#the-pricing-models) does,
+so the lake never holds a value no source stated.
+
+**Liveness, delay and staleness** (contract 27). A dataset carries its
+declared delay, its plugin admin's staleness threshold and its last sign of
+life: see [Data age and liveness](data-age-and-liveness.md).
 
 Prices are unadjusted by default.
 
@@ -313,8 +322,11 @@ conflated, catch up by reading the latest in force.
 
 | Data | Read and heard by |
 |---|---|
-| Prices and bars | `reporting`, `portfolio`, `compliance`, `signal` |
+| Prices and bars | `reporting`, `portfolio`, `compliance`, `signal`; and from contract 27 `operations`, for closes and other conflated prices, to value a foreign-cash cost at a trade date's FX close |
 | Trades and quotes | `signal` and `ems` |
+| Rates | `reporting`, `portfolio`, `compliance`, `signal` |
+| Execution costs | `reporting`, `portfolio`, `compliance`, `signal`, `oms`, `ems`, `operations`, each within its read scope's accounts |
+| A dataset's liveness | `reporting`, `portfolio`, `compliance`, `signal` and `ems` |
 | Outcomes | `reporting`, `portfolio`, `compliance`, `signal`, and `operations`, which reads the lake for outcomes alone, to explain a payout's break |
 | The datasets a plugin may read | `reporting`, `portfolio`, `compliance`, `signal` and `ems` |
 
@@ -339,8 +351,9 @@ like any other: see [Licences and entitlements](licences-and-entitlements.md).
 ## Where you see it
 
 A deployment admin sees and sets the lake's configuration on the
-dashboard's **Data sources** page, beside **Instruments** on **Settings**,
-and through its five tools:
+dashboard's **Data sources** page, beside **Instruments** under **Data** on
+the settings' sidebar, and through its five tools; a source priority may
+order rates' datasets too:
 see [License and entitle a dataset](../how-to/license-and-entitle-a-dataset.md).
 Its Datasets tab counts, per dataset, the rows flagged on
 a closed day of its calendar, **Closed days**, those outside the calendar's

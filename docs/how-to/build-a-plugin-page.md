@@ -132,7 +132,7 @@ market-direction convention, and the kit applies them.
 
 ## The kit's version
 
-The kit is at 0.12.0. What each version added is in the
+The kit is at 0.13.0. What each version added is in the
 [release notes](../api/python-sdk.md#release-notes).
 
 **A 0.x release only adds.** Nothing in the kit is removed or renamed within 0.x, so a page built
@@ -569,6 +569,55 @@ the page's server decides, from `request.caller.second_pair_of_eyes`.
 
 The SDK's role templates (`meridian/roles/<role>/<page>.html`) are drawn from these patterns: see
 [Each role's common part](../api/python-sdk.md#each-roles-common-part).
+
+## A site's sections: `om-sidebar` { #a-sites-sections-om-sidebar }
+
+Added in kit 0.13.0. `om-sidebar` draws a site's sections as a grouped
+left sidebar of plain links: the dashboard's settings are drawn with it,
+and a plugin with many sections of its own may use it too. Its groups are
+data, so a group or an item is added without changing the element:
+
+```html
+<div class="om-shell">
+  <om-sidebar label="Sections" remember="my-plugin">
+    <script type="application/json">
+      { "groups": [
+        { "label": "Desk", "items": [
+          { "id": "orders", "label": "Orders", "href": "/orders", "icon": "list" },
+          { "id": "quotes", "label": "Quotes", "href": "/quotes?tab=open", "icon": "chart",
+            "also": ["/quotes?tab=picked"] } ] } ] }
+    </script>
+    <nav aria-label="Sections">…the server's own links, for a browser without the kit…</nav>
+  </om-sidebar>
+  <main class="om-shell-main">…the page, with its own head and tab row…</main>
+</div>
+```
+
+- **An item** is a `label` and an `href`, both required, with an `id` the
+  `current` attribute names, an `icon` from the kit's icons (`package`,
+  `route`, `key`, `bot`, `link`, `wallet`, `layers`, `lock`, `list`,
+  `clock` and the platform's sixteen), and `also`, other addresses that are
+  the same item. Every item is a plain link, so each address stays what it
+  was.
+- **The current item** is marked `aria-current="page"`: the one the
+  `current` attribute names, else the one the data marks `current`, else
+  the one whose address best matches the page's, worked out again on each
+  `hashchange`.
+- **On a desktop** it is a column beside the page, sticky under the host's
+  header (`--om-sidebar-top`), and its first control collapses it to its
+  icons and back, the person's choice remembered in the browser under
+  `remember` (`collapsed` is the default when nothing is remembered).
+- **On a phone**, below 768 pixels, it is a one-line bar, **Menu** and the
+  current item's words; **Menu** opens it as a drawer, a modal dialog with
+  focus on the current item, closed by Escape, a click outside, its close
+  button or a link followed, focus returning to **Menu**.
+- **A page keeps its own tabs** inside `.om-shell-main`: one sidebar, never
+  two.
+
+The element's properties (`groups`, `collapsed`, `currentItem`,
+`drawerOpen`), methods (`openDrawer()`, `closeDrawer()`) and its
+`om-collapse` event are in the kit's
+[README](https://github.com/open-meridian/meridian-ui#om-sidebar).
 
 ## Inside the dashboard's frame
 

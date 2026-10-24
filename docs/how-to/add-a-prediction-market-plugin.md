@@ -180,5 +180,5 @@ page shows. Neither shows a price.
 - [Watch the market on the Board](watch-the-board.md): the Prediction
   markets panel.
 - [Using a data plugin](using-a-data-plugin.md): every data plugin's
-  first-use path and pages, and Alpaca, Tradier, Tiingo, Coinbase, Kraken
-  and H.10.
+  first-use path and pages, and Alpaca, Tradier, Tiingo, Coinbase, Kraken,
+  the Federal Reserve Board, the New York Fed, US Treasury, FRED and the ECB.

@@ -58,6 +58,26 @@ The book records; it does not police. It computes no margin, no projection, no
 scenario and no return, and converts nothing with the base currency. Plugins
 that read it derive those, joined to reference and market data.
 
+### A closed lot's proceeds { #a-closed-lots-proceeds }
+
+Added in contract 27. Each relief of a lot is kept on the lot, in
+`Lot.reliefs`, as a `LotRelief`: the entry that relieved it
+(`relieved_by`), the quantity relieved, the `proceeds` that quantity was
+sold for, in the execution's asset, and the `trade_date`. The book sets
+them from the execution it booked, its fees on the sale stated apart, so a
+reader computes realized P&L as the proceeds less the relieved quantity's
+cost, and the book stores nothing derived. The analytics component's
+`pnl` version 2 does (see
+[The analytics component](the-analytics-component.md#the-measures)). A
+relief with no execution behind it, a transfer out or a correction, has no
+proceeds and says so, never zero. The lot's list of `relieved_by` entries
+stays.
+
+**At the upgrade to contract 27** each account's projection is rebuilt
+from its journal, as a snapshot of the older format is, so every lot
+relieved before it gains its reliefs, each with its proceeds where an
+execution is behind it. Nothing in the journal is rewritten.
+
 ### Every change is an entry
 
 The book is an append-only **journal**, partitioned by account. An entry is

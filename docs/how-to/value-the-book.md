@@ -54,7 +54,7 @@ deployment admin sets:
 
 A price the lake does not hold yet is asked of the source that serves it,
 and the page fills in when the source answers. A value in another currency
-is converted through the lake's rates, such as the Federal Reserve's H.10:
+is converted through the lake's rates, such as the Federal Reserve Board's H.10:
 multiplied, divided where the rate is quoted the other way, or crossed
 through dollars, each rate up to a week older than the date, its date shown.
 
@@ -123,7 +123,7 @@ and nothing it reads leaves the deployment.
 ## Build your own
 
 A reporting plugin of your own uses what the sample does. You need CLI
-0.1.50 and SDK 0.31.1 or later (contract 26):
+0.1.52 and SDK 0.32.1 or later (contract 27):
 
 - **The reads.** A `reporting` plugin reads positions with
   [`list_positions`](../api/typed-operations.md#list_positions) and prices

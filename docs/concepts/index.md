@@ -24,8 +24,11 @@ piece of data lives.
 | [One ID per instrument](one-id.md) | Every instrument named by the platform's `INS-` ID, minted from the platform's own source; local `LCL-` records until it answers, never priced; why a thin statement line stays unrecognised; the licence list, usage reporting and orders on local records |
 | [Event groups](event-groups.md) | A venue's event contracts grouped by event in the instrument master: mutually exclusive and exhaustive as stated or not stated, every version kept, reported by a data plugin and minted by the platform |
 | [The lake](the-lake.md) | Where a deployment keeps what its data sources say, prices and bars, by dataset: versions, reads as of a recorded time, the source priority, wants, kept or served; trades and quotes, streamed, caught up after a watermark; event contracts' outcomes; and who reads them |
+| [Rates](rates.md) | The lake's rates: fixings, averages, index levels and curves' points, each a value with its unit, convention and tenor, about a referential record that is never held; read point in time and by publication time |
+| [Data age and liveness](data-age-and-liveness.md) | A dataset's liveness, declared delay and staleness threshold, the trading sessions staleness counts in, the `ems`'s stale-reference hold or warning, and latency recorded but not yet reported |
 | [Licences and entitlements](licences-and-entitlements.md) | The terms a dataset is kept on, the one-person warning, which plugins may read it and which fields, and who changed what |
-| [The analytics component](the-analytics-component.md) | Figures over the book and the lake for the plugins that ask: jobs, the measures and the pricing models, the `pricing` role's seam, provenance and the answer hash, what is not evaluated and why, and its current limits |
+| [The analytics component](the-analytics-component.md) | Figures over the book and the lake for the plugins that ask: jobs for a moment or a business date, in a reporting currency; the measures, realized P&L among them, and the pricing models; fiat legs inverted and crossed through the deployment's pivots; the `pricing` role's seam, provenance and the answer hash, what is not evaluated and why, and its current limits |
+| [Execution costs](execution-costs.md) | TCA: each fill's cost in basis points against the mid at four moments, from the sources a job chooses, recorded as the lake's account-scoped rows; what is not measured, and why |
 | [Money and instruments](money-and-instruments.md) | Why every amount names a cash instrument, fiat and tokens alike, and a fiat code resolved by core |
 | [Venues](venues.md) | The platform's venue master: a venue ID, its MIC and vendors' codes, pulled one at a time, and where a deployment names a venue |
 | [Dates and time](dates-and-time.md) | Moments and plain dates, a daily price keyed by its business date, a dataset's day, and a date checked at both ends |
@@ -33,6 +36,8 @@ piece of data lives.
 | [Prepared changes](prepared-changes.md) | An agent or a person prepares a change and a person makes it; what agents may do with each act, set by the deployment admin and a plugin's admin; the second pair of eyes; lapse |
 | [Service accounts](service-accounts.md) | A user of the deployment that is not a person, which a plugin's autonomous work runs as: its owner, prepare only or act, granted per role, what binds it and what is recorded |
 | [The order lifecycle](the-order-lifecycle.md) | How an order reaches a venue through the book: who does what by role, the states and the transition table, child orders, the release gate and waiting for compliance, connectivity plugins linked to an `ems`, fills moving positions, venue-originated fills, and trading instructions |
+| [Placement types and RFQ quotes](placement-types-and-rfq-quotes.md) | How a placement is executed, DMA, algo, care, RFQ or manual; a manual placement's evidence; the dealers' quotes on the buy side's RFQ placement and the pick |
+| [FX netting](fx-netting.md) | Opposite FX orders on one pair and one value date netted into one order, the offset crossed internally at a recorded rate, and booked as a block |
 | [The agents' guard](the-agents-guard.md) | Agents place orders on demo connections only: what the book refuses and records, how a connection's environment is decided from its setting and its session, and the Demo and Live badges |
 | [Booking](booking.md) | An order's executions booked to its accounts, the block, the error account, the hand-off, corrections, sleeves, give-ups and alerts, and which currency has lots |
 | [Settlement calendars](settlement-calendars.md) | Business-day calendars and date rules the platform keeps and a deployment pulls; a settlement, spot or tenor date worked out one way in core, with its basis; coverage, and the Calendars tab |
@@ -57,8 +62,12 @@ piece of data lives.
     instrument is named by the platform's `INS-` ID, a deployment keeping
     local records, never priced, until the platform answers. The analytics
     component answers plugins' jobs over the book and the lake, each answer
-    naming its inputs; venues' event contracts are grouped by event; and
-    agents place orders on demo connections only. A plugin
+    naming its inputs, realized P&L and execution costs among them; venues'
+    event contracts are grouped by event; and agents place orders on demo
+    connections only. A placement states how it is executed, manually or by
+    RFQ among the ways; FX orders net on one pair and value date; the lake
+    keeps rates; and an `ems` checks its reference price's age before it
+    places. Latency is recorded by plugins but not yet reported to core. A plugin
     carries its own documentation, read before it is launched, and the
     platform's Community registry lists Open Meridian's own plugins. Where a page
     describes something that is specified but not built, it says so.

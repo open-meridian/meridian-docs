@@ -123,9 +123,9 @@ value. No trading yet.
 | A 401(k) plan's own fund codes linked to their instruments | [`custody`](roles.md#custody) | SnapTrade, its Plan-code links table | Community | Exists |
 | The IRA's core position, an FDIC-insured deposit, counted as cash | [`custody`](roles.md#custody) | SnapTrade, by its own flag or its Cash links table | Community | Exists |
 | An opening balance per account, with its lots, and daily reconciliation, each break explained | [`operations`](roles.md#operations) | The sample operations plugin | Local | Exists |
-| Daily closes for stocks and ETFs | [`data`](roles.md#data) | Alpaca and Tradier | Local | Exists: see [Using a data plugin](../how-to/using-a-data-plugin.md#alpaca-and-tradier) |
-| US dollar exchange rates | [`data`](roles.md#data) | The Federal Reserve's H.10 rates | Local | Exists: see [Using a data plugin](../how-to/using-a-data-plugin.md#the-federal-reserves-h10) |
-| A mutual fund's daily NAV | [`data`](roles.md#data) | Tiingo | Local | Exists: see [Using a data plugin](../how-to/using-a-data-plugin.md#tiingo-mutual-funds-daily-navs) |
+| Daily closes for stocks and ETFs | [`data`](roles.md#data) | Alpaca and Tradier | Community | Exists: see [Using a data plugin](../how-to/using-a-data-plugin.md#alpaca-and-tradier) |
+| US dollar exchange rates | [`data`](roles.md#data) | The Federal Reserve Board's H.10 rates | Community | Exists: see [Using a data plugin](../how-to/using-a-data-plugin.md#the-federal-reserve-board) |
+| A mutual fund's daily NAV | [`data`](roles.md#data) | Tiingo | Community | Exists: see [Using a data plugin](../how-to/using-a-data-plugin.md#tiingo-mutual-funds-daily-navs) |
 | The book valued, by account and in total | [`reporting`](roles.md#reporting) | The sample reporting plugin | Local | Exists: see [Value the book](../how-to/value-the-book.md) |
 | A plan-only fund valued at the custodian's own mark | [`data`](roles.md#data) | SnapTrade | Community | Planned, not scheduled |
 | Trading from the deployment | [`connectivity`](roles.md#connectivity) | SnapTrade | Community | Exists: trading enabled per connection, tested against a simulated brokerage only; see [Trading through SnapTrade](../how-to/using-a-custody-plugin.md#trading-through-snaptrade) |
@@ -151,11 +151,12 @@ reports to its investors, and trades through the order path.
 |---|---|---|---|---|
 | Holdings, cash and activity from the brokerages SnapTrade reaches | [`custody`](roles.md#custody) | SnapTrade | Community | Exists |
 | Holdings, cash and activity from a custodian or prime broker with no plugin | [`custody`](roles.md#custody) | Yours | Local | Build your own |
-| Holdings and activity read directly from Alpaca or Tradier | [`custody`](roles.md#custody) | Alpaca, Tradier | Local | Exists: see [Using a custody plugin](../how-to/using-a-custody-plugin.md) |
+| Holdings and activity read directly from Alpaca or Tradier | [`custody`](roles.md#custody) | Alpaca, Tradier | Community | Exists: see [Using a custody plugin](../how-to/using-a-custody-plugin.md) |
 | Opening balances, daily reconciliation, breaks resolved by people | [`operations`](roles.md#operations) | The sample operations plugin, or yours | Local | Exists |
 | Consolidated end-of-day prices under the fund's own licence | [`data`](roles.md#data) | Databento, Massive | Planned | Planned, in live market data |
-| Mutual fund NAVs | [`data`](roles.md#data) | Tiingo, under the fund's own licence | Local | Exists: see [Using a data plugin](../how-to/using-a-data-plugin.md#tiingo-mutual-funds-daily-navs) |
-| Exchange rates | [`data`](roles.md#data) | The Federal Reserve's H.10 rates | Local | Exists: see [Using a data plugin](../how-to/using-a-data-plugin.md#the-federal-reserves-h10) |
+| Mutual fund NAVs | [`data`](roles.md#data) | Tiingo, under the fund's own licence | Community | Exists: see [Using a data plugin](../how-to/using-a-data-plugin.md#tiingo-mutual-funds-daily-navs) |
+| Exchange rates | [`data`](roles.md#data) | The Federal Reserve Board's H.10 rates, the ECB's reference rates | Community | Exists: see [Using a data plugin](../how-to/using-a-data-plugin.md#the-federal-reserve-board) |
+| Reference rates and Treasury curves | [`data`](roles.md#data) | The New York Fed, US Treasury, FRED | Community | Exists: see [Using a data plugin](../how-to/using-a-data-plugin.md#the-new-york-fed-the-us-treasury-and-fred) |
 | The book valued daily, consolidated and by account | [`reporting`](roles.md#reporting) | The sample reporting plugin, or yours | Local | Exists: see [Value the book](../how-to/value-the-book.md) |
 | Post-trade concentration checks against the book | [`compliance`](roles.md#compliance) | Yours | Local | Build your own: it reads positions and account figures today |
 | Restricted lists and standing limits in a common form | [`compliance`](roles.md#compliance) | Yours | Local | Planned, with risk and compliance |
@@ -164,7 +165,7 @@ reports to its investors, and trades through the order path.
 | An agent drafting an adjustment that a person makes | any | Any | — | Exists: [Prepared changes](prepared-changes.md) |
 | A nightly job running as a named account | any | Any | — | Exists: [Service accounts](service-accounts.md) |
 | Orders decided, worked and sent | [`portfolio`](roles.md#portfolio), [`oms`](roles.md#oms), [`ems`](roles.md#ems) | Yours | Local | Build your own: the contract carries it; see [The order lifecycle](the-order-lifecycle.md) |
-| Orders placed at a broker | [`connectivity`](roles.md#connectivity) | SnapTrade; Alpaca and Tradier | Community; Local | Exists, each tested against a simulated brokerage only: see [Route orders through a connectivity plugin](../how-to/route-orders-through-a-connectivity-plugin.md) |
+| Orders placed at a broker | [`connectivity`](roles.md#connectivity) | SnapTrade; Alpaca and Tradier | Community | Exists, each tested against a simulated brokerage only: see [Route orders through a connectivity plugin](../how-to/route-orders-through-a-connectivity-plugin.md) |
 
 **Configuration.** Accounts carry an owner label per fund or sleeve, and
 account groups follow them: operations staff hold `write` on the accounts
@@ -193,7 +194,7 @@ deployment records and checks, and the firm answers to MAS.
 | Each client's accounts and positions, reconciled daily with the carrying broker's | core, and [`operations`](roles.md#operations) | The sample operations plugin, or yours | Local | Exists |
 | Positions, cash and activity from the carrying broker for US equities | [`custody`](roles.md#custody) | Alpaca, its Broker API | Planned | Planned, not scheduled |
 | Spot crypto balances and activity from an exchange | [`custody`](roles.md#custody) | Yours, reading OKX | Local | Build your own |
-| Crypto prices | [`data`](roles.md#data) | Coinbase and Kraken; OKX later | Local; planned | Coinbase and Kraken exist: see [Using a data plugin](../how-to/using-a-data-plugin.md#coinbase-and-kraken); OKX planned |
+| Crypto prices | [`data`](roles.md#data) | Coinbase and Kraken; OKX later | Community; planned | Coinbase and Kraken exist: see [Using a data plugin](../how-to/using-a-data-plugin.md#coinbase-and-kraken); OKX planned |
 | US equity prices under the firm's licence | [`data`](roles.md#data) | Databento, Massive | Planned | Planned, in live market data |
 | Money in, out and between accounts, and journals between the firm's accounts and its clients' | [`custody`](roles.md#custody), or [`settlement`](roles.md#settlement) for a separate payment rail | The carrying broker's plugin | Planned | Planned, after the order path |
 | A firm-account mark, and custodial, joint and trust accounts | core | none | — | Planned, after the order path |
