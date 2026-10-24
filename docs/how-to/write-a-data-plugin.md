@@ -40,8 +40,8 @@ conversion, and the Datasets page fills its rows from what it kept
 `.event_contracts` do a venue's whole work for a venue listing pairs or
 binary event contracts, with their pages and the checks a plugin runs
 (`meridian.roles.data.testing`); a venue of event contracts also reports
-how it groups them by event (see [Event groups](../concepts/event-groups.md)). A plugin made by an older CLI moves to
-0.32.1 with `meridian plugin migrate`; see
+how it groups them by event (see [Event groups](../concepts/event-groups.md)). A plugin made by an older CLI, or on
+0.32.1, moves to the latest SDK, 0.32.3, with `meridian plugin migrate`; see
 [Each role's common logic](../api/python-sdk.md#each-roles-common-logic).
 
 `AGENTS.md` teaches a coding agent the role's rules beside the template's
@@ -80,6 +80,10 @@ deployment admin confirms or replaces; never a claim that a deployment
 meets them. Put the vendor's key in a secret setting, and, for a vendor with
 a sandbox as well as its live service, declare `meridian.environment()`
 first (see [Using a data plugin](using-a-data-plugin.md#its-settings)).
+From SDK 0.32.3 the licence also states the vendor's attribution terms,
+such as its copyright class, the attribution's text and its not-affiliated
+notice, set only for a deployment on chart 0.1.311 or later (see
+[Record rates in a data plugin](record-rates.md#declare-the-dataset)).
 Each part, and what the SDK refuses, is in the
 [Python SDK reference](../api/python-sdk.md#a-data-plugins-catalogue).
 
@@ -330,11 +334,13 @@ names it not presented, "core receives ReportLatency from contract v28,
 ruling 515", until contract 28 requires it.
 `meridian.roles.data.testing`'s `PAIRS_NOT_PRESENTED`,
 `EVENT_CONTRACTS_NOT_PRESENTED` and `RATES_NOT_PRESENTED` name what each
-kind of venue never presents.
+kind of venue never presents; from SDK 0.32.2 `RATES_NOT_PRESENTED` leaves
+`records-a-datasets-liveness` for a polled plugin to present or name.
 
 **Liveness and delay.** A dataset that is delayed declares it,
 `DatasetDeclaration(declared_delay_ns=...)`; a stream that sends only on
-change records its heartbeats with `Wants.liveness`; and the plugin
+change records its heartbeats with `Wants.liveness`, as a pairs feed and,
+from SDK 0.32.3, a listings feed do for their live datasets; and the plugin
 declares `meridian.dataset_thresholds()` for its admin to set each
 dataset's staleness. See
 [Data age and liveness](../concepts/data-age-and-liveness.md).

@@ -8,8 +8,11 @@ suite's rates cases. What a rate is, and how it is read, is in
 [Write a data plugin against its suite](write-a-data-plugin.md): this page
 adds what is different for rates.
 
-You need SDK 0.32.1 or later and a deployment on contract 27 (chart
-0.1.309 or later).
+You need SDK 0.32.3 or later and a deployment on chart 0.1.312 or later,
+which resolves a subject by its administrator's code and takes the
+licence's attribution terms. `meridian plugin new` on CLI 0.1.52 writes a
+plugin on 0.32.1: move it with `meridian plugin migrate`, which moves only
+the pins.
 
 ## Declare the dataset
 
@@ -28,6 +31,25 @@ DatasetDeclaration(
 )
 ```
 
+A publisher's terms often ask to be cited. The licence states it with the
+attribution terms, each optional: `copyright_class` (`public_domain`,
+`copyright_citation_required` or `copyright_preapproval_required`),
+`redistribution` (`not_allowed`, `licence_required` or
+`allowed_with_attribution`), `attribution_required` with its
+`attribution_text`, `no_more_restrictive_terms`, and
+`not_affiliated_notice`, as the publisher words them. A deployment before
+chart 0.1.311 refuses the registration of a declaration setting any of
+them.
+
+```python
+licence_default=DatasetLicence(
+    kept=True, display=True, derived_use_terms="not_restricted",
+    copyright_class="public_domain",
+    attribution_required=True, attribution_text="Source: My publisher",
+    not_affiliated_notice="Not affiliated with or endorsed by My publisher.",
+)
+```
+
 ## Resolve the subjects
 
 A rate's subject is a referential record the platform seeds: a reference
@@ -35,7 +57,9 @@ rate, a curve or an index. `Feed.subject` resolves it by the identifiers
 the publisher states, the administrator's code as a `symbol` at its source
 and, where one exists, a FIGI or an ISIN, once per process. A record the
 deployment does not hold is reported missing once a day, and its rows are
-not recorded: a plugin never mints one.
+not recorded: a plugin never mints one. One missed is asked again the
+same day, after 5, then 15, then every 60 minutes, and its miss is still
+reported once a day.
 
 ```python
 from meridian.roles.data import rates
@@ -49,10 +73,13 @@ curve = await feed.subject(("symbol", "PAR_NOMINAL", "ust"), instrument_type="ra
 `Feed.rate` builds one rate; `Feed.curve` builds a curve's points for one
 date, one row per tenor the publisher published, and none for a tenor it
 left empty. A bare number is a percent; `rates.index_level(value, base)`
-is an index's level. Name the convention as the publisher states it, with
-the constants for the common ones: `MONEY_MARKET` (actual/360, simple),
-`BOND_EQUIVALENT` (semi-annual compounding), `DISCOUNT` (actual/360, a
-bill's discount) and `CONTINUOUS`.
+is an index's level. Every rate carries its convention: name it as the
+publisher states it, with the constants for the common ones:
+`MONEY_MARKET` (actual/360, simple), `BOND_EQUIVALENT` (semi-annual
+compounding), `DISCOUNT` (actual/360, a bill's discount) and `CONTINUOUS`.
+An index level takes the convention of the rate it compounds, the SOFR
+Index `MONEY_MARKET`. `Feed.rate` refuses a rate with none, with a clear
+error, before the lake does.
 
 ```python
 rows = feed.curve(
@@ -89,8 +116,15 @@ own conversion of its publisher's recorded answer with
 `data.testing.rates_producers`, and name everything a rates-only plugin
 never presents with `data.testing.RATES_NOT_PRESENTED`: the cases about
 prices, trades, quotes and outcomes (among them `an-exact-price` and
-`a-want-recorded-against`, about `closes` from SDK 0.32.1), a stream's
-liveness, and the feed delay, which is `about: latency` until contract 28.
+`a-want-recorded-against`, about `closes`), and the feed delay, which is
+`about: latency` until contract 28.
+
+**A dataset's liveness.** Changed in SDK 0.32.2: `RATES_NOT_PRESENTED` no
+longer names `records-a-datasets-liveness`. A polled plugin recording each
+poll its publisher answers as its dataset's liveness
+(`Wants.liveness(key)`) presents it; one recording none adds it to
+`not_presented`, with why, such as "it polls hourly and records no
+liveness".
 
 ```python
 from meridian.roles.data import testing

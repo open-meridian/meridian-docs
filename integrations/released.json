@@ -2,119 +2,165 @@
   "refreshed_by": "python tools/integrations_page.py refresh",
   "plugins": {
     "plugin-tiingo": {
-      "commit": "d7efc3f096b2964b275efa8d417c966dfd955a31",
-      "version": "0.6.0",
+      "commit": "df07241305cfbeb78dddc035c85cac1276cee57a",
+      "version": "0.8.0",
       "roles": [
         "data"
       ],
-      "sdk": "0.29.0",
-      "contract": 25
+      "sdk": "0.32.2",
+      "contract": 27
     },
-    "plugin-fed-h10": {
-      "commit": "99f79c2332d7d2882c75a0e9fca5c22c1925d898",
-      "version": "0.5.0",
+    "plugin-fed-board": {
+      "commit": "88d80f705c665892ab655c6cd78748cd54ca8795",
+      "version": "1.0.0",
       "roles": [
         "data"
       ],
-      "sdk": "0.29.0",
-      "contract": 25
+      "sdk": "0.32.2",
+      "contract": 27
     },
-    "plugin-coinbase": {
-      "commit": "1a941646706741eebac1a0d35efea137d1c59b7b",
-      "version": "0.6.0",
-      "roles": [
-        "data"
-      ],
-      "sdk": "0.29.0",
-      "contract": 25
-    },
-    "plugin-kraken": {
-      "commit": "d5905bba2be60053eb86640dc90d4e3c8e6a04d8",
-      "version": "0.6.0",
-      "roles": [
-        "data"
-      ],
-      "sdk": "0.29.0",
-      "contract": 25
-    },
-    "plugin-kalshi": {
-      "commit": "421d5512d79eed51fd5fa4d97beabd5f0bd11239",
-      "version": "0.5.0",
-      "roles": [
-        "data"
-      ],
-      "sdk": "0.27.0",
-      "contract": 23
-    },
-    "plugin-polymarket": {
-      "commit": "7b82ce188e0a04ad6ad4f936d1ec765ea761375a",
-      "version": "0.5.0",
-      "roles": [
-        "data"
-      ],
-      "sdk": "0.27.0",
-      "contract": 23
-    },
-    "plugin-polymarket-us": {
-      "commit": "0fbab67ff2ed19005363749c30ab2f97ae3728d6",
+    "plugin-ny-fed": {
+      "commit": "a171467d0639d4ea55fcb150adc9240a54f83b69",
       "version": "0.1.0",
       "roles": [
         "data"
       ],
-      "sdk": "0.27.0",
-      "contract": 23
+      "sdk": "0.32.2",
+      "contract": 27
     },
-    "plugin-alpaca": {
-      "commit": "05f0b1ea0eebf48c4c5197086278b026275104e0",
-      "version": "0.10.0",
+    "plugin-us-treasury": {
+      "commit": "ed6b25a5e05d73f19523cab550036199924b3d00",
+      "version": "0.1.0",
       "roles": [
-        "data",
-        "custody",
-        "connectivity"
+        "data"
       ],
-      "sdk": "0.29.0",
-      "contract": 25
+      "sdk": "0.32.2",
+      "contract": 27
     },
-    "plugin-tradier": {
-      "commit": "ad192d46251e08320809f3bc93cfb5486a2d452f",
-      "version": "0.9.0",
+    "plugin-fred": {
+      "commit": "93074ca3f7aea0bce977d2d700b92d14f95a1111",
+      "version": "0.1.0",
       "roles": [
-        "data",
-        "custody",
-        "connectivity"
+        "data"
       ],
-      "sdk": "0.29.0",
-      "contract": 25
+      "sdk": "0.32.2",
+      "contract": 27
     },
-    "plugin-snaptrade": {
-      "commit": "58f480d3e6b713955fdfd86e4b75a8191c654fcd",
-      "version": "0.18.0",
-      "roles": [
-        "custody",
-        "connectivity"
-      ],
-      "sdk": "0.29.0",
-      "contract": 25
-    },
-    "plugin-oanda": {
-      "commit": "2a358cb453c12712625b4e2136bb0b2272826087",
+    "plugin-ecb": {
+      "commit": "e18d343f5afb9d2d4d9137bcd13336f8ee8c789b",
       "version": "0.2.0",
       "roles": [
+        "data"
+      ],
+      "sdk": "0.32.3",
+      "contract": 27
+    },
+    "plugin-truefx": {
+      "commit": "1873c00abfd9420fd35f5381aafb8070c06cef94",
+      "version": "0.3.0",
+      "roles": [
+        "data"
+      ],
+      "sdk": "0.32.2",
+      "contract": 27
+    },
+    "plugin-coinbase": {
+      "commit": "c27002296063bdff1ccb244abace786aac51e149",
+      "version": "0.9.0",
+      "roles": [
+        "data"
+      ],
+      "sdk": "0.32.2",
+      "contract": 27
+    },
+    "plugin-kraken": {
+      "commit": "0f40559c0344caed8f41930d544bf39619dfcc4f",
+      "version": "0.9.0",
+      "roles": [
+        "data"
+      ],
+      "sdk": "0.32.2",
+      "contract": 27
+    },
+    "plugin-kalshi": {
+      "commit": "6ddff12502d1d073c82297c836c7f6a48e6860f8",
+      "version": "0.9.0",
+      "roles": [
+        "data"
+      ],
+      "sdk": "0.32.2",
+      "contract": 27
+    },
+    "plugin-polymarket": {
+      "commit": "95383de524ba8d7397669920a6c08e07117aaa9f",
+      "version": "0.9.0",
+      "roles": [
+        "data"
+      ],
+      "sdk": "0.32.3",
+      "contract": 27
+    },
+    "plugin-polymarket-us": {
+      "commit": "d03ddf87c2089f53cb5299f361c4375697133fcc",
+      "version": "0.4.0",
+      "roles": [
+        "data"
+      ],
+      "sdk": "0.32.2",
+      "contract": 27
+    },
+    "plugin-alpaca": {
+      "commit": "76a73b4f2790d14e918957a2026c84dfa5f35250",
+      "version": "0.13.1",
+      "roles": [
+        "data",
         "custody",
         "connectivity"
       ],
-      "sdk": "0.27.0",
-      "contract": 23
+      "sdk": "0.32.3",
+      "contract": 27
+    },
+    "plugin-tradier": {
+      "commit": "90f80e2a4fd35a3f570229ddd4ea977699d2c9dd",
+      "version": "0.12.0",
+      "roles": [
+        "data",
+        "custody",
+        "connectivity"
+      ],
+      "sdk": "0.32.3",
+      "contract": 27
+    },
+    "plugin-snaptrade": {
+      "commit": "72974d59c5299047f0841168404894fc931063a7",
+      "version": "0.20.0",
+      "roles": [
+        "custody",
+        "connectivity"
+      ],
+      "sdk": "0.32.2",
+      "contract": 27
+    },
+    "plugin-oanda": {
+      "commit": "8c5527f5aaf97fdfd94a58515c9717d596649cd6",
+      "version": "0.6.0",
+      "roles": [
+        "custody",
+        "connectivity",
+        "data"
+      ],
+      "sdk": "0.32.3",
+      "contract": 27
     }
   },
   "sdk": {
-    "0.27.0": {
-      "commit": "b03b6700c213df45fd3cef57afeb684bcb64ed62",
-      "contract": 23
+    "0.32.2": {
+      "commit": "44006a00e5e780f2fc982dd447a1b22d61fca32b",
+      "contract": 27
     },
-    "0.29.0": {
-      "commit": "a8409cedd8aad2d3e036dfcf77163eb2e777ea4a",
-      "contract": 25
+    "0.32.3": {
+      "commit": "6e563c2db5717dc98e7eba1c7ef2387a1cd23d92",
+      "contract": 27
     }
   }
 }

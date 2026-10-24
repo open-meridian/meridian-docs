@@ -29,6 +29,16 @@ or *set by* a person.
 | Default fields | The fields readable by default, each by its [data dictionary](../boundaries/lake.md) entry, such as `meridian.v1.Bar.vwap`; none for every field. |
 | One person's terms | Whether the terms are one person's, as a retail brokerage account holder's market data is (`personal_use`). |
 
+**The vendor's attribution terms.** A catalogue's default licence may also
+state how the vendor asks to be cited and what it allows passed on: its
+copyright class, whether redistribution is allowed, needs a licence or is
+allowed with attribution, the attribution's text, whether downstream terms
+may be no more restrictive, and the vendor's not-affiliated notice. The
+deployment keeps them with the licence the catalogue defaults, and
+`dashboard__list_datasets` answers them, the texts as the plugin's words.
+They record what the vendor's terms say, and grant nothing. A deployment
+takes them from chart 0.1.311.
+
 **The one-person warning.** A dataset whose terms are one person's is
 flagged on the Data sources page, and in `dashboard__list_datasets`, where
 more than one person holds `read` or `write` on a plugin entitled to it,
@@ -118,7 +128,8 @@ should read them with that in mind.
   the page and its tools, step by step.
 - [Using a data plugin](../how-to/using-a-data-plugin.md#the-data-plugins):
   each data plugin's terms, summarised: Alpaca's, Tradier's, Tiingo's,
-  Coinbase's, Kraken's and the Federal Reserve Board's.
+  Coinbase's, Kraken's, the Federal Reserve Board's, the New York Fed's,
+  US Treasury's, FRED's and the ECB's.
 - The data dictionary, field by field:
   [`DatasetLicence`](../boundaries/sidecar.md#meridian.v1.DatasetLicence),
   [`DatasetEntitlement`](../boundaries/lake.md#meridian.v1.DatasetEntitlement)

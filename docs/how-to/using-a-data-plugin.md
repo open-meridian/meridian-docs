@@ -89,7 +89,8 @@ order:
 4. **Stream.** The session's state, how many listings it streams of the
    session's limit, reconnects, messages and the last message; or "Does not
    stream".
-5. The vendor's own sections, such as H.10's release calendar.
+5. The vendor's own sections, such as the Federal Reserve Board's Sources,
+   one line per file it reads.
 
 ## Datasets
 
@@ -158,6 +159,10 @@ you to approve, and asks for storage for its raw
 responses. Its datasets are then `alpaca-1:daily` and so on, listed on the
 Data sources page while the instance runs. The plugin repositories are
 named `plugin-<name>`.
+
+A plugin listed in the platform's registry is installed by digest instead,
+one at a time or several in a starter pack, and launched the same way: see
+[Install a plugin from a registry](install-from-a-registry.md).
 
 ## The data plugins
 
@@ -457,33 +462,99 @@ deployment admin and its users to settle with each source.
 
 Neither is affiliated with or endorses Open Meridian.
 
-### The Federal Reserve's H.10
+### The Federal Reserve Board
 
-plugin-fed-h10 (`fed-h10`) puts the Board's weekly noon buying rates in New
-York for about two dozen currencies against the US dollar into one dataset,
-`daily`: pushed when each weekly release appears, pulled for any past week,
-ten years back, kept, public domain.
+plugin-fed-board (`fed-board`) reads three of the Board's publications from
+its own site, not through FRED: H.10's exchange rates as prices, and H.15's
+selected interest rates and the Board's zero curve as
+[rates](../concepts/rates.md). It replaces plugin-fed-h10, whose listing
+is withdrawn: it is a new listing, `fed-board`, carrying H.10 unchanged as
+its `daily` dataset, read back on the first run.
 
-- **Each rate as the Board quotes it**, never inverted. Most currencies are
-  quoted per US dollar, so CHF 0.8293 is the price of the dollar's cash
-  instrument, in francs. The euro, the pound and the Australian and New
-  Zealand dollars are quoted in US dollars per unit. A reader wanting the
-  other way inverts it, and says so.
-- **A close for its business date**, kind `close` (the noon rate),
-  published weekly on Monday for the week before. A valuation for yesterday
-  has no H.10 rate until the next release.
-- **Every currency resolved** to its cash instrument by its ISO 4217 code;
-  a currency the deployment does not hold is fetched from the platform's
-  master. A day the Board marks `ND` is no rate, never a zero.
-- Read from the Board's own site, not through FRED.
+- **`daily`, H.10**: the Board's weekly noon buying rates in New York for
+  about two dozen currencies against the US dollar, pushed when each
+  weekly release appears, pulled for any past week, ten years back.
+  - **Each rate as the Board quotes it**, never inverted. Most currencies
+    are quoted per US dollar, so CHF 0.8293 is the price of the dollar's
+    cash instrument, in francs. The euro, the pound and the Australian and
+    New Zealand dollars are quoted in US dollars per unit. A reader wanting
+    the other way inverts it, and says so.
+  - **A close for its business date**, kind `close` (the noon rate),
+    published weekly on Monday for the week before. A valuation for
+    yesterday has no H.10 rate until the next release.
+  - **Every currency resolved** to its cash instrument by its ISO 4217
+    code; a currency the deployment does not hold is fetched from the
+    platform's master. A day the Board marks `ND` is no rate, never a zero.
+- **`fed_h15`, H.15**: each business day's rates, history from July 1954.
+  The federal funds effective rate is recorded against the New York Fed's
+  EFFR, and the Treasury constant maturities against Treasury's par and
+  real par curves, by tenor, so each sits beside the publisher's own plugin
+  under the deployment's source priority. H.15's own series, Treasury bills
+  in the secondary market, AA commercial paper, the bank prime rate, the
+  discount window's primary credit rate and the inflation-indexed long-term
+  average, are recorded against the Board's own records.
+- **`fed_zero`, the zero curve**: zero-coupon yields, continuously
+  compounded, 1 to 30 years, against the Board's zero curve record, weekly
+  as the Board updates it, history from June 1961. The Board describes it
+  as a staff research product, not an official statistical release, revised
+  without notice.
 - **Its terms.** The Board's site says its information is in the public
   domain and may be copied and distributed without permission, and asks
-  that the Board be cited as the source. So the default licence is kept,
-  with no limit on retention, derived use or display.
+  that the Board be cited as the source. So each dataset's default licence
+  is kept, with no limit on retention, derived use or display.
 
-H.10 passes the whole data suite: it presents what it serves, its licences
-among them, and names every case about a kind of data the Board never
-states in `not_presented`, with why.
+It passes the whole data suite: it presents what it serves, its licences
+and the rates cases among them, and names every case about a kind of data
+the Board never states in `not_presented`, with why.
+
+### The New York Fed, the US Treasury and FRED
+
+Three plugins record [rates](../concepts/rates.md) alone, each subject a
+referential record the platform seeds and the plugin resolves by its
+administrator's code; a record the deployment does not hold is reported
+missing, never minted. Resolving by an administrator's code needs a
+deployment on chart 0.1.312 or later (see
+[The licence list](../concepts/one-id.md#the-licence-list)).
+
+- **plugin-ny-fed** (`ny-fed`) reads the New York Fed's markets data API:
+  one dataset, `nyfed_rates`, each business day's SOFR, EFFR, OBFR, TGCR
+  and BGCR, each a fixing with its percentiles and volume, the SOFR 30, 90
+  and 180-day averages and the SOFR Index, history from July 2000. No key.
+  Its terms allow storing and redistributing the rates with the New York
+  Fed's notice and no more restrictive terms downstream, so the default
+  licence is kept, with derived use and display.
+- **plugin-us-treasury** (`us-treasury`) reads Treasury's daily rates
+  files: `ust_par`, the nominal par yield curve, 1 month to 30 years;
+  `ust_real`, the real par yield curve, 5 to 30 years; and `ust_bills`, each
+  bill's discount rate and coupon equivalent, 4 to 52 weeks. Each curve is
+  one record and its points are rows by tenor; a tenor Treasury leaves
+  empty is no row. No key: Treasury's data are US government work.
+- **plugin-fred** (`fred`) reads the St. Louis Fed's FRED API for the rate
+  series it carries, each recorded against its publisher's record with the
+  same kind, tenor and convention, so the deployment's source priority
+  puts FRED after the publisher's own plugin. It needs a FRED API key, and
+  asks nothing without one. Its datasets follow FRED's copyright class:
+  `fred_public` and `fred_cited` are kept, and `fred_restricted`, a
+  series needing its owner's permission, is served and never kept.
+
+Each passes the data suite on the rates cases its publisher presents, and
+names every other case in `not_presented`, with why.
+
+### The European Central Bank
+
+plugin-ecb (`ecb`) reads the ECB's Data Portal. `ecb_fx` holds the euro
+foreign exchange reference rates as prices, each TARGET business day's
+rate for about thirty currencies against the euro, each the price of the
+euro's cash instrument in the other currency, as the ECB quotes it, never
+inverted, history from 1999. `ecb_estr` holds €STR as rates, with its
+compounded averages and its compounded index, history from October 2019.
+It reads TARGET's calendar from the deployment, and asks nothing on a day
+the ECB publishes nothing. No key. The ECB allows free use of its
+information with the ECB cited as the source, so each default licence is
+kept, with derived use and display; the ECB publishes the reference rates
+for information and discourages using them for transactions.
+
+None of these publishers is affiliated with or endorses Open Meridian.
 
 ### Kalshi and Polymarket
 

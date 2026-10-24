@@ -54,7 +54,7 @@ deployment admin sets:
 
 A price the lake does not hold yet is asked of the source that serves it,
 and the page fills in when the source answers. A value in another currency
-is converted through the lake's rates, such as the Federal Reserve's H.10:
+is converted through the lake's rates, such as the Federal Reserve Board's H.10:
 multiplied, divided where the rate is quoted the other way, or crossed
 through dollars, each rate up to a week older than the date, its date shown.
 

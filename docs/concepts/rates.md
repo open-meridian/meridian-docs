@@ -44,7 +44,12 @@ class `referential`, of one of three types.
 
 The platform seeds these records, as it seeds calendars and venues, each
 named by the administrator's code at its source and, where one exists, a
-FIGI or an ISIN. A referential record names what the lake observes and is
+FIGI or an ISIN. A deployment resolves one by its administrator's code where
+the platform's [licence list](one-id.md#the-licence-list) names that
+administrator: the New York Fed, the Federal Reserve Board, the ECB and the
+US Treasury, from chart 0.1.312. Core ships the platform's templates for the
+three types, so a record names its template before its first pull. A
+referential record names what the lake observes and is
 **never held**: an entry moving a position in one is refused, `invalid`,
 naming `instrument_id`, and no order names one. See
 [One ID per instrument](one-id.md).
@@ -86,6 +91,12 @@ bars, trades and quotes (see
 [License and entitle a dataset](../how-to/license-and-entitle-a-dataset.md)).
 
 ## Who records and reads them
+
+The public publishers' plugins record them: the New York Fed's reference
+rates, the US Treasury's curves, the Federal Reserve Board's H.15 rates and
+zero curve, the ECB's €STR, and FRED's copies of them, each recorded against
+the publisher's record (see
+[Using a data plugin](../how-to/using-a-data-plugin.md#the-new-york-fed-the-us-treasury-and-fred)).
 
 | Role | Does |
 |---|---|

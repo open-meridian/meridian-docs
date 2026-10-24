@@ -198,6 +198,18 @@ share-class and composite FIGI), LEI, a ticker with its venue, CAIP-19,
 ISO 4217 and the SEC's series and class IDs. `open_meridian_local` and the
 `LCL-` ID are never on it.
 
+**An administrator's own code.** The list also names the **administrators**
+whose own codes may be sent: a `symbol` whose source is one of them, such
+as the New York Fed's `SOFR` at `nyfed`, is sent where the list names the
+scheme family `administrator_symbol`, and a vendor's own symbol never is. The list
+names the New York Fed (`nyfed`), the Federal Reserve Board (`frb`), the
+ECB (`ecb`) and the US Treasury (`ustreasury`), so the referential records
+the platform seeds, the subjects of [rates](rates.md), resolve by the code
+their publisher states. A person's pull asks by such a code with its
+source too. The conductor hands the list to the instrument store again
+when the store starts after it, so a store restarted later sends by the
+same list. This needs chart 0.1.312 or later.
+
 When the list gains a scheme, the deployment **backfills**: each local
 record carrying that scheme is sent, exact matches resolve automatically,
 and uncertain ones become prepared changes for a person. The Provisional

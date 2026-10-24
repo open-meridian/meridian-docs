@@ -48,6 +48,10 @@ changes on the way, release by release, is in the
     [execution costs](../concepts/execution-costs.md), and places by
     [type](../concepts/placement-types-and-rfq-quotes.md) (see
     [Moving a plugin to a new release](../api/python-sdk.md#moving-a-plugin-to-a-new-release)).
+    A plugin whose catalogue states the licence's attribution terms
+    registers only on chart 0.1.311 or later, and
+    rates resolve by their publisher's own codes from chart 0.1.312 (see
+    [The licence list](../concepts/one-id.md#the-licence-list)).
     Upgrading from a chart before contract 26 also adds
     [the analytics component](../concepts/the-analytics-component.md): two
     Deployments, a coordinator and a worker, on an image of its own,

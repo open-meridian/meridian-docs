@@ -16,7 +16,7 @@ such as Homebrew's on macOS (`externally-managed-environment`).
 |---|---|
 | PyPI name | `open-meridian` |
 | Import name | `meridian` |
-| Version | 0.32.1 |
+| Version | 0.32.3 |
 | Python | 3.11 or newer |
 | Dependencies | `grpcio>=1.68,<2`, `protobuf>=5.28,<7`, `jinja2>=3.1,<4` (for [pages](#pages)) |
 | Licence | Apache-2.0 |
@@ -24,7 +24,7 @@ such as Homebrew's on macOS (`externally-managed-environment`).
 !!! warning "Not `meridian-sdk`"
     The PyPI package `meridian-sdk` belongs to an unrelated company. Don't install it.
 
-A plugin pins the SDK exactly, `open-meridian==0.32.1`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.32.1`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls (see [Moving a plugin to a new release](#moving-a-plugin-to-a-new-release)). CLI 0.1.52's `meridian plugin new` writes a plugin pinned to 0.32.1, which declares contract 27; one pinned to 0.31.1 or earlier moves with `meridian plugin migrate`.
+A plugin pins the SDK exactly, `open-meridian==0.32.3`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.32.3`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls (see [Moving a plugin to a new release](#moving-a-plugin-to-a-new-release)). CLI 0.1.52's `meridian plugin new` writes a plugin pinned to 0.32.1, which declares contract 27, as 0.32.3 does; `meridian plugin migrate` moves it, or one pinned earlier, to 0.32.3.
 
 | Optional extra | Installs | For |
 |---|---|---|
@@ -836,7 +836,7 @@ DECLARATION = Declaration(
 | `venue_id` | `str` | The venue the dataset is, a venue master ID (`VEN-`); empty for a consolidated dataset. |
 | `calendar_id` | `str` | The settlement calendar its business dates follow, its `CAL-` ID; empty for none. The lake flags a daily value dated on a day the calendar says is closed, and refuses nothing by it. Added in SDK 0.28.0. |
 
-`DatasetLicence`, keyword only, every field optional: `kept` (`False`: served, not kept), `retention_days` (0 to 36,500; 0 for no limit set), `derived_use`, `display`, `default_fields` (at most 64 dictionary entries; none for every field) and `personal_use`. It records what the vendor's terms say, which a deployment admin confirms or replaces (see [Licences and entitlements](../concepts/licences-and-entitlements.md)), never whether a deployment meets them.
+`DatasetLicence`, keyword only, every field optional: `kept` (`False`: served, not kept), `retention_days` (0 to 36,500; 0 for no limit set), `derived_use` and `derived_use_terms` (`not_restricted`, `internal_only` or `redistribution_needs_licence`), `display`, `default_fields` (at most 64 dictionary entries; none for every field) and `personal_use`. Added in SDK 0.32.2, the vendor's attribution terms, by the wire's names: `redistribution` (`not_allowed`, `licence_required` or `allowed_with_attribution`), `attribution_required`, `attribution_text`, `copyright_class` (`public_domain`, `copyright_citation_required` or `copyright_preapproval_required`) and `no_more_restrictive_terms`; added in SDK 0.32.3, `not_affiliated_notice`. An answer is given by its word, with or without its prefix, and refused when it is none of them. Set these terms only on a deployment on chart 0.1.311 or later: an earlier one refuses the registration of a declaration setting any of them. It records what the vendor's terms say, which a deployment admin confirms or replaces (see [Licences and entitlements](../concepts/licences-and-entitlements.md)), never whether a deployment meets them.
 
 **Raises** `ValueError` when the declaration is built, naming the dataset: a key out of form, a vendor or aggregator too long, a data type or field no dictionary entry names, one named twice, no mode or a mode twice, a negative cadence or history, a zone that is no IANA zone, a day end out of range, a venue that is no `VEN-` ID, a calendar that is no `CAL-` ID, and a catalogue on a version not holding `data`. The upload's JSON carries the catalogue only where one is declared, its modes as words. The sidecar holds a catalogue to the same rules at registration, and refuses the plugin naming the field.
 
@@ -883,7 +883,7 @@ its own plugin. See [Rates](../concepts/rates.md) and
 
 | Name | What |
 |---|---|
-| `Feed(plugin, source_name, *, wants=None, day_zone="UTC")` | A data plugin's rates: `subject(*identifiers, description="", instrument_type="")` resolves a referential record once per process, reporting one not held as a miss once a day; `rate(subject, key, kind, value, *, business_date, published_ns=0, convention=None, tenor=None, maturity_date="", preliminary=False, volume=None, transaction_count=None, percentiles=None, series="", raw_key="")` builds one `Rate`; `curve(subject, key, kind, points, **given)` one row per tenor published, none for one left empty; `record(key, rows, want_id="")` sends them 500 a batch, through `wants` where given |
+| `Feed(plugin, source_name, *, wants=None, day_zone="UTC")` | A data plugin's rates: `subject(*identifiers, description="", instrument_type="")` resolves a referential record once per process, reporting one not held as a miss once a day and, changed in SDK 0.32.3, asking it again the same day after 5, then 15, then every 60 minutes; `rate(subject, key, kind, value, *, business_date, published_ns=0, convention=None, tenor=None, maturity_date="", preliminary=False, volume=None, transaction_count=None, percentiles=None, series="", raw_key="")` builds one `Rate`, and, changed in SDK 0.32.3, refuses one with no `convention`, an index level taking the convention of the rate it compounds; `curve(subject, key, kind, points, **given)` one row per tenor published, none for one left empty; `record(key, rows, want_id="")` sends them 500 a batch, through `wants` where given |
 | `read_curve(plugin, subject, business_date, *, kinds=(), tenors=(), sources=None)` | A curve's points for a date, every page of `list_rates`, in tenor order, a point with an exact maturity after the tenors |
 | `tenor(label)`, `tenor_label(tenor)`, `tenor_days(tenor)` | A publisher's label (`1 Mo`, `13 WEEKS`, `10 Yr`, `3M`, `ON`, `TN`, `SN`) as the contract's `Tenor`, refusing a fraction; its one label (`3M`); its length in days, to order a curve |
 | `percent(value)`, `index_level(value, base="")` | A `UnitValue` in per cent, or an index's level with its base period |
@@ -893,7 +893,11 @@ In `meridian.roles.data.testing`: `rates_producers(cases, *, source)`, the
 data suite's rates cases for a plugin built on `rates.Feed`; `RATES_CASES`,
 their names; and, added in SDK 0.32.1, `RATES_NOT_PRESENTED`, every case a
 plugin recording only rates never presents, each with why ("it records
-rates, never prices" among them). `PAIRS_NOT_PRESENTED` and
+rates, never prices" among them). Changed in SDK 0.32.2: it no longer
+names `records-a-datasets-liveness`, which a plugin recording each poll as
+its dataset's liveness presents, and one recording none adds itself, with
+why. The testing `Recorder` answers `RecordRates` with its count, as it
+does prices, from SDK 0.32.2. `PAIRS_NOT_PRESENTED` and
 `EVENT_CONTRACTS_NOT_PRESENTED` do the same for a pairs venue and an
 event-contract venue, which publish no rates.
 
@@ -926,7 +930,12 @@ A data plugin's `Wants` takes `latency=` and records each row's age at the
 venue_id="")` records a dataset's sign of life
 ([`record_liveness`](typed-operations.md#record_liveness)). A
 `connectivity.Trader` takes `latency=` and `session=`. A pairs venue's feed
-records its stream's heartbeats (`alive()`, `alive_ns`, `liveness_ns`).
+records its stream's heartbeats (`alive()`, `alive_ns`, `liveness_ns`), and,
+added in SDK 0.32.3, so does a listings feed (`listings.Feed`): `heard`
+notes the stream's last message and `flush` records its live dataset's
+liveness, with no venue, once a pass when a message was heard since the
+last. A data plugin's Connection draws **Sessions** only once a session is
+measured, from SDK 0.32.2, so a polled plugin's page has none.
 
 
 ### The data suite { #the-data-suite }
@@ -1970,9 +1979,10 @@ What every plugin of a role must do the same way to fulfil its typed operations 
 - **The Trader**, from SDK 0.31.0, also reports the charges a venue states apart from its orders (`VenueCharge`) and a fill's settlement date where the venue states it, awaits an async adapter, and dates a fill in its order's own zone. Its adapter says which environment its session reached (`environment`, read with `meridian.reached_environment`), which the Trader publishes on its catalogue.
 - **The pricing role** (`meridian.roles.pricing.Pricer`, added in SDK 0.31.0): each batch the analytics component routes to the plugin answered whole, from exactly the market objects each unit carries, and the batches still waiting read after a restart from the last sequence answered, kept in memory, since `pricing` holds no storage.
 - **Connectivity's pages** (added in SDK 0.32.0), each declared by the SDK with its acts and checks, from the plugin's state as it stands (`TradingState`: its `trader`, its venue adapter `venue`, its account `scope`, and for raw records its `store` and kept `values`) and its words for the venue: `connectivity.trading_pages(pages, state, *, venue, credentials, environment, environment_setting, ...)` declares **Trading** at `/admin/connections` (`TRADING`), with **Enable trading** (`ENABLE_TRADING`) and its check, and a **Sessions** section from `latency=`; `connectivity.raw_records_page(pages, state, *, kinds, why)` declares **Raw records** (`RAW`) for a plugin holding custody or connectivity; and, for a plugin holding `data` as well, `connectivity.connection_pages(pages, state, connection, *, venue, ...)` declares one **Connection** at `/` (`CONNECTION`) for both roles, the data role's record carrying connectivity's as `trading` (`ConnectionRead.trading`), in place of a Trading page of its own. `TradingRead` carries `session_latency`, `reached_environment`, `badge` and `environment_to_save`. `meridian plugin check` counts the pages each declares as the plugin's own.
+- **The merged Connection's tabs** (changed in SDK 0.32.3): `connection_pages` draws one group at a time under a tab row of its sections' own titles, **Key**, **Limits and use**, **Stream**, **Trading**, and **Sessions** once measured, picked by `?tab=`; **Enable trading** answers on Trading, and `read_connection` still answers every section. A page given no tabs draws every section at once. An account's **Enable trading** column shows only where its button does, and Raw records' record wraps within its box.
 - **The Trader's placement types and RFQs** (added in SDK 0.32.0): an adapter may answer `placement_types(code)`, the types its venue takes beside DMA, and where it takes RFQs `request_quotes(code, asked)`, `quotes(code, request_id)` (each a `VenueQuote`) and `accept_quote(code, request_id, quote, asked)`; the `Trader` lists the types on the catalogue (`Trader.placement_types()`), rejects one an account does not take with why, records each dealer's quote on the placement and accepts the pick. `VenueOrder` carries `identifiers` and `currency`; `connectivity.testing.placement(placement_type=...)` makes a test's placement, and `Rig.latency` its recorders. See [Placement types and RFQ quotes](../concepts/placement-types-and-rfq-quotes.md).
 - **An `ems`'s checks** (`meridian.roles.ems`, added in SDK 0.32.0): `ReferenceCheck(action, after_ns, latency, liveness)` judges the reference price's age before a placement (`stale(price, dataset=, asset_class=, sessions=)`), holding the order with its cause (`hold(plugin, order_id, stale)`) under `REFUSE` or marking the placement (`placement(stale)`) under `WARN`; `after_ns(rows)` reads the admin's `stale_reference_after`; `open_quotes(placement)` orders an RFQ placement's open quotes best first. See [Set staleness thresholds and the stale-reference action](../how-to/set-staleness-thresholds.md).
-- **An event-contract venue's events** (added in SDK 0.32.0): `event_contracts.Feed.keep_events(sleep=asyncio.sleep, *, clock=..., once=False)` reports the events of the contracts served, each read once its contract is first served and again every `EVENTS_EVERY_SECONDS` (600), a pass every `EVENTS_FIRST_SECONDS` (15), reported where new or stated otherwise than last reported, in place of a loop of the plugin's own. A range member's bounds go with its group (`member_bounds`).
+- **An event-contract venue's events** (added in SDK 0.32.0): `event_contracts.Feed.keep_events(sleep=asyncio.sleep, *, clock=..., once=False)` reports the events of the contracts served, each read once its contract is first served and again every `EVENTS_EVERY_SECONDS` (600), a pass every `EVENTS_FIRST_SECONDS` (15), reported where new or stated otherwise than last reported, in place of a loop of the plugin's own. A range member's bounds go with its group (`member_bounds`). Added in SDK 0.32.3: a `Resolution` carries the venue's optional deadline to challenge a proposed determination, `challenge_ends_at_ns`, 0 unset by default, and `Feed.outcome()` carries it to the `Outcome` recorded.
 
 The SDK's `templates/` holds a role template for `connectivity`, `custody`, `data`, `operations`, `pricing` and `reporting`. CLI 0.1.52 writes each: `meridian plugin new <name> --role <role>`.
 
@@ -2127,6 +2137,42 @@ The package installs one command, `meridian-dev run`. On a development deploymen
 ## Release notes { #release-notes }
 
 Each release of the SDK, the contract it declares, the runtime it needs, and the CLI whose `plugin new` writes a plugin on it. What a plugin's author does to move to it is in [Moving a plugin to a new release](#moving-a-plugin-to-a-new-release).
+
+!!! note "0.32.3: a rate's convention, listings' liveness, the not-affiliated notice"
+    open-meridian 0.32.3, released on PyPI on 2026-10-24, declares contract
+    v27, as 0.32.0 does. `rates.Feed.rate` refuses a rate with no
+    convention, an index level taking the convention of the rate it
+    compounds, and `Feed.subject` asks a subject missed again the same day,
+    after 5, then 15, then every 60 minutes. A listings feed records its
+    live dataset's liveness, as a pairs feed does. An event contract's
+    `Resolution` carries the venue's deadline to challenge a determination
+    (`challenge_ends_at_ns`) to the `Outcome`. `DatasetLicence` writes
+    `not_affiliated_notice`. The merged Connection (`connection_pages`)
+    draws one group at a time under a tab row of its sections' titles, and
+    Raw records' record wraps within its box. Set the licence's attribution
+    terms only on chart 0.1.311 or later. Only the pins move, but a rate
+    built with no convention now raises (see
+    [0.32.2 to 0.32.3](#0322-to-0323)). CLI 0.1.52's `plugin new` writes a
+    plugin on 0.32.1, and `plugin migrate` moves it here. Its base image is
+    `ghcr.io/open-meridian/plugin-python:0.32.3`
+    (`sha256:596236b9c7e2a2e324f7704df68551a311d1a1ce9387ec6d5bd4d7ba661674f3`).
+
+!!! note "0.32.2: the licence's attribution terms, Sessions only once measured"
+    open-meridian 0.32.2, released on PyPI on 2026-10-23, declares contract
+    v27, as 0.32.0 does. `DatasetLicence` writes the v27 wire's
+    `redistribution`, `attribution_required`, `attribution_text`,
+    `copyright_class` and `no_more_restrictive_terms`, an answer given by
+    its word, with or without its prefix. A data plugin's Connection draws
+    **Sessions** only once a session is measured. The testing `Recorder`
+    answers `RecordRates` with its count. `RATES_NOT_PRESENTED` no longer
+    names `records-a-datasets-liveness`: a polled rates plugin recording
+    each poll as its dataset's liveness presents it. Set the licence's new
+    terms only on chart 0.1.311 or later: an earlier v27 deployment refuses
+    the registration. Only the pins move (see
+    [0.32.1 to 0.32.2](#0321-to-0322)). CLI 0.1.52's `plugin new` writes a
+    plugin on 0.32.1, and `plugin migrate` moves it here. Its base image is
+    `ghcr.io/open-meridian/plugin-python:0.32.2`
+    (`sha256:2235d96dcca58e315dbb9d38fe9dda753d1a4bfbcac67b09f614b07d54020b80`).
 
 !!! note "0.32.1: two data cases about closes"
     open-meridian 0.32.1, released on PyPI on 2026-10-23, declares contract
@@ -2523,6 +2569,8 @@ Move a plugin one release at a time or several at once: [`meridian plugin migrat
 
 | From | To | Contract | Runtime | `plugin new` writes it from | `plugin migrate` rewrites | Then by hand |
 |---|---|---|---|---|---|---|
+| 0.32.2 | 0.32.3 | 27 | chart 0.1.309 or later; 0.1.311 for the licence's attribution terms | not yet: CLI 0.1.52 writes 0.32.1 | nothing: only the pins move | give every rate a convention: see [0.32.2 to 0.32.3](#0322-to-0323) |
+| 0.32.1 | 0.32.2 | 27 | chart 0.1.309 or later; 0.1.311 for the licence's attribution terms | not yet: CLI 0.1.52 writes 0.32.1 | nothing: only the pins move | a rates plugin recording no liveness names one more case not presented: see [0.32.1 to 0.32.2](#0321-to-0322) |
 | 0.32.0 | 0.32.1 | 27 | chart 0.1.309 or later | CLI 0.1.52 | nothing: only the pins move | a rates-only data plugin names two more cases not presented: see [0.32.0 to 0.32.1](#0320-to-0321) |
 | 0.31.1 | 0.32.0 | 27 | chart 0.1.309 or later | CLI 0.1.51 | a base pinned by digest, moved with its digest dropped where it cannot be read | see [0.31.1 to 0.32.0](#0311-to-0320) |
 | 0.31.0 | 0.31.1 | 26 | chart 0.1.308 or later | CLI 0.1.50 | nothing: only the pins move | nothing |
@@ -2541,6 +2589,33 @@ Move a plugin one release at a time or several at once: [`meridian plugin migrat
 | 0.18.0 | 0.19.0 | 14 | | CLI 0.1.34 | nothing: only the pins move | see [0.18.0 to 0.19.0](#0180-to-0190) |
 
 Before 0.19.0, `plugin new` pinned 0.18.0 from CLI 0.1.33, 0.17.0 from CLI 0.1.29 to 0.1.32, 0.16.0 from CLI 0.1.28, 0.15.0 from CLI 0.1.27, 0.14.0 from CLI 0.1.26, 0.12.0 from CLI 0.1.24 and 0.1.25, 0.11.0 from CLI 0.1.23, 0.10.1 from CLI 0.1.22, 0.10.0 from CLI 0.1.21, 0.9.0 from CLI 0.1.20, 0.7.1 from CLI 0.1.18 and 0.1.19, and 0.6.1 from CLI 0.1.16 and 0.1.17.
+
+### 0.32.2 to 0.32.3 { #0322-to-0323 }
+
+Released 2026-10-24 (the `to_0_32_3` step). `meridian plugin migrate --to
+0.32.3` moves the pins and changes no code. One change can raise: a rate
+built with `rates.Feed.rate` and no `convention` is refused at the plugin,
+with a clear error, as the lake refuses it; give it the publisher's
+convention, and an index level the convention of the rate it compounds
+(the SOFR Index `rates.MONEY_MARKET`). Nothing else a plugin calls changed
+shape: a missed rates subject is asked again the same day, a listings feed
+records its live dataset's liveness, a `Resolution` may carry
+`challenge_ends_at_ns`, `DatasetLicence` takes `not_affiliated_notice`, and
+the merged Connection is tabbed. Set the licence's attribution terms only
+for a deployment on chart 0.1.311 or later.
+
+### 0.32.1 to 0.32.2 { #0321-to-0322 }
+
+Released 2026-10-23 (the `to_0_32_2` step). Not breaking: `meridian plugin
+migrate --to 0.32.2` moves the pins and changes no code. `DatasetLicence`
+takes `redistribution`, `attribution_required`, `attribution_text`,
+`copyright_class` and `no_more_restrictive_terms`; a deployment before chart
+0.1.311 refuses the registration of a declaration setting any of them, so
+set them only for one on 0.1.311 or later. `RATES_NOT_PRESENTED` no longer
+names `records-a-datasets-liveness`: a rates-only plugin recording no
+liveness adds it to `not_presented` itself, with why. A data plugin's
+Connection drops its empty **Sessions** until a session is measured, so a
+page check expecting it on a polled plugin no longer finds it.
 
 ### 0.32.0 to 0.32.1 { #0320-to-0321 }
 
