@@ -8,7 +8,7 @@ suite's rates cases. What a rate is, and how it is read, is in
 [Write a data plugin against its suite](write-a-data-plugin.md): this page
 adds what is different for rates.
 
-You need SDK 0.32.3 or later and a deployment on chart 0.1.312 or later,
+You need SDK 0.32.3 or later and a deployment on chart 0.1.311 or later,
 which resolves a subject by its administrator's code and takes the
 licence's attribution terms. `meridian plugin new` on CLI 0.1.52 writes a
 plugin on 0.32.1: move it with `meridian plugin migrate`, which moves only

@@ -513,7 +513,7 @@ Three plugins record [rates](../concepts/rates.md) alone, each subject a
 referential record the platform seeds and the plugin resolves by its
 administrator's code; a record the deployment does not hold is reported
 missing, never minted. Resolving by an administrator's code needs a
-deployment on chart 0.1.312 or later (see
+deployment on chart 0.1.311 or later (see
 [The licence list](../concepts/one-id.md#the-licence-list)).
 
 - **plugin-ny-fed** (`ny-fed`) reads the New York Fed's markets data API:

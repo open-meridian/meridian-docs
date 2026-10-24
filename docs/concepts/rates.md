@@ -47,7 +47,7 @@ named by the administrator's code at its source and, where one exists, a
 FIGI or an ISIN. A deployment resolves one by its administrator's code where
 the platform's [licence list](one-id.md#the-licence-list) names that
 administrator: the New York Fed, the Federal Reserve Board, the ECB and the
-US Treasury, from chart 0.1.312. Core ships the platform's templates for the
+US Treasury, from chart 0.1.311. Core ships the platform's templates for the
 three types, so a record names its template before its first pull. A
 referential record names what the lake observes and is
 **never held**: an entry moving a position in one is refused, `invalid`,

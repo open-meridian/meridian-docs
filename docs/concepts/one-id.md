@@ -208,7 +208,7 @@ the platform seeds, the subjects of [rates](rates.md), resolve by the code
 their publisher states. A person's pull asks by such a code with its
 source too. The conductor hands the list to the instrument store again
 when the store starts after it, so a store restarted later sends by the
-same list. This needs chart 0.1.312 or later.
+same list. This needs chart 0.1.311 or later.
 
 When the list gains a scheme, the deployment **backfills**: each local
 record carrying that scheme is sent, exact matches resolve automatically,
