@@ -33,8 +33,30 @@ backups set up. See [Back up and restore a deployment](back-up-and-restore.md). 
 changes on the way, release by release, is in the
 [release notes](../api/python-sdk.md#release-notes).
 
-!!! note "Upgrading to contract 27"
-    The upgrade to contract 27 (chart 0.1.309 or later) rebuilds each
+!!! note "Upgrading to contract 28"
+    The upgrade to contract 28 (chart 0.1.31x or later) migrates the
+    instrument store (a listed series' terms, and the company records), the
+    conductor (the deployment's settings kept one record each, and starter
+    packs) and the dashboard's notices, each adding to what is held. The
+    book's snapshots change format, so each account's projection is
+    rebuilt from its journal once; the journal is not rewritten. The
+    settings home page gains **Series request rule** (series for an order
+    asked for, standing wants not, 500 a day) and **Stale reference actions
+    permitted** (refuse only); the **Data sources** page its **Age** tab; **Browse** its
+    **Starter packs** view. Plugins keep running as they are: one built on
+    SDK 0.32 registers and sends what it did, and reports no latency until
+    it moves to SDK 0.33.0 (see
+    [Moving a plugin to a new release](../api/python-sdk.md#moving-a-plugin-to-a-new-release)).
+    An `ems` moved to SDK 0.33.0 reads **Stale reference actions permitted**, so
+    a desk whose admin chose **Warn** refuses until a deployment admin
+    permits **Refuse or warn**. The options measures price at the US
+    Treasury's par yield curve, so a deployment running them launches a
+    rates plugin recording it (see [Rates](../concepts/rates.md)). Core
+    serves the filings slice, quality states and the data-use counts in a
+    later chart release on the same contract (see
+    [The lake](../concepts/the-lake.md#not-served-yet)).
+
+    Upgrading from a chart before contract 27 (chart 0.1.309) also rebuilds each
     account's projection from its journal once, as the book's snapshots
     change format, so every lot relieved before it gains its
     [proceeds](../concepts/the-book-of-record.md#a-closed-lots-proceeds);

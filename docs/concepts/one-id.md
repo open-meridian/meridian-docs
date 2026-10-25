@@ -52,6 +52,19 @@ only. They ship with every core release, so a deployment that has never
 reached the platform still names a record's template and what it lacks.
 The conductor pulls newer versions daily and on reconnecting.
 
+From contract 28 the platform also publishes `TPL-listed-option`,
+`TPL-future` and `TPL-future-option`, the
+[listed options and futures](listed-options-and-futures.md) templates, and
+`TPL-commodity`, a commodity future's underlying, a referential record
+nobody holds. Each field of a template states its **requirement**: `mint`,
+needed to mint the record; `complete`, needed before the book takes it; or
+`optional`; and whether it is `repeated`. Each template version's
+calculation package binds its pricing model by term, such as the exercise
+style (`model_bindings`). A version the platform **withdraws** stays
+readable and runnable: new records are minted on its successor
+(`successor_version`), and a record on it moves only by a person's act, a
+change of its own.
+
 ## An `LCL-` record: a local record until the platform answers
 
 The instrument store mints a **provisional** record of its own, under an

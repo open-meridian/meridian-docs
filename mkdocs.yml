@@ -122,12 +122,15 @@ nav:
       - The archive: concepts/the-archive.md
       - Instruments: concepts/instruments.md
       - One ID per instrument: concepts/one-id.md
+      - Listed options and futures: concepts/listed-options-and-futures.md
+      - Companies and corporate actions: concepts/companies-and-corporate-actions.md
       - Event groups: concepts/event-groups.md
       - The lake: concepts/the-lake.md
       - Rates: concepts/rates.md
       - Data age and liveness: concepts/data-age-and-liveness.md
       - Licences and entitlements: concepts/licences-and-entitlements.md
       - The analytics component: concepts/the-analytics-component.md
+      - Scenarios: concepts/scenarios.md
       - Execution costs: concepts/execution-costs.md
       - Money and instruments: concepts/money-and-instruments.md
       - Venues: concepts/venues.md
@@ -164,6 +167,7 @@ nav:
       - Write a data plugin against its suite: how-to/write-a-data-plugin.md
       - Write a pricing plugin: how-to/write-a-pricing-plugin.md
       - Record rates in a data plugin: how-to/record-rates.md
+      - Record and read an option chain: how-to/record-and-read-an-option-chain.md
       - Set staleness thresholds and the stale-reference action: how-to/set-staleness-thresholds.md
       - Set the FX pivot currencies: how-to/set-the-fx-pivot-currencies.md
       - Run a TCA job and read its costs: how-to/read-execution-costs.md

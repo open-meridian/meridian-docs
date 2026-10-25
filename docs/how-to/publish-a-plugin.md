@@ -21,7 +21,7 @@ Signing the tag yourself and running `meridian plugin publish` is the other way,
 
 ## Before you start
 
-- CLI 0.1.52, and git 2.34 or later, which signs tags with SSH keys.
+- CLI 0.1.53, and git 2.34 or later, which signs tags with SSH keys.
 - To release in one command, your GitHub sign-in: `GH_TOKEN` or `GITHUB_TOKEN`, or the credential
   git keeps for github.com (`gh auth setup-git` gives git one). It must be able to read checks on
   the plugin's repository.

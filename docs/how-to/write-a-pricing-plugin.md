@@ -10,9 +10,9 @@ the market objects its model declares, it answers a value per unit, and
 nothing else. The role has a conformance suite, carried by the SDK. This
 page starts one from the template and holds it to the suite.
 
-You need CLI 0.1.52 and SDK 0.32.1 or later (contract 27): `meridian plugin
+You need CLI 0.1.53 and SDK 0.33.0 or later (contract 28): `meridian plugin
 new --role pricing` writes this template on the role's common part, for a
-runtime serving contract 27.
+runtime serving contract 28.
 
 ## Make the plugin
 
@@ -22,7 +22,7 @@ cd my-pricing
 ```
 
 It writes a whole plugin holding `pricing`, pinned to
-`open-meridian==0.32.1`, that answers `quoted_price` batches with the
+`open-meridian==0.33.0`, that answers `quoted_price` batches with the
 built-in model's own computation:
 
 | File | What it is |

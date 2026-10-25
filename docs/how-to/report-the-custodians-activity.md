@@ -9,7 +9,7 @@ as the worked example of a custody plugin. Why activity is evidence and
 never a source, and what operations does with it, is in
 [The custodian's activity](../concepts/the-custodians-activity.md).
 
-You need CLI 0.1.52 and SDK 0.32.1 or later (contract 27). The activity operations,
+You need CLI 0.1.53 and SDK 0.33.0 or later (contract 28). The activity operations,
 `record_activity`, `list_activities`, `list_sync_statuses` and
 `re_resolve_activity`, are `preview` in the contract.
 

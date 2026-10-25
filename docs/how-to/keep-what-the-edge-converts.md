@@ -7,7 +7,7 @@ written from the contract alone reconciles any custodian the same way. This page
 custody plugin does for each, with [plugin-snaptrade](https://github.com/open-meridian/plugin-snaptrade)
 as the worked example.
 
-You need CLI 0.1.52 and SDK 0.32.1 or later (contract 27).
+You need CLI 0.1.53 and SDK 0.33.0 or later (contract 28).
 
 A custody plugin also reports each activity on an account, each with a raw
 record of its own: see [Report the custodian's activity](report-the-custodians-activity.md).

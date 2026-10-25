@@ -10,9 +10,8 @@ adds what is different for rates.
 
 You need SDK 0.32.3 or later and a deployment on chart 0.1.311 or later,
 which resolves a subject by its administrator's code and takes the
-licence's attribution terms. `meridian plugin new` on CLI 0.1.52 writes a
-plugin on 0.32.1: move it with `meridian plugin migrate`, which moves only
-the pins.
+licence's attribution terms. `meridian plugin new` on CLI 0.1.53 writes a
+plugin on SDK 0.33.0, which needs a deployment on contract 28.
 
 ## Declare the dataset
 
@@ -116,8 +115,10 @@ own conversion of its publisher's recorded answer with
 `data.testing.rates_producers`, and name everything a rates-only plugin
 never presents with `data.testing.RATES_NOT_PRESENTED`: the cases about
 prices, trades, quotes and outcomes (among them `an-exact-price` and
-`a-want-recorded-against`, about `closes`), and the feed delay, which is
-`about: latency` until contract 28.
+`a-want-recorded-against`, about `closes`), and, from SDK 0.33.0, the
+chain's, the filings slice's and the quote-quality cases. The feed delay
+is required from contract 28: map `reports-its-feed-delay` with
+`data.testing.feed_delay`, the plugin's `roles.Latency` reporting it.
 
 **A dataset's liveness.** Changed in SDK 0.32.2: `RATES_NOT_PRESENTED` no
 longer names `records-a-datasets-liveness`. A polled plugin recording each

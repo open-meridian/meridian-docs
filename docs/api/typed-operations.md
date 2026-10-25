@@ -15,7 +15,7 @@ The operations are generated, not written by hand. One generator reads the contr
 - the sidecar's side of it;
 - the Python methods on [`Plugin`](python-sdk.md#plugin).
 
-This page lists every operation in SDK 0.32.3, which declares contract 27: holdings ingestion and [the custodian's activity](../concepts/the-custodians-activity.md), the [book of record](../concepts/the-book-of-record.md)'s commands and reads, instrument and venue resolution, [the lake](../concepts/the-lake.md)'s records and reads, [the order path](#the-order-path), [booking](../concepts/booking.md), the [settlement calendars' reads](#settlement-calendars-reads), and the [one-ID model](../concepts/one-id.md)'s reads, [`list_replacements`](#list_replacements), [`list_templates`](#list_templates) and [`read_template`](#read_template), with `reference`'s [`offer_template_fields`](#offer_template_fields); contract 26's [analytics component, event groups, bounded lake query and agents' guard](#contract-v26s-operations); and contract 27's [RFQ quotes, execution costs, rates, liveness and latency](#contract-v27s-operations). A resolve answers whether its record is provisional. The book refuses an entry missing what it requires, `REFUSAL_REASON_INCOMPLETE`, naming each missing field (see [What the book requires](#what-the-book-requires)). A command naming an order, a placement, a change request or a locate by its ID is admitted on the role's grant and held by the book to the plugin's write scope (see [The order lifecycle](../concepts/the-order-lifecycle.md#a-command-naming-a-record-by-its-id)).
+This page lists every operation in SDK 0.33.0, which declares contract 28: holdings ingestion and [the custodian's activity](../concepts/the-custodians-activity.md), the [book of record](../concepts/the-book-of-record.md)'s commands and reads, instrument and venue resolution, [the lake](../concepts/the-lake.md)'s records and reads, [the order path](#the-order-path), [booking](../concepts/booking.md), the [settlement calendars' reads](#settlement-calendars-reads), and the [one-ID model](../concepts/one-id.md)'s reads, [`list_replacements`](#list_replacements), [`list_templates`](#list_templates) and [`read_template`](#read_template), with `reference`'s [`offer_template_fields`](#offer_template_fields); contract 26's [analytics component, event groups, bounded lake query and agents' guard](#contract-v26s-operations); contract 27's [RFQ quotes, execution costs, rates, liveness and latency](#contract-v27s-operations); and contract 28's [listed options and futures, companies and corporate actions, derived series and saved scenarios, the stale-reference actions permitted, and the filings slice and quality states core serves later](#contract-v28s-operations). A resolve answers whether its record is provisional. The book refuses an entry missing what it requires, `REFUSAL_REASON_INCOMPLETE`, naming each missing field (see [What the book requires](#what-the-book-requires)). A command naming an order, a placement, a change request or a locate by its ID is admitted on the role's grant and held by the book to the plugin's write scope (see [The order lifecycle](../concepts/the-order-lifecycle.md#a-command-naming-a-record-by-its-id)).
 
 Three calls every plugin may make are in the Python SDK rather than here: reading the [prepared change](python-sdk.md#prepared) a page was opened from (`ReadPreparedCall`), saving [a person's own settings](python-sdk.md#own_settings) (`SetOwnSettings`), and calling one of the plugin's own acts as the [service account](../concepts/service-accounts.md) its role runs as (`CallAsServiceAccount`, offered as [`meridian.runs_as`](python-sdk.md#runs_as)). Where the dashboard makes such an act, its route is reached with a service account's claims and sends what it sends for a person, `acting_for` the header it received (see [Acting for a person](#acting-for-a-person)); the book records the service account and its owner as the entry's actor.
 
@@ -122,6 +122,33 @@ Three calls every plugin may make are in the Python SDK rather than here: readin
 | [`report_placement_quote`](#report_placement_quote) | `ReportPlacementQuote` | W11.40 Record a quote received on an RFQ placement | command | `connectivity` (added in contract 27) | `ReportPlacementQuoteResult` |
 | [`pick_placement_quote`](#pick_placement_quote) | `PickPlacementQuote` | W11.41 Pick a quote received on an RFQ placement | command | `ems` (added in contract 27) | `PickPlacementQuoteResult` |
 | [`list_execution_costs`](#list_execution_costs) | `ListExecutionCosts` | W10.11 Record and read execution costs | query | `compliance`, `ems`, `oms`, `operations`, `portfolio`, `reporting`, `signal` (added in contract 27) | `ListExecutionCostsResult` |
+| [`record_series`](#record_series) | `RecordSeries` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` (added in contract 28) | `RecordSeriesResult` |
+| [`list_series`](#list_series) | `ListSeries` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `ems`, `oms`, `portfolio`, `signal` (added in contract 28) | `ListSeriesResult` |
+| [`record_statistics`](#record_statistics) | `RecordStatistics` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` (added in contract 28) | `RecordStatisticsResult` |
+| [`list_statistics`](#list_statistics) | `ListStatistics` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `portfolio`, `reporting`, `signal` (added in contract 28) | `ListStatisticsResult` |
+| [`request_series_records`](#request_series_records) | `RequestSeriesRecords` | W3.31 Ask for a listed series' record when it is wanted | command | `ems`, `oms`, `portfolio`, `signal` (added in contract 28) | `RequestSeriesRecordsResult` |
+| [`record_lifecycle_event`](#record_lifecycle_event) | `RecordLifecycleEvent` | W9.16 Book a listed option's or a future's lifecycle event as the broker reports it | command | `connectivity`, `custody` (added in contract 28) | `RecordLifecycleEventResult` |
+| [`propose_lifecycle_events`](#propose_lifecycle_events) | `ProposeLifecycleEvents` | W9.17 Propose the lifecycle events expected | command | `servicing` (added in contract 28) | `ProposeLifecycleEventsResult` |
+| [`release_lifecycle_event`](#release_lifecycle_event) | `ReleaseLifecycleEvent` | W9.18 Release a proposed lifecycle event no report came for | command | `operations` (added in contract 28) | `ReleaseLifecycleEventResult` |
+| [`list_lifecycle_events`](#list_lifecycle_events) | `ListLifecycleEvents` | W9.19 Read lifecycle events, and hear each | query | `operations`, `portfolio`, `reporting`, `servicing` (added in contract 28) | `ListLifecycleEventsResult` |
+| [`resolve_company`](#resolve_company) | `ResolveCompany` | W3.32 Resolve a company, asking the platform on a miss | query | `data` (added in contract 28) | `ResolveCompanyResult` |
+| [`record_corporate_actions`](#record_corporate_actions) | `RecordCorporateActions` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` (added in contract 28) | `RecordCorporateActionsResult` |
+| [`list_corporate_actions`](#list_corporate_actions) | `ListCorporateActions` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `portfolio`, `reporting`, `signal` (added in contract 28) | `ListCorporateActionsResult` |
+| [`record_derived_series`](#record_derived_series) | `RecordDerivedSeries` | W10.4 Record prices, bars, trades and quotes in batches | command | `signal` (added in contract 28) | `RecordDerivedSeriesResult` |
+| [`list_derived_series`](#list_derived_series) | `ListDerivedSeries` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `compliance`, `portfolio`, `reporting`, `signal` (added in contract 28) | `ListDerivedSeriesResult` |
+| [`record_scenarios`](#record_scenarios) | `RecordScenarios` | W12.8 Save a scenario or a scenario set | command | `signal` (added in contract 28) | `RecordScenariosResult` |
+| [`list_scenarios`](#list_scenarios) | `ListScenarios` | W12.8 Save a scenario or a scenario set | query | `compliance`, `portfolio`, `reporting`, `signal` (added in contract 28) | `ListScenariosResult` |
+| [`read_stale_reference_actions_permitted`](#read_stale_reference_actions_permitted) | `ReadStaleReferenceActionsPermitted` | W6.38 Set the stale-reference actions the deployment permits | query | `ems` (added in contract 28) | `ReadStaleReferenceActionsPermittedResult` |
+| [`record_filings`](#record_filings) | `RecordFilings` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` (added in contract 28; served in a later chart release) | `RecordFilingsResult` |
+| [`list_filings`](#list_filings) | `ListFilings` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `portfolio`, `reporting`, `signal` (added in contract 28; served in a later chart release) | `ListFilingsResult` |
+| [`record_reported_facts`](#record_reported_facts) | `RecordReportedFacts` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` (added in contract 28; served in a later chart release) | `RecordReportedFactsResult` |
+| [`list_reported_facts`](#list_reported_facts) | `ListReportedFacts` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `portfolio`, `reporting`, `signal` (added in contract 28; served in a later chart release) | `ListReportedFactsResult` |
+| [`record_holdings_reports`](#record_holdings_reports) | `RecordHoldingsReports` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` (added in contract 28; served in a later chart release) | `RecordHoldingsReportsResult` |
+| [`record_holdings`](#record_holdings) | `RecordHoldings` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` (added in contract 28; served in a later chart release) | `RecordHoldingsResult` |
+| [`list_holdings`](#list_holdings) | `ListHoldings` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `portfolio`, `reporting`, `signal` (added in contract 28; served in a later chart release) | `ListHoldingsResult` |
+| [`record_rating_actions`](#record_rating_actions) | `RecordRatingActions` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` (added in contract 28; served in a later chart release) | `RecordRatingActionsResult` |
+| [`list_rating_actions`](#list_rating_actions) | `ListRatingActions` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `portfolio`, `reporting`, `signal` (added in contract 28; served in a later chart release) | `ListRatingActionsResult` |
+| [`record_quality_assessments`](#record_quality_assessments) | `RecordQualityAssessments` | W10.12 Escalate a row's quality | command | `signal` (added in contract 28; served in a later chart release) | `RecordQualityAssessmentsResult` |
 
 **Role** is the plugin role that publishes the step, or the roles that may ask the query, from the contract's matrix. A plugin can call an operation only if it holds one of them, approved when it was launched. Otherwise the call raises `NotGranted`. See [Plugins, roles and grants](../concepts/plugins.md) and [Plugin manifest](plugin-manifest.md).
 
@@ -2229,7 +2256,8 @@ Answers the order at proposed, or for a child at released.
 | `order_type`, `limit_price`, `stop_price` | Its type, its limit and a stop's trigger, each a `Money` where given |
 | `time_in_force`, `expire_date`, `expire_time_ns` | Its time in force, and a good-till-date's date or a good-till-time's time |
 | `sleeve` | The part of the account it is for; empty for the unsleeved part |
-| `dealt_currency`, `legs` | On a pair, the dealt currency's cash instrument; legs, each an instrument, a side and a ratio |
+| `dealt_currency`, `legs` | On a pair, the dealt currency's cash instrument; legs, each an instrument, a side and a ratio. Changed in contract 28: a [package](../concepts/listed-options-and-futures.md#package-orders) names no top-level instrument and 2 to 16 legs, the ratios whole and in lowest terms, at most one leg in no option or future, no leg in an expired series or one with no `INS-` record; its quantity is package units and its limit one net price per unit, positive a debit |
+| `position_effect` | Added in contract 28. `open` or `close`, required on an order or a leg in an option or a future, refused on any other |
 | `quote_currency` | Added in contract 23. On a pair: the quote currency's cash instrument, the pair's second currency as quoted. One naming the order's own instrument is refused `invalid` naming it; a limit or stop in another currency, naming `limit_price` or `stop_price` |
 | `allocation_instruction` | The accounts and amounts or weights it is for; none for the whole in its own account. A child carries none |
 | `execution_instructions`, `lot_relief_method`, `relieve_lot_ids`, `capacity` | The `oms`'s: the standard execution instructions, how a sale relieves lots or the lots it names, and capacity |
@@ -2370,6 +2398,7 @@ A connectivity plugin reports an execution of a placement; the `ems` or the
 | `counterparty`, `liquidity_indicator`, `venue_id` | The counterparty where known, maker or taker, and the place of execution |
 | `uti`, `uti_generated_by`, `prior_uti`, `upi`, `given_up_to`, `trade_chain_reference`, `settlement_counterparty` | Fields recorded for reporting, as the venue states them |
 | `cross_rate_source` | Added in contract 27. On an internal cross of a [net order](../concepts/fx-netting.md), which convention set its rate: `net_street_rate` or `mid_at_netting`. A cross on an order that is no net, or one with none, is refused `invalid` naming the field |
+| `multi_leg_reporting_type`, `package_execution_id` | Added in contract 28. A package's fill: `package` for the package's own execution, which books nothing, and `leg` for each leg's, naming the package's (FIX 442). A leg's fill names its package execution, and nothing else names one |
 | `instrument_id`, `side`, `venue_order_id`, `venue_client_order_id` | Added in contract 23. A fill on no placement the venue originated: its instrument, side and the venue's order ID, each required on such a fill and refused `invalid` naming it without, and the venue's client order ID where sent. Recorded unmatched |
 | `raw_record`, `idempotency_key`, `acting_for` | As above |
 
@@ -3162,12 +3191,10 @@ is refused, naming it. `Wants.liveness(key)` sends one.
 A data, connectivity or `ems` plugin's latency: its sessions' histograms
 and its hops' data age, every 10 seconds.
 
-!!! note "Recorded, not yet reported"
-    Core receives `ReportLatency` from contract 28. SDK 0.32 records
-    latency and sends nothing: `roles.Latency.report()` takes and resets
-    its snapshots and drops them, keeping what a connection page's
-    **Sessions** section shows. No component serves `report_latency` in
-    a contract-27 deployment: leave it to the SDK.
+Changed in contract 28: core's latency monitor receives it, and from SDK
+0.33.0 `roles.Latency.report()` sends it; in SDK 0.32 it sent nothing. A
+contract-27 deployment serves no `report_latency`. See
+[Data age and liveness](../concepts/data-age-and-liveness.md#latency).
 
 ```python
 async def report_latency(
@@ -3181,12 +3208,17 @@ async def report_latency(
 | Workflow step | W4.16, Report a session's latency and a hop's data age |
 | Kind | command, on `platform.deployment.command.report-latency` |
 | Role | `data`, `connectivity`, `ems` |
-| Served by | core's latency monitor, from contract 28 |
+| Served by | core's latency monitor, in the dashboard, from contract 28 |
 
 | Parameter | Meaning |
 |---|---|
 | `snapshots` | 1 to 500 `LatencySnapshot`s, each one session's or one hop's histograms over the interval, its counters and the ceilings in force |
 | `acting_for` | As above |
+
+**Returns** `ReportLatencyResult`. A snapshot naming neither a session nor
+a dataset, or both, or whose buckets do not sum to its total, refuses the
+call whole, naming the snapshot. Measurements, not records: nothing is
+journalled.
 
 ### `report_placement_quote` { #report_placement_quote }
 
@@ -3296,6 +3328,859 @@ async def list_execution_costs(
 and `next_cursor`. The lake's first account-scoped row: a reader reads
 only the accounts its read scope holds. What each row says is in
 [Execution costs](../concepts/execution-costs.md#a-row).
+
+## Contract 28's operations { #contract-v28s-operations }
+
+Added in SDK 0.33.0 (contract 28). Every one is `preview`. They serve
+[listed options and futures](../concepts/listed-options-and-futures.md)
+(a chain's series and statistics, a series asked for, and the lifecycle
+events in the book), [companies and corporate actions](../concepts/companies-and-corporate-actions.md),
+a signal's [derived series](../concepts/the-lake.md#derived-series) and
+[saved scenarios](../concepts/scenarios.md), and an `ems`'s read of the
+[stale-reference actions permitted](../concepts/data-age-and-liveness.md#what-a-deployment-admin-permits).
+Ten more, the filings slice and quality states, are in the contract and
+served by core in a later chart release (see
+[The lake: what core does not serve yet](../concepts/the-lake.md#not-served-yet)).
+The Python SDK wraps them in `meridian.roles.chains`, `.lifecycle`,
+`.packages`, `.signal`, `.data.filings` and `.data.quality` (see
+[Contract 28's helpers](python-sdk.md#contract-28s-helpers)). Four events
+come with them, heard through [`receive`](python-sdk.md#receive):
+`statistics_recorded` (`portfolio`, `reporting`, `signal`),
+`corporate_actions_recorded` and `filings_recorded` (`reporting`,
+`signal`) and `lifecycle_event_recorded` (`operations`, `servicing`,
+`portfolio`, `reporting`).
+
+**`SubjectRef` carries its role.** Changed in contract 28: a row's subject
+may name its role (`subject`, `holder`, `held`, `issuer`,
+`reporting_owner`, `filer`, `underlying`, `rater`), and a read naming a
+subject in a role answers only rows naming it so. From SDK 0.33.0 every
+typed operation takes `meridian.SubjectRef`, the SDK's own, and refuses the
+wire's.
+
+Contract 28 also changes operations listed above:
+[`propose_order`](#propose_order) takes a package's legs with their
+`position_effect`, and an order's own; [`report_execution`](#report_execution)
+a package's fill and each leg's, linked (`multi_leg_reporting_type`,
+`package_execution_id`); [`record_trades`](#record_trades) a trade's
+`quote_at_trade`; [`list_trades`](#list_trades) and
+[`list_quotes`](#list_quotes) a chain's rows, only when asked for by
+`series_keys` or `all_series`; every row's envelope its `series_key`, and
+its `quality` and `quality_reasons` (not yet acted on by core); a
+`SourceChoice` `include_quarantined` (likewise); [`run_job`](#run_job) a
+job's `chains`, `scenario_set` and `scenario_ref`, and a figure's
+`series_key`; [`list_templates`](#list_templates) and
+[`read_template`](#read_template) each field's `requirement` and
+`repeated`, a package's `model_bindings`, and a version's `withdrawn` and
+`successor_version`; [`resolve_instrument`](#resolve_instrument) a listed
+series' terms (`InstrumentRecord.listed_option`, `.future`); and a data
+plugin's catalogue licence its `eligibility`.
+
+
+### `record_series` { #record_series }
+
+A data plugin records an underlying's listed series, each as its template's fields. Recording a series mints nothing. See [The chain](../concepts/listed-options-and-futures.md#the-chain-read-never-minted).
+
+```python
+async def record_series(
+    self, *, series: Sequence[ListedSeries] = (), want_id: str = "",
+    acting_for: str | None = None,
+) -> RecordSeriesResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc RecordSeries(RecordSeriesParams) returns (RecordSeriesResult)` |
+| Workflow step | W10.4, Record prices, bars, trades and quotes in batches |
+| Kind | command, on `platform.lake.command.record-series` |
+| Role | `data` |
+| Served by | the lake |
+
+| Parameter | Meaning |
+|---|---|
+| `series` | 1 to 500 `ListedSeries`: each its `meta`, the underlying as its subject and the series' key (`series_key`: `occ_osi` and the OSI symbol, or one `ticker` with its venue's MIC in `source`); its `template_id` and `template_version`, the `listed_option`, `future` or `future_option` template's; and its `fields`, each by its template path. `instrument_id` is the lake's to fill on a read, never a writer's |
+| `want_id`, `acting_for` | As above |
+
+**Returns** `RecordSeriesResult`, as [`record_prices`](#record_prices) answers: `recorded`, `restated`, `unchanged` and the dataset's `watermark`. A row missing what it requires is refused `invalid`, naming `series[i]` and the field, and the batch is recorded whole or not at all. An adjustment is the next version of the series' row key. A series is never published as an event.
+
+### `list_series` { #list_series }
+
+Reads an underlying's listed series at the as-of, narrowed by type, expiration window and key, each with the deployment's `INS-` record where one is held, matched read-only and never minted.
+
+```python
+async def list_series(
+    self, *, subjects: Sequence[SubjectRef] = (),
+    instrument_type: InstrumentType | str | None = None, expiration_from: date | str = "",
+    expiration_to: date | str = "", series_keys: Sequence[Identifier] = (),
+    sources: SourceChoice | None = None, as_of_ns: int = 0, page_size: int = 0,
+    cursor: str = "",
+) -> ListSeriesResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc ListSeries(ListSeriesParams) returns (ListSeriesResult)` |
+| Workflow step | W10.6, Read prices, bars, trades and quotes, point in time, by source |
+| Kind | query, on `platform.lake.query.list-series` |
+| Role | `ems`, `oms`, `portfolio`, `signal` |
+| Served by | the lake |
+
+| Parameter | Meaning |
+|---|---|
+| `subjects` | 1 to 64 underlyings, each its `INS-` record |
+| `instrument_type` | `listed_option`, `future` or `future_option`; unset for every listed type |
+| `expiration_from`, `expiration_to` | Plain dates; empty for no bound |
+| `series_keys` | Up to 500 series' keys, each answered where it is listed under the subjects asked |
+| `sources` | A [`SourceChoice`](#sourcechoice); none set is the deployment's source priority |
+| `as_of_ns` | The recorded-time cut-off; 0 for now |
+| `page_size`, `cursor` | Up to 500 a page, 100 when 0; the `next_cursor` of the page before |
+
+**Returns** `ListSeriesResult`: `series`, the rows, each naming its dataset; `unanswered`, each an [`Unanswered`](#unanswered); `datasets`; the `watermark`; and `next_cursor`. Each page is filled after the type and the window are applied. `meridian.roles.chains.read_chain` reads every page.
+
+### `record_statistics` { #record_statistics }
+
+A data plugin records a count for a trading date: a series' open interest, volume or block volume, or a share's short and total volume reported to a FINRA facility.
+
+```python
+async def record_statistics(
+    self, *, statistics: Sequence[Statistic] = (), want_id: str = "",
+    acting_for: str | None = None,
+) -> RecordStatisticsResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc RecordStatistics(RecordStatisticsParams) returns (RecordStatisticsResult)` |
+| Workflow step | W10.4, Record prices, bars, trades and quotes in batches |
+| Kind | command, on `platform.lake.command.record-statistics` |
+| Role | `data` |
+| Served by | the lake |
+
+| Parameter | Meaning |
+|---|---|
+| `statistics` | 1 to 500 `Statistic`s: each its `meta` (its subject, the contract's record or the underlying with the series' key, and its `business_date`, the trading date it is for, required), its `kind` (`open_interest`, `volume`, `block_volume`, `short_volume`, `total_volume`) and its `value`, a `UnitValue` in contracts or shares, never negative |
+| `want_id`, `acting_for` | As above |
+
+**Returns** `RecordStatisticsResult`, as [`record_prices`](#record_prices) answers: `recorded`, `restated`, `unchanged` and the dataset's `watermark`. A row missing what it requires is refused `invalid`, naming `statistics[i]` and the field, and the batch is recorded whole or not at all. Heard as `statistics_recorded` by `portfolio`, `reporting` and `signal`, conflated per subject, series key, kind and date.
+
+### `list_statistics` { #list_statistics }
+
+Reads statistics by kind, for a trading date or a range, an underlying's own or its chain's.
+
+```python
+async def list_statistics(
+    self, *, subjects: Sequence[SubjectRef] = (), kinds: Sequence[StatisticKind | str] = (),
+    business_date: date | str = "", from_date: date | str = "", to_date: date | str = "",
+    series_keys: Sequence[Identifier] = (), all_series: bool = False,
+    sources: SourceChoice | None = None, as_of_ns: int = 0, page_size: int = 0,
+    cursor: str = "",
+) -> ListStatisticsResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc ListStatistics(ListStatisticsParams) returns (ListStatisticsResult)` |
+| Workflow step | W10.6, Read prices, bars, trades and quotes, point in time, by source |
+| Kind | query, on `platform.lake.query.list-statistics` |
+| Role | `portfolio`, `reporting`, `signal` |
+| Served by | the lake |
+
+| Parameter | Meaning |
+|---|---|
+| `subjects` | 1 to 64 `INS-` records; with `series_keys` or `all_series`, an underlying's chain |
+| `kinds` | Narrow to these kinds; none reads every one |
+| `business_date`, or `from_date` and `to_date` | One trading date, the latest each subject has where none is named; or a range, refused beside `business_date` |
+| `series_keys`, `all_series` | Rows keyed by these series, or by any series of the underlying; neither leaves every series' rows out, so a reader of an underlying never receives its chain |
+| `sources` | A [`SourceChoice`](#sourcechoice); none set is the deployment's source priority |
+| `as_of_ns` | The recorded-time cut-off; 0 for now |
+| `page_size`, `cursor` | Up to 500 a page, 100 when 0; the `next_cursor` of the page before |
+
+**Returns** `ListStatisticsResult`: `statistics`, the rows, each naming its dataset; `unanswered`, each an [`Unanswered`](#unanswered); `datasets`; the `watermark`; and `next_cursor`. `meridian.roles.chains.read_open_interest` reads a chain's open interest for a date.
+
+### `request_series_records` { #request_series_records }
+
+Asks for the `INS-` record of a listed series the deployment does not hold, when an order or a standing want needs it, under the deployment's series request rule. See [A series gets its record when it is wanted](../concepts/listed-options-and-futures.md#a-series-gets-its-record-when-it-is-wanted).
+
+```python
+async def request_series_records(
+    self, *, series: Sequence[SeriesWant] = (), note: str = "", acting_for: str | None = None,
+) -> RequestSeriesRecordsResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc RequestSeriesRecords(RequestSeriesRecordsParams) returns (RequestSeriesRecordsResult)` |
+| Workflow step | W3.31, Ask for a listed series' record when it is wanted |
+| Kind | command, on `platform.reference.command.request-series-records` |
+| Role | `ems`, `oms`, `portfolio`, `signal` |
+| Served by | the instrument store |
+
+| Parameter | Meaning |
+|---|---|
+| `series` | 1 to 500 `SeriesWant`s: each its `series_key`, its `underlying_instrument_id` (the `INS-` record its chain rows name) and its `cause`, `order` or `standing` |
+| `note` | Why, kept on the request's record; required when sent for a person |
+| `acting_for` | As above |
+
+**Returns** `RequestSeriesRecordsResult`: `answers`, one per series asked, in order, each its `series_key` and its `instrument_id` where held, matched or minted; `pending_review` where the platform's staff review it, asked again daily; or `refused_by_rule` where the rule does not allow its cause or the day's limit is reached, nothing sent. A key no chain row holds is refused `invalid`, naming `series[n].series_key`. Each request the rule refuses is its own record. `meridian.roles.chains.want_series` asks for one.
+
+### `record_lifecycle_event` { #record_lifecycle_event }
+
+A custody or connectivity plugin books a listed option's or a future's lifecycle event as its broker reports it: an exercise, an assignment, an expiry or a day's settlement variation. See [Lifecycle events in the book](../concepts/listed-options-and-futures.md#lifecycle-events-in-the-book).
+
+```python
+async def record_lifecycle_event(
+    self, *, event: LifecycleEvent | None = None, idempotency_key: str = "",
+    acting_for: str | None = None,
+) -> RecordLifecycleEventResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc RecordLifecycleEvent(RecordLifecycleEventParams) returns (RecordLifecycleEventResult)` |
+| Workflow step | W9.16, Book a listed option's or a future's lifecycle event as the broker reports it |
+| Kind | command, on `platform.book.command.record-lifecycle-event` |
+| Role | `connectivity`, `custody` |
+| Served by | the book |
+
+| Parameter | Meaning |
+|---|---|
+| `event` | A `LifecycleEvent`: its `account_id`; its `instrument_id`, a `listed_option`, `future_option` or `future` record; its `kind` (`exercise`, `assignment`, `expiry`, `settlement_variation`); its `quantity`, the contracts, or on a variation those held at the settlement; its `event_date`; its `deliveries`, each an instrument, a signed quantity (positive received) and its price; its `cash`, signed, positive received; its `settlement_price` for a variation or a cash settlement; its `external_event_id` as the broker states it; and its `raw_record` |
+| `idempotency_key`, `acting_for` | As above |
+
+**Returns** `RecordLifecycleEventResult`: the `event`, its `LCE-` `event_id`, its state and the proposal it answered where it matched one. A report sent twice is answered with the first. Refused naming the field: an instrument that is no listed option or future, an exercise, assignment or expiry on a future, a variation on an option, more contracts than held, a variation with no settlement price or cash. Heard as `lifecycle_event_recorded`. `meridian.roles.lifecycle.report` sends one.
+
+### `propose_lifecycle_events` { #propose_lifecycle_events }
+
+`servicing` proposes the lifecycle events it expects, such as an exercise by exception at expiration. A proposal moves nothing.
+
+```python
+async def propose_lifecycle_events(
+    self, *, events: Sequence[LifecycleEvent] = (), acting_for: str | None = None,
+) -> ProposeLifecycleEventsResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc ProposeLifecycleEvents(ProposeLifecycleEventsParams) returns (ProposeLifecycleEventsResult)` |
+| Workflow step | W9.17, Propose the lifecycle events expected |
+| Kind | command, on `platform.book.command.propose-lifecycle-events` |
+| Role | `servicing` |
+| Served by | the book |
+
+| Parameter | Meaning |
+|---|---|
+| `events` | 1 to 500 `LifecycleEvent`s, each in its account, as `record_lifecycle_event` takes them, with its `proposal_basis` (the underlying's close, or the settlement price) |
+| `acting_for` | As above |
+
+**Returns** `ProposeLifecycleEventsResult`: `events`, one per event proposed, in order, each its `event_id` and state `proposed`. A report matching one by account, instrument, kind and date answers it, and it is never booked as well. `meridian.roles.lifecycle.propose` sends them.
+
+### `release_lifecycle_event` { #release_lifecycle_event }
+
+`operations` releases a proposed lifecycle event no report answered, and the book books it as proposed.
+
+```python
+async def release_lifecycle_event(
+    self, *, event_id: str = "", note: str = "", acting_for: str | None = None,
+) -> ReleaseLifecycleEventResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc ReleaseLifecycleEvent(ReleaseLifecycleEventParams) returns (ReleaseLifecycleEventResult)` |
+| Workflow step | W9.18, Release a proposed lifecycle event no report came for |
+| Kind | command, on `platform.book.command.release-lifecycle-event` |
+| Role | `operations` |
+| Served by | the book |
+
+| Parameter | Meaning |
+|---|---|
+| `event_id` | The proposal, among the sender's accounts |
+| `note` | Why, 1 to 2,000 characters, kept on the release's entry; none is refused `REFUSAL_REASON_REASON_REQUIRED` |
+| `acting_for` | As above |
+
+**Returns** `ReleaseLifecycleEventResult`: the `event`, booked. `meridian.roles.lifecycle.due_for_release` says when one may be released.
+
+### `list_lifecycle_events` { #list_lifecycle_events }
+
+Reads an account's lifecycle events, in the account's sequence.
+
+```python
+async def list_lifecycle_events(
+    self, *, account_id: str = "", instrument_id: str = "",
+    kinds: Sequence[LifecycleEventKind | str] = (), from_date: date | str = "",
+    to_date: date | str = "", since: Watermark | None = None, page_size: int = 0,
+    cursor: str = "",
+) -> ListLifecycleEventsResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc ListLifecycleEvents(ListLifecycleEventsParams) returns (ListLifecycleEventsResult)` |
+| Workflow step | W9.19, Read lifecycle events, and hear each |
+| Kind | query, on `platform.book.query.list-lifecycle-events` |
+| Role | `operations`, `portfolio`, `reporting`, `servicing` |
+| Served by | the book |
+
+| Parameter | Meaning |
+|---|---|
+| `account_id` | An account in the reader's scope |
+| `instrument_id`, `kinds` | Narrow to one instrument and to these kinds |
+| `from_date`, `to_date` | Plain dates on `event_date`; empty from the account's opening balance and to today |
+| `since` | A watermark: events whose last change is after it |
+| `page_size`, `cursor` | Up to 500 a page, 100 when 0; the `next_cursor` of the page before |
+
+**Returns** `ListLifecycleEventsResult`: `events`, each with its state; `as_of`, the head of each partition the read saw; and `next_cursor`. `meridian.roles.lifecycle.read_events` reads every page.
+
+
+### `resolve_company` { #resolve_company }
+
+A data plugin resolves a company to its `ENT-` record: by its ID, or by a CIK or an LEI as of a date. A miss by identifiers asks the platform. See [Companies and corporate actions](../concepts/companies-and-corporate-actions.md#the-company-kind).
+
+```python
+async def resolve_company(
+    self, *, company_id: str = "", identifiers: Sequence[Identifier] = (), as_of_ns: int = 0,
+) -> ResolveCompanyResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc ResolveCompany(ResolveCompanyParams) returns (ResolveCompanyResult)` |
+| Workflow step | W3.32, Resolve a company, asking the platform on a miss |
+| Kind | query, on `platform.reference.query.resolve-company` |
+| Role | `data` |
+| Served by | the instrument store |
+
+| Parameter | Meaning |
+|---|---|
+| `company_id` | Its `ENT-` ID; empty where `identifiers` name it |
+| `identifiers` | Up to 4: a `cik` or an `lei`, against each identifier's validity window |
+| `as_of_ns` | The moment the identifiers are read at; 0 for now |
+
+**Returns** `ResolveCompanyResult`: the `company_id`, its current `name`, its `identifiers` with their windows, its `former_names` and its `version`. Two companies named at once are refused. A company the platform queues for its staff, or a platform not reached, leaves a miss refused naming `identifiers`, nothing kept. `meridian.roles.data.filings.Companies` resolves a filer once.
+
+### `record_corporate_actions` { #record_corporate_actions }
+
+A data plugin records a company's declared corporate actions; in contract 28, a cash dividend. See [Corporate actions](../concepts/companies-and-corporate-actions.md#corporate-actions).
+
+```python
+async def record_corporate_actions(
+    self, *, actions: Sequence[CorporateActionAnnounced] = (), want_id: str = "",
+    acting_for: str | None = None,
+) -> RecordCorporateActionsResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc RecordCorporateActions(RecordCorporateActionsParams) returns (RecordCorporateActionsResult)` |
+| Workflow step | W10.4, Record prices, bars, trades and quotes in batches |
+| Kind | command, on `platform.lake.command.record-corporate-actions` |
+| Role | `data` |
+| Served by | the lake |
+
+| Parameter | Meaning |
+|---|---|
+| `actions` | 1 to 500 `CorporateActionAnnounced` rows: each its `meta`, the security as a subject and its issuer as a company in the `issuer` role; its `kind`, `cash_dividend`; its `amount_per_share`, a `Money`; its `declared_date`, `ex_date`, `record_date` and `payment_date`, each required, a plain date; its `rule`; and its `filing` where given |
+| `want_id`, `acting_for` | As above |
+
+**Returns** `RecordCorporateActionsResult`, as [`record_prices`](#record_prices) answers: `recorded`, `restated`, `unchanged` and the dataset's `watermark`. A row missing what it requires is refused `invalid`, naming `actions[i]` and the field, and the batch is recorded whole or not at all. A correction is the next version of its row key. Heard as `corporate_actions_recorded`, every version, never conflated.
+
+### `list_corporate_actions` { #list_corporate_actions }
+
+Reads corporate actions by subject, kind and a range of the kind's date (a cash dividend's ex-date), point in time; or every version recorded after a watermark.
+
+```python
+async def list_corporate_actions(
+    self, *, subjects: Sequence[SubjectRef] = (), from_date: date | str = "",
+    to_date: date | str = "", kinds: Sequence[CorporateActionKind | str] = (),
+    published_as_of_ns: int = 0, sources: SourceChoice | None = None, as_of_ns: int = 0,
+    page_size: int = 0, cursor: str = "", after_watermark: Watermark | None = None,
+) -> ListCorporateActionsResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc ListCorporateActions(ListCorporateActionsParams) returns (ListCorporateActionsResult)` |
+| Workflow step | W10.6, Read prices, bars, trades and quotes, point in time, by source |
+| Kind | query, on `platform.lake.query.list-corporate-actions` |
+| Role | `portfolio`, `reporting`, `signal` |
+| Served by | the lake |
+
+| Parameter | Meaning |
+|---|---|
+| `subjects` | 1 to 64 companies or instruments, each with the role it must hold on the row where given |
+| `from_date`, `to_date`, `kinds` | A range of the kind's date, and the kinds; none reads every one |
+| `published_as_of_ns` | The version in force by published time, among rows recorded by the cut-off |
+| `after_watermark` | Every version each dataset recorded after the watermark the reader last saw, whatever its dates |
+| `sources` | A [`SourceChoice`](#sourcechoice); none set is the deployment's source priority |
+| `as_of_ns` | The recorded-time cut-off; 0 for now |
+| `page_size`, `cursor` | Up to 500 a page, 100 when 0; the `next_cursor` of the page before |
+
+**Returns** `ListCorporateActionsResult`: `actions`, the rows, each naming its dataset; `unanswered`, each an [`Unanswered`](#unanswered); `datasets`; the `watermark`; and `next_cursor`.
+
+
+### `record_derived_series` { #record_derived_series }
+
+A signal plugin records what it computed from the lake into its own derived dataset. See [Derived series](../concepts/the-lake.md#derived-series).
+
+```python
+async def record_derived_series(
+    self, *, values: Sequence[DerivedSeries] = (), acting_for: str | None = None,
+) -> RecordDerivedSeriesResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc RecordDerivedSeries(RecordDerivedSeriesParams) returns (RecordDerivedSeriesResult)` |
+| Workflow step | W10.4, Record prices, bars, trades and quotes in batches |
+| Kind | command, on `platform.lake.command.record-derived-series` |
+| Role | `signal` |
+| Served by | the lake |
+
+| Parameter | Meaning |
+|---|---|
+| `values` | 1 to 500 `DerivedSeries`: each its `meta` (its subject, its own dataset and its `business_date`, required), its `series` name, its `value`, a `UnitValue`, its `rule` (a definition and version) and its `inputs`, each dataset read with the as-of it read at |
+| `acting_for` | As above |
+
+**Returns** `RecordDerivedSeriesResult`, as [`record_prices`](#record_prices) answers: `recorded`, `restated`, `unchanged` and the dataset's `watermark`. A row missing what it requires is refused `invalid`, naming `values[i]` and the field, and the batch is recorded whole or not at all. Its latest per series is kept. Never published as an event. `meridian.roles.signal.derived` builds one.
+
+### `list_derived_series` { #list_derived_series }
+
+Reads derived series by subject and name, over a range of business dates, every readable derived dataset side by side.
+
+```python
+async def list_derived_series(
+    self, *, subjects: Sequence[SubjectRef] = (), series: Sequence[str] = (),
+    from_date: date | str = "", to_date: date | str = "",
+) -> ListDerivedSeriesResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc ListDerivedSeries(ListDerivedSeriesParams) returns (ListDerivedSeriesResult)` |
+| Workflow step | W10.6, Read prices, bars, trades and quotes, point in time, by source |
+| Kind | query, on `platform.lake.query.list-derived-series` |
+| Role | `compliance`, `portfolio`, `reporting`, `signal` |
+| Served by | the lake |
+
+| Parameter | Meaning |
+|---|---|
+| `subjects` | 1 to 64 `INS-` records |
+| `series` | The series' names; none reads every one |
+| `from_date`, `to_date` | Plain dates; empty for no bound |
+
+**Returns** `ListDerivedSeriesResult`: `values`, each naming its rule and inputs. `meridian.roles.signal.read_derived` reads them.
+
+### `record_scenarios` { #record_scenarios }
+
+A signal plugin saves a scenario, or a scenario set's axes, as a row of its own dataset under its row key. See [Scenarios](../concepts/scenarios.md).
+
+```python
+async def record_scenarios(
+    self, *, scenarios: Sequence[SavedScenario] = (), acting_for: str | None = None,
+) -> RecordScenariosResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc RecordScenarios(RecordScenariosParams) returns (RecordScenariosResult)` |
+| Workflow step | W12.8, Save a scenario or a scenario set |
+| Kind | command, on `platform.lake.command.record-scenarios` |
+| Role | `signal` |
+| Served by | the lake |
+
+| Parameter | Meaning |
+|---|---|
+| `scenarios` | 1 to 50 `SavedScenario`s: each its `meta` (its row key, its own dataset, no subjects), and one `scenario` or one `scenario_set` (1 to 4 axes of 1 to 32 steps), with its `description` |
+| `acting_for` | As above |
+
+**Returns** `RecordScenariosResult`, as [`record_prices`](#record_prices) answers: `recorded`, `restated`, `unchanged` and the dataset's `watermark`. A row missing what it requires is refused `invalid`, naming `scenarios[i]` and the field, and the batch is recorded whole or not at all. Saving a row key again is its next version. A shock whose form does not fit its object, with no unit, or naming both a subject and `every`, is refused naming it.
+
+### `list_scenarios` { #list_scenarios }
+
+Reads saved scenarios by row key, each at its latest or the version asked.
+
+```python
+async def list_scenarios(
+    self, *, row_keys: Sequence[str] = (), version: int = 0,
+) -> ListScenariosResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc ListScenarios(ListScenariosParams) returns (ListScenariosResult)` |
+| Workflow step | W12.8, Save a scenario or a scenario set |
+| Kind | query, on `platform.lake.query.list-scenarios` |
+| Role | `compliance`, `portfolio`, `reporting`, `signal` |
+| Served by | the lake |
+
+| Parameter | Meaning |
+|---|---|
+| `row_keys` | Their row keys; none reads every saved scenario |
+| `version` | With one row key, that version; 0 for the latest |
+
+**Returns** `ListScenariosResult`: `scenarios`, each at the version asked. A job names one by its row key and version (`Job.scenario_ref`).
+
+
+### `read_stale_reference_actions_permitted` { #read_stale_reference_actions_permitted }
+
+An `ems` reads whether the deployment permits **Warn** beside **Refuse** for a stale reference price, at its own role, with no person. See [What a deployment admin permits](../concepts/data-age-and-liveness.md#what-a-deployment-admin-permits).
+
+```python
+async def read_stale_reference_actions_permitted(self) -> ReadStaleReferenceActionsPermittedResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc ReadStaleReferenceActionsPermitted(ReadStaleReferenceActionsPermittedParams) returns (ReadStaleReferenceActionsPermittedResult)` |
+| Workflow step | W6.38, Set the stale-reference actions the deployment permits |
+| Kind | query, on `platform.config.query.read-stale-reference-actions-permitted` |
+| Role | `ems` |
+| Served by | the conductor |
+
+**Returns** `ReadStaleReferenceActionsPermittedResult`: `warn_permitted` (`false`, refuse only, by default, when a plugin admin's **Warn** is read as **Refuse**), and `changed_at_ns` and `changed_by` of the last change. `meridian.roles.ems.ReferenceCheck.permitted` reads it.
+
+
+### `record_filings` { #record_filings }
+
+A data plugin records filings: each its filer and the subjects it is about, each in its role, its accession number, form, kind, filing date and items (an 8-K's 2.02 among them).
+
+!!! note "Not served yet"
+    Core serves this operation in a later chart release on contract 28.
+    Until then a deployment answers it `UNAVAILABLE`, nothing serving it,
+    which the SDK raises as `CallFailed`, `kind="no handler"`. See
+    [The lake: what core does not serve yet](../concepts/the-lake.md#not-served-yet).
+
+```python
+async def record_filings(
+    self, *, filings: Sequence[Filing] = (), want_id: str = "", acting_for: str | None = None,
+) -> RecordFilingsResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc RecordFilings(RecordFilingsParams) returns (RecordFilingsResult)` |
+| Workflow step | W10.4, Record prices, bars, trades and quotes in batches |
+| Kind | command, on `platform.lake.command.record-filings` |
+| Role | `data` |
+| Served by | the lake, in a later chart release |
+
+| Parameter | Meaning |
+|---|---|
+| `filings` | 1 to 500 rows, each with its `meta` and subjects in their roles |
+| `want_id`, `acting_for` | As above |
+
+**Returns** `RecordFilingsResult`, as [`record_prices`](#record_prices) answers: `recorded`, `restated`, `unchanged` and the dataset's `watermark`. A row missing what it requires is refused `invalid`, naming `filings[i]` and the field, and the batch is recorded whole or not at all.
+
+### `list_filings` { #list_filings }
+
+Reads filings by subject, kind and filing date, point in time, or every version recorded after a watermark.
+
+!!! note "Not served yet"
+    Core serves this operation in a later chart release on contract 28.
+    Until then a deployment answers it `UNAVAILABLE`, nothing serving it,
+    which the SDK raises as `CallFailed`, `kind="no handler"`. See
+    [The lake: what core does not serve yet](../concepts/the-lake.md#not-served-yet).
+
+```python
+async def list_filings(
+    self, *, subjects: Sequence[SubjectRef] = (), from_date: date | str = "",
+    to_date: date | str = "", kinds: Sequence[FilingKind | str] = (),
+    published_as_of_ns: int = 0, sources: SourceChoice | None = None, as_of_ns: int = 0,
+    page_size: int = 0, cursor: str = "", after_watermark: Watermark | None = None,
+) -> ListFilingsResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc ListFilings(ListFilingsParams) returns (ListFilingsResult)` |
+| Workflow step | W10.6, Read prices, bars, trades and quotes, point in time, by source |
+| Kind | query, on `platform.lake.query.list-filings` |
+| Role | `portfolio`, `reporting`, `signal` |
+| Served by | the lake, in a later chart release |
+
+| Parameter | Meaning |
+|---|---|
+| `subjects` | 1 to 64 companies or instruments, each with the role it must hold on the row where given |
+| `from_date`, `to_date`, `kinds` | A range of dates and the kinds; none reads every one |
+| `published_as_of_ns` | The version in force by published time |
+| `after_watermark` | Every version recorded after the watermark the reader last saw |
+| `sources` | A [`SourceChoice`](#sourcechoice); none set is the deployment's source priority |
+| `as_of_ns` | The recorded-time cut-off; 0 for now |
+| `page_size`, `cursor` | Up to 500 a page, 100 when 0; the `next_cursor` of the page before |
+
+**Returns** `ListFilingsResult`: `filings`, the rows, each naming its dataset; `unanswered`, each an [`Unanswered`](#unanswered); `datasets`; the `watermark`; and `next_cursor`.
+
+### `record_reported_facts` { #record_reported_facts }
+
+A data plugin records the facts a filing reports, each a concept, its period and its value, a restatement the next version of its row key.
+
+!!! note "Not served yet"
+    Core serves this operation in a later chart release on contract 28.
+    Until then a deployment answers it `UNAVAILABLE`, nothing serving it,
+    which the SDK raises as `CallFailed`, `kind="no handler"`. See
+    [The lake: what core does not serve yet](../concepts/the-lake.md#not-served-yet).
+
+```python
+async def record_reported_facts(
+    self, *, facts: Sequence[ReportedFact] = (), want_id: str = "",
+    acting_for: str | None = None,
+) -> RecordReportedFactsResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc RecordReportedFacts(RecordReportedFactsParams) returns (RecordReportedFactsResult)` |
+| Workflow step | W10.4, Record prices, bars, trades and quotes in batches |
+| Kind | command, on `platform.lake.command.record-reported-facts` |
+| Role | `data` |
+| Served by | the lake, in a later chart release |
+
+| Parameter | Meaning |
+|---|---|
+| `facts` | 1 to 500 rows, each with its `meta` and subjects in their roles |
+| `want_id`, `acting_for` | As above |
+
+**Returns** `RecordReportedFactsResult`, as [`record_prices`](#record_prices) answers: `recorded`, `restated`, `unchanged` and the dataset's `watermark`. A row missing what it requires is refused `invalid`, naming `facts[i]` and the field, and the batch is recorded whole or not at all.
+
+### `list_reported_facts` { #list_reported_facts }
+
+Reads reported facts by subject, concept and period, point in time.
+
+!!! note "Not served yet"
+    Core serves this operation in a later chart release on contract 28.
+    Until then a deployment answers it `UNAVAILABLE`, nothing serving it,
+    which the SDK raises as `CallFailed`, `kind="no handler"`. See
+    [The lake: what core does not serve yet](../concepts/the-lake.md#not-served-yet).
+
+```python
+async def list_reported_facts(
+    self, *, subjects: Sequence[SubjectRef] = (), from_date: date | str = "",
+    to_date: date | str = "", published_as_of_ns: int = 0, sources: SourceChoice | None = None,
+    as_of_ns: int = 0, page_size: int = 0, cursor: str = "", concepts: Sequence[str] = (),
+) -> ListReportedFactsResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc ListReportedFacts(ListReportedFactsParams) returns (ListReportedFactsResult)` |
+| Workflow step | W10.6, Read prices, bars, trades and quotes, point in time, by source |
+| Kind | query, on `platform.lake.query.list-reported-facts` |
+| Role | `portfolio`, `reporting`, `signal` |
+| Served by | the lake, in a later chart release |
+
+| Parameter | Meaning |
+|---|---|
+| `subjects` | 1 to 64 companies or instruments, each with the role it must hold on the row where given |
+| `from_date`, `to_date` | A range of periods |
+| `concepts` | Each a taxonomy and name; none reads every one |
+| `published_as_of_ns` | The version in force by published time |
+| `sources` | A [`SourceChoice`](#sourcechoice); none set is the deployment's source priority |
+| `as_of_ns` | The recorded-time cut-off; 0 for now |
+| `page_size`, `cursor` | Up to 500 a page, 100 when 0; the `next_cursor` of the page before |
+
+**Returns** `ListReportedFactsResult`: `facts`, the rows, each naming its dataset; `unanswered`, each an [`Unanswered`](#unanswered); `datasets`; the `watermark`; and `next_cursor`.
+
+### `record_holdings_reports` { #record_holdings_reports }
+
+A data plugin records a holdings report: who reports, the period and its kind.
+
+!!! note "Not served yet"
+    Core serves this operation in a later chart release on contract 28.
+    Until then a deployment answers it `UNAVAILABLE`, nothing serving it,
+    which the SDK raises as `CallFailed`, `kind="no handler"`. See
+    [The lake: what core does not serve yet](../concepts/the-lake.md#not-served-yet).
+
+```python
+async def record_holdings_reports(
+    self, *, reports: Sequence[HoldingsReport] = (), want_id: str = "",
+    acting_for: str | None = None,
+) -> RecordHoldingsReportsResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc RecordHoldingsReports(RecordHoldingsReportsParams) returns (RecordHoldingsReportsResult)` |
+| Workflow step | W10.4, Record prices, bars, trades and quotes in batches |
+| Kind | command, on `platform.lake.command.record-holdings-reports` |
+| Role | `data` |
+| Served by | the lake, in a later chart release |
+
+| Parameter | Meaning |
+|---|---|
+| `reports` | 1 to 500 rows, each with its `meta` and subjects in their roles |
+| `want_id`, `acting_for` | As above |
+
+**Returns** `RecordHoldingsReportsResult`, as [`record_prices`](#record_prices) answers: `recorded`, `restated`, `unchanged` and the dataset's `watermark`. A row missing what it requires is refused `invalid`, naming `reports[i]` and the field, and the batch is recorded whole or not at all.
+
+### `record_holdings` { #record_holdings }
+
+A data plugin records each holding a report states: the holder, what is held, its quantity and market value, and its share of the class where stated.
+
+!!! note "Not served yet"
+    Core serves this operation in a later chart release on contract 28.
+    Until then a deployment answers it `UNAVAILABLE`, nothing serving it,
+    which the SDK raises as `CallFailed`, `kind="no handler"`. See
+    [The lake: what core does not serve yet](../concepts/the-lake.md#not-served-yet).
+
+```python
+async def record_holdings(
+    self, *, holdings: Sequence[Holding] = (), want_id: str = "",
+    acting_for: str | None = None,
+) -> RecordHoldingsResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc RecordHoldings(RecordHoldingsParams) returns (RecordHoldingsResult)` |
+| Workflow step | W10.4, Record prices, bars, trades and quotes in batches |
+| Kind | command, on `platform.lake.command.record-holdings` |
+| Role | `data` |
+| Served by | the lake, in a later chart release |
+
+| Parameter | Meaning |
+|---|---|
+| `holdings` | 1 to 500 rows, each with its `meta` and subjects in their roles |
+| `want_id`, `acting_for` | As above |
+
+**Returns** `RecordHoldingsResult`, as [`record_prices`](#record_prices) answers: `recorded`, `restated`, `unchanged` and the dataset's `watermark`. A row missing what it requires is refused `invalid`, naming `holdings[i]` and the field, and the batch is recorded whole or not at all.
+
+### `list_holdings` { #list_holdings }
+
+Reads holdings, and the reports they came from, by holder or by what is held.
+
+!!! note "Not served yet"
+    Core serves this operation in a later chart release on contract 28.
+    Until then a deployment answers it `UNAVAILABLE`, nothing serving it,
+    which the SDK raises as `CallFailed`, `kind="no handler"`. See
+    [The lake: what core does not serve yet](../concepts/the-lake.md#not-served-yet).
+
+```python
+async def list_holdings(
+    self, *, subjects: Sequence[SubjectRef] = (), from_date: date | str = "",
+    to_date: date | str = "", kinds: Sequence[HoldingsReportKind | str] = (),
+    published_as_of_ns: int = 0, sources: SourceChoice | None = None, as_of_ns: int = 0,
+    page_size: int = 0, cursor: str = "",
+) -> ListHoldingsResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc ListHoldings(ListHoldingsParams) returns (ListHoldingsResult)` |
+| Workflow step | W10.6, Read prices, bars, trades and quotes, point in time, by source |
+| Kind | query, on `platform.lake.query.list-holdings` |
+| Role | `portfolio`, `reporting`, `signal` |
+| Served by | the lake, in a later chart release |
+
+| Parameter | Meaning |
+|---|---|
+| `subjects` | 1 to 64 companies or instruments, each with the role it must hold on the row where given |
+| `from_date`, `to_date`, `kinds` | A range of dates and the reports' kinds |
+| `published_as_of_ns` | The version in force by published time |
+| `sources` | A [`SourceChoice`](#sourcechoice); none set is the deployment's source priority |
+| `as_of_ns` | The recorded-time cut-off; 0 for now |
+| `page_size`, `cursor` | Up to 500 a page, 100 when 0; the `next_cursor` of the page before |
+
+**Returns** `ListHoldingsResult`: `holdings`, the rows, each naming its dataset; `unanswered`, each an [`Unanswered`](#unanswered); `datasets`; the `watermark`; and `next_cursor`. Beside them, `reports`, each report its holdings came from, once.
+
+### `record_rating_actions` { #record_rating_actions }
+
+A data plugin records a rating action: the rated company or security, the rater in the `rater` role, the rating, its scale and the action.
+
+!!! note "Not served yet"
+    Core serves this operation in a later chart release on contract 28.
+    Until then a deployment answers it `UNAVAILABLE`, nothing serving it,
+    which the SDK raises as `CallFailed`, `kind="no handler"`. See
+    [The lake: what core does not serve yet](../concepts/the-lake.md#not-served-yet).
+
+```python
+async def record_rating_actions(
+    self, *, actions: Sequence[RatingAction] = (), want_id: str = "",
+    acting_for: str | None = None,
+) -> RecordRatingActionsResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc RecordRatingActions(RecordRatingActionsParams) returns (RecordRatingActionsResult)` |
+| Workflow step | W10.4, Record prices, bars, trades and quotes in batches |
+| Kind | command, on `platform.lake.command.record-rating-actions` |
+| Role | `data` |
+| Served by | the lake, in a later chart release |
+
+| Parameter | Meaning |
+|---|---|
+| `actions` | 1 to 500 rows, each with its `meta` and subjects in their roles |
+| `want_id`, `acting_for` | As above |
+
+**Returns** `RecordRatingActionsResult`, as [`record_prices`](#record_prices) answers: `recorded`, `restated`, `unchanged` and the dataset's `watermark`. A row missing what it requires is refused `invalid`, naming `actions[i]` and the field, and the batch is recorded whole or not at all.
+
+### `list_rating_actions` { #list_rating_actions }
+
+Reads a company's or a security's rating history.
+
+!!! note "Not served yet"
+    Core serves this operation in a later chart release on contract 28.
+    Until then a deployment answers it `UNAVAILABLE`, nothing serving it,
+    which the SDK raises as `CallFailed`, `kind="no handler"`. See
+    [The lake: what core does not serve yet](../concepts/the-lake.md#not-served-yet).
+
+```python
+async def list_rating_actions(
+    self, *, subjects: Sequence[SubjectRef] = (), from_date: date | str = "",
+    to_date: date | str = "", kinds: Sequence[RatingActionKind | str] = (),
+    published_as_of_ns: int = 0, sources: SourceChoice | None = None, as_of_ns: int = 0,
+    page_size: int = 0, cursor: str = "",
+) -> ListRatingActionsResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc ListRatingActions(ListRatingActionsParams) returns (ListRatingActionsResult)` |
+| Workflow step | W10.6, Read prices, bars, trades and quotes, point in time, by source |
+| Kind | query, on `platform.lake.query.list-rating-actions` |
+| Role | `portfolio`, `reporting`, `signal` |
+| Served by | the lake, in a later chart release |
+
+| Parameter | Meaning |
+|---|---|
+| `subjects` | 1 to 64 companies or instruments, each with the role it must hold on the row where given |
+| `from_date`, `to_date`, `kinds` | A range of dates and the actions' kinds |
+| `published_as_of_ns` | The version in force by published time |
+| `sources` | A [`SourceChoice`](#sourcechoice); none set is the deployment's source priority |
+| `as_of_ns` | The recorded-time cut-off; 0 for now |
+| `page_size`, `cursor` | Up to 500 a page, 100 when 0; the `next_cursor` of the page before |
+
+**Returns** `ListRatingActionsResult`: `actions`, the rows, each naming its dataset; `unanswered`, each an [`Unanswered`](#unanswered); `datasets`; the `watermark`; and `next_cursor`.
+
+### `record_quality_assessments` { #record_quality_assessments }
+
+A signal plugin escalates a recorded row's quality, each assessment its own record; a state only escalates.
+
+!!! note "Not served yet"
+    Core serves this operation in a later chart release on contract 28.
+    Until then a deployment answers it `UNAVAILABLE`, nothing serving it,
+    which the SDK raises as `CallFailed`, `kind="no handler"`. See
+    [The lake: what core does not serve yet](../concepts/the-lake.md#not-served-yet).
+
+```python
+async def record_quality_assessments(
+    self, *, assessments: Sequence[QualityAssessment] = (), acting_for: str | None = None,
+) -> RecordQualityAssessmentsResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc RecordQualityAssessments(RecordQualityAssessmentsParams) returns (RecordQualityAssessmentsResult)` |
+| Workflow step | W10.12, Escalate a row's quality |
+| Kind | command, on `platform.lake.command.record-quality-assessments` |
+| Role | `signal` |
+| Served by | the lake, in a later chart release |
+
+| Parameter | Meaning |
+|---|---|
+| `assessments` | 1 to 500 `QualityAssessment`s, each naming the row, its state (`suspicious` or `invalid`) and its reasons |
+| `acting_for` | As above |
+
+**Returns** `RecordQualityAssessmentsResult`: `recorded`. `meridian.roles.signal.escalate` records them.
 
 ## Types { #types }
 

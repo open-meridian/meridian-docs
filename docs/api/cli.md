@@ -4,7 +4,7 @@
 
 Nothing in a cloud install depends on it. A marketplace listing's form and the deployment's own wizard are the whole path there; `meridian` makes the same things convenient from a terminal. Where it drives `helm` or `kubectl`, it drives your own, and what it tells you to run next is a `meridian` command, never `helm` or `kubectl`: you never run them yourself.
 
-This page describes release 0.1.52 of the command line, released 2026-10-23. `meridian --version` says which one you have. For installing it, see [Install a deployment](../getting-started/installation.md).
+This page describes release 0.1.53 of the command line. `meridian --version` says which one you have. For installing it, see [Install a deployment](../getting-started/installation.md).
 
 ## Synopsis
 
@@ -40,6 +40,10 @@ meridian plugin download <namespace>/<plugin>@<version> [--registry community|ve
 meridian plugin upload --bundle <file> [--deployment <addr>]
 meridian plugin install <organisation>/<plugin>[@<version>] --note <why> [--registry community|verified]
 meridian plugin install --pack <pack> --note <why> [--with <plugin>]... [--without <plugin>]... [--yes]
+meridian plugin pack list [--json]
+meridian plugin pack show <pack> [--json]
+meridian plugin pack update <pack> --note <why> [--yes] [--json]
+meridian plugin pack remove <pack> --note <why> [--yes] [--json]
 meridian plugin gc [--release <name>] [--timeout <d>] [--yes]
 meridian upgrade [--to <version>]
 meridian uninstall [--yes]
@@ -522,19 +526,20 @@ If the deployment can't be reached, the delegation is still forgotten here. It s
 meridian plugin new <name> [--into <dir>] [--role connectivity|custody|data|operations|pricing|reporting]
 ```
 
-!!! note "CLI 0.1.52"
-    CLI 0.1.52, released 2026-10-23, pins SDK 0.32.1 (contract v27),
-    whose plugins need a runtime serving contract v27 (chart 0.1.309
-    or later), and carries SDK 0.32.1's templates, the pricing
-    template among them (`--role pricing`, added in CLI 0.1.49). The data,
-    reporting and connectivity templates' suites meet contract v27's cases,
-    the three latency reports' cases (`about: latency`) marked not
-    presented, with why, until core receives them in contract 28. Every template carries a `docs/` folder, its whole
+!!! note "CLI 0.1.53"
+    CLI 0.1.53 pins SDK 0.33.0 (contract v28), whose plugins need a
+    runtime serving contract v28 (chart 0.1.31x or later), and carries
+    SDK 0.33.0's templates, the pricing template among them (`--role
+    pricing`, added in CLI 0.1.49). Each template takes
+    `meridian.SubjectRef`; the data, reporting and connectivity templates'
+    suites meet contract v28's cases, the three latency reports' cases
+    required again, and name v28's new cases not presented, with why,
+    where their stand-ins touch none. Every template carries a `docs/` folder, its whole
     declaration (`Declaration(settings=, interface=, documentation=)`) named
     in `[tool.meridian]`, and a CI workflow checking with the `meridian`
     release that wrote it (`MERIDIAN_VERSION`).
 
-Writes a working plugin to start from: the Python SDK's reference plugin, renamed to `<name>`, or with `--role` that role's template. It needs no network, because the template is compiled into the binary. It writes the plugin's code and its pages, each a view function and a Jinja2 template declared with the levels it serves (a **Setup** page under Manage, at `admin`, and an **Accounts** page under Open and View, at `write` and `read`), its declaration (`src/<module>/declaration.py`, which `[tool.meridian]` names), its documentation (`docs/overview.md`, `setup.md`, `troubleshooting.md`, `terms.md` and `pages.md`, each a short prompt to replace; see [Write a plugin's documentation](../how-to/write-a-plugins-documentation.md)), its tests (`tests/test_page.py`), a `Dockerfile`, `pyproject.toml`, `.dockerignore`, `.gitignore`, `README.md`, `AGENTS.md`, `CLAUDE.md`, a `develop-live` skill for Claude Code, a CI workflow that runs `meridian plugin check --run-tests` (`.github/workflows/check.yaml`), and a pre-push hook, `hooks/pre-push`, then prints the next steps. Where git has no SSH key to sign release tags with, it then offers [`meridian plugin key setup`](#meridian-plugin-key-setup) at a terminal, asking `Set up a signing key now?`, and only says so where there is no terminal. The hook is CI-first: a branch's push runs nothing, its pull request's CI being the gate; a tag push runs nothing either, since [`plugin release`](#meridian-plugin-release) checked main's CI before signing it; and a push straight to `main` runs `meridian plugin check --run-tests` first. Turn it on in a fresh clone with `git config core.hooksPath hooks`. The plugin pins SDK 0.32.1, and needs a deployment whose sidecar accepts contract 27 (chart 0.1.309 or later). Its `AGENTS.md` teaches a coding agent the kinds of raw record a plugin at the edge declares and their windows, and that a custody plugin keeps each activity's raw record at least as long as the history it reported; how a data plugin records trades and quotes; that work the plugin does on its own changes something only by calling one of its acts as its role's service account (`meridian.runs_as`), each such act naming its check tool, and names the declared algorithm it runs (`meridian.runs_as(role, algorithm_id=...)`); and that a date is worked out in core (`compute_date`, `read_calendar`), never by hand; and that a change raises `version` and adds its `CHANGELOG.md` entry, `## X.Y.Z` with no date, in its own pull request, and a version is then published to a registry with `meridian plugin release`. Which SDK each earlier CLI pinned is in [Moving a plugin to a new release](python-sdk.md#moving-a-plugin-to-a-new-release). See [Your first plugin](../getting-started/first-plugin.md).
+Writes a working plugin to start from: the Python SDK's reference plugin, renamed to `<name>`, or with `--role` that role's template. It needs no network, because the template is compiled into the binary. It writes the plugin's code and its pages, each a view function and a Jinja2 template declared with the levels it serves (a **Setup** page under Manage, at `admin`, and an **Accounts** page under Open and View, at `write` and `read`), its declaration (`src/<module>/declaration.py`, which `[tool.meridian]` names), its documentation (`docs/overview.md`, `setup.md`, `troubleshooting.md`, `terms.md` and `pages.md`, each a short prompt to replace; see [Write a plugin's documentation](../how-to/write-a-plugins-documentation.md)), its tests (`tests/test_page.py`), a `Dockerfile`, `pyproject.toml`, `.dockerignore`, `.gitignore`, `README.md`, `AGENTS.md`, `CLAUDE.md`, a `develop-live` skill for Claude Code, a CI workflow that runs `meridian plugin check --run-tests` (`.github/workflows/check.yaml`), and a pre-push hook, `hooks/pre-push`, then prints the next steps. Where git has no SSH key to sign release tags with, it then offers [`meridian plugin key setup`](#meridian-plugin-key-setup) at a terminal, asking `Set up a signing key now?`, and only says so where there is no terminal. The hook is CI-first: a branch's push runs nothing, its pull request's CI being the gate; a tag push runs nothing either, since [`plugin release`](#meridian-plugin-release) checked main's CI before signing it; and a push straight to `main` runs `meridian plugin check --run-tests` first. Turn it on in a fresh clone with `git config core.hooksPath hooks`. The plugin pins SDK 0.33.0, and needs a deployment whose sidecar accepts contract 28 (chart 0.1.31x or later). Its `AGENTS.md` teaches a coding agent the kinds of raw record a plugin at the edge declares and their windows, and that a custody plugin keeps each activity's raw record at least as long as the history it reported; how a data plugin records trades and quotes; that work the plugin does on its own changes something only by calling one of its acts as its role's service account (`meridian.runs_as`), each such act naming its check tool, and names the declared algorithm it runs (`meridian.runs_as(role, algorithm_id=...)`); and that a date is worked out in core (`compute_date`, `read_calendar`), never by hand; and that a change raises `version` and adds its `CHANGELOG.md` entry, `## X.Y.Z` with no date, in its own pull request, and a version is then published to a registry with `meridian plugin release`. Which SDK each earlier CLI pinned is in [Moving a plugin to a new release](python-sdk.md#moving-a-plugin-to-a-new-release). See [Your first plugin](../getting-started/first-plugin.md).
 
 `<name>` must be lowercase letters, digits and single hyphens, starting with a letter. It becomes the package name, and, with hyphens as underscores, the module name.
 
@@ -561,11 +566,16 @@ Writes a working plugin to start from: the Python SDK's reference plugin, rename
 meridian plugin check [--dir <dir>] [--run-tests] [--verified] [--json]
 ```
 
-!!! note "CLI 0.1.52"
-    CLI 0.1.52 reads contract v27's roles and suites: the v27 cases are in
-    the suites that hold them, with the `about` markers `rates`, `streams`,
-    `rfqs` and `latency`, and the data suite's `an-exact-price` and
-    `a-want-recorded-against` about `closes` (changed in CLI 0.1.52), so a
+!!! note "CLI 0.1.53"
+    CLI 0.1.53 reads contract v28's roles and suites: the v28 cases are in
+    the suites that hold them, each case about what a plugin's source or
+    work may never present marked by its `about` (`option chains`,
+    `filings`, `holdings`, `corporate actions`, `ratings`, `quotes`,
+    `options`, `packages`, `derived series`, `scenarios`, `quality
+    states`), so a plugin touching none names it not presented, with why;
+    the three latency reports' cases are required again (changed in CLI
+    0.1.53). The data suite's `an-exact-price` and
+    `a-want-recorded-against` stay about `closes` (from CLI 0.1.52), so a
     data plugin recording only rates names them not presented and passes
     `--verified`. `role-pages` counts the pages, routes and tools an SDK
     helper declares for the plugin, such as
@@ -754,6 +764,7 @@ The rewrites keep a file's formatting and comments wherever they change nothing.
 | 0.32.0 to 0.32.1: the data suite's `an-exact-price` and `a-want-recorded-against` are about `closes`, and `meridian.roles.data.testing.RATES_NOT_PRESENTED` names every case a rates-only plugin never presents. See [0.32.0 to 0.32.1](python-sdk.md#0320-to-0321) | Nothing: only the pins move | a data plugin recording only rates names the two cases not presented |
 | 0.32.1 to 0.32.2: `DatasetLicence` writes `redistribution`, `attribution_required`, `attribution_text`, `copyright_class` and `no_more_restrictive_terms`; a data plugin's Connection draws Sessions only once a session is measured; the testing `Recorder` answers `RecordRates`; `RATES_NOT_PRESENTED` no longer names `records-a-datasets-liveness`. See [0.32.1 to 0.32.2](python-sdk.md#0321-to-0322) | Nothing: only the pins move | a rates-only plugin recording no liveness names `records-a-datasets-liveness` not presented, with why |
 | 0.32.2 to 0.32.3: `rates.Feed.rate` refuses a rate with no convention; a missed rates subject is asked again the same day; a listings feed records its live dataset's liveness; `Resolution.challenge_ends_at_ns` reaches the `Outcome`; `DatasetLicence` writes `not_affiliated_notice`; the merged Connection draws one group at a time under a tab row. See [0.32.2 to 0.32.3](python-sdk.md#0322-to-0323) | Nothing: only the pins move | a rate built with no convention: give it one |
+| 0.32.3 to 0.33.0: the SDK declares contract v28: the typed operations take `meridian.SubjectRef` only, which carries its role; `Latency.report` sends `ReportLatency`, and the three latency cases are required; an `ems` reads the stale-reference actions the deployment permits; listed options' and futures' chains, lifecycle events and package orders (`roles.chains`, `roles.lifecycle`, `roles.packages`); a signal's derived series, saved scenarios and quality escalated (`roles.signal`); the filings slice (`roles.data.filings`); quality states at the edge (`roles.data.quality`); `DataEligibility`; every role's v28 cases, each marked by its `about`. Breaking. It needs chart 0.1.31x or later. See [0.32.3 to 0.33.0](python-sdk.md#0323-to-0330) | a wire `SubjectRef` handed to the SDK (`ops.SubjectRef(...)`, `operations_pb2.SubjectRef(...)`) into `meridian.SubjectRef(...)` (`subject-ref-from-the-sdk`); a base pinned by digest at an older release moved to 0.33.0, its digest dropped where it cannot be read (`base-digest-dropped`) | a heard message's subjects passed to a typed operation: convert each (`subjects-from-the-wire`); map each role suite's v28 cases, or name one about what the plugin never presents with why (`suite-cases-v28`); map the three latency cases a v27 plugin named not presented (`latency-cases-required`); pin the base's digest again (`base-digest`) |
 | 0.31.0 to 0.31.1: a saved setting value no longer among its choices, or not of its kind, is delivered unset rather than raised (`Settings.refused`, `meridian.RefusedSetting`, `request.own_settings_refused`); an event-contract venue's map keeps a range market's bounds, and `event_contracts.Feed.stated_identifiers`; the pricing template declares no storage; the templates' `AGENTS.md` on publishing to a registry. See [0.31.0 to 0.31.1](python-sdk.md#0310-to-0311) | Nothing: only the pins move | |
 
 `plugin migrate` adds three rules of its own: `base-digest`, for a base pinned by digest whose new digest could not be read, with the `docker buildx imagetools inspect` that names it; `pin-elsewhere`, for the old release still named in another file (a Makefile's base image, a workflow, a README), which it reports rather than moves because some of those are history; and `unreadable`, for a file that is not UTF-8, or that a step could not read as Python, which it leaves as it was.
@@ -1139,15 +1150,22 @@ approving the roles it asks for.
   from `--registry` where given, the Community registry otherwise. Without
   `@version` it installs the one Browse shows: the newest offered release,
   verified first.
-- **A starter pack.** `--pack <pack>` installs the pack's members, each its
-  own install. A bare name is `open-meridian`'s: `crypto` is
-  `open-meridian/crypto`. Each member resolves to its newest offered release
-  at or above the pack's minimum for it; one with none offered is
-  **unavailable** and left out. The members the pack's curator preselected
-  are installed, and the members to choose are not: `--with <plugin>` adds
-  one, and `--without <plugin>` leaves out a preselected one, each
-  repeatable, by its listing or its plugin part. A name that is not a member
-  is refused before anything is installed.
+- **A starter pack.** Changed in CLI 0.1.53: `--pack <pack>` installs a
+  starter pack through the deployment, as Browse's install sheet does: one
+  pack install, which the deployment keeps, one record naming the pack's
+  revision, the members and how each went, and each member's own install
+  record naming its pack. A bare name is `open-meridian`'s: `crypto` is
+  `open-meridian/crypto`. The deployment resolves each member to its newest
+  offered release at or above the pack's minimum for it; one with none
+  offered is **unavailable**, and one the deployment will not take (its
+  floor not met, or a registry it does not take) is **not permitted here**:
+  neither is installed, and a pack whose required member is either is not.
+  The members the pack's curator preselected are installed, and the members
+  to choose are not: `--with <plugin>` adds one, and `--without <plugin>`
+  leaves out a preselected one, each repeatable, by its listing or its
+  plugin part. A name that is not a member is refused before anything is
+  installed. It needs a deployment whose core is at contract 28; an older
+  one is said in one line.
 - **Asked first.** The plan is shown version by version, and asked about
   before anything is installed. At a terminal, each member to choose that
   you did not name is asked about too. `--yes` approves the plan without
@@ -1158,11 +1176,13 @@ approving the roles it asks for.
   `Installed 0.3.0; 0.5.1 offered`.
 - **`--note` is required**: the deployment keeps it with each install.
 
-Each member's line says installed or why it failed, and the rest go on past
-a failure. The end lists `meridian plugin launch` for each version ready to
-launch. `--pack`, and a listing without `@version`, read the platform's
-catalogue through your platform sign-in; a platform that does not yet let
-the CLI read its catalogue says so in one line.
+The install runs in the deployment, member by member; the command follows
+it, one line a member as each ends, going on past a failure, then lists
+`meridian plugin launch` for each version ready to launch and each that
+failed, with why. A listing without `@version` reads the platform's
+catalogue through your platform sign-in, and a platform that does not yet
+let the CLI read its catalogue says so in one line; `--pack` reads only the
+deployment.
 
 ```console
 $ meridian plugin install --pack crypto --with plugin-coinbase --note "the crypto desk"
@@ -1175,11 +1195,53 @@ $ meridian plugin install --pack crypto --with plugin-coinbase --note "the crypt
 | `--pack` | `<pack>` | A starter pack, `organisation/pack`, or a bare name for `open-meridian`'s. |
 | `--with` | `<plugin>` | With `--pack`: also install this member to choose. Repeatable. |
 | `--without` | `<plugin>` | With `--pack`: leave out this preselected member. Repeatable. |
-| `--yes` | | Install without being asked. |
+| `--yes` | | Install without being asked. Where there is no terminal, nothing is installed without it. |
 
 Exits 0 when every member asked for is installed or held; 1 when one
 failed, each named, or nothing was approved. See
 [Install a plugin from a registry](../how-to/install-from-a-registry.md).
+
+### `meridian plugin pack` { #meridian-plugin-pack }
+
+```text
+meridian plugin pack list [--json]
+meridian plugin pack show <pack> [--json]
+meridian plugin pack update <pack> --note <why> [--yes] [--json]
+meridian plugin pack remove <pack> --note <why> [--yes] [--json]
+```
+
+Added in CLI 0.1.53. Reads and keeps the starter packs a deployment has
+installed, through core's pack routes, as the deployment admin, through the
+session `meridian connect` keeps (`--deployment` names another):
+
+- **`list`**: Browse's pack view, one line a pack, its title, asset classes,
+  members and its state here.
+- **`show <pack>`**: the pack's page, its setup checklist: each member's
+  versions, its state with why, its connection and the step after it, what
+  a revision added, and the launch command for each member installed and
+  not launched.
+- **`update <pack>`**: **Update all**: each launched member moved to its
+  newest offered version, an installed one given it, and one asking for more
+  roles left for its own approval. What would move is shown first.
+- **`remove <pack>`**: removes only the deployment's record of the pack.
+  Every member stays installed, and running where it runs; they are shown
+  first.
+
+`update` and `remove` take `--note`, which the deployment keeps with the
+pack's record, and are asked about unless `--yes`; where there is no
+terminal, nothing is done without it. `--json` prints the deployment's
+answer as core's [starter pack tools](core-tools.md#starter-packs) give it:
+a pack's `state` and `said`, each member's `state`, and its `setup_href`
+where core gives one. The commands need a deployment whose core is at
+contract 28; an older one is said in one line.
+
+```console
+$ meridian plugin pack show crypto
+$ meridian plugin pack update crypto --note "monthly update"
+```
+
+Exits 0 when done; 1 when refused or not approved; 2 when asked wrongly;
+3 without a session.
 
 ## `meridian plugin gc`
 
