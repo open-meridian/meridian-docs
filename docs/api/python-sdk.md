@@ -16,7 +16,7 @@ such as Homebrew's on macOS (`externally-managed-environment`).
 |---|---|
 | PyPI name | `open-meridian` |
 | Import name | `meridian` |
-| Version | 0.32.3 |
+| Version | 0.33.1 |
 | Python | 3.11 or newer |
 | Dependencies | `grpcio>=1.68,<2`, `protobuf>=5.28,<7`, `jinja2>=3.1,<4` (for [pages](#pages)) |
 | Licence | Apache-2.0 |
@@ -24,7 +24,7 @@ such as Homebrew's on macOS (`externally-managed-environment`).
 !!! warning "Not `meridian-sdk`"
     The PyPI package `meridian-sdk` belongs to an unrelated company. Don't install it.
 
-A plugin pins the SDK exactly, `open-meridian==0.32.3`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.32.3`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls (see [Moving a plugin to a new release](#moving-a-plugin-to-a-new-release)). CLI 0.1.52's `meridian plugin new` writes a plugin pinned to 0.32.1, which declares contract 27, as 0.32.3 does; `meridian plugin migrate` moves it, or one pinned earlier, to 0.32.3.
+A plugin pins the SDK exactly, `open-meridian==0.33.1`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.33.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls (see [Moving a plugin to a new release](#moving-a-plugin-to-a-new-release)). CLI 0.1.53's `meridian plugin new` writes a plugin pinned to 0.33.0, which declares contract 28; `meridian plugin migrate` moves one pinned earlier to it.
 
 | Optional extra | Installs | For |
 |---|---|---|
@@ -89,7 +89,8 @@ A version registers exactly the declaration it was uploaded with (see [The whole
 | `ActivityKind`, `ActivityRef` | generated protobuf enum and message | [Typed operations](typed-operations.md#activitykind) |
 | `DatasetDeclaration`, `DatasetLicence` | frozen dataclasses | [A data plugin's catalogue](#a-data-plugins-catalogue) |
 | `Price`, `Bar`, `ObservationMeta`, `SourceTime` | frozen dataclasses | [Typed operations](typed-operations.md#price) |
-| `ObservationMode`, `PriceKind`, `PriceBasis`, `SourceTimeKind`, `UnansweredReason`, `VenueKind`, `Source`, `SourceChoice`, `SubjectRef`, `DatasetRef`, `Unanswered`, `VenueRecord` | generated protobuf enums and messages | [Typed operations](typed-operations.md#types), the lake's |
+| `SubjectRef` | frozen dataclass | A row's subject: its `entity_id`, and from SDK 0.33.0 its `role`. Changed in SDK 0.33.0: the typed operations take this only, never the wire's (see [0.32.3 to 0.33.0](#0323-to-0330)) |
+| `ObservationMode`, `PriceKind`, `PriceBasis`, `SourceTimeKind`, `UnansweredReason`, `VenueKind`, `Source`, `SourceChoice`, `DatasetRef`, `Unanswered`, `VenueRecord` | generated protobuf enums and messages | [Typed operations](typed-operations.md#types), the lake's |
 | `Trade`, `TradeAttributes`, `Eligibility`, `Quote` | frozen dataclasses | [Typed operations](typed-operations.md#trade) |
 | `Aggressor`, `Eligible`, `TradeCharacteristic`, `QuoteCharacteristic` | generated protobuf enums | [Typed operations](typed-operations.md#tradecharacteristic) |
 | `roles` | module | [Each role's common part](#each-roles-common-part) |
@@ -101,6 +102,9 @@ A version registers exactly the declaration it was uploaded with (see [The whole
 | `Outcome`, `OutcomeDetermination`, `OutcomeStage` | frozen dataclass, generated protobuf enums | [Outcomes](#outcomes). Added in SDK 0.27.0 |
 | `settings`, `setting`, `environment`, `sample_data` | decorator, functions | [Typed settings](#typed-settings); `account_currency` added in SDK 0.27.0 |
 | `session_ceilings`, `ceilings_from`, `dataset_thresholds`, `stale_reference_action`, `stale_reference_after` | functions | [Typed settings](#typed-settings): latency's and staleness's settings. Added in SDK 0.32.0 |
+| `quality_thresholds` | function | [Typed settings](#typed-settings): a signal's outlier thresholds. Added in SDK 0.33.0 |
+| `ListedSeries`, `Statistic`, `QuoteAtTrade`, `SeriesWant`, `LifecycleEvent`, `LifecycleDelivery`, `DerivedSeries`, `SavedScenario`, `Scenario`, `ScenarioAxis`, `ScenarioSet`, `Shock`, `ShockBucket`, `UnitValue` | frozen dataclasses | [Contract 28's helpers](#contract-28s-helpers) and [contract 28's operations](typed-operations.md#contract-v28s-operations). Added in SDK 0.33.0 |
+| `Filing`, `ReportedFact`, `HoldingsReport`, `Holding`, `CorporateActionAnnounced`, `RatingAction`, `QualityAssessment`, `DataEligibility` | frozen dataclasses | [The filings slice and quality states](#the-filings-slice-and-quality-states); `DataEligibility` on a [catalogue's licence](#a-data-plugins-catalogue). Added in SDK 0.33.0 |
 | `RefusedSetting` | frozen dataclass | [`Settings`](#settings): a saved value this version cannot read. Added in SDK 0.31.1 |
 | `analytics`, `Job`, `WhatIf`, `WhatIfTrade`, `ComputedAs`, `NotEvaluatedReason`, `ScenarioKey`, `ScenarioKind`, `PricedUnit`, `Sensitivity` | module, generated protobuf messages and enums | The analytics component and a pricing plugin's answers; see [Contract 26's operations](typed-operations.md#contract-v26s-operations). Added in SDK 0.31.0 |
 | `EventGroups`, `EventGroup`, `EventGroupFlag` | class, generated protobuf message and enum | Event groups; see [`list_event_groups`](typed-operations.md#list_event_groups). Added in SDK 0.31.0 |
@@ -108,7 +112,7 @@ A version registers exactly the declaration it was uploaded with (see [The whole
 | `CallerMiddleware` | ASGI middleware | [`CallerMiddleware`](#callermiddleware) |
 | `MeridianError`, `Refused`, `NoSidecar`, `NotRegistered`, `NotGranted`, `CallFailed`, `NotLinked`, `CommandRefused` | exceptions | [Exceptions](#exceptions) |
 | `DEFAULT_ADDRESS` | `str` | `"127.0.0.1:9191"`, where a sidecar listens |
-| `SCHEMA_VERSION` | `str` | the contract version sent at registration, `"v27"`; each SDK release's is in the [release notes](#release-notes) |
+| `SCHEMA_VERSION` | `str` | the contract version sent at registration, `"v28"`; each SDK release's is in the [release notes](#release-notes) |
 
 The module `meridian.testing` holds [`PageClient`](#testing) and [`heartbeat`](#testing), for a plugin's own tests.
 
@@ -919,11 +923,11 @@ recorders the `data` and `connectivity` helpers and an `ems` use. See
 | `confirmed_ns(row, liveness=None)`, `source_ns(row)` | A value's confirmed time, the later of its source time and its dataset's liveness after it; a row's source time |
 | `in_session(sessions, at_ns, *, extended=False)` | Whether a moment falls in a venue's [trading sessions](../concepts/settlement-calendars.md#trading-sessions), a dated day's in place of its weekday's |
 
-!!! note "Recorded, not yet reported"
-    Core receives `ReportLatency` from contract 28. In SDK 0.32
-    `Latency.report()` takes the snapshots and sends nothing, so a plugin
-    can record latency now and report it, unchanged, once its SDK moves to
-    the release that turns the send on.
+Changed in SDK 0.33.0: `Latency.report()` sends the snapshots it takes as
+[`ReportLatency`](typed-operations.md#report_latency), every 10 seconds
+under `run()`, and core's latency monitor judges them (see
+[Data age and liveness](../concepts/data-age-and-liveness.md#latency)). In
+SDK 0.32 it sent nothing. Nothing in a plugin's code changes.
 
 A data plugin's `Wants` takes `latency=` and records each row's age at the
 `edge` hop as it records it, and `Wants.liveness(key, alive_at_ns=0,
@@ -998,9 +1002,28 @@ More cases carry `about` (added in SDK 0.27.0), each a thing the plugin's source
 | `rates` | Added in SDK 0.32.0. The data suite's seven rates cases (`a-rate-fixing`, `a-same-day-revision`, `a-curve-for-a-date`, `a-tenor-not-published`, `two-conventions-one-tenor`, `an-index-level`, `a-curve-point-from-another-source`) |
 | `streams` | Added in SDK 0.32.0. The data suite's `records-a-datasets-liveness`, for a source that is polled and streams nothing |
 | `rfqs` | Added in SDK 0.32.0. Connectivity's `records-a-dealers-quote-on-an-rfq-placement`, for a venue that takes no RFQ |
+| `option chains` | Added in SDK 0.33.0. The data suite's `records-a-chains-series`, `records-open-interest` and `a-chain-row-is-never-resolved` |
+| `filings` | Added in SDK 0.33.0. The data suite's `a-filing-recorded`, `a-fact-restated`, `a-fact-confirmed` and `resolves-a-filer` |
+| `holdings` | Added in SDK 0.33.0. The data suite's `a-complete-holdings-report`, `a-cusip-used-as-key` and `a-stake-crossed` |
+| `corporate actions` | Added in SDK 0.33.0. The data suite's `a-dividend-declared` |
+| `ratings` | Added in SDK 0.33.0. The data suite's `a-rating-action` |
+| `quotes` | Added in SDK 0.33.0. The data suite's `a-crossed-quote-is-recorded-invalid`, `a-duplicate-is-recorded-suspicious` and `rows-after-a-gap-are-suspicious`, which expect quote rows |
+| `options` | Added in SDK 0.33.0. Custody's `reports-an-assignment`, connectivity's `reports-an-expiry` and servicing's `proposes-an-exercise-by-exception` |
+| `packages` | Added in SDK 0.33.0. Connectivity's `reports-a-package-fill` |
+| `derived series`, `scenarios`, `quality states` | Added in SDK 0.33.0. Signal's `records-a-derived-series`, `saves-a-scenario-set` and `escalates-an-outlier` |
+
+Changed in SDK 0.33.0: the data suite's `reports-its-feed-delay`,
+connectivity's `reports-a-sessions-round-trip` and the ems's
+`reports-its-pre-trade-checks-data-age` are no longer `about: latency`, and
+are required. The reading roles' v28 cases (a chain, open interest, a
+statistic heard, an account's lifecycle events, a derived series, a saved
+scenario set, declared dividends, a company's filings, reported facts, who
+holds a security and a rating history, each read or heard) are required.
+`meridian.roles.data.testing.feed_delay` maps the data suite's feed-delay
+case for a plugin built on the SDK's kinds.
 | `trades` | Changed in SDK 0.32.0: the data suite's `queries-the-lake-within-bounds`, which a data plugin recording no trades marks "it records no trades" |
 | `closes` | Changed in SDK 0.32.1: the data suite's `an-exact-price` and `a-want-recorded-against`, which a plugin recording only rates marks "it records rates, never prices" |
-| `latency` | Added in SDK 0.32.0. The data suite's `reports-its-feed-delay`, connectivity's `reports-a-sessions-round-trip` and the ems's `reports-its-pre-trade-checks-data-age`: **not presented until contract 28**, every plugin holding the role naming them with the reason "core receives ReportLatency from contract v28, ruling 515". In contract 28 the marker comes off and they are required in full |
+| `latency` | Removed in SDK 0.33.0. In SDK 0.32 the data suite's `reports-its-feed-delay`, connectivity's `reports-a-sessions-round-trip` and the ems's `reports-its-pre-trade-checks-data-age` carried it, every plugin holding the role naming them not presented; from contract 28 they are required in full |
 
 ```python
 report = run("connectivity", PRODUCERS, not_presented={
@@ -1981,10 +2004,63 @@ What every plugin of a role must do the same way to fulfil its typed operations 
 - **Connectivity's pages** (added in SDK 0.32.0), each declared by the SDK with its acts and checks, from the plugin's state as it stands (`TradingState`: its `trader`, its venue adapter `venue`, its account `scope`, and for raw records its `store` and kept `values`) and its words for the venue: `connectivity.trading_pages(pages, state, *, venue, credentials, environment, environment_setting, ...)` declares **Trading** at `/admin/connections` (`TRADING`), with **Enable trading** (`ENABLE_TRADING`) and its check, and a **Sessions** section from `latency=`; `connectivity.raw_records_page(pages, state, *, kinds, why)` declares **Raw records** (`RAW`) for a plugin holding custody or connectivity; and, for a plugin holding `data` as well, `connectivity.connection_pages(pages, state, connection, *, venue, ...)` declares one **Connection** at `/` (`CONNECTION`) for both roles, the data role's record carrying connectivity's as `trading` (`ConnectionRead.trading`), in place of a Trading page of its own. `TradingRead` carries `session_latency`, `reached_environment`, `badge` and `environment_to_save`. `meridian plugin check` counts the pages each declares as the plugin's own.
 - **The merged Connection's tabs** (changed in SDK 0.32.3): `connection_pages` draws one group at a time under a tab row of its sections' own titles, **Key**, **Limits and use**, **Stream**, **Trading**, and **Sessions** once measured, picked by `?tab=`; **Enable trading** answers on Trading, and `read_connection` still answers every section. A page given no tabs draws every section at once. An account's **Enable trading** column shows only where its button does, and Raw records' record wraps within its box.
 - **The Trader's placement types and RFQs** (added in SDK 0.32.0): an adapter may answer `placement_types(code)`, the types its venue takes beside DMA, and where it takes RFQs `request_quotes(code, asked)`, `quotes(code, request_id)` (each a `VenueQuote`) and `accept_quote(code, request_id, quote, asked)`; the `Trader` lists the types on the catalogue (`Trader.placement_types()`), rejects one an account does not take with why, records each dealer's quote on the placement and accepts the pick. `VenueOrder` carries `identifiers` and `currency`; `connectivity.testing.placement(placement_type=...)` makes a test's placement, and `Rig.latency` its recorders. See [Placement types and RFQ quotes](../concepts/placement-types-and-rfq-quotes.md).
-- **An `ems`'s checks** (`meridian.roles.ems`, added in SDK 0.32.0): `ReferenceCheck(action, after_ns, latency, liveness)` judges the reference price's age before a placement (`stale(price, dataset=, asset_class=, sessions=)`), holding the order with its cause (`hold(plugin, order_id, stale)`) under `REFUSE` or marking the placement (`placement(stale)`) under `WARN`; `after_ns(rows)` reads the admin's `stale_reference_after`; `open_quotes(placement)` orders an RFQ placement's open quotes best first. See [Set staleness thresholds and the stale-reference action](../how-to/set-staleness-thresholds.md).
+- **An `ems`'s checks** (`meridian.roles.ems`, added in SDK 0.32.0): `ReferenceCheck(action, after_ns, latency, liveness)` judges the reference price's age before a placement (`stale(price, dataset=, asset_class=, sessions=)`), holding the order with its cause (`hold(plugin, order_id, stale)`) under `REFUSE` or marking the placement (`placement(stale)`) under `WARN`; `after_ns(rows)` reads the admin's `stale_reference_after`; `open_quotes(placement)` orders an RFQ placement's open quotes best first. Added in SDK 0.33.0: `permitted(plugin)` reads the stale-reference actions the deployment permits, at the plugin's own role, kept as `warn_permitted`; `refuses` is true for `WARN` too where warn is not permitted. See [Set staleness thresholds and the stale-reference action](../how-to/set-staleness-thresholds.md).
 - **An event-contract venue's events** (added in SDK 0.32.0): `event_contracts.Feed.keep_events(sleep=asyncio.sleep, *, clock=..., once=False)` reports the events of the contracts served, each read once its contract is first served and again every `EVENTS_EVERY_SECONDS` (600), a pass every `EVENTS_FIRST_SECONDS` (15), reported where new or stated otherwise than last reported, in place of a loop of the plugin's own. A range member's bounds go with its group (`member_bounds`). Added in SDK 0.32.3: a `Resolution` carries the venue's optional deadline to challenge a proposed determination, `challenge_ends_at_ns`, 0 unset by default, and `Feed.outcome()` carries it to the `Outcome` recorded.
 
-The SDK's `templates/` holds a role template for `connectivity`, `custody`, `data`, `operations`, `pricing` and `reporting`. CLI 0.1.52 writes each: `meridian plugin new <name> --role <role>`.
+The SDK's `templates/` holds a role template for `connectivity`, `custody`, `data`, `operations`, `pricing` and `reporting`. CLI 0.1.53 writes each: `meridian plugin new <name> --role <role>`.
+
+## Contract 28's helpers { #contract-28s-helpers }
+
+Added in SDK 0.33.0 (contract 28); every operation they call is `preview`.
+
+### Listed options and futures { #listed-options-and-futures }
+
+See [Listed options and futures](../concepts/listed-options-and-futures.md)
+and [Record and read an option chain](../how-to/record-and-read-an-option-chain.md).
+
+| Module | Names | What |
+|---|---|---|
+| `meridian.roles.chains` | `osi_symbol`, `osi_terms`, `osi_key` | The 21-character OSI symbol from a root, an expiration, `call` or `put` and a strike; its parts read back; a series' key under `occ_osi` |
+| | `option_series`, `statistic`, `series_meta` | A data plugin's chain: a series as the `listed_option` template's fields, a series' open interest or volume for a trading date, and a chain row's envelope, the underlying as its subject and the series' key, never its own record |
+| | `read_chain`, `read_open_interest`, `want_series` | A reader's: an underlying's series in an expiration window, every page; a chain's open interest for a trading date; a series' `INS-` record asked for, with its cause and a note |
+| `meridian.roles.lifecycle` | `report` | An expiry, assignment, exercise or day of variation sent once, as the broker states it (`expiry`, `assignment`, `exercise` and `variation` build each) |
+| | `exercise_by_exception`, `propose`, `EXERCISE_THRESHOLD` | `servicing`'s: the exercise a long option's holder can expect where it is in the money by the threshold, a cent by default, against the underlying's close; the proposals sent |
+| | `due_for_release`, `release` | `operations`': whether a proposal no report answered may be released, the morning after its date with its position gone from the statement; its release, with a note |
+| | `read_events` | An account's lifecycle events in a range of dates, every page |
+| `meridian.roles.packages` | `legs`, `MOST_LEGS` | A package's legs, each an instrument, a side, a ratio and open or close, in lowest terms, 2 to 16 |
+| | `propose` | A package proposed: its legs, its units and one net limit per unit, positive a debit |
+| | `report_fill`, `LegFill` | A venue's fill of a package, sent once for the package and once per leg, each leg linked to the package's |
+
+### A signal's derived series and scenarios { #a-signals-derived-series-and-scenarios }
+
+`meridian.roles.signal`. See [The lake: derived series](../concepts/the-lake.md#derived-series)
+and [Scenarios](../concepts/scenarios.md).
+
+| Names | What |
+|---|---|
+| `derived`, `read_derived` | One value of a derived series, with its rule and each dataset it read; a subject's derived series read by name over a range of dates |
+| `spot_steps`, `date_steps` | A grid's usual axes: every spot moved by percentages; today, forward by days, and to settlement |
+| `saved`, `read_scenarios` | A scenario set's axes, or one scenario, as a row of the plugin's own dataset under its row key; saved scenarios read by row key, the latest or a version |
+| `escalate`, `Baseline`, `OutlierThresholds` | A row judged against its subject's robust baseline, and each found suspicious or invalid recorded as an assessment, states only escalating; the admin's thresholds from `meridian.quality_thresholds()` |
+
+### The filings slice and quality states { #the-filings-slice-and-quality-states }
+
+Core serves quality states from chart 0.1.314 and the filings slice in a later chart release: see
+[The lake: what core does not serve yet](../concepts/the-lake.md#not-served-yet).
+Declared cash dividends, recorded with this module, are served.
+
+| Module | Names | What |
+|---|---|---|
+| `meridian.roles.data.filings` | `Companies` | A filer, an issuer, a holder or a rater resolved once by its CIK or LEI to its `ENT-` record ([`resolve_company`](typed-operations.md#resolve_company)), and a builder for each of the slice's rows: a filing, a reported fact, a holdings report and its holdings, a declared dividend and a rating action. `Wants.record` takes them |
+| `meridian.roles.data.quality` | `EdgeChecks` | Every row a data plugin records unasked or for a standing want, judged at the edge: a quote crossed past `crossed_tolerance` invalid; a duplicate under a new row key, the rows after a sequence gap until resynced, a row out of order or stale suspicious; a source time ahead of the clock invalid. A state the plugin set is only ever escalated. `Wants.quality` holds the checks, and `Wants.edge()` |
+| | `thresholds_from` | The checks' thresholds, from `meridian.dataset_thresholds()`'s columns `crossed_tolerance`, `out_of_order_tolerance` and `future_skew_max` |
+| | `Baseline`, `OutlierThresholds`, `assessment` | A signal's robust rolling baseline, its thresholds, and one row's assessment |
+
+A pairs venue numbers its quotes (`Top.sequence`) for the gap check.
+`DatasetLicence.eligibility`, a `DataEligibility`, states who may take a
+dataset: the uses its terms allow (`personal`, `commercial`) and the
+buyer's revenue bounds, shown and never enforced. `ems.ReferenceCheck.permitted`
+and `warn_permitted` are in [Each role's common logic](#each-roles-common-logic).
 
 ## Typed settings { #typed-settings }
 
@@ -2011,6 +2087,7 @@ async for current in plugin.settings(Settings):
 - **`meridian.sample_data()`**: the setting `sample_data`, "Sample data", off, a developer setting, last; the one convention for a plugin answering from made-up data on a development deployment, in place of each plugin's own `synthetic`.
 - **`meridian.account_currency()`**, added in SDK 0.27.0: the setting `account_currency`, a table labelled "Account currency", each row a linked account, or none for every linked account without a row of its own, and its currency, an ISO 4217 code. A plugin whose source states no currency for an account's securities declares it, and `meridian.edge.supplied_currency(rows, external_account_id, field)` answers the account's code with its provenance, supplied by the person who set the row (`PROVENANCE_KIND_SUPPLIED`), or `None` while no row covers it; until then the plugin reports nothing that needs the currency, never a guess.
 - **Latency's and staleness's settings**, added in SDK 0.32.0, each a plugin admin's (see [Data age and liveness](../concepts/data-age-and-liveness.md)): `meridian.session_ceilings()`, the table "Session ceilings", each row a connection, a session and its ceilings in milliseconds or counts, which `meridian.ceilings_from(rows)` turns into `roles.Latency`'s `ceilings`; `meridian.dataset_thresholds()`, the table "Dataset thresholds", each row a dataset, its asset class and **Stale after** in seconds, which the lake reads by that name; and an `ems`'s `meridian.stale_reference_action()`, "Stale reference action", **Refuse** (the default) or **Warn**, and `meridian.stale_reference_after()`, the table "Stale reference after", each row an asset class and **After** in seconds.
+- **The quality settings**, added in SDK 0.33.0: `meridian.dataset_thresholds()` gains the edge's tolerances beside **Stale after**, `crossed_tolerance` (how far a bid may sit above its ask before a quote is invalid, in its price), `out_of_order_tolerance` and `future_skew_max` (in seconds), read by `roles.data.quality.thresholds_from`; and a signal's `meridian.quality_thresholds()`, the table "Quality thresholds", each row a dataset, its `outlier_sigma`, `sigma_floor`, `warm_up`, `invalid_sigma` and `cross_source_tolerance`. Core does not yet act on quality states (see [The lake](../concepts/the-lake.md#not-served-yet)).
 - The class is a frozen dataclass of the values, with `declared()`, `label(name)`, `.missing` and `.refused`; `plugin.settings(Settings)` delivers an instance at each change, `plugin.first_settings(Settings)` the first.
 
 Every page's template loader also holds the kit's macros, `meridian/kit.html` (`facts` among them).
@@ -2137,6 +2214,44 @@ The package installs one command, `meridian-dev run`. On a development deploymen
 ## Release notes { #release-notes }
 
 Each release of the SDK, the contract it declares, the runtime it needs, and the CLI whose `plugin new` writes a plugin on it. What a plugin's author does to move to it is in [Moving a plugin to a new release](#moving-a-plugin-to-a-new-release).
+
+!!! note "0.33.1: contract v28, additive"
+    open-meridian 0.33.1 adds an event-contract venue's bars. A `Market`
+    answering `bars(contract, interval, first_ns, until_ns)` -- each
+    `Candle` of an hour (`HOUR`) or the venue's session day (`DAY`) --
+    publishes a third dataset keyed `bars`, of the lake's bar kind, and
+    `Feed.keep_bars(declared)` keeps each served contract's closed hours and
+    days; a want of `bars` is answered from the venue's history. A `Market`
+    without the hook is unchanged, and `EventContractsChecks` refuse any
+    third dataset but `bars`. The data suite's feed-delay producer stands
+    its want on the quote where the venue's last trade states no time or
+    its live dataset declares no prices, and a row's interval and business
+    date are part of what makes it a duplicate. Base image
+    `ghcr.io/open-meridian/plugin-python:0.33.1`; runtime chart 0.1.313 or
+    later.
+
+!!! note "0.33.0: contract v28"
+    open-meridian 0.33.0 declares contract v28. Breaking: the typed
+    operations take `meridian.SubjectRef` only, which carries its role
+    (`role=`), and refuse the wire's; every role's suite holds v28's cases,
+    each case about what a plugin's source or work may never present marked
+    by its `about`; and the three latency cases are required again.
+    `Latency.report` sends `ReportLatency`, and an `ems`'s
+    `ReferenceCheck.permitted` reads the stale-reference actions the
+    deployment permits. Listed options and futures: chains, lifecycle
+    events and package orders (`meridian.roles.chains`, `.lifecycle`,
+    `.packages`); a signal's derived series, saved scenarios and a row's
+    quality escalated (`meridian.roles.signal`); the filings slice
+    (`meridian.roles.data.filings`); quality states at the edge
+    (`meridian.roles.data.quality`); a licence's eligibility
+    (`DataEligibility`). `meridian plugin migrate` rewrites a wire
+    `SubjectRef` handed to the SDK (see [0.32.3 to 0.33.0](#0323-to-0330)).
+    It needs a deployment on contract 28 (chart 0.1.313 or later); core
+    serves the filings slice, quality states and the data-use counts in a
+    later chart release on the same contract (see
+    [The lake](../concepts/the-lake.md#not-served-yet)). CLI 0.1.53's
+    `plugin new` writes a plugin on it. Its base image is
+    `ghcr.io/open-meridian/plugin-python:0.33.0`.
 
 !!! note "0.32.3: a rate's convention, listings' liveness, the not-affiliated notice"
     open-meridian 0.32.3, released on PyPI on 2026-10-24, declares contract
@@ -2569,8 +2684,10 @@ Move a plugin one release at a time or several at once: [`meridian plugin migrat
 
 | From | To | Contract | Runtime | `plugin new` writes it from | `plugin migrate` rewrites | Then by hand |
 |---|---|---|---|---|---|---|
-| 0.32.2 | 0.32.3 | 27 | chart 0.1.309 or later; 0.1.311 for the licence's attribution terms | not yet: CLI 0.1.52 writes 0.32.1 | nothing: only the pins move | give every rate a convention: see [0.32.2 to 0.32.3](#0322-to-0323) |
-| 0.32.1 | 0.32.2 | 27 | chart 0.1.309 or later; 0.1.311 for the licence's attribution terms | not yet: CLI 0.1.52 writes 0.32.1 | nothing: only the pins move | a rates plugin recording no liveness names one more case not presented: see [0.32.1 to 0.32.2](#0321-to-0322) |
+| 0.33.0 | 0.33.1 | 28 | chart 0.1.313 or later | none: CLI 0.1.53 writes 0.33.0 | nothing: only the pins move | a venue keeping bars declares `bars`, names `BARS_DECLARED` in its `venue_cases` and drops `a-daily-bar` from `NOT_PRESENTED`; a plugin's own feed-delay producer standing on the quote can be removed |
+| 0.32.3 | 0.33.0 | 28 | chart 0.1.313 or later | CLI 0.1.53 | a wire `SubjectRef` handed to the SDK, into `meridian.SubjectRef`; a base pinned by digest, moved with its digest dropped where it cannot be read | see [0.32.3 to 0.33.0](#0323-to-0330) |
+| 0.32.2 | 0.32.3 | 27 | chart 0.1.309 or later; 0.1.311 for the licence's attribution terms | none: CLI 0.1.52 writes 0.32.1 | nothing: only the pins move | give every rate a convention: see [0.32.2 to 0.32.3](#0322-to-0323) |
+| 0.32.1 | 0.32.2 | 27 | chart 0.1.309 or later; 0.1.311 for the licence's attribution terms | none: CLI 0.1.52 writes 0.32.1 | nothing: only the pins move | a rates plugin recording no liveness names one more case not presented: see [0.32.1 to 0.32.2](#0321-to-0322) |
 | 0.32.0 | 0.32.1 | 27 | chart 0.1.309 or later | CLI 0.1.52 | nothing: only the pins move | a rates-only data plugin names two more cases not presented: see [0.32.0 to 0.32.1](#0320-to-0321) |
 | 0.31.1 | 0.32.0 | 27 | chart 0.1.309 or later | CLI 0.1.51 | a base pinned by digest, moved with its digest dropped where it cannot be read | see [0.31.1 to 0.32.0](#0311-to-0320) |
 | 0.31.0 | 0.31.1 | 26 | chart 0.1.308 or later | CLI 0.1.50 | nothing: only the pins move | nothing |
@@ -2589,6 +2706,42 @@ Move a plugin one release at a time or several at once: [`meridian plugin migrat
 | 0.18.0 | 0.19.0 | 14 | | CLI 0.1.34 | nothing: only the pins move | see [0.18.0 to 0.19.0](#0180-to-0190) |
 
 Before 0.19.0, `plugin new` pinned 0.18.0 from CLI 0.1.33, 0.17.0 from CLI 0.1.29 to 0.1.32, 0.16.0 from CLI 0.1.28, 0.15.0 from CLI 0.1.27, 0.14.0 from CLI 0.1.26, 0.12.0 from CLI 0.1.24 and 0.1.25, 0.11.0 from CLI 0.1.23, 0.10.1 from CLI 0.1.22, 0.10.0 from CLI 0.1.21, 0.9.0 from CLI 0.1.20, 0.7.1 from CLI 0.1.18 and 0.1.19, and 0.6.1 from CLI 0.1.16 and 0.1.17.
+
+### 0.32.3 to 0.33.0 { #0323-to-0330 }
+
+The `to_0_33_0` step. Breaking: the SDK declares contract v28, the typed
+operations take `meridian.SubjectRef` only, and every role's suite holds
+new cases, so a plugin running its role's suite is not verified until its
+test maps them. `meridian plugin migrate --to 0.33.0` moves the pins and
+rewrites:
+
+- **A wire `SubjectRef` handed to the SDK** (`subject-ref-from-the-sdk`):
+  `ops.SubjectRef(...)`, `operations_pb2.SubjectRef(...)`, or one imported
+  from `meridian.plugin.v1.operations_pb2`, into
+  `meridian.SubjectRef(...)`. One built inside another wire message, or
+  added to a wire message's field, stays the wire's.
+- **A base pinned by digest** (`base-digest-dropped`): moved to 0.33.0 with
+  its digest dropped, since the migration runs with no network.
+
+Then, by hand where they apply:
+
+- **Subjects from the wire** (`subjects-from-the-wire`): a typed operation,
+  or one of the SDK's rows, given a heard message's subjects
+  (`subjects=want.subjects`). Convert each:
+  `[meridian.SubjectRef(entity_id=s.entity_id) for s in want.subjects]`,
+  keeping `role=s.role` where the row states one.
+- **The suites' v28 cases** (`suite-cases-v28`): map each to the plugin's
+  own producer through the SDK's v28 helpers (see
+  [Contract 28's helpers](#contract-28s-helpers)), or, for a case about
+  what its source or work never presents, name it in `not_presented` with
+  why (see [A case not presented](#a-case-not-presented)).
+- **The latency cases** (`latency-cases-required`): the three a v27 plugin
+  named not presented, "core receives ReportLatency from contract v28", are
+  required: map each to the plugin's `roles.Latency`, which now reports.
+  `meridian.roles.data.testing.feed_delay`, and the connectivity and `ems`
+  producers in the SDK's testing modules, do it for the SDK's kinds.
+- **The base's digest** (`base-digest`): pin it again,
+  `ghcr.io/open-meridian/plugin-python:0.33.0@sha256:<digest>`.
 
 ### 0.32.2 to 0.32.3 { #0322-to-0323 }
 

@@ -27,8 +27,12 @@ and 27, eight read and set [the deployment's settings](#the-deployments-settings
 routing), one reads an account's
 [execution costs](#dashboard__list_execution_costs), one the
 [event groups](#dashboard__list_event_groups), and one is the lake's
-[bounded query](#dashboard__query_lake). This page is the reference for
-those fifty-nine. An agent calls them as the person who
+[bounded query](#dashboard__query_lake). From contract 28, six work
+[starter packs](#starter-packs), one reads the Data sources page's
+[Age tab](#dashboard__read_data_age), three read and set the
+[series request rule](#listed-series) and ask for series, and two read and
+set the [stale reference actions permitted](#dashboard__read_stale_reference_actions_permitted).
+This page is the reference for those seventy-one. An agent calls them as the person who
 delegated to it, only as far as that person could at the page each tool
 mirrors, and only as far as the deployment lets agents go with each act.
 Every act listed below that changes something can be prepared, but for the
@@ -199,8 +203,13 @@ where the plugin's own page says), `where` and `deployment_admins`); `figures`,
 `not_carried_seen`, `tool_refusals` and `stored`, what
 storage holds of each kind of raw record; and on an edge plugin keeping raw
 records, the `holds` over it, `archived`, what the archive holds of each
-kind, and its `archive` as allowed. A deployment admin who administers none
-of its roles reads the Overview's parts alone. Nothing of a raw record's
+kind, and its `archive` as allowed. Added in contract 28: `latency`, the
+Status's latency line, each series the plugin reports (a session and its
+metric, or a dataset and its hop) with its ceiling, its p99 over the last
+minute and its open latency or backlog episodes, and since when (see
+[Data age and liveness](../concepts/data-age-and-liveness.md#latency)). A
+deployment admin who administers none of its roles reads the Overview's
+parts alone. Nothing of a raw record's
 content is answered. Changed in contract 25: what the version declares and
 its tools are answered by
 [`dashboard__read_plugin_documentation`](#dashboard__read_plugin_documentation),
@@ -519,6 +528,105 @@ The **Registries** tab's **Report plugin usage**.
 **Answer:** `outcome: "made"`, with `reports_plugin_usage`, the setting in force. The report names
 no person, account, instrument or local plugin.
 
+## Starter packs { #starter-packs }
+
+Added in contract 28. The **Plugins** page's **Browse** tab, its
+**Starter packs** view, a pack's install sheet and the pack's own page,
+the setup checklist (see
+[Install a plugin from a registry](../how-to/install-from-a-registry.md#a-starter-pack)).
+Each is a deployment admin's. A pack is a list of listings, never a merged
+plugin, and its title and description are its curator's words, screened.
+The three acts take a note, can be prepared, and agents may not make them
+until the deployment admin loosens them, as installing a plugin is.
+
+### `dashboard__list_registry_packs`
+
+**Browse**'s **Starter packs** view: the packs in the catalogue's copy this
+deployment's conductor keeps.
+
+**Input:** `search`, words; `pull_now`, `true` to pull the catalogue first;
+`cursor`.
+
+**Answer:** one line a pack: its name (`organisation/pack`), title,
+curator, revision, asset classes, members, and this deployment's `state`
+("Not installed", or "Installed: 7 of 9 members"); `next_cursor`. A
+withdrawn pack is not listed.
+
+### `dashboard__read_registry_pack`
+
+A pack as its install sheet shows it.
+
+**Input:** `pack`, `organisation/pack`.
+
+**Answer:** the revision to install, and each member in the curator's
+order: its group, its selection (`required`, `preselected` or `choose`;
+brokers and venues to choose, none preselected), its version as resolved
+(its latest offered release at or above the pack's minimum), its roles,
+its floor against this deployment, its registry, its terms' access basis
+and the address of its terms section, and its state here: installed
+already at a version, unavailable, or not permitted here with the reason,
+neither of which can be ticked. With the Terms' address where a member is
+community, and that each data source's terms are accepted on Data sources,
+never by a pack.
+
+### `dashboard__install_pack`
+
+The install sheet's **Install {pack title}**.
+
+**Input:** `pack`; `revision`, the revision read, the catalogue's latest
+when absent; `members`, the members ticked, whole, or leave it out for the
+pack's defaults with `with` and `without`, each a listing or its plugin
+part; `note`.
+
+**Answer:** at once, each member's state, those to install `installing`;
+[`dashboard__read_pack`](#dashboard__read_pack) follows the job. A name
+that is not a member is refused by its path before anything moves, a
+revision other than the catalogue's latest refused naming `revision`.
+Each member is installed by [`dashboard__install_plugin`](#dashboard__install_plugin)'s
+steps, one by one, as a job that goes on past a failure and rolls nothing
+back, each its own install record naming the pack; the pack is one record,
+`pack_installed`, of the members ticked and each one's outcome. A member
+installed already at any version is left alone. Install launches nothing.
+
+### `dashboard__read_pack`
+
+A pack's page, the setup checklist.
+
+**Input:** `pack`.
+
+**Answer:** the revision installed and the catalogue's latest, whether its
+curator withdrew it, and each member: its group, its version installed and
+the latest offered, its `state` (`not_installed`, `installing`, `failed`,
+`installed`, `launched`, `unavailable` or `not_permitted`) and the reason,
+its instances, its connection from that instance's **Setting up** ("Set
+up", the next step's words, "Not answering", or "Launch to connect"), and
+the revision that added it since the install, or that dropped it ("No
+longer in this pack", still installed).
+
+### `dashboard__update_pack`
+
+**Update all**.
+
+**Input:** `pack`, `note`.
+
+**Answer:** each member's outcome, and one `pack_updated` record of them.
+Each launched member with a newer offered version in its source registry
+moves by its own update, each its own record; a member whose new version
+asks for more roles is skipped as "Needs approval", which a person approves
+on its own **Update** sheet; an installed member not launched is given the
+newer version; a member added since is never installed. Nothing launches
+that was not launched.
+
+### `dashboard__remove_pack`
+
+**Remove pack**.
+
+**Input:** `pack`, `note`.
+
+**Answer:** each member as it stays. Only this deployment's record of the
+pack is removed, one `pack_removed` record; every member stays installed,
+and running where it runs.
+
 ## The Data sources page
 
 The dashboard's **Data sources**
@@ -536,6 +644,20 @@ reads do. Changed in contract 23: `dashboard__list_datasets` and
 client written against them accepts either. A licence records
 what was entered; no answer says the deployment meets a vendor's terms.
 
+### `dashboard__read_data_age`
+
+Added in contract 28. The page's **Age** tab (see
+[Data age and liveness](../concepts/data-age-and-liveness.md#latency)).
+
+**Input:** nothing.
+
+**Answer:** over the last minute, a line per dataset and hop, and per data,
+connectivity or `ems` plugin's session and metric (round trip, order
+acknowledgement, fill delay): p50, p95 and p99 in nanoseconds, how many
+were measured, the plugin or core component that measured them, the
+session's last sign of life and its backlog's peak. Measurements, never a
+price and never a record. A read answers `outcome: "unchanged"`.
+
 ### `dashboard__list_datasets`
 
 The page's **Datasets** and **Entitlements** tabs.
@@ -549,7 +671,7 @@ The page's **Datasets** and **Entitlements** tabs.
 | `dataset`, `instance` | The dataset's ID, the instance, a colon and its key (`alpaca-1:daily`), and the instance serving it. |
 | `vendor`, `aggregator` | Who originated it, and who carries it where an aggregator does, as the plugin names them: others' words, screened. |
 | `catalogue_entry` | The catalogue's entry as the plugin declared it ([`DatasetDeclaration`](../boundaries/sidecar.md#meridian.v1.DatasetDeclaration)): data types and fields, modes, cadence, history, its default licence, its day's zone and end, its venue. Screened as others' words. |
-| `licence` | The licence enforced: `set_by_the_deployment`, false while it is the catalogue's default; `kept`, `retention_days`, `derived_use`, `display`, `default_fields`, `personal_use`; and who set it, when, the `acting_through_delegation` and `client_name`, and its `note`. Added in contract 27: `derived_use_terms`, the terms' answer, `not_restricted`, `internal_only` or `redistribution_needs_licence`, read from the boolean `derived_use` where the licence states none. Added in chart 0.1.311: the attribution terms the plugin's catalogue declares, `redistribution` (`not_allowed`, `licence_required` or `allowed_with_attribution`, empty for none stated), `attribution_required`, `attribution_text`, `copyright_class` (`public_domain`, `copyright_citation_required` or `copyright_preapproval_required`, empty for none stated), `no_more_restrictive_terms` and `not_affiliated_notice`, the two texts screened as others' words. |
+| `licence` | The licence enforced: `set_by_the_deployment`, false while it is the catalogue's default; `kept`, `retention_days`, `derived_use`, `display`, `default_fields`, `personal_use`; and who set it, when, the `acting_through_delegation` and `client_name`, and its `note`. Added in contract 27: `derived_use_terms`, the terms' answer, `not_restricted`, `internal_only` or `redistribution_needs_licence`, read from the boolean `derived_use` where the licence states none. Added in chart 0.1.311: the attribution terms the plugin's catalogue declares, `redistribution` (`not_allowed`, `licence_required` or `allowed_with_attribution`, empty for none stated), `attribution_required`, `attribution_text`, `copyright_class` (`public_domain`, `copyright_citation_required` or `copyright_preapproval_required`, empty for none stated), `no_more_restrictive_terms` and `not_affiliated_notice`, the two texts screened as others' words. Added in contract 28: `eligibility`, who may take it as its terms state (`uses`, `buyer_revenue_below`, `buyer_revenue_at_least`, `buyer_revenue_currency_code`), where stated; shown, never enforced. |
 | `entitlements` | Each instance entitled now: `instance`, `allowed`, `fields` (none for every field), who set it, when, the delegation and client, and its `note`. |
 | `unconverted_count` | How many of its values its plugin left unconverted. |
 | `miss_count` | How many identifiers and venues its plugin reported missing. |
@@ -571,7 +693,13 @@ The **Licence** dialog: replaces a dataset's licence whole.
 | `derived_use`, `display` | Required: whether derived data may be made, and whether it may be shown. |
 | `default_fields` | The fields readable by default, by their dictionary entries, at most 64; none for every field. |
 | `personal_use` | Required: whether its terms are one person's. |
+| `eligibility` | Added in contract 28. Who may take it, as its terms state: `uses` (`personal`, `commercial`), `buyer_revenue_below` or `buyer_revenue_at_least` as a decimal, and `buyer_revenue_currency_code`, ISO 4217. Unset keeps the declared eligibility. Shown, never enforced. |
 | `note` | Required: why. |
+
+Changed in contract 28: every term the input leaves unstated, the six
+attribution terms, the meters and the eligibility among them, is kept at
+the value the plugin's catalogue declares, so setting a licence never
+clears them.
 
 ```json
 {
@@ -1062,10 +1190,12 @@ weekend day that is a business day), `name` and `source`; its `coverage`
 
 ## The deployment's settings { #the-deployments-settings }
 
-Four settings of the whole deployment, each a deployment admin's, read and
+Six settings of the whole deployment, each a deployment admin's, read and
 set from the dashboard's settings: the agents' guard on the home page,
-**Model routing** under **Plugins**, and **Time zone** and **FX pivot
-currencies** under **Deployment**. A read by anyone else, or a set, is
+**Model routing** under **Plugins**, **Time zone** and **FX pivot
+currencies** under **Deployment**, and from contract 28 **Stale reference
+actions permitted** and **Series request rule** on the settings home page
+(the second's tools are under [Listed series](#listed-series)). A read by anyone else, or a set, is
 refused `not_permitted`. Each set takes a `note`, is its own record naming
 the person, the delegation and the client, can be prepared, and is at
 **May not** for agents until the deployment admin loosens it; the guard's
@@ -1170,6 +1300,81 @@ launched version does not declare the model id.
 **Answer:** `outcome: "made"`, with the table as the list answers it. A
 routed plugin that does not answer leaves the figures through it not
 evaluated.
+
+### `dashboard__read_stale_reference_actions_permitted`
+
+Added in contract 28. **Stale reference actions permitted**: whether an execution
+plugin's admin may choose **Warn**, beside **Refuse**, when a placement's
+reference price is past its ceiling (see
+[Data age and liveness](../concepts/data-age-and-liveness.md#what-a-deployment-admin-permits)).
+
+**Input:** nothing.
+
+**Answer:** `outcome: "unchanged"`, with `warn_permitted` (`false`, refuse
+only, by default), and the last change and who made it.
+
+### `dashboard__set_stale_reference_actions_permitted`
+
+Added in contract 28. **Refuse only** or **Refuse or warn**.
+
+**Input:** `warn_permitted`, `true` or `false`; `note`.
+
+**Answer:** `outcome: "made"`, with the setting as the read answers it.
+Each change is its own record.
+
+## Listed series { #listed-series }
+
+Added in contract 28. **Series request rule** on the settings home page
+and its **Request series records** dialog, a deployment admin's: which wants for a
+listed option or future series the deployment does not hold are asked of
+the platform with no person, and asking for series by hand (see
+[Listed options and futures](../concepts/listed-options-and-futures.md#a-series-gets-its-record-when-it-is-wanted)).
+Each act takes a note, is its own record, can be prepared, and is at
+**May not** for agents until the deployment admin loosens it.
+
+### `dashboard__read_series_request_rule`
+
+**Input:** nothing.
+
+**Answer:** `outcome: "unchanged"`, with `orders` (an order's or a
+proposal's series asked for, on by default), `standing_wants` (a standing
+want's, off by default), `daily_limit` (500 by default), and the last change
+and who made it.
+
+### `dashboard__set_series_request_rule`
+
+**Input:** `orders` and `standing_wants`, `true` or `false`; `daily_limit`,
+1 to 5,000; `note`.
+
+**Answer:** `outcome: "made"`, with the rule as the read answers it.
+
+### `dashboard__request_series_records`
+
+**Request series records**: asks the platform for the `INS-` records of series the
+deployment does not hold, under the rule.
+
+**Input:** `series`, 1 to 500, each its `series_key` (one identifier:
+`occ_osi` and the OSI symbol for a listed option, or `ticker` with its
+venue's MIC in `source` for a future or a future option), its
+`underlying_instrument_id` (`INS-`) and its `cause`, `order` or `standing`;
+`note`.
+
+```json
+{
+  "series": [
+    {"series_key": [{"scheme": "occ_osi", "value": "AAPL  261120P00230000"}],
+     "underlying_instrument_id": "INS-...", "cause": "order"},
+    {"series_key": [{"scheme": "ticker", "value": "ESZ6", "source": "XCME"}],
+     "underlying_instrument_id": "INS-...", "cause": "standing"}
+  ],
+  "note": "The desk is quoting the November put and the December future."
+}
+```
+
+**Answer:** each series with its record where held or minted,
+`pending_review` where the platform's staff review it, or `refused_by_rule`
+where the rule does not allow its cause or the day's limit is reached,
+nothing sent. A key no listed series row holds is refused, naming it.
 
 ## Execution costs
 

@@ -8,9 +8,9 @@ plugins of a pair pass it unchanged. This page starts one from the template
 and holds it to the suite. How a person then uses it is
 [Using a data plugin](using-a-data-plugin.md).
 
-You need CLI 0.1.52 and SDK 0.32.1 or later (contract 27): `meridian plugin new
+You need CLI 0.1.53 and SDK 0.33.0 or later (contract 28): `meridian plugin new
 --role data` writes this template on the role's common part, for a runtime
-serving contract 27. A plugin made by an older CLI moves with
+serving contract 28. A plugin made by an older CLI moves with
 [`meridian plugin migrate`](../api/cli.md#plugin-migrate), then maps any new
 cases as [below](#hold-it-to-the-suite).
 
@@ -21,7 +21,7 @@ meridian plugin new my-prices --role data
 cd my-prices
 ```
 
-It writes a whole plugin holding `data`, pinned to `open-meridian==0.32.1`,
+It writes a whole plugin holding `data`, pinned to `open-meridian==0.33.0`,
 that puts a stand-in vendor's daily closes and bars into the lake:
 
 | File | What it is |
@@ -40,8 +40,8 @@ conversion, and the Datasets page fills its rows from what it kept
 `.event_contracts` do a venue's whole work for a venue listing pairs or
 binary event contracts, with their pages and the checks a plugin runs
 (`meridian.roles.data.testing`); a venue of event contracts also reports
-how it groups them by event (see [Event groups](../concepts/event-groups.md)). A plugin made by an older CLI, or on
-0.32.1, moves to the latest SDK, 0.32.3, with `meridian plugin migrate`; see
+how it groups them by event (see [Event groups](../concepts/event-groups.md)). A plugin made by an older CLI moves to the latest SDK, 0.33.0, with
+`meridian plugin migrate`; see
 [Each role's common logic](../api/python-sdk.md#each-roles-common-logic).
 
 `AGENTS.md` teaches a coding agent the role's rules beside the template's
@@ -329,9 +329,18 @@ rates`, mapped by a rates publisher's plugin (see
 `records-a-datasets-liveness` is `about: streams`, for a source that is
 polled; `queries-the-lake-within-bounds` is `about: trades`; and
 `an-exact-price` and `a-want-recorded-against` are `about: closes` from SDK
-0.32.1. `reports-its-feed-delay` is `about: latency`: **every** data plugin
-names it not presented, "core receives ReportLatency from contract v28,
-ruling 515", until contract 28 requires it.
+0.32.1.
+
+**Contract 28's markers.** `reports-its-feed-delay` is required of every
+data plugin: its `roles.Latency` reports the feed delay, and
+`meridian.roles.data.testing.feed_delay` maps the case for the SDK's
+kinds. The chain's cases are `about: option chains`; the filings slice's
+`about: filings`, `holdings`, `corporate actions` and `ratings`; and
+`a-crossed-quote-is-recorded-invalid`, `a-duplicate-is-recorded-suspicious`
+and `rows-after-a-gap-are-suspicious` `about: quotes`, since they expect
+quote rows. A plugin whose source presents none of a kind names its cases
+not presented, with why. See
+[Record and read an option chain](record-and-read-an-option-chain.md).
 `meridian.roles.data.testing`'s `PAIRS_NOT_PRESENTED`,
 `EVENT_CONTRACTS_NOT_PRESENTED` and `RATES_NOT_PRESENTED` name what each
 kind of venue never presents; from SDK 0.32.2 `RATES_NOT_PRESENTED` leaves

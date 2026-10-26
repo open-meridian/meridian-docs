@@ -21,13 +21,16 @@ piece of data lives.
 | [The custodian's activity](the-custodians-activity.md) | What a custody plugin reports of what happened on an account, and how operations explains a break and proposes its entry from it |
 | [The archive](the-archive.md) | An edge plugin's raw records: each kind's window, archived, kept or deleted past it, the deployment admin's archive, bound and holds, restore, and the record every move leaves. |
 | [Instruments](instruments.md) | Instrument identity, the security master, and the copy a deployment keeps of it; each identifier's window, binary event contracts, and an ID never reused |
+| [Listed options and futures](listed-options-and-futures.md) | Listed options' and futures' templates and series keys, a chain read without minting, a series minted when wanted under the series request rule, lifecycle events in the book with the broker's report as the record, daily settlement variation, and package orders |
+| [Companies and corporate actions](companies-and-corporate-actions.md) | The company kind, `ENT-` records resolved by CIK or LEI with the platform asked on a miss, a subject's role on a row, declared cash dividends, and the filings slice core serves later |
 | [One ID per instrument](one-id.md) | Every instrument named by the platform's `INS-` ID, minted from the platform's own source; local `LCL-` records until it answers, never priced; why a thin statement line stays unrecognised; the licence list, usage reporting and orders on local records |
 | [Event groups](event-groups.md) | A venue's event contracts grouped by event in the instrument master: mutually exclusive and exhaustive as stated or not stated, every version kept, reported by a data plugin and minted by the platform |
 | [The lake](the-lake.md) | Where a deployment keeps what its data sources say, prices and bars, by dataset: versions, reads as of a recorded time, the source priority, wants, kept or served; trades and quotes, streamed, caught up after a watermark; event contracts' outcomes; and who reads them |
 | [Rates](rates.md) | The lake's rates: fixings, averages, index levels and curves' points, each a value with its unit, convention and tenor, about a referential record that is never held; read point in time and by publication time |
-| [Data age and liveness](data-age-and-liveness.md) | A dataset's liveness, declared delay and staleness threshold, the trading sessions staleness counts in, the `ems`'s stale-reference hold or warning, and latency recorded but not yet reported |
+| [Data age and liveness](data-age-and-liveness.md) | A dataset's liveness, declared delay and staleness threshold, the trading sessions staleness counts in, the `ems`'s stale-reference hold or warning and what the deployment permits, and the latency plugins and core report: breaches, notices, the Summary's line and the Age tab |
 | [Licences and entitlements](licences-and-entitlements.md) | The terms a dataset is kept on, the one-person warning, which plugins may read it and which fields, and who changed what |
-| [The analytics component](the-analytics-component.md) | Figures over the book and the lake for the plugins that ask: jobs for a moment or a business date, in a reporting currency; the measures, realized P&L among them, and the pricing models; fiat legs inverted and crossed through the deployment's pivots; the `pricing` role's seam, provenance and the answer hash, what is not evaluated and why, and its current limits |
+| [The analytics component](the-analytics-component.md) | Figures over the book and the lake for the plugins that ask: jobs for a moment or a business date, in a reporting currency; the measures, realized P&L among them, and the pricing models; the options measures over a chain, IV, greeks, the surface, the grid and positioning, priced at Treasury's curve; fiat legs inverted and crossed through the deployment's pivots; the `pricing` role's seam, provenance and the answer hash, what is not evaluated and why, and its current limits |
+| [Scenarios](scenarios.md) | The common scenario format: shocks to spot, a surface, a rate or time, each with its form and unit; scenario sets as axes; saved by a signal plugin and named by a job |
 | [Execution costs](execution-costs.md) | TCA: each fill's cost in basis points against the mid at four moments, from the sources a job chooses, recorded as the lake's account-scoped rows; what is not measured, and why |
 | [Money and instruments](money-and-instruments.md) | Why every amount names a cash instrument, fiat and tokens alike, and a fiat code resolved by core |
 | [Venues](venues.md) | The platform's venue master: a venue ID, its MIC and vendors' codes, pulled one at a time, and where a deployment names a venue |
@@ -67,7 +70,14 @@ piece of data lives.
     connections only. A placement states how it is executed, manually or by
     RFQ among the ways; FX orders net on one pair and value date; the lake
     keeps rates; and an `ems` checks its reference price's age before it
-    places. Latency is recorded by plugins but not yet reported to core. A plugin
+    places. Plugins and core report their latency, and a breach tells the
+    people who can act. Listed options and futures are read as chains,
+    minted when wanted, priced by the analytics component's option models
+    and kept in the book through their lifecycle events, with package
+    orders; a signal saves scenarios and derived series; a company's
+    declared dividends reach the lake; and a starter pack installs from
+    Browse or the CLI. The filings slice, quality states and the data-use
+    counts are in the contract and served by core in a later release. A plugin
     carries its own documentation, read before it is launched, and the
     platform's Community registry lists Open Meridian's own plugins. Where a page
     describes something that is specified but not built, it says so.

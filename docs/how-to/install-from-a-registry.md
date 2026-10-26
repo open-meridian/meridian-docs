@@ -51,7 +51,7 @@ registry version is verified again.
 An instance already running a local version of the same plugin is offered **Move to this listing**
 in the same sheet. The move is checked as an update, keeps the instance's ID, and is recorded.
 
-## From the command line, or a starter pack
+## From the command line
 
 [`meridian plugin install`](../api/cli.md#meridian-plugin-install), from
 CLI 0.1.51, does the same through the session `meridian connect` keeps, as
@@ -62,23 +62,73 @@ meridian plugin install open-meridian/snaptrade@0.20.0 --note "the family office
 meridian plugin install open-meridian/snaptrade --note "the newest offered, as Browse shows it"
 ```
 
-A **starter pack** is a curated list of plugins for an asset class, each
-member installed as its own version. `--pack` installs the members the
-pack's curator preselected, and none of those you choose: add one with
-`--with`, leave a preselected one out with `--without`. The plan is shown
-version by version and asked about first; `--yes` approves it without
-asking. A member your deployment already holds is never moved.
+## A starter pack { #a-starter-pack }
 
-The platform publishes five, by `open-meridian`: `equities-options`, `fx`,
+A **starter pack** is a curated list of plugins for an asset class: its
+members, each installed as its own version, never one merged plugin. The
+platform publishes five, by `open-meridian`: `equities-options`, `fx`,
 `crypto`, `event-contracts` and `multi-asset`. Each pack's page on the
 platform, under [its plugins](https://open-meridian.com/plugins), lists
-its members and which are preselected.
+its members and which are preselected. From contract 28 the deployment
+installs a pack and keeps it, at the dashboard or with the CLI.
+
+**Install it.** On **Browse**, switch from **Plugins** to **Starter
+packs**: one line a pack, with its title, asset classes, members and its
+state here ("Not installed", or "Installed: 7 of 9 members"). **Install**
+opens the sheet, **Install {pack title}**, one step a group in the
+curator's order (**Step n of m**, with **Next** and **Back**): the data
+members ticked, brokers and venues to choose, none preselected. A member
+your deployment already holds is never moved; one that is unavailable, or
+"Not permitted here" (its floor not met, or a registry the deployment does
+not take), cannot be ticked, with why beneath the table. The review says
+each data source's terms are accepted on **Data sources**, never by a pack,
+and links the Terms where a member is community. Write a note and install.
+
+The deployment installs the members one by one, as
+[Install it](#install-it) does each, going on past a failure and rolling
+nothing back. Each member's install record names the pack, and the pack's
+install is one record of the members ticked and how each went. It launches
+nothing.
+
+**The pack's page** is its setup checklist: a tab per group, and **About**.
+Each member is one line, with its version installed and the latest
+offered, its state, its connection from its instance's **Setting up**, and
+its next act: **Install**, **Retry**, **Launch**, or its setup step. A
+member a later revision added says **Added to this pack**; one it dropped
+says **No longer in this pack** and stays installed. A pack its curator
+withdrew says **Withdrawn by its curator**. Launch each member from here,
+approving the roles each asks for.
+
+**Update all** moves each launched member to the newest version offered in
+its source registry, each its own update; a member asking for more roles is
+skipped as **Needs approval**, approved on its own **Update** sheet
+(**Update to {version}**). **Remove pack** removes only this deployment's
+record of the pack, through a confirmation with a note: every member stays
+installed, and running where it runs.
+
+Through an agent, the same is done with core's
+[starter pack tools](../api/core-tools.md#starter-packs), each act with a
+note.
+
+**From the command line,** CLI 0.1.53 installs a pack through the
+deployment, as the sheet does, and reads and keeps it with
+[`meridian plugin pack`](../api/cli.md#meridian-plugin-pack):
 
 ```bash
 meridian plugin install --pack crypto --with plugin-coinbase --note "the crypto desk"
+meridian plugin pack list
+meridian plugin pack show crypto
+meridian plugin pack update crypto --note "monthly update"
+meridian plugin pack remove crypto --note "the desk closed" --yes
 ```
 
-Then launch each member it lists, approving the roles each asks for.
+`--pack` installs the members the curator preselected, and none of those
+you choose: add one with `--with`, leave a preselected one out with
+`--without`. The plan is shown version by version and asked about first;
+`--yes` approves it without asking. The command follows the install one
+line a member, then lists `meridian plugin launch` for each member ready to
+launch. A deployment whose core is older than contract 28 installs no pack,
+and the CLI says so in one line.
 
 ## Update it
 
@@ -109,7 +159,7 @@ with a note.
 
 A deployment with no route to the platform installs from a **plugin bundle** carried in by hand.
 
-On a connected machine with CLI 0.1.52:
+On a connected machine with CLI 0.1.53:
 
 ```bash
 meridian plugin download open-meridian/snaptrade@0.20.0
@@ -117,7 +167,7 @@ meridian plugin download open-meridian/snaptrade@0.20.0
 
 It signs in to the platform in your browser the first time, asks where the version is, pulls it,
 and verifies the image, its provenance, bill of materials, scan results and listing statement
-against the platform's keys this CLI release carries: CLI 0.1.52 carries the platform's
+against the platform's keys this CLI release carries: CLI 0.1.53 carries the platform's
 registry-signing key, version 1. Only then does it write
 `open-meridian-snaptrade-0.20.0.plugin-bundle.tar` (`--to` names another file), with the
 version's documentation and a dated copy of the signing keys' status. `--registry` names the

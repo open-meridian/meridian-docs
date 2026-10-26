@@ -1,14 +1,17 @@
 # Set staleness thresholds and the stale-reference action
 
-How old a price may be before it is treated as stale is set in two places:
-a data plugin's admin sets each dataset's threshold, and an `ems`'s admin
+How old a price may be before it is treated as stale is set in three
+places: a data plugin's admin sets each dataset's threshold, a deployment
+admin says whether a desk may warn rather than refuse, and an `ems`'s admin
 sets the desk's own ceiling and what the desk does past it. Then, for a
 plugin's author, how a data plugin records liveness and an `ems` makes its
 check. What each number means is in
 [Data age and liveness](../concepts/data-age-and-liveness.md).
 
-You need a deployment on contract 27 (chart 0.1.309 or later) and plugins
-on SDK 0.32.0 or later.
+You need a deployment on contract 28 (chart 0.1.313 or later) and plugins
+on SDK 0.33.0 or later. On contract 27 the thresholds and the desk's
+setting work as below, but there is no deployment's permission: the
+`ems`'s admin chooses.
 
 ## A dataset's threshold
 
@@ -25,6 +28,19 @@ dataset's values by it, counted only in session. A delayed dataset is
 judged against its declared delay plus this. Each change is recorded with
 who made it and why, as every setting change is.
 
+## What the deployment permits
+
+You need to be a deployment admin.
+
+1. Open the dashboard's settings home page, at **Stale reference actions
+   permitted** (`/admin#stale-reference`).
+2. **Change**, choose **Refuse only** (the default) or **Refuse or warn**,
+   write why, and save; or prepare it for another person to make.
+
+Each change is its own record, shown on the tab with who made it and when.
+Through an agent, `dashboard__set_stale_reference_actions_permitted` with a
+note.
+
 ## The desk's ceiling and action
 
 You need admin on the `ems` plugin.
@@ -34,13 +50,13 @@ You need admin on the `ems` plugin.
    class the desk trades. Only one tighter than the dataset's threshold
    changes anything.
 3. Set **Stale reference action**: **Refuse**, the default, holds the order
-   and places nothing; **Warn** sends the placement and marks it.
+   and places nothing; **Warn** sends the placement and marks it, where the
+   deployment permits it, and is applied as **Refuse** where it does not.
 4. Save with why.
 
 A held order says why, typed, `HOLD_CAUSE_REFERENCE_PRICE_STALE`, with the
 dataset, the price's age and the ceiling. Place it again once the price is
-fresh. A deployment-wide limit on which actions a desk may choose comes
-with contract 28; until then the `ems`'s admin chooses.
+fresh.
 
 ## In a data plugin
 
@@ -74,6 +90,7 @@ check = ems.ReferenceCheck(
     after_ns=ems.after_ns(config.stale_reference_after),
     liveness=liveness,
 )
+await check.permitted(plugin)         # the deployment's Stale reference setting, read as the plugin
 stale = check.stale(price, dataset=dataset_ref, asset_class="equity", sessions=sessions)
 if stale is not None and check.refuses:
     await check.hold(plugin, order_id, stale)
@@ -85,9 +102,11 @@ else:
 [`list_datasets`](../api/typed-operations.md#list_datasets), carrying its
 threshold and delay; `sessions` its venue's trading sessions from
 [`read_calendar`](../api/typed-operations.md#read_calendar). With no
-ceiling set at all, nothing is stale. The ems suite's
-`reports-its-pre-trade-checks-data-age` is `about: latency`: mark it not
-presented until contract 28.
+ceiling set at all, nothing is stale. `check.refuses` is true for
+**Refuse**, and for **Warn** where the deployment does not permit it. The
+check records the price's age at its hop, which `roles.Latency` reports to
+core. The ems suite's `reports-its-pre-trade-checks-data-age` and
+`reads-the-stale-reference-actions-permitted` are required.
 
 ## Related
 

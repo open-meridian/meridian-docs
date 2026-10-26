@@ -5,7 +5,8 @@ a minute may still be the market, if its stream is alive and sends only on
 change, or it may be a feed that stopped. This page explains how a
 deployment tells the two apart: a dataset's **liveness**, its **declared
 delay**, its **staleness threshold**, the **trading sessions** staleness
-counts in, and the `ems`'s check of its reference price before it places.
+counts in, the `ems`'s check of its reference price before it places, and
+the latency every data, connectivity and `ems` plugin reports to core.
 
 ## Liveness
 
@@ -70,48 +71,95 @@ delay added, counted only in session. Past the ceiling, its admin's
 | Action | What happens |
 |---|---|
 | **Refuse** (the default) | Nothing is placed. The order is **held**, its cause typed, `HOLD_CAUSE_REFERENCE_PRICE_STALE`, with the `StaleReference` found: the dataset, the price's age and the ceiling. A person, or an agent where the admins allow, places again once the price is fresh |
-| **Warn** | The placement is sent, carrying its `StaleReference`. The book records it with the condition `PLACEMENT_CONDITION_SENT_ON_STALE_REFERENCE`, a record of the warning |
+| **Warn** | Only where the deployment [permits it](#what-a-deployment-admin-permits). The placement is sent, carrying its `StaleReference`. The book records it with the condition `PLACEMENT_CONDITION_SENT_ON_STALE_REFERENCE`, a record of the warning |
 
 The book refuses nothing for staleness: the check, its ceiling and the
 choice are the `ems`'s, and the book records what it did. Both the hold's
 cause and the warning are read typed, never from words. A cause on any
 condition but held is refused `invalid`, naming `hold_cause`.
 
-## Latency: recorded, not yet reported
+## Latency, reported to core { #latency }
 
-A data or connectivity plugin on SDK 0.32 **records** its sessions'
+Changed in contract 28. A data or connectivity plugin records its sessions'
 latency (round trip, a venue's order acknowledgement and fill delay, each
 dataset's feed delay, gaps, reconnects, its send backlog and clock skew) as
-histograms, and an `ems` records the age of what it checks. Its connection
-page's **Sessions** section shows each session's p50, p95 and p99 over the
-last minute, and its plugin admin's **Session ceilings** setting holds each
-session's ceilings.
+histograms, and an `ems` records the age of what it checks. From SDK
+0.33.0 the SDK **reports** them to core every 10 seconds
+([`report_latency`](../api/typed-operations.md#report_latency)), with the
+ceilings in force from its plugin admin's **Session ceilings** setting. Its
+connection page's **Sessions** section shows each session's p50, p95 and
+p99 over the last minute, as before.
 
-**Nothing is reported to core yet.** Core receives `ReportLatency` from
-contract 28: until then the SDK sends nothing, and no breach opens a
-notice. The three suite cases about it, the data suite's
-`reports-its-feed-delay`, connectivity's `reports-a-sessions-round-trip`
-and the ems's `reports-its-pre-trade-checks-data-age`, carry the marker
-`about: latency`: a contract-27 plugin marks them **not presented until
-contract 28**, with the reason "core receives ReportLatency from contract
-v28, ruling 515". In contract 28 the marker comes off and they are
-required in full.
+Core's own components report their hops the same way: each plugin's
+sidecar its sidecar hop (a record batch accepted) and bus hop (a row
+delivered), the lake its lake hop, and the analytics component its hop on a
+job read at now. A daily value's age is its date's, so core measures the
+hops of trades and quotes only.
 
-## Not built yet
+**Core's latency monitor** merges what it receives, per minute for 7 days
+and per hour for 30. Latency is a measurement, not a record: nothing is
+journalled, and a restart begins the window again.
 
-These wait for contract 28:
+**Breaches.** The monitor judges each whole minute. A minute with
+measurements is in session; it is **over** where its p99 is above the
+ceiling, or more than three standard deviations above the series' own
+in-session minutes of the trailing 7 days (with at least 20 of them). Three
+minutes over in a row open a **latency episode**, and three clear close it.
+A send backlog's peak past its ceiling opens a **backlog episode**, and the
+first minute under closes it.
 
-- **Core's latency monitor**: receiving each plugin's latency, judging
-  breaches, its notices in the inbox, the Summary's latency part, the
-  **Data sources** page's data age, and the tool reading it.
-- **Core's own hops' age**, each plugin's consumer lag, and the backlog
-  alarm.
-- **The analytics component's check at use**: a job's ceiling per source, a
-  figure's oldest input and a stale figure's age. Today a job sets no
-  ceiling, and `PRICE_STALE` does not arise from one.
-- **What a deployment admin permits** of the `ems`'s stale-reference
-  actions. Until then the `ems`'s plugin admin chooses, refuse by default.
-- **Quality states**: a value's assessment and quarantine.
+**Notices.** Each opening and each closing is one notice, its own record,
+read in the **Inbox** and through `dashboard__read_inbox`
+(`latency_notices`): `latency_breached`, `latency_recovered`,
+`backlog_breached` or `backlog_recovered`. They go to each of the plugin's
+admins and, for a connectivity plugin's session, to the admins of the `ems`
+it is linked to; a core component's own hop is no plugin's, so its episodes
+go to the deployment admins.
+
+**Where you see it.**
+
+- A plugin's **Summary**: its Status carries one latency line, "Breached
+  since HH:MM UTC" while an episode is open, or "Within ceilings, p99 N ms",
+  its title naming the series and the date.
+  `dashboard__read_plugin_summary` answers its `latency` part: each series
+  with its ceiling and its open episodes.
+- The **Data sources** page's **Age** tab, a deployment admin's: a line per
+  dataset and hop, and per plugin session and metric, over the last minute,
+  p50, p95 and p99, the plugin that measured it, the session's last sign of
+  life and its backlog's peak; searched and paged.
+  `dashboard__read_data_age` answers the same.
+
+The suite cases about latency, the data suite's `reports-its-feed-delay`,
+connectivity's `reports-a-sessions-round-trip` and the ems's
+`reports-its-pre-trade-checks-data-age`, are required of every plugin
+holding the role from contract 28.
+
+## What a deployment admin permits { #what-a-deployment-admin-permits }
+
+Added in contract 28. Whether an `ems`'s admin may choose **Warn** at all is
+the deployment's: a deployment admin's **Stale reference actions
+permitted**, on the dashboard's settings home page (`/admin#stale-reference`),
+**Refuse only** (the default) or **Refuse or warn**, its last change
+shown. Each change takes a reason, can be prepared
+for a person to make, and is its own record. An `ems` reads it at its own
+role, with no person
+([`read_stale_reference_actions_permitted`](../api/typed-operations.md#read_stale_reference_actions_permitted));
+the SDK's `ems.ReferenceCheck.permitted` reads it, and honours **Warn** only
+where it is permitted, refusing otherwise. Through an agent:
+`dashboard__read_stale_reference_actions_permitted` and
+`dashboard__set_stale_reference_actions_permitted`.
+
+## Not built yet { #not-built-yet }
+
+- **The analytics component's check at use**: a job's ceiling per source,
+  a figure's age and ceiling, and a stale figure. Today a job sets no
+  ceiling, and `PRICE_STALE` does not arise from one. A model figure names
+  its oldest input's source time.
+- **Each plugin's consumer lag and its conflation counts**, and the page
+  hop's age.
+- **Quality states**: a row's assessment and quarantine, which core serves
+  in a later chart release on contract 28 (see
+  [The lake: what core does not serve yet](the-lake.md#not-served-yet)).
 
 ## Related
 

@@ -23,9 +23,10 @@ recorded: the plugin reports the miss, and the Data sources page counts it.
 
 ## What it holds
 
-Seven data types, each one message per row: prices, bars, trades, quotes,
-an event contract's outcome, and from contract 27 rates and execution
-costs.
+Twelve data types, each one message per row: prices, bars, trades, quotes,
+an event contract's outcome, from contract 27 rates and execution costs,
+and from contract 28 a chain's listed series and statistics, a signal's
+derived series and saved scenarios, and corporate actions.
 
 | Type | What one row is |
 |---|---|
@@ -36,6 +37,11 @@ costs.
 | **Outcome** | What an event contract pays, as its venue determined it, at one stage: see [An event contract's outcome](#an-event-contracts-outcome). |
 | **Rate** | A reference rate's fixing, an average, an index level or a curve's point, its value with its unit, convention and tenor: see [Rates](rates.md). |
 | **Execution cost** | One execution's cost against one benchmark, recorded by the analytics component, the lake's first row scoped to an account: see [Execution costs](execution-costs.md). |
+| **Listed series** | Added in contract 28. One series of an underlying's chain, its terms as its template's fields, keyed by its OSI symbol or its ticker and MIC, never minted: see [Listed options and futures](listed-options-and-futures.md#the-chain-read-never-minted). |
+| **Statistic** | Added in contract 28. A count for a trading date: a series' open interest, volume or block volume, or a share's short and total volume reported to a FINRA facility. |
+| **Derived series** | Added in contract 28. A value a `signal` plugin computed from the lake, an underlying's 30-day IV say, recorded into its own dataset with the rule it used and every dataset it read: see [Derived series](#derived-series). |
+| **Saved scenario** | Added in contract 28. A scenario or a scenario set a `signal` plugin saved, by its row key: see [Scenarios](scenarios.md). |
+| **Corporate action** | Added in contract 28. A company's declared cash dividend, its security and its issuer each a subject: see [Companies and corporate actions](companies-and-corporate-actions.md). |
 
 **An FX rate is a price**: the price of one currency's cash instrument in
 another, EUR at 1.0842 USD, of kind `mid`, `bid`, `ask` or `close`. An FX
@@ -81,6 +87,23 @@ A trade's and a quote's venue is the [venue](venues.md) it printed on, by
 its venue ID: a consolidated dataset's trade names the market centre it
 printed on, a FINRA print its reporting facility. Both are keyed by UTC
 instants and name **no business date**: see [Dates and time](dates-and-time.md).
+
+### Derived series { #derived-series }
+
+Added in contract 28. A `signal` plugin may record what it computes from
+the lake back into the lake, as a row of its **own** dataset
+([`record_derived_series`](../api/typed-operations.md#record_derived_series)):
+each value names its subject, its own name for the series (`iv30`, an
+index's level, a positioning summary's part), its value and unit, the
+**rule** it was computed by (a definition and version, an analytics
+measure's where one was used) and every dataset it read with the as-of it
+read at, so the inputs' licences follow it. Its latest per series is
+kept; it is never published as an event. `compliance`, `portfolio`,
+`reporting` and `signal` read them
+([`list_derived_series`](../api/typed-operations.md#list_derived_series)),
+every readable derived dataset side by side. A signal plugin's catalogue
+declares its own datasets, which serve derived series and saved scenarios
+and nothing else.
 
 ## Datasets
 
@@ -327,6 +350,10 @@ conflated, catch up by reading the latest in force.
 | Rates | `reporting`, `portfolio`, `compliance`, `signal` |
 | Execution costs | `reporting`, `portfolio`, `compliance`, `signal`, `oms`, `ems`, `operations`, each within its read scope's accounts |
 | A dataset's liveness | `reporting`, `portfolio`, `compliance`, `signal` and `ems` |
+| Listed series | `portfolio`, `signal`, `oms` and `ems` (added in contract 28) |
+| Statistics | `portfolio`, `reporting`, `signal` (added in contract 28) |
+| Corporate actions | `portfolio`, `reporting`, `signal` (added in contract 28) |
+| Derived series and saved scenarios | `compliance`, `portfolio`, `reporting`, `signal` (added in contract 28) |
 | Outcomes | `reporting`, `portfolio`, `compliance`, `signal`, and `operations`, which reads the lake for outcomes alone, to explain a payout's break |
 | The datasets a plugin may read | `reporting`, `portfolio`, `compliance`, `signal` and `ems` |
 
@@ -365,6 +392,31 @@ plugins' pages. Each data plugin shows its own connection and what it
 serves on its pages under Manage, the same pages on every one: see
 [Using a data plugin](../how-to/using-a-data-plugin.md).
 
+## What core does not serve yet { #not-served-yet }
+
+Contract 28 carries three parts that core serves in later chart releases
+on the same contract, one release each, in the order below, without a
+contract change. Until a deployment's chart
+serves one, its typed operations are answered `UNAVAILABLE`, nothing
+serving them (the Python SDK raises `CallFailed`, `kind="no handler"`), its
+tools are not listed, and each suite case about it carries its `about`
+marker, so a plugin whose source or work presents none names it not
+presented:
+
+| Part | Its operations | Served from |
+|---|---|---|
+| **Quality states**: a row's state (`valid`, `suspicious`, `invalid`) and reasons as the edge judged it (`ObservationMeta.quality`, `.quality_reasons`), a signal's escalation and invalid rows held from default reads | [`record_quality_assessments`](../api/typed-operations.md#record_quality_assessments), `SourceChoice.include_quarantined` | chart 0.1.314 (core d6781a1). Before it the lake judged nothing: a row was kept with whatever state its plugin set, a default read held no invalid row back, and `include_quarantined` was not acted on |
+| **Filings, reported facts, holdings reports and holdings, and rating actions**, an 8-K's earnings date among the filings | [`record_filings`](../api/typed-operations.md#record_filings), [`list_filings`](../api/typed-operations.md#list_filings), [`record_reported_facts`](../api/typed-operations.md#record_reported_facts), [`list_reported_facts`](../api/typed-operations.md#list_reported_facts), [`record_holdings_reports`](../api/typed-operations.md#record_holdings_reports), [`record_holdings`](../api/typed-operations.md#record_holdings), [`list_holdings`](../api/typed-operations.md#list_holdings), [`record_rating_actions`](../api/typed-operations.md#record_rating_actions), [`list_rating_actions`](../api/typed-operations.md#list_rating_actions) | the next chart release |
+| **The data-use counts and the professional test**: display persons and non-display plugins counted against a dataset's meters, their CSV export, and a person's self-certification on first access | `dashboard__read_data_use`, `dashboard__export_data_use`, `dashboard__answer_professional_test` (core's tools) | the one after |
+
+The SDK's helpers for the first two already exist: `meridian.roles.data.quality`
+judges a row at the edge, `meridian.roles.signal.escalate` records an
+assessment, and `meridian.roles.data.filings` records the filings slice
+(see [Python SDK](../api/python-sdk.md#the-filings-slice-and-quality-states)).
+A plugin built on them runs on any contract-28 deployment; what it sends to
+a part not yet served is refused as above, and the SDK's quality checks
+mark rows at the edge whether or not the lake acts on the mark.
+
 ## Valuing the book, and the Board
 
 The sample reporting plugin values the book at a business date's prices
@@ -390,4 +442,5 @@ every few seconds, conflated, with no tape: see
   [its operations](../api/typed-operations.md#record_prices), trades and
   quotes from [`record_trades`](../api/typed-operations.md#record_trades),
   outcomes from [`record_outcomes`](../api/typed-operations.md#record_outcomes).
+- [Listed options and futures](listed-options-and-futures.md), [Scenarios](scenarios.md) and [Companies and corporate actions](companies-and-corporate-actions.md): contract 28's kinds.
 - [The lake's data dictionary](../boundaries/lake.md).

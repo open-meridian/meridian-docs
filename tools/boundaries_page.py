@@ -103,10 +103,12 @@ GUIDES = [
      "five, its datasets' licences, entitlements and source priority, at the deployment admin's level; "
      "the prepared changes' seven and the accounts a plugin may link to; the deployment's settings "
      "(the agents' guard, the time zone, the FX pivot currencies, the model routing), an account's "
-     "execution costs, event groups and the lake's bounded query"),
+     "execution costs, event groups and the lake's bounded query; from contract 28 starter packs, "
+     "the data age, the series request rule and the stale reference actions permitted"),
     ("concepts/the-lake.md", "The lake",
      "prices and bars by dataset from data plugins: versions, reads by business date and as of a "
-     "recorded time, the source priority, wants, kept or served"),
+     "recorded time, the source priority, wants, kept or served; contract 28's kinds, and what core "
+     "does not serve yet"),
     ("concepts/rates.md", "Rates",
      "the lake's rates: fixings, averages, index levels and curves' points, each a value with its "
      "unit, convention and tenor, about a referential record, read point in time and by publication time"),
@@ -115,7 +117,21 @@ GUIDES = [
      "revisions, and the data suite's rates cases"),
     ("concepts/data-age-and-liveness.md", "Data age and liveness",
      "a dataset's liveness, declared delay and staleness threshold, trading sessions, the ems's "
-     "stale-reference hold or warning, and latency recorded but not yet reported"),
+     "stale-reference hold or warning and what the deployment permits, and the latency plugins and "
+     "core report: breaches, notices, the Summary's line and the Age tab"),
+    ("concepts/listed-options-and-futures.md", "Listed options and futures",
+     "the listed_option, future and future_option templates; OSI and ticker-and-MIC series keys; "
+     "a chain read without minting; a series minted when wanted under the series request rule; "
+     "lifecycle events in the book with the broker's report as the record; package orders"),
+    ("how-to/record-and-read-an-option-chain.md", "Record and read an option chain",
+     "a data plugin recording a chain's series, open interest and quotes; a reader's chain read; "
+     "a series asked for before an order; the options measures run over a chain"),
+    ("concepts/scenarios.md", "Scenarios",
+     "the common scenario format: shocks with their object, target, form and unit; scenario sets as "
+     "axes; saved by a signal plugin and named by a job's scenario grid"),
+    ("concepts/companies-and-corporate-actions.md", "Companies and corporate actions",
+     "the company kind (ENT- by CIK or LEI, the platform asked on a miss), a subject's role, "
+     "declared cash dividends, and the filings slice core serves in a later release"),
     ("concepts/placement-types-and-rfq-quotes.md", "Placement types and RFQ quotes",
      "dma, algo, care, rfq and manual placements; a manual placement's evidence; the dealers' "
      "quotes on the buy side's RFQ placement and the ems's pick"),
@@ -146,7 +162,7 @@ GUIDES = [
      "checked by plugin check, uploaded with the version and read before launch"),
     ("concepts/the-analytics-component.md", "The analytics component",
      "figures over the book and the lake for the plugins that ask: a job by reference, answered inline "
-     "or later; the measures and the pricing models; the pricing role's seam; provenance and the answer "
+     "or later; the measures and the pricing models; the options measures over a chain; the pricing role's seam; provenance and the answer "
      "hash; what is not evaluated and why; the current limits"),
     ("how-to/write-a-pricing-plugin.md", "Write a pricing plugin",
      "a pricing plugin from plugin new --role pricing: a model over a batch's market objects, the "

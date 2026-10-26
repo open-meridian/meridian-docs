@@ -28,14 +28,14 @@ by any service listed here.
 Only released plugins are listed. **Sample data** is a developer's setting,
 offered on a development deployment. **Version** is the plugin's release and
 the contract it is built on: every one is on contract 27. A deployment on
-contract 27 runs plugins built on earlier contracts. The Federal Reserve
+contract 28 runs plugins built on contract 27 and earlier. The Federal Reserve
 Bank of New York, US Treasury and FRED plugins record rates, which belong to
 none of the asset classes, so an asset filter leaves them out.
 
 Each is listed in the platform's Community registry, and the five starter
 packs, equities and options, FX, crypto, event contracts and multi-asset,
-install several with one command: see
-[Install a plugin from a registry](install-from-a-registry.md#from-the-command-line-or-a-starter-pack).
+install several at once, from the dashboard's Browse or with one command: see
+[Install a plugin from a registry](install-from-a-registry.md#a-starter-pack).
 
 **Request a plugin.** For a service not listed here, open an issue with
 **Suggest an improvement** on

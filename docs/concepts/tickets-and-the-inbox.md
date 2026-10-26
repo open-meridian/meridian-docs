@@ -225,7 +225,7 @@ deployment admin's capabilities:
 | `dashboard__list_tickets` | reads | The tickets this delegation may see, newest first, filtered by what they concern, their state, or only the person's own. |
 | `dashboard__read_ticket` | reads | One ticket: its text, what it concerns, the records it names, its state and resolution, and its notes and advice oldest first, each beside its author and provenance. |
 | `dashboard__add_ticket_note` | acts | Appends a note or advice. It changes nothing on the ticket, and refuses any other kind of note. |
-| `dashboard__read_inbox` | reads | The person's notices new since this client last read them, and this client's place moved past them. Beside them, the latest notices of each service account the person owns (`service_account_notices`). |
+| `dashboard__read_inbox` | reads | The person's notices new since this client last read them, and this client's place moved past them. Beside them, the latest notices of each service account the person owns (`service_account_notices`), and from contract 28 the person's latency and backlog notices, each an episode opened or closed (`latency_notices`; see [Data age and liveness](data-age-and-liveness.md#latency)). |
 | `dashboard__mark_notices_read` | acts | Marks the person's own notices of the tickets named as read. It changes no ticket. |
 | `dashboard__count_tickets` | reads | The tickets this delegation may see, counted by what they concern, by state, or both. Counts carry no text. |
 

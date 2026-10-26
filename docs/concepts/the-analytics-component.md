@@ -20,7 +20,7 @@ A job names four things:
 
 | Part | What |
 |---|---|
-| **Accounts** | The accounts it is over, one or more, each in the asking plugin's read scope. One outside it is refused, naming it. |
+| **Accounts** | The accounts it is over, one or more, each in the asking plugin's read scope. One outside it is refused, naming it. A job of [options measures](#options-measures) alone names none. |
 | **Measures** | Each a definition and a version the component serves, with the breakdowns wanted, and for an event measure, the event group. |
 | **Inputs, by reference** | The book's watermark, the lake's recorded-time cut-off (its as-of) and the source choice, one of each for the whole job. Unset, each is now and the deployment's source priority, resolved and named in the answer. |
 | **A what-if** | Optionally, trades added to one account's positions, answered beside the base. Never a book record. |
@@ -39,6 +39,12 @@ From contract 27 a job may also name:
   each account's figures are converted to it, each leg named in the
   provenance. Without one each account is answered in its base currency,
   and an account with none is not evaluated, `CONVERSION_MISSING`.
+
+From contract 28 it may also name **chains**, the listed series the
+[options measures](#options-measures) read, and **a scenario set**, inline
+(`scenario_set`) or saved in the lake by its row key and version
+(`scenario_ref`), which the scenario grid applies (see
+[Scenarios](scenarios.md)); naming both is refused.
 
 A plugin holding `reporting`, `portfolio`, `compliance` or `signal` runs
 one with [`run_job`](../api/typed-operations.md#run_job). Asking is a
@@ -84,7 +90,8 @@ parameter that changes its number fixed by that version.
 [`list_measure_definitions`](../api/typed-operations.md#list_measure_definitions)
 answers them, with their parameters, the breakdowns each allows and the
 scale it rounds to. Each is served at version 1, and `pnl` at version 2
-too (from contract 27):
+too (from contract 27); the options measures of contract 28 are
+[below](#options-measures):
 
 | Definition | What it answers | Breakdowns | Scale |
 |---|---|---|---|
@@ -170,6 +177,77 @@ another hash. A position under a local `LCL-` record is
 [never priced](one-id.md#a-local-line-is-never-priced): it is not
 evaluated, `LOCAL_RECORD`, never zero.
 
+### Options measures { #options-measures }
+
+Added in contract 28. A job may name **chains** (`Job.chains`), each an
+underlying's [listed series](listed-options-and-futures.md) in an
+expiration window, or by their keys, and ask the options measures over
+them. A job of chain measures alone names no account; the scenario grid
+also reads each account's held options. The component reads each chain for
+the job, read-only, as the asking plugin would: the series in the window
+(`ListSeries`), each series' latest quote, open interest on the latest two
+trading dates and the underlying's volume (`ListStatistics`), the
+underlying's price, its declared cash dividends (`ListCorporateActions`, see
+[Companies and corporate actions](companies-and-corporate-actions.md)), and
+each series' settlement instant. A series not held is named by its key and
+never minted.
+
+| Definition | What it answers | Breakdowns |
+|---|---|---|
+| `implied_volatility` | Each series' implied volatility at bid, mid and ask; none below intrinsic | series, quote side |
+| `implied_forward` | Each expiration's forward from put-call parity, and the borrow it implies | expiry |
+| `greeks` | Each series' delta, gamma, theta, vega, rho, vanna and charm, from the node its implied volatility at mid came from | series, greek |
+| `surface_fit` | Raw SVI per expiration and SSVI across them, no-arbitrage checked: the parameters (SVI `a`, `b`, `rho`, `m`, `sigma`; `ssvi_rho`, `ssvi_eta`, `ssvi_gamma`), `rmse` in vol points and the share `inside_bid_ask` | expiry, parameter |
+| `surface_residual` | Each series' residual to the fitted surface in vol points; `rich_or_cheap` only outside the IV bid-ask | series |
+| `term_and_skew` | `atm_iv`, constant-maturity `atm_iv_30d`, `atm_iv_60d` and `atm_iv_90d`, `risk_reversal_25d`, `butterfly_25d`, and the expected move from IV and from the straddle | expiry |
+| `volatility_index` | Cboe's published volatility index method on the listed strip, 30 days; no option model | none |
+| `scenario_grid` | Each position's value at each point of a [scenario set](scenarios.md), on the fitted surface, sticky strike; at an expiration column, intrinsic | instrument, account |
+| `positioning_exposure` | GEX, DEX, VEX and CHEX by series and expiry: version 1 long calls and short puts, version 2 every series short | expiry, greek, series |
+| `positioning_levels` | The zero-gamma crossings, the call, put and total gamma strikes, gamma to liquidity and the 0DTE share | none |
+| `max_pain` | Each expiration's strike at which the holders' payout is least, exact | expiry |
+| `open_interest_change` | Each series' open interest less the trading date's before, exact | series |
+
+**The models.** Each series is priced by the model its template version's
+calculation package binds for its exercise style and its underlying's
+asset class, never by a table of the engine's own:
+
+| Model id | For |
+|---|---|
+| `american_binomial` | An American option on a share or a fund: a Cox-Ross-Rubinstein tree of the share less its escrowed discrete cash dividends, early exercise tested at each node, 200 steps by default (`steps`) |
+| `black_scholes` | A European, cash-settled index option |
+| `black_76` | An option on a future |
+| `svi`, `ssvi` | The surface: raw SVI per expiration on out-of-the-money mids weighted by the inverse IV width, and the power-law SSVI across them, each held to Gatheral and Jacquier's butterfly and calendar conditions |
+
+Implied volatility is a bracketed root between 0.01% and 500%. Greeks are
+in their declared units: delta and gamma per 1, vega and vanna per vol
+point, theta and charm per calendar day, rho per 1%. Time counts in
+calendar minutes to the series' settlement over 525,600 a year: an AM
+series settles at its session's open, a PM series at 16:00, in the time zone
+of the trading-sessions calendar of the quote's venue, else the dataset's
+calendar. A series with no zone at all is not evaluated, never settled at a
+guessed hour.
+
+**The risk-free rate.** The option definitions read two parameters, each
+fixed by the definition's version and overridable by a later version:
+`risk_free_rate=ust_cmt`, the US Treasury's constant-maturity par yield
+curve, read through the deployment's source priority for rates at the
+job's as-of; and `rate_interpolation=cubic_spline`, a natural cubic spline
+through its par yields read at each expiry, flat beyond the ends, as Cboe's
+volatility index method reads it. Put-call parity gives each expiry's
+forward and borrow at that rate, never the rate itself. A curve the
+deployment does not hold, or no par yields at the as-of, leaves every
+option not evaluated, `PRICE_MISSING`, naming the curve. A deployment
+running option measures therefore holds a [rates](rates.md) plugin
+recording Treasury's par yield curve.
+
+**Model figures.** Every option figure is answered `computed_as` a model's,
+with its series' key (`Figure.series_key`) and its oldest input's source
+time; `max_pain` and `open_interest_change` are exact. The models compute
+in floating point inside the engine; the figures they answer are decimals
+rounded to their definition's scale. Every model is proved against
+QuantLib, which is a test oracle only and never part of the deployment's
+image.
+
 ## The pricing role's seam
 
 A deployment admin may route a model id to a plugin holding the
@@ -213,7 +291,8 @@ Every answer carries its **provenance**: the book's watermark and the
 lake's as-of it read at; each dataset read; each instrument, with its
 record's version, its template and template version and its calculation
 version; each model with the implementation that answered it; the measures
-asked; each event group at the version read; the routing table's version;
+asked; each event group at the version read; from contract 28 each chain
+read and the scenario set; the routing table's version;
 the component's version; and the **answer hash**. From contract 27 it also
 names the job's `business_date`; `input_prices`, each position's input
 price (its instrument, price, dataset, row key, version and source time);
@@ -234,10 +313,13 @@ over unrounded terms and rounded once, half to even, to its definition's
 scale. A weight or a probability is answered as its numerator and its
 denominator, so a bound is decided by cross-multiplication, never by a
 rounded division (`JobFigure.compare` does it). Each figure says how it was
-computed, `computed_as`: every figure the component answers today is
-`exact`; a reader treats an unset value as exact, and any other as a
-model's. Each figure names its scenario, `scenario_key`: the base, the
-what-if, a historical day by its date, or an outcome by its member.
+computed, `computed_as`: every figure but the options models' is `exact`,
+and theirs `COMPUTED_AS_MODEL`; a reader treats an unset value as exact,
+and any other as a model's. Each figure names its scenario, `scenario_key`:
+the base, the what-if, a historical day by its date, an outcome by its
+member, or from contract 28 a scenario set's point
+(`SCENARIO_KIND_SCENARIO_POINT`, with the saved set's row key, version and
+the point's axis positions).
 
 The SDK carries the computations the engine must equal exactly, hashes
 included, in `meridian.analytics.reference`: slow on purpose, every value a
@@ -262,21 +344,28 @@ A position or a measure the component cannot answer is listed under
 | `NOT_EVALUATED_REASON_GROUP_NOT_EXHAUSTIVE` | An implied distribution over a group not stated exhaustive; the raw prices and their sum are still answered |
 | `NOT_EVALUATED_REASON_HISTORY_INSUFFICIENT` | Too few closes for the definition's window |
 | `NOT_EVALUATED_REASON_COST_MISSING` | Added in contract 27. A lot's cost the book does not record, which realized P&L needs |
+| `NOT_EVALUATED_REASON_BELOW_INTRINSIC` | Added in contract 28. A quote below the option's intrinsic value, which no volatility prices |
+| `NOT_EVALUATED_REASON_FIT_FAILED` | Added in contract 28. A surface slice that failed its fit or its no-arbitrage checks, naming the expiry |
+
+From contract 28 a series not evaluated names its key (`NotEvaluated.series_key`).
+A series no model binding covers is `IMPLEMENTATION_UNAVAILABLE`.
 
 ## Current limits
 
 - **No staleness bound.** The component sets no maximum age per source, so
   the latest price valid at the as-of is used however old it is, and
   `PRICE_STALE` does not arise from a job. The check at use, against the
-  dataset's threshold in session, comes with contract 28 (see
+  dataset's threshold in session, is not built yet (see
   [Data age and liveness](data-age-and-liveness.md#not-built-yet)).
 - **The historical window's days** are the business dates the lake's
   closes carry, not a settlement calendar's days.
 - **Interval VWAP and a fixing** are not measured by `execution_cost`
   version 1.
-- **Exact figures only.** The three models are arithmetic: no figure is
-  computed by a model in floating point, and no model declares a
-  sensitivity.
+- **Exact figures, but the options models'.** The `cash`, `quoted_price`
+  and `binary_event` models are arithmetic. The options models compute in
+  floating point inside the engine and say so on each figure.
+- **The scenario grid** holds the surface sticky to strike; sticky
+  moneyness is a later definition version.
 - **Answers are not kept.** They are held in memory and lost when the
   component restarts; the job is run again.
 
