@@ -43,10 +43,10 @@ page's [release notes](docs/api/python-sdk.md#release-notes), and its
 with the CLI's `plugin migrate` step table. An upgrade fact a page drops
 goes there first.
 
-Today they describe contract v28, released in chart 0.1.31x (core
-8def82a). CLI 0.1.53 (`meridian plugin install --pack` through the
+Today they describe contract v28, released in chart 0.1.313 (core
+8def82a; its quality states served from chart 0.1.314, core d6781a1). CLI 0.1.53 (`meridian plugin install --pack` through the
 deployment, one pack install it keeps, and `meridian plugin pack
-list|show|update|remove`; new plugins on SDK 0.33.0). SDK 0.33.0 (contract
+list|show|update|remove`; new plugins on SDK 0.33.0). SDK 0.33.1 (an event-contract venue's bars, over 0.33.0's contract
 v28: `meridian.SubjectRef` only, with its role; `ReportLatency` sent and
 the three latency cases required; an `ems`'s read of the stale-reference
 actions permitted; listed options' and futures' chains, lifecycle events

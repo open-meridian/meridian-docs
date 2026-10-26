@@ -34,7 +34,7 @@ changes on the way, release by release, is in the
 [release notes](../api/python-sdk.md#release-notes).
 
 !!! note "Upgrading to contract 28"
-    The upgrade to contract 28 (chart 0.1.31x or later) migrates the
+    The upgrade to contract 28 (chart 0.1.313 or later) migrates the
     instrument store (a listed series' terms, and the company records), the
     conductor (the deployment's settings kept one record each, and starter
     packs) and the dashboard's notices, each adding to what is held. The

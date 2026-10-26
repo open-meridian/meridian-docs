@@ -8,7 +8,7 @@ plugin's author, how a data plugin records liveness and an `ems` makes its
 check. What each number means is in
 [Data age and liveness](../concepts/data-age-and-liveness.md).
 
-You need a deployment on contract 28 (chart 0.1.31x or later) and plugins
+You need a deployment on contract 28 (chart 0.1.313 or later) and plugins
 on SDK 0.33.0 or later. On contract 27 the thresholds and the desk's
 setting work as below, but there is no deployment's permission: the
 `ems`'s admin chooses.

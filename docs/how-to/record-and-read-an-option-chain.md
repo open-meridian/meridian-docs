@@ -6,7 +6,7 @@ order names it, and run the options measures over it. What each part means
 is in [Listed options and futures](../concepts/listed-options-and-futures.md).
 
 You need SDK 0.33.0 or later, CLI 0.1.53, and a deployment on contract 28
-(chart 0.1.31x or later) whose platform publishes the `TPL-listed-option`
+(chart 0.1.313 or later) whose platform publishes the `TPL-listed-option`
 template. `meridian plugin new` on CLI 0.1.53 writes a plugin on 0.33.0.
 
 ## In a data plugin: record the chain

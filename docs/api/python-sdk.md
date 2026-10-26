@@ -16,7 +16,7 @@ such as Homebrew's on macOS (`externally-managed-environment`).
 |---|---|
 | PyPI name | `open-meridian` |
 | Import name | `meridian` |
-| Version | 0.33.0 |
+| Version | 0.33.1 |
 | Python | 3.11 or newer |
 | Dependencies | `grpcio>=1.68,<2`, `protobuf>=5.28,<7`, `jinja2>=3.1,<4` (for [pages](#pages)) |
 | Licence | Apache-2.0 |
@@ -24,7 +24,7 @@ such as Homebrew's on macOS (`externally-managed-environment`).
 !!! warning "Not `meridian-sdk`"
     The PyPI package `meridian-sdk` belongs to an unrelated company. Don't install it.
 
-A plugin pins the SDK exactly, `open-meridian==0.33.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.33.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls (see [Moving a plugin to a new release](#moving-a-plugin-to-a-new-release)). CLI 0.1.53's `meridian plugin new` writes a plugin pinned to 0.33.0, which declares contract 28; `meridian plugin migrate` moves one pinned earlier to it.
+A plugin pins the SDK exactly, `open-meridian==0.33.1`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the contract, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.33.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls (see [Moving a plugin to a new release](#moving-a-plugin-to-a-new-release)). CLI 0.1.53's `meridian plugin new` writes a plugin pinned to 0.33.0, which declares contract 28; `meridian plugin migrate` moves one pinned earlier to it.
 
 | Optional extra | Installs | For |
 |---|---|---|
@@ -2045,7 +2045,7 @@ and [Scenarios](../concepts/scenarios.md).
 
 ### The filings slice and quality states { #the-filings-slice-and-quality-states }
 
-Core serves neither in contract 28's first chart release: see
+Core serves quality states from chart 0.1.314 and the filings slice in a later chart release: see
 [The lake: what core does not serve yet](../concepts/the-lake.md#not-served-yet).
 Declared cash dividends, recorded with this module, are served.
 
@@ -2215,6 +2215,21 @@ The package installs one command, `meridian-dev run`. On a development deploymen
 
 Each release of the SDK, the contract it declares, the runtime it needs, and the CLI whose `plugin new` writes a plugin on it. What a plugin's author does to move to it is in [Moving a plugin to a new release](#moving-a-plugin-to-a-new-release).
 
+!!! note "0.33.1: contract v28, additive"
+    open-meridian 0.33.1 adds an event-contract venue's bars. A `Market`
+    answering `bars(contract, interval, first_ns, until_ns)` -- each
+    `Candle` of an hour (`HOUR`) or the venue's session day (`DAY`) --
+    publishes a third dataset keyed `bars`, of the lake's bar kind, and
+    `Feed.keep_bars(declared)` keeps each served contract's closed hours and
+    days; a want of `bars` is answered from the venue's history. A `Market`
+    without the hook is unchanged, and `EventContractsChecks` refuse any
+    third dataset but `bars`. The data suite's feed-delay producer stands
+    its want on the quote where the venue's last trade states no time or
+    its live dataset declares no prices, and a row's interval and business
+    date are part of what makes it a duplicate. Base image
+    `ghcr.io/open-meridian/plugin-python:0.33.1`; runtime chart 0.1.313 or
+    later.
+
 !!! note "0.33.0: contract v28"
     open-meridian 0.33.0 declares contract v28. Breaking: the typed
     operations take `meridian.SubjectRef` only, which carries its role
@@ -2231,7 +2246,7 @@ Each release of the SDK, the contract it declares, the runtime it needs, and the
     (`meridian.roles.data.quality`); a licence's eligibility
     (`DataEligibility`). `meridian plugin migrate` rewrites a wire
     `SubjectRef` handed to the SDK (see [0.32.3 to 0.33.0](#0323-to-0330)).
-    It needs a deployment on contract 28 (chart 0.1.31x or later); core
+    It needs a deployment on contract 28 (chart 0.1.313 or later); core
     serves the filings slice, quality states and the data-use counts in a
     later chart release on the same contract (see
     [The lake](../concepts/the-lake.md#not-served-yet)). CLI 0.1.53's
@@ -2669,7 +2684,8 @@ Move a plugin one release at a time or several at once: [`meridian plugin migrat
 
 | From | To | Contract | Runtime | `plugin new` writes it from | `plugin migrate` rewrites | Then by hand |
 |---|---|---|---|---|---|---|
-| 0.32.3 | 0.33.0 | 28 | chart 0.1.31x or later | CLI 0.1.53 | a wire `SubjectRef` handed to the SDK, into `meridian.SubjectRef`; a base pinned by digest, moved with its digest dropped where it cannot be read | see [0.32.3 to 0.33.0](#0323-to-0330) |
+| 0.33.0 | 0.33.1 | 28 | chart 0.1.313 or later | none: CLI 0.1.53 writes 0.33.0 | nothing: only the pins move | a venue keeping bars declares `bars`, names `BARS_DECLARED` in its `venue_cases` and drops `a-daily-bar` from `NOT_PRESENTED`; a plugin's own feed-delay producer standing on the quote can be removed |
+| 0.32.3 | 0.33.0 | 28 | chart 0.1.313 or later | CLI 0.1.53 | a wire `SubjectRef` handed to the SDK, into `meridian.SubjectRef`; a base pinned by digest, moved with its digest dropped where it cannot be read | see [0.32.3 to 0.33.0](#0323-to-0330) |
 | 0.32.2 | 0.32.3 | 27 | chart 0.1.309 or later; 0.1.311 for the licence's attribution terms | none: CLI 0.1.52 writes 0.32.1 | nothing: only the pins move | give every rate a convention: see [0.32.2 to 0.32.3](#0322-to-0323) |
 | 0.32.1 | 0.32.2 | 27 | chart 0.1.309 or later; 0.1.311 for the licence's attribution terms | none: CLI 0.1.52 writes 0.32.1 | nothing: only the pins move | a rates plugin recording no liveness names one more case not presented: see [0.32.1 to 0.32.2](#0321-to-0322) |
 | 0.32.0 | 0.32.1 | 27 | chart 0.1.309 or later | CLI 0.1.52 | nothing: only the pins move | a rates-only data plugin names two more cases not presented: see [0.32.0 to 0.32.1](#0320-to-0321) |

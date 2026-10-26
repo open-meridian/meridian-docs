@@ -14,7 +14,7 @@ It works on any deployment. For the faster loop where each save runs at once, se
 - You hold **deployment admin** on it. Only a deployment admin brings plugins in.
 - The `meridian` CLI 0.1.53 (`meridian --version`; update with `meridian upgrade`). Its
   `plugin new` writes a plugin on SDK 0.33.0, so the deployment must serve contract 28 (chart
-  0.1.31x or later).
+  0.1.313 or later).
 - Docker on this machine. `meridian plugin upload` builds the plugin's image here, from its own
   `Dockerfile`.
 
