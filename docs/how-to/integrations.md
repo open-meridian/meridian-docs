@@ -27,10 +27,24 @@ by any service listed here.
 
 Only released plugins are listed. **Sample data** is a developer's setting,
 offered on a development deployment. **Version** is the plugin's release and
-the contract it is built on: every one is on contract 27. A deployment on
-contract 28 runs plugins built on contract 27 and earlier. The Federal Reserve
+the contract it is built on: every one is on contract 29. The Federal Reserve
 Bank of New York, US Treasury and FRED plugins record rates, which belong to
-none of the asset classes, so an asset filter leaves them out.
+none of the asset classes, so an asset filter leaves them out; so are Pyth
+Network's metals and commodities.
+
+**Fixed income.** Terrapin's plugin records government par yield curves,
+inflation index levels and municipal bonds' prints, and offers bonds' and
+CDs' terms to their records. OpenYield's records its ATS's firm quotes, mids
+and Treasury benchmark curve, and the TRACE and MSRB prints it resells. 9fin's,
+listed as `ninefin`, offers bonds' terms and issuers and records their
+new-issue prices. The Fannie Mae and Freddie Mac disclosures plugin
+(`gse-disclosures`) and the Ginnie Mae disclosures plugin (`ginnie-mae`) record
+each held pool's and REMIC class's monthly factor and offer the terms the same
+files state, read from a location the deployment admin names, since the
+agencies publish their files to registered users. Pyth Network's plugin records
+composite prices with their confidence intervals and US Treasury par yields.
+Each needs your own access with its service. See
+[Bonds and fixed income](../concepts/bonds-and-fixed-income.md).
 
 Each is listed in the platform's Community registry, and the five starter
 packs, equities and options, FX, crypto, event contracts and multi-asset,

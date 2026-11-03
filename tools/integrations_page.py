@@ -60,7 +60,7 @@ MARKER = "<!-- integrations -->"
 
 # Each filter group's values, in the order the page shows them, with their
 # labels. A value outside its group fails the build.
-ROLES = {r: r for r in ("data", "custody", "connectivity", "confirmation", "operations", "reporting")}
+ROLES = {r: r for r in ("data", "reference", "custody", "connectivity", "confirmation", "operations", "reporting")}
 ASSETS = {
     "equity": "Equity",
     "fund": "Fund",

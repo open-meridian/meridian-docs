@@ -271,7 +271,7 @@ def operation_target(op: dict) -> tuple[str, str, str]:
     roles = op.get("roles", {})
     if roles.get("publishes") or roles.get("reads"):
         return TYPED_OPERATIONS, snake(op["name"]), snake(op["name"])
-    return SDK, "receive", op["name"]
+    return SDK, "events", op["name"]
 
 
 def every_plugin_target(call: dict) -> tuple[str, str, str]:
@@ -504,7 +504,7 @@ def index_entries(roles: dict, vendored: dict, site_url: str, directory_urls: bo
     for op in sorted(roles["operations"], key=lambda o: step_key(o["step"])):
         page, anchor, shown = operation_target(op)
         holders = "; ".join(f"{BY[kind]} {', '.join(who)}" for kind, who in op["roles"].items())
-        how = ", with receive" if page == SDK else ""
+        how = f", heard as on_{snake(op['name'])}" if page == SDK else ""
         article = "an" if op["kind"][0] in "aeiou" else "a"
         ops.append((shown, at(page, anchor),
                     f"{op['name']}, {op['step']} {op['title']}: {article} {op['kind']}, {holders}{how}"))

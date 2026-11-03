@@ -111,6 +111,7 @@ nav:
       - concepts/index.md
       - Architecture: concepts/architecture.md
       - Plan your deployment: concepts/plan-your-deployment.md
+      - Service levels: concepts/service-levels.md
       - Projects and deployments: concepts/projects-and-deployments.md
       - Plugins, roles and grants: concepts/plugins.md
       - Registries: concepts/registries.md
@@ -123,6 +124,7 @@ nav:
       - Instruments: concepts/instruments.md
       - One ID per instrument: concepts/one-id.md
       - Listed options and futures: concepts/listed-options-and-futures.md
+      - Bonds and fixed income: concepts/bonds-and-fixed-income.md
       - Companies and corporate actions: concepts/companies-and-corporate-actions.md
       - Event groups: concepts/event-groups.md
       - The lake: concepts/the-lake.md

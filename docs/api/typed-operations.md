@@ -13,9 +13,9 @@ The operations are generated, not written by hand. One generator reads the contr
 
 - the plugin-facing gRPC service, `meridian.plugin.v1.PluginOperations`;
 - the sidecar's side of it;
-- the Python methods on [`Plugin`](python-sdk.md#plugin).
+- the Python methods of the role classes, [`meridian.roles.<role>.Role`](python-sdk.md#role-classes).
 
-This page lists every operation in SDK 0.33.0, which declares contract 28: holdings ingestion and [the custodian's activity](../concepts/the-custodians-activity.md), the [book of record](../concepts/the-book-of-record.md)'s commands and reads, instrument and venue resolution, [the lake](../concepts/the-lake.md)'s records and reads, [the order path](#the-order-path), [booking](../concepts/booking.md), the [settlement calendars' reads](#settlement-calendars-reads), and the [one-ID model](../concepts/one-id.md)'s reads, [`list_replacements`](#list_replacements), [`list_templates`](#list_templates) and [`read_template`](#read_template), with `reference`'s [`offer_template_fields`](#offer_template_fields); contract 26's [analytics component, event groups, bounded lake query and agents' guard](#contract-v26s-operations); contract 27's [RFQ quotes, execution costs, rates, liveness and latency](#contract-v27s-operations); and contract 28's [listed options and futures, companies and corporate actions, derived series and saved scenarios, the stale-reference actions permitted, and the filings slice and quality states core serves later](#contract-v28s-operations). A resolve answers whether its record is provisional. The book refuses an entry missing what it requires, `REFUSAL_REASON_INCOMPLETE`, naming each missing field (see [What the book requires](#what-the-book-requires)). A command naming an order, a placement, a change request or a locate by its ID is admitted on the role's grant and held by the book to the plugin's write scope (see [The order lifecycle](../concepts/the-order-lifecycle.md#a-command-naming-a-record-by-its-id)).
+This page lists every operation in SDK 0.35.5, which declares contract 29: holdings ingestion and [the custodian's activity](../concepts/the-custodians-activity.md), the [book of record](../concepts/the-book-of-record.md)'s commands and reads, instrument and venue resolution, [the lake](../concepts/the-lake.md)'s records and reads, [the order path](#the-order-path), [booking](../concepts/booking.md), the [settlement calendars' reads](#settlement-calendars-reads), and the [one-ID model](../concepts/one-id.md)'s reads, [`list_replacements`](#list_replacements), [`list_templates`](#list_templates) and [`read_template`](#read_template), with `reference`'s [`offer_template_fields`](#offer_template_fields); contract 26's [analytics component, event groups, bounded lake query and agents' guard](#contract-v26s-operations); contract 27's [RFQ quotes, execution costs, rates, liveness and latency](#contract-v27s-operations); and contract 28's [listed options and futures, companies and corporate actions, derived series and saved scenarios, the stale-reference actions permitted, and the filings slice and quality states core serves later](#contract-v28s-operations); and contract 29's [factors and an underlying's expirations](#contract-v29s-operations), with fixed income's prices and fills. A resolve answers whether its record is provisional. The book refuses an entry missing what it requires, `REFUSAL_REASON_INCOMPLETE`, naming each missing field (see [What the book requires](#what-the-book-requires)). A command naming an order, a placement, a change request or a locate by its ID is admitted on the role's grant and held by the book to the plugin's write scope (see [The order lifecycle](../concepts/the-order-lifecycle.md#a-command-naming-a-record-by-its-id)).
 
 Three calls every plugin may make are in the Python SDK rather than here: reading the [prepared change](python-sdk.md#prepared) a page was opened from (`ReadPreparedCall`), saving [a person's own settings](python-sdk.md#own_settings) (`SetOwnSettings`), and calling one of the plugin's own acts as the [service account](../concepts/service-accounts.md) its role runs as (`CallAsServiceAccount`, offered as [`meridian.runs_as`](python-sdk.md#runs_as)). Where the dashboard makes such an act, its route is reached with a service account's claims and sends what it sends for a person, `acting_for` the header it received (see [Acting for a person](#acting-for-a-person)); the book records the service account and its owner as the entry's actor.
 
@@ -149,6 +149,9 @@ Three calls every plugin may make are in the Python SDK rather than here: readin
 | [`record_rating_actions`](#record_rating_actions) | `RecordRatingActions` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` (added in contract 28; served in a later chart release) | `RecordRatingActionsResult` |
 | [`list_rating_actions`](#list_rating_actions) | `ListRatingActions` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `portfolio`, `reporting`, `signal` (added in contract 28; served in a later chart release) | `ListRatingActionsResult` |
 | [`record_quality_assessments`](#record_quality_assessments) | `RecordQualityAssessments` | W10.12 Escalate a row's quality | command | `signal` (added in contract 28; served in a later chart release) | `RecordQualityAssessmentsResult` |
+| [`record_factors`](#record_factors) | `RecordFactors` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` (added in contract 29) | `RecordObservationsReply` |
+| [`list_factors`](#list_factors) | `ListFactors` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `operations`, `portfolio`, `reporting`, `servicing`, `signal` (added in contract 29) | `ListFactorsReply` |
+| [`list_expirations`](#list_expirations) | `ListExpirations` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `ems`, `oms`, `portfolio`, `signal` | `ListExpirationsReply` |
 
 **Role** is the plugin role that publishes the step, or the roles that may ask the query, from the contract's matrix. A plugin can call an operation only if it holds one of them, approved when it was launched. Otherwise the call raises `NotGranted`. See [Plugins, roles and grants](../concepts/plugins.md) and [Plugin manifest](plugin-manifest.md).
 
@@ -157,7 +160,7 @@ Three calls every plugin may make are in the Python SDK rather than here: readin
 - An **event** returns `Published`, the message's identifier on the bus.
 - A **command** or a **query** returns the answer of whatever serves it.
 
-W2 is holdings ingestion from a brokerage. It is read-only throughout: nothing in it places an order. A `custody` plugin records what the custodian says is held, and each activity on the account as the custodian states it, and an `operations` plugin reads it, within its read scope, and hears it change with [`receive`](python-sdk.md#receive), the stream of what a plugin's roles hear (W4.3, `rpc Receive`). W3 is instrument resolution. W6.4 is linking the accounts a source reaches to the firm's own, which a plugin does on its own page at `admin`, for the admin of the plugin viewing it under Manage. The tutorial [Record a holdings statement](../tutorials/record-a-holdings-statement.md) walks through W2 and W6.4.
+W2 is holdings ingestion from a brokerage. It is read-only throughout: nothing in it places an order. A `custody` plugin records what the custodian says is held, and each activity on the account as the custodian states it, and an `operations` plugin reads it, within its read scope, and hears it change with [their role classes' `on_<event>` methods](python-sdk.md#events), the stream of what a plugin's roles hear (W4.3, `rpc Receive`). W3 is instrument resolution. W6.4 is linking the accounts a source reaches to the firm's own, which a plugin does on its own page at `admin`, for the admin of the plugin viewing it under Manage. The tutorial [Record a holdings statement](../tutorials/record-a-holdings-statement.md) walks through W2 and W6.4.
 
 W9 is the [book of record](../concepts/the-book-of-record.md): the firm's own record of what each account holds, which an `operations` plugin opens with an opening balance a person confirms, reconciles with the street on each statement, and corrects only by entries that resolve its breaks. `portfolio`, `reporting`, `compliance` and `oms` read it, and hear it change with `receive`. W3.6 is forward resolution, by which those roles join a book position to its instrument. The book refuses an entry missing what tax tracking, valuation, confirmation or settlement need, and names each field it lacks.
 
@@ -165,16 +168,24 @@ W9 is the [book of record](../concepts/the-book-of-record.md): the firm's own re
 
 ### Calling
 
-Every operation is an `async` method on the `Plugin` that `meridian.connect()` returns, and takes keyword arguments only. The return types are the generated protobuf messages in `meridian.plugin.v1.operations_pb2`. Each parameter crosses the wire under its own name.
+Every operation is an `async` method of the role class holding it, `meridian.roles.<role>.Role`, and takes keyword arguments only: in the class, `await self.<operation>(...)`; elsewhere, on the role object the plugin registered, written `role.<operation>(...)` on this page. An operation two roles hold is the same call from either class, and core checks every call against the plugin's declared roles and grants. The connection (`self.plugin`) makes no operation. The return types are the generated protobuf messages in `meridian.plugin.v1.operations_pb2`. Each parameter crosses the wire under its own name. See [Role classes](python-sdk.md#role-classes).
 
 ```python
 import meridian
+from meridian.roles import custody
 
-async with await meridian.connect() as plugin:
-    published = await plugin.report_sync_status(
-        source="snaptrade", external_account_id="acct-1", connection_healthy=True,
-    )
+
+class Custody(custody.Role):
+    async def on_start(self) -> None:
+        published = await self.report_sync_status(
+            source="snaptrade", external_account_id="acct-1", connection_healthy=True,
+        )
+
+
+meridian.run(declaration=DECLARATION, roles=[Custody()], pages=pages, port=PORT)
 ```
+
+An event a role hears is its `on_<event>` method (`on_observations_wanted`, `on_activity_recorded`), handed a [`Heard`](python-sdk.md#heard).
 
 ### Numbers and amounts
 
@@ -243,7 +254,7 @@ The sidecar also puts the plugin's own instance in place of `{instance}` in a to
 
 ### Reads are within the read scope { #reads }
 
-The sidecar stamps the plugin's [read scope](../concepts/accounts.md#how-accounts-bound-a-plugin) on every read, and the store answers only within it: a read naming an account outside it is refused with `NotGranted`, one naming none answers every account in it, and a plugin whose read scope is empty reads nothing. A plugin reads its whole scope as itself, and serves each person from it with `caller.read`. What it hears with [`receive`](python-sdk.md#receive) is held to the same scope.
+The sidecar stamps the plugin's [read scope](../concepts/accounts.md#how-accounts-bound-a-plugin) on every read, and the store answers only within it: a read naming an account outside it is refused with `NotGranted`, one naming none answers every account in it, and a plugin whose read scope is empty reads nothing. A plugin reads its whole scope as itself, and serves each person from it with `caller.read`. What it hears with [their role classes' `on_<event>` methods](python-sdk.md#events) is held to the same scope.
 
 Each read answers a page, the next page's `cursor` in `next_cursor`, empty on the last, and `as_of`, the [`Watermark`](#watermark) it was read at. Given a watermark as `since`, a read answers only what changed after it. `receive` reads this way to seed and to catch up, so a plugin hearing a row seldom reads it itself.
 
@@ -329,7 +340,7 @@ Catch `NotLinked`. Do not match the text of the exception:
 
 ```python
 try:
-    await plugin.record_holding(..., external_account_id="acct-3")
+    await role.record_holding(..., external_account_id="acct-3")
 except meridian.NotLinked:
     ...  # offer acct-3 for linking; stop this statement
 ```
@@ -362,7 +373,7 @@ The order path's other codes, and booking's, are on
 
 ```python
 try:
-    await plugin.record_opening_balance(..., acting_for=caller.header)
+    await role.record_opening_balance(..., acting_for=caller.header)
 except meridian.CommandRefused as refused:
     if refused.reason_name == "REFUSAL_REASON_OPENING_BALANCE_RECORDED":
         ...  # already recorded: read it back with list_account_attributes and say so
@@ -432,7 +443,7 @@ The sidecar keeps the list as the accounts a link from this plugin may name.
 ```python
 import meridian
 
-await plugin.report_external_accounts(
+await role.report_external_accounts(
     accounts=[
         meridian.ExternalAccount(
             external_account_id="acct-1", name="Individual brokerage", venue_account_type="Individual"
@@ -486,7 +497,7 @@ async def report_sync_status(
 import time
 import meridian
 
-await plugin.report_sync_status(
+await role.report_sync_status(
     source="snaptrade",
     external_account_id="acct-1",
     connection_healthy=True,
@@ -569,7 +580,7 @@ import time
 from decimal import Decimal
 import meridian
 
-statement = await plugin.record_holdings_statement(
+statement = await role.record_holdings_statement(
     source="snaptrade",
     external_statement_id="acct-1@2026-09-25T13:30:00Z",
     external_account_id="acct-1",
@@ -666,7 +677,7 @@ async def record_holding(
 from decimal import Decimal
 import meridian
 
-result = await plugin.record_holding(
+result = await role.record_holding(
     statement_id=statement.statement_id,
     instrument_id=instrument_id,
     side=meridian.HoldingSide.HOLDING_SIDE_LONG,
@@ -684,7 +695,7 @@ result = await plugin.record_holding(
 
 # An instrument that resolved ambiguously is still recorded. A short row's
 # quantity is negative, and a venue that reported no value sends none:
-await plugin.record_holding(
+await role.record_holding(
     statement_id=statement.statement_id,
     unresolved_identifiers=[meridian.Identifier(scheme="symbol", value="XYZQ", source="snaptrade")],
     side=meridian.HoldingSide.HOLDING_SIDE_SHORT,
@@ -732,7 +743,7 @@ async def list_custodial_positions(
 **Errors:** `NotGranted` for an `account_id` outside the read scope, and without the `operations` role. `no handler`, `timeout` or `handler error` from the street store.
 
 ```python
-page = await plugin.list_custodial_positions(include_unresolved=True)
+page = await role.list_custodial_positions(include_unresolved=True)
 for position in page.positions:
     quantity = meridian.as_decimal(position.quantity)
 ```
@@ -775,7 +786,7 @@ async def list_statements(
 **Errors:** `NotGranted` for an `account_id` outside the read scope, and without the `operations` role. `no handler`, `timeout` or `handler error` from the street store.
 
 ```python
-page = await plugin.list_statements(account_id="ACC-…")
+page = await role.list_statements(account_id="ACC-…")
 for statement in page.statements:
     for figures in statement.figures:
         if figures.HasField("net_liquidation"):
@@ -824,7 +835,7 @@ The street keeps an activity once, by its source, its account and its `external_
 from decimal import Decimal
 import meridian
 
-reply = await plugin.record_activity(
+reply = await role.record_activity(
     external_account_id="acct-1",
     source="snaptrade",
     activity=meridian.CustodialActivity(
@@ -837,7 +848,7 @@ reply = await plugin.record_activity(
         price=meridian.Money(Decimal("1.00"), "USD"),
         amount=meridian.Money(Decimal("-3.27"), "USD"),  # signed by what it did to the cash
         description=venue_activity["description"],
-        raw_record=plugin.raw_record(f"activities/acct-1/{venue_activity['id']}"),
+        raw_record=role.plugin.raw_record(f"activities/acct-1/{venue_activity['id']}"),
     ),
 )
 reply.activity_id, reply.already_recorded   # "ACT-…", False
@@ -884,7 +895,7 @@ async def list_activities(
 **Errors:** `NotGranted` for an `account_id` outside the read scope, and without the `operations` role. `no handler`, `timeout` or `handler error` from the street store.
 
 ```python
-page = await plugin.list_activities(account_id="ACC-…", trade_date_from="2026-09-01")
+page = await role.list_activities(account_id="ACC-…", trade_date_from="2026-09-01")
 for each in page.activities:
     activity = each.activity
     if activity.kind == meridian.ActivityKind.ACTIVITY_KIND_REINVESTMENT:
@@ -934,7 +945,7 @@ The street keeps the activity as first recorded, which never changes, and each r
 **Errors:** [`NotLinked`](#an-unlinked-external-account) for an external account nobody has linked. `handler error` from the street store, its words naming what is wrong, for an activity never recorded under that source, account and identifier (a re-resolution re-resolves an activity already recorded, and resolves none into existence), and for no provenance, a provenance that is the custodian's word, or no `resolved_at_ns`. `invalid` for an `external_activity_id` outside 1 to 200 characters, or a provenance kind the enum does not define. `NotGranted` without the `custody` role. `no handler` or `timeout` from the street store.
 
 ```python
-reply = await plugin.re_resolve_activity(
+reply = await role.re_resolve_activity(
     external_account_id="SNAP-ACC-401K",
     source="snaptrade",
     external_activity_id=activity_id,          # as first reported
@@ -981,7 +992,7 @@ A sync status for an external account nobody has linked is kept with its account
 **Errors:** `NotGranted` for an `account_id` outside the read scope, and without the `operations` role. `no handler`, `timeout` or `handler error` from the street store.
 
 ```python
-page = await plugin.list_sync_statuses(account_id="ACC-…")
+page = await role.list_sync_statuses(account_id="ACC-…")
 for each in page.statuses:
     if each.status.state == meridian.SyncState.SYNC_STATE_NEEDS_SIGN_IN:
         ...  # a person must sign in again at the venue: say so, rather than "old"
@@ -1049,7 +1060,7 @@ held = [
     meridian.Identifier(scheme="isin", value="US0378331005"),
     meridian.Identifier(scheme="symbol", value="AAPL", source="snaptrade"),
 ]
-answer = await plugin.resolve_identifier(identifiers=held, as_of_ns=time.time_ns())
+answer = await role.resolve_identifier(identifiers=held, as_of_ns=time.time_ns())
 if answer.found:
     instrument_id = answer.instrument_id  # an instrument, perhaps one the deployment just minted
 else:
@@ -1096,7 +1107,7 @@ The sidecar sets `publisher_instance_id`, and leaves `placeholder_instrument_id`
 ```python
 import time
 
-await plugin.report_missing_instrument(
+await role.report_missing_instrument(
     source="snaptrade",
     asset_class="equity",
     identifiers=held,
@@ -1141,7 +1152,7 @@ Offer only open accounts. A link to a closed account is refused.
 ```python
 from meridian.plugin.v1 import operations_pb2 as ops
 
-read = await plugin.read_accounts_for_linking(acting_for=request.state.caller.header)
+read = await role.read_accounts_for_linking(acting_for=request.state.caller.header)
 offered = [a for a in read.accounts if a.state != ops.ACCOUNT_STATE_CLOSED]
 ```
 
@@ -1210,12 +1221,12 @@ The four `new_account_*` attributes are free text, which a page may pre-fill fro
 caller = request.state.caller
 
 # Link to an existing account:
-await plugin.link_external_account(
+await role.link_external_account(
     external_account_id="acct-1", account_id="ACC-…", acting_for=caller.header,
 )
 
 # Or create one and link it, pre-filled from what the source reported:
-await plugin.link_external_account(
+await role.link_external_account(
     external_account_id="acct-2",
     new_account_name="Rollover IRA",
     new_account_custodian="Fidelity",
@@ -1224,7 +1235,7 @@ await plugin.link_external_account(
 )
 
 # Remove a link:
-await plugin.link_external_account(external_account_id="acct-2", acting_for=caller.header)
+await role.link_external_account(external_account_id="acct-2", acting_for=caller.header)
 ```
 
 ## `resolve_instrument` { #resolve_instrument }
@@ -1260,7 +1271,7 @@ async def resolve_instrument(
 **Errors:** `no handler`, `timeout` or `handler error` from the instrument store. `NotGranted` without one of those roles.
 
 ```python
-answer = await plugin.resolve_instrument(instrument_id=position.instrument_id)
+answer = await role.resolve_instrument(instrument_id=position.instrument_id)
 if answer.found:
     name = answer.instrument.description
 ```
@@ -1313,7 +1324,7 @@ A position held under a placeholder instrument enters under the placeholder, fla
 ```python
 import meridian
 
-reply = await plugin.record_opening_balance(
+reply = await role.record_opening_balance(
     account_id=account,
     as_of_date="2026-09-08",
     sources=[meridian.OpeningSource(kind="custodian", name="Interactive Brokers",
@@ -1371,7 +1382,7 @@ Every difference is recorded: a plugin may rank or group breaks for its people, 
 **Errors:** `CommandRefused` with `REFUSAL_REASON_NO_OPENING_BALANCE` for an account with no opening balance, `REFUSAL_REASON_BREAK_STATE` for a `break_id` that is not open, or `REFUSAL_REASON_IDEMPOTENCY_CONFLICT`. `ValueError` for both `position` and `figure`. `NotGranted` for an account outside the write scope, and without the `operations` role. `handler error`, `no handler` or `timeout` from the book.
 
 ```python
-await plugin.record_break(
+await role.record_break(
     account_id=account,
     position=meridian.PositionKey(instrument_id=instrument, side="long"),
     category="trade_date_quantity",
@@ -1532,7 +1543,7 @@ async def resolve_break(
 - `NotGranted` for an account outside the write scope, a person who may not write it, a session not opened by Open, or without the `operations` role. `not vouched for`, `handler error`, `no handler` or `timeout`.
 
 ```python
-await plugin.resolve_break(
+await role.resolve_break(
     account_id=account,
     break_ids=[break_id],
     reason="The custodian's statement shows a buy of 25 we had not booked.",
@@ -1616,7 +1627,7 @@ A read by business date or at a watermark takes no `since`.
 **Errors:** `NotGranted` for an `account_id` outside the read scope, and without one of the five roles. `handler error` from the book for a `since` beside `business_date` or `at`, or a business date that is not `YYYY-MM-DD`. `no handler` or `timeout` from the book.
 
 ```python
-page = await plugin.list_positions(account_id=account)
+page = await role.list_positions(account_id=account)
 for position in page.positions:
     trade_date = meridian.as_decimal(position.trade_date_quantity)
     free = meridian.as_decimal(position.free_quantity) if position.HasField("free_quantity") else None
@@ -1715,7 +1726,7 @@ async def list_account_attributes(
 **Errors:** `NotGranted` for an `account_id` outside the read scope, and without one of the five roles. `no handler`, `timeout` or `handler error` from the book.
 
 ```python
-page = await plugin.list_account_attributes(account_id=account)
+page = await role.list_account_attributes(account_id=account)
 if page.attributes and page.attributes[0].HasField("opening_balance"):
     d0 = page.attributes[0].opening_balance.as_of_date  # in the book since this date
 ```
@@ -1756,7 +1767,7 @@ from decimal import Decimal
 from meridian import Money, ObservationMeta, Price, SourceTime
 from meridian.plugin.v1 import operations_pb2 as ops
 
-done = await plugin.record_prices(prices=[
+done = await role.record_prices(prices=[
     Price(
         meta=ObservationMeta(
             row_key="SPY:1d:2026-10-08",                    # from the raw record: a repeat changes nothing
@@ -1765,7 +1776,7 @@ done = await plugin.record_prices(prices=[
             valid_from_ns=open_ns, valid_until_ns=close_ns,
             business_date=date(2026, 10, 8),
             source_times=[SourceTime(kind="published", at_ns=published_ns)],
-            raw=plugin.raw_record("bars/SPY/2026-10-08"),
+            raw=role.plugin.raw_record("bars/SPY/2026-10-08"),
         ),
         kind="close",
         price=Money(Decimal("671.16"), "USD"),
@@ -1823,14 +1834,14 @@ from meridian import Eligibility, Money, ObservationMeta, Trade, TradeAttributes
 from meridian.plugin.v1 import operations_pb2 as ops
 
 every = Eligibility(high_low="eligible", open="eligible", close="eligible", volume="eligible")
-await plugin.record_trades(trades=[
+await role.record_trades(trades=[
     Trade(
         meta=ObservationMeta(
             row_key="BTC-USD:t:812345678",                       # the product and the venue's trade ID
             subjects=[ops.SubjectRef(entity_id=btc)],
             source=ops.Source(dataset=f"{plugin.identity.instance_id}:trades", venue_id=venue),
             valid_from_ns=traded_at_ns,
-            raw=plugin.raw_record("matches/BTC-USD/812345678"),
+            raw=role.plugin.raw_record("matches/BTC-USD/812345678"),
         ),
         price=Money(Decimal("62510.01"), "USD"),
         quantity=Decimal("0.0125"),
@@ -1864,7 +1875,7 @@ A quote is valid from its time until the next for the same subject, dataset, ven
 **Errors:** as `record_prices`, and: a bid and an ask in two assets, a quantity not more than zero, an unspecified quote characteristic, a quote naming a business date. `NotGranted` without `data`.
 
 ```python
-await plugin.record_quotes(quotes=[
+await role.record_quotes(quotes=[
     Quote(meta=meta, bid=Money(Decimal("62510.00"), "USD"), bid_quantity=Decimal("0.84")),  # no offer
 ])
 ```
@@ -1873,7 +1884,7 @@ await plugin.record_quotes(quotes=[
 
 This operation is `preview`. Says what a data plugin cannot serve of a want, per subject, with a reason.
 
-A read the lake cannot answer from what it holds becomes a want, heard only by the instance serving its dataset, with `receive(observations_wanted=...)`: an `ObservationsWantedEvent` with its `want_id`, `dataset`, `data_type`, `subjects`, `kinds` (for prices), `interval_ns` (for bars), a `business_date` or a valid range, and `standing`. The plugin fetches what it covers and records it with `want_id=`; what it cannot, it declines. A standing want asks that its subjects be kept current until a `WantWithdrawnEvent` (`want_id`, `dataset`), heard with `receive(want_withdrawn=...)`, withdraws it.
+A read the lake cannot answer from what it holds becomes a want, heard only by the instance serving its dataset, by its data class's `on_observations_wanted`: an `ObservationsWantedEvent` with its `want_id`, `dataset`, `data_type`, `subjects`, `kinds` (for prices), `interval_ns` (for bars), a `business_date` or a valid range, and `standing`. The plugin fetches what it covers and records it with `want_id=`; what it cannot, it declines. A standing want asks that its subjects be kept current until a `WantWithdrawnEvent` (`want_id`, `dataset`), heard by `on_want_withdrawn`, withdraws it.
 
 ```python
 async def decline_want(
@@ -1901,13 +1912,15 @@ async def decline_want(
 A decline stands for the business date or range its want asked, or for the latest where it asked the latest, and for no other date of that dataset and subject: a later want of another date is asked again.
 
 ```python
-async def wanted(heard: meridian.Heard) -> None:
-    want = heard.message
-    await plugin.record_prices(prices=fetched(want), want_id=want.want_id)
-    if uncovered:
-        await plugin.decline_want(want_id=want.want_id, subjects=uncovered, reason="not_covered")
+class Lake(data.Role):
+    async def on_observations_wanted(self, heard: meridian.Heard) -> None:
+        want = heard.message
+        await self.record_prices(prices=fetched(want), want_id=want.want_id)
+        if uncovered:
+            await self.decline_want(want_id=want.want_id, subjects=uncovered, reason="not_covered")
 
-await plugin.receive(observations_wanted=wanted, want_withdrawn=stop_keeping_current)
+    async def on_want_withdrawn(self, heard: meridian.Heard) -> None:
+        stop_keeping_current(heard.message)
 ```
 
 ## `resolve_venue` { #resolve_venue }
@@ -1939,7 +1952,7 @@ async def resolve_venue(
 **Errors:** `no handler` or `timeout` from the instrument store. `NotGranted` without `data`.
 
 ```python
-answer = await plugin.resolve_venue(
+answer = await role.resolve_venue(
     identifiers=[meridian.Identifier(scheme="symbol", value="V", source="alpaca")],
 )
 venue_id = answer.venue.venue_id if answer.found else ""   # not held: report it, name none
@@ -2015,12 +2028,12 @@ Give one of `at_ns`, `business_date` or the range. A read the lake cannot answer
 ```python
 from datetime import date
 
-closes = await plugin.list_prices(subjects=held, kinds=["close"], business_date=date(2026, 10, 8))
+closes = await role.list_prices(subjects=held, kinds=["close"], business_date=date(2026, 10, 8))
 for price in closes.prices:
     close = meridian.as_money(price.price)       # names its cash instrument
 for gap in closes.unanswered:
     ...                                          # unvalued, never zero: gap.reason says why
-then = await plugin.list_prices(subjects=held, business_date=date(2026, 10, 8), as_of_ns=friday_ns)
+then = await role.list_prices(subjects=held, business_date=date(2026, 10, 8), as_of_ns=friday_ns)
 ```
 
 ## `list_bars` { #list_bars }
@@ -2081,16 +2094,16 @@ async def list_trades(
 **Errors:** `CallFailed` with `kind="invalid"` for no subject or more than 500, or a range wider than one day of a dataset. `NotGranted` without `signal` or `ems`, or `data` (which reads only its own rows, with `latest_recorded`).
 
 ```python
-day = await plugin.list_trades(subjects=held, valid_from_ns=open_ns, valid_until_ns=now_ns)
-late = await plugin.list_trades(subjects=held, after_watermark=day.watermark)   # a late print among them
+day = await role.list_trades(subjects=held, valid_from_ns=open_ns, valid_until_ns=now_ns)
+late = await role.list_trades(subjects=held, after_watermark=day.watermark)   # a late print among them
 ```
 
-A plugin hearing trades with [`receive`](python-sdk.md#receive) has the SDK make the catch-up read for it.
+A plugin hearing trades with [their role classes' `on_<event>` methods](python-sdk.md#events) has the SDK make the catch-up read for it.
 
 A data plugin starting again:
 
 ```python
-last = await plugin.list_trades(subjects=streamed, latest_recorded=True)
+last = await role.list_trades(subjects=streamed, latest_recorded=True)
 ```
 
 or `meridian.roles.data.backfill_restart`, which reads it and records what the venue's history states since (see [Write a data plugin](../how-to/write-a-data-plugin.md)).
@@ -2118,7 +2131,7 @@ async def list_quotes(
 Its parameters are `list_trades`'s, with `at_ns` (the latest in force at this valid time; 0 for now) in place of `after_watermark`. A read the lake cannot answer is wanted of the data plugin serving the dataset, as a price's is. **Returns** `ListQuotesResult`: `quotes`, each a [`Quote`](#quote); `unanswered`, `datasets`, `watermark` and `next_cursor`.
 
 ```python
-latest = await plugin.list_quotes(subjects=held)      # BTC in USD and in USDC on one venue: both
+latest = await role.list_quotes(subjects=held)      # BTC in USD and in USDC on one venue: both
 ```
 
 ## An event contract's outcomes { #outcomes }
@@ -2741,7 +2754,7 @@ query. The Python SDK wraps most of them: `meridian.analytics` builds and
 runs a job, `meridian.roles.pricing.Pricer` answers a pricing plugin's
 batches, `meridian.EventGroups` keeps the event groups read and heard, and
 `plugin.query_lake` is the bounded query. Three events come with them,
-heard through [`receive`](python-sdk.md#receive): `event_group_changed`
+heard through [their role classes' `on_<event>` methods](python-sdk.md#events): `event_group_changed`
 (every role but `pricing`), `job_finished` (the roles that run jobs, each
 hearing its own) and `price_batch` (`pricing`, each instance hearing the
 batches routed to it).
@@ -2778,7 +2791,7 @@ async def report_event_group(
 | `mutually_exclusive`, `exhaustive` | Each as the venue states it, `true` or `false`, or `not_stated` where it says nothing, never `false` for unknown. Unset reads as not stated |
 | `series_id` | The venue's series for a recurring event, up to 256 characters; empty for none |
 | `valid_from_ns` | When the grouping took effect; 0 for now |
-| `raw_record` | The raw record it was read from (`plugin.raw_record(...)`) |
+| `raw_record` | The raw record it was read from (`role.plugin.raw_record(...)`) |
 | `member_bounds` | Added in contract 27. Each range member's `floor`, `cap` and `bound_unit` as the venue states them, each an `EventGroupMemberBound` naming one of the members. The store offers them for the member's record, where a person accepts them; a person's value wins. A bound naming an instrument that is not a member is refused `invalid`, naming `member_bounds[i].instrument_id` |
 
 **Returns** `ReportEventGroupResult`: `event_group`, the
@@ -3063,7 +3076,7 @@ most of them: `meridian.roles.data.rates` records and reads rates,
 `Wants.liveness` records a dataset's liveness, `roles.Latency` records
 latency, `roles.ems.open_quotes` orders an RFQ placement's quotes, and a
 connectivity plugin's `Trader` reports its venue's quotes. Two events come
-with them, heard through [`receive`](python-sdk.md#receive):
+with them, heard through [their role classes' `on_<event>` methods](python-sdk.md#events):
 `rates_recorded` (`reporting`, `portfolio`, `compliance`, `signal`) and
 `liveness_recorded` (those four and the `ems`).
 
@@ -3341,10 +3354,10 @@ a signal's [derived series](../concepts/the-lake.md#derived-series) and
 Ten more, the filings slice and quality states, are in the contract and
 served by core in a later chart release (see
 [The lake: what core does not serve yet](../concepts/the-lake.md#not-served-yet)).
-The Python SDK wraps them in `meridian.roles.chains`, `.lifecycle`,
-`.packages`, `.signal`, `.data.filings` and `.data.quality` (see
-[Contract 28's helpers](python-sdk.md#contract-28s-helpers)). Four events
-come with them, heard through [`receive`](python-sdk.md#receive):
+The Python SDK wraps them in `meridian.helpers.chains`, `.lifecycle` and
+`.packages`, and `meridian.roles.signal`, `.data.filings` and `.data.quality` (see
+[Helpers](python-sdk.md#helpers)). Four events
+come with them, heard through [their role classes' `on_<event>` methods](python-sdk.md#events):
 `statistics_recorded` (`portfolio`, `reporting`, `signal`),
 `corporate_actions_recorded` and `filings_recorded` (`reporting`,
 `signal`) and `lifecycle_event_recorded` (`operations`, `servicing`,
@@ -3434,7 +3447,7 @@ async def list_series(
 | `as_of_ns` | The recorded-time cut-off; 0 for now |
 | `page_size`, `cursor` | Up to 500 a page, 100 when 0; the `next_cursor` of the page before |
 
-**Returns** `ListSeriesResult`: `series`, the rows, each naming its dataset; `unanswered`, each an [`Unanswered`](#unanswered); `datasets`; the `watermark`; and `next_cursor`. Each page is filled after the type and the window are applied. `meridian.roles.chains.read_chain` reads every page.
+**Returns** `ListSeriesResult`: `series`, the rows, each naming its dataset; `unanswered`, each an [`Unanswered`](#unanswered); `datasets`; the `watermark`; and `next_cursor`. Each page is filled after the type and the window are applied. `meridian.helpers.chains.read_chain` reads every page.
 
 ### `record_statistics` { #record_statistics }
 
@@ -3494,7 +3507,7 @@ async def list_statistics(
 | `as_of_ns` | The recorded-time cut-off; 0 for now |
 | `page_size`, `cursor` | Up to 500 a page, 100 when 0; the `next_cursor` of the page before |
 
-**Returns** `ListStatisticsResult`: `statistics`, the rows, each naming its dataset; `unanswered`, each an [`Unanswered`](#unanswered); `datasets`; the `watermark`; and `next_cursor`. `meridian.roles.chains.read_open_interest` reads a chain's open interest for a date.
+**Returns** `ListStatisticsResult`: `statistics`, the rows, each naming its dataset; `unanswered`, each an [`Unanswered`](#unanswered); `datasets`; the `watermark`; and `next_cursor`. `meridian.helpers.chains.read_open_interest` reads a chain's open interest for a date.
 
 ### `request_series_records` { #request_series_records }
 
@@ -3520,7 +3533,7 @@ async def request_series_records(
 | `note` | Why, kept on the request's record; required when sent for a person |
 | `acting_for` | As above |
 
-**Returns** `RequestSeriesRecordsResult`: `answers`, one per series asked, in order, each its `series_key` and its `instrument_id` where held, matched or minted; `pending_review` where the platform's staff review it, asked again daily; or `refused_by_rule` where the rule does not allow its cause or the day's limit is reached, nothing sent. A key no chain row holds is refused `invalid`, naming `series[n].series_key`. Each request the rule refuses is its own record. `meridian.roles.chains.want_series` asks for one.
+**Returns** `RequestSeriesRecordsResult`: `answers`, one per series asked, in order, each its `series_key` and its `instrument_id` where held, matched or minted; `pending_review` where the platform's staff review it, asked again daily; or `refused_by_rule` where the rule does not allow its cause or the day's limit is reached, nothing sent. A key no chain row holds is refused `invalid`, naming `series[n].series_key`. Each request the rule refuses is its own record. `meridian.helpers.chains.want_series` asks for one.
 
 ### `record_lifecycle_event` { #record_lifecycle_event }
 
@@ -3546,7 +3559,7 @@ async def record_lifecycle_event(
 | `event` | A `LifecycleEvent`: its `account_id`; its `instrument_id`, a `listed_option`, `future_option` or `future` record; its `kind` (`exercise`, `assignment`, `expiry`, `settlement_variation`); its `quantity`, the contracts, or on a variation those held at the settlement; its `event_date`; its `deliveries`, each an instrument, a signed quantity (positive received) and its price; its `cash`, signed, positive received; its `settlement_price` for a variation or a cash settlement; its `external_event_id` as the broker states it; and its `raw_record` |
 | `idempotency_key`, `acting_for` | As above |
 
-**Returns** `RecordLifecycleEventResult`: the `event`, its `LCE-` `event_id`, its state and the proposal it answered where it matched one. A report sent twice is answered with the first. Refused naming the field: an instrument that is no listed option or future, an exercise, assignment or expiry on a future, a variation on an option, more contracts than held, a variation with no settlement price or cash. Heard as `lifecycle_event_recorded`. `meridian.roles.lifecycle.report` sends one.
+**Returns** `RecordLifecycleEventResult`: the `event`, its `LCE-` `event_id`, its state and the proposal it answered where it matched one. A report sent twice is answered with the first. Refused naming the field: an instrument that is no listed option or future, an exercise, assignment or expiry on a future, a variation on an option, more contracts than held, a variation with no settlement price or cash. Heard as `lifecycle_event_recorded`. `meridian.helpers.lifecycle.report` sends one.
 
 ### `propose_lifecycle_events` { #propose_lifecycle_events }
 
@@ -3571,7 +3584,7 @@ async def propose_lifecycle_events(
 | `events` | 1 to 500 `LifecycleEvent`s, each in its account, as `record_lifecycle_event` takes them, with its `proposal_basis` (the underlying's close, or the settlement price) |
 | `acting_for` | As above |
 
-**Returns** `ProposeLifecycleEventsResult`: `events`, one per event proposed, in order, each its `event_id` and state `proposed`. A report matching one by account, instrument, kind and date answers it, and it is never booked as well. `meridian.roles.lifecycle.propose` sends them.
+**Returns** `ProposeLifecycleEventsResult`: `events`, one per event proposed, in order, each its `event_id` and state `proposed`. A report matching one by account, instrument, kind and date answers it, and it is never booked as well. `meridian.helpers.lifecycle.propose` sends them.
 
 ### `release_lifecycle_event` { #release_lifecycle_event }
 
@@ -3597,7 +3610,7 @@ async def release_lifecycle_event(
 | `note` | Why, 1 to 2,000 characters, kept on the release's entry; none is refused `REFUSAL_REASON_REASON_REQUIRED` |
 | `acting_for` | As above |
 
-**Returns** `ReleaseLifecycleEventResult`: the `event`, booked. `meridian.roles.lifecycle.due_for_release` says when one may be released.
+**Returns** `ReleaseLifecycleEventResult`: the `event`, booked. `meridian.helpers.lifecycle.due_for_release` says when one may be released.
 
 ### `list_lifecycle_events` { #list_lifecycle_events }
 
@@ -3628,7 +3641,7 @@ async def list_lifecycle_events(
 | `since` | A watermark: events whose last change is after it |
 | `page_size`, `cursor` | Up to 500 a page, 100 when 0; the `next_cursor` of the page before |
 
-**Returns** `ListLifecycleEventsResult`: `events`, each with its state; `as_of`, the head of each partition the read saw; and `next_cursor`. `meridian.roles.lifecycle.read_events` reads every page.
+**Returns** `ListLifecycleEventsResult`: `events`, each with its state; `as_of`, the head of each partition the read saw; and `next_cursor`. `meridian.helpers.lifecycle.read_events` reads every page.
 
 
 ### `resolve_company` { #resolve_company }
@@ -4182,6 +4195,156 @@ async def record_quality_assessments(
 
 **Returns** `RecordQualityAssessmentsResult`: `recorded`. `meridian.roles.signal.escalate` records them.
 
+## Contract 29's operations { #contract-v29s-operations }
+
+Contract 29 is [bonds and fixed income](../concepts/bonds-and-fixed-income.md).
+Every operation here is `preview`. The SDK's
+[`meridian.helpers.debt`](../concepts/bonds-and-fixed-income.md#the-sdks-helpers)
+wraps the factor's: `debt.factor(...)` builds a row, `debt.read_factors`
+reads a pool's history every page, and `debt.latest` takes the version in
+force. Two events come with them, each an `on_<event>` method of the role
+classes hearing it: `on_factors_recorded` (`operations`, `portfolio`,
+`reporting`, `servicing`, `signal`), every version, never conflated, caught
+up by [`list_factors`](#list_factors); and `on_series_recorded` (`ems`,
+`oms`, `portfolio`, `signal`), a listed series recorded.
+
+Contract 29 also changes operations listed above:
+
+- [`propose_order`](#propose_order) takes a fixed-income limit,
+  `price_basis` with `limit_yield` or `limit_spread_bps` and the
+  `benchmark_instrument_id` a spread is over; a single option or future
+  order states its `position_effect`.
+- [`report_execution`](#report_execution) takes a fixed-income fill:
+  `price_basis` and `yield` beside the dollar price per 100 of face, which
+  `price` always is; `factor_used`, an override only, for a pool's or a
+  tranche's fill, which otherwise states original face and takes the factor
+  the book finds; `settlement_date_unknown`; `trade_time_precision`; and the
+  trade-reporting fields `contra_party_type`, `parties`, `capacity`,
+  `no_remuneration`, `affiliate_back_to_back`, `special_price` with its
+  `special_price_reason`, `weighted_average_price`, `primary_market`,
+  `list_offering_price_takedown`, `traded_flat`, `stipulated`,
+  `portfolio_trade` and `treasury_trade_modifier`.
+- `Price`, `Trade` and `Quote` take a `PriceBasis` of percent of par,
+  yield or spread (with `benchmark_instrument_id`), and a capped size
+  (`Trade.quantity_capped`, `Quote.bid_size_capped`).
+- [`list_trades`](#list_trades), [`list_quotes`](#list_quotes) and
+  [`list_statistics`](#list_statistics) take an expiration window,
+  `expiration_from` and `expiration_to`, and `fields`, the dictionary
+  entries a page shows, a field not asked coming back unset;
+  [`list_series`](#list_series) takes `paths`, the template paths a page
+  draws; a want (`ObservationsWantedEvent`) carries `series_keys`,
+  `all_series` and the expiration window.
+- [`read_job_answer`](#read_job_answer) is read a page at a time,
+  `page_size` and `cursor`, answering `next_cursor`.
+- [`record_derived_series`](#record_derived_series) is held by `data` as
+  well as `signal`.
+- A quality assessment names its data type, a derived value in money is
+  `money_value`, `DatasetRef` counts its valid, suspicious and invalid
+  rows, and a quarantined dataset is answered
+  `UNANSWERED_REASON_QUARANTINED`, never fallen back from.
+
+### `record_factors` { #record_factors }
+
+An agency's data plugin records each held pool's or REMIC class's factor
+as the agency published it, one row per pool or class and factor month,
+never a whole file.
+
+```python
+async def record_factors(
+    self, *, factors: Sequence[Factor] = (), want_id: str = "",
+    acting_for: str | None = None,
+) -> RecordObservationsReply
+```
+
+| | |
+|---|---|
+| gRPC | `rpc RecordFactors(RecordFactorsParams) returns (RecordObservationsReply)` |
+| Workflow step | W10.4, Record prices, bars, trades and quotes in batches |
+| Kind | command, on `platform.lake.command.record-factors` |
+| Role | `data` |
+| Served by | the lake |
+
+| Parameter | Meaning |
+|---|---|
+| `factors` | 1 to 500 `Factor` rows, each its `meta` (the pool's or class's record as its subject, its row key the agency, the pool or deal and class, and the factor month), the `factor` exactly as published, its `factor_month`, `record_date` and `payment_date`, and where the disclosure states them the pool's `wac`, `wam` and `wala` and a floating class's period `coupon_rate` |
+| `want_id`, `acting_for` | As above |
+
+**Returns** `RecordObservationsReply`, as [`record_prices`](#record_prices)
+answers: `recorded`, `restated`, `unchanged` and the dataset's
+`watermark`. A corrected or final factor is the next version of its row
+key, and the latest version is the one in force.
+
+```python
+from meridian.helpers import debt
+
+row = debt.factor(pool_id, "0.84123456", "2026-10", dataset="fannie_mae",
+                  wac="6.125", wam=342, wala=17)
+await role.record_factors(factors=[row])
+```
+
+### `list_factors` { #list_factors }
+
+Reads the factors the lake holds for pools or classes over a range of
+dates, point in time and by source.
+
+```python
+async def list_factors(
+    self, *, subjects: Sequence[SubjectRef] = (), from_date: date | str = "",
+    to_date: date | str = "", sources: SourceChoice | None = None,
+    as_of_ns: int = 0, page_size: int = 0, cursor: str = "",
+    after_watermark: Watermark | None = None,
+) -> ListFactorsReply
+```
+
+| | |
+|---|---|
+| gRPC | `rpc ListFactors(ListFactorsParams) returns (ListFactorsReply)` |
+| Workflow step | W10.6, Read prices, bars, trades and quotes, point in time, by source |
+| Kind | query, on `platform.lake.query.list-factors` |
+| Role | `operations`, `portfolio`, `reporting`, `servicing`, `signal`; the book reads it too, to price a fill |
+| Served by | the lake |
+
+| Parameter | Meaning |
+|---|---|
+| `subjects` | 1 to 500 pools or classes |
+| `from_date`, `to_date` | The range of dates read; `debt.read_factors` answers each pool's rows by payment date |
+| `sources`, `as_of_ns` | As [`list_prices`](#list_prices) takes them |
+| `page_size`, `cursor` | At most 500 a page, capped |
+| `after_watermark` | Only what was recorded after it, to catch up |
+
+**Returns** `ListFactorsReply`: `factors`, each at its version in force
+(or at `as_of_ns`); `unanswered`; the `datasets` read; the `watermark`;
+and `next_cursor`. `debt.read_factors(role, subjects, from_date, to_date)`
+reads every page, and a pool no source covers is named unanswered, never
+given a factor of 1.
+
+### `list_expirations` { #list_expirations }
+
+Reads an underlying's expirations alone, in date order, each with how many
+series it lists, so a page chooses its expiration with one small read
+instead of listing every series.
+
+```python
+async def list_expirations(
+    self, *, underlying_id: str = "",
+    instrument_type: InstrumentType | str | None = None,
+    expiration_from: date | str = "", expiration_to: date | str = "",
+) -> ListExpirationsReply
+```
+
+| | |
+|---|---|
+| gRPC | `rpc ListExpirations(ListExpirationsParams) returns (ListExpirationsReply)` |
+| Workflow step | W10.6, Read prices, bars, trades and quotes, point in time, by source |
+| Kind | query, on `platform.lake.query.list-expirations` |
+| Role | `ems`, `oms`, `portfolio`, `signal` |
+| Served by | the lake |
+
+**Returns** `ListExpirationsReply`: `expirations`, each its
+`expiration_date` and `series_count`; `unanswered`; the `datasets` read;
+and the `watermark`. `chains.read_expirations(role, underlying_id,
+expiration_from, expiration_to)` wraps it.
+
 ## Types { #types }
 
 The plugin-facing types these operations take and return. [`Identifier`](python-sdk.md#identifier) and [`MissReason`](python-sdk.md#missreason) are described with the Python SDK. `Money`, `StatementFigures`, `ReportedCollateral`, `ReportedLot`, `ReportedEncumbrance` and the book's `OpeningSource`, `OpeningPosition`, `OpeningLot`, `PendingSettlement`, `LotTerms`, `PositionKey`, `BreakDifference`, `BreakValue`, `BreakCause`, `PendingSettlementRef`, `AgreementFigures`, `ReportedPositionValue`, `PositionEncumbrances`, `Encumbrance`, `Adjustment`, `MovementLine` and `BasisAdjustment` are the SDK's frozen dataclasses, exported from `meridian`, which take their numbers as `Decimal` and their amounts as `Money`, and are converted and refused as a call's own parameters are. Every other type below is a generated protobuf message or enum in `meridian.plugin.v1.operations_pb2`, and `AssetClass`, `CollateralDirection`, `ExternalAccount`, `HoldingSide` and `SyncState` are also exported from `meridian`. What a read answers is all generated messages, `StatementFigures` among them: read a number or an amount off one with [`as_decimal` and `as_money`](#numbers-and-amounts).
@@ -4314,7 +4477,7 @@ What the custodian says an account holds of an instrument, on one side. It is th
 | `cost_basis`, `average_cost`, `lots`, `margin_requirement` | as on [`record_holding`](#record_holding) | As the custodian reported them on the row that last stated the position, unset or empty where it reported none. |
 | `available_quantity`, `not_available_quantity`, `available_basis`, `encumbrances` | as on [`record_holding`](#record_holding) | The same. |
 | `last_statement_id`, `as_of_date`, `updated_at_ns` | `str`, `str`, `int` | The statement that last stated it, and when. |
-| `last_change` | `JournalRef` | Where its last change sits in the store's record, which [`receive`](python-sdk.md#receive) reads to catch up. A handler is handed none. |
+| `last_change` | `JournalRef` | Where its last change sits in the store's record, which [their role classes' `on_<event>` methods](python-sdk.md#events) reads to catch up. A handler is handed none. |
 | `removed` | `bool` | Removed, as when a placeholder's replacement moved it: answered only to a read given `since`, and heard once. |
 
 ### `UnresolvedHolding` { #unresolvedholding }
@@ -4333,7 +4496,7 @@ A holding the deployment received but could not name.
 
 ### `StatementRecordedEvent` { #statementrecordedevent }
 
-A completed statement, as the street store announced it when its last row landed. The `statement_recorded` handler of [`receive`](python-sdk.md#receive) is handed one, and [`list_statements`](#list_statements) answers them.
+A completed statement, as the street store announced it when its last row landed. The `statement_recorded` handler of [their role classes' `on_<event>` methods](python-sdk.md#events) is handed one, and [`list_statements`](#list_statements) answers them.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -4364,7 +4527,7 @@ One activity on an account as the custodian states it, `meridian.CustodialActivi
 | `price` | `Money` or `None` | The price per unit, as stated. `None` where the custodian states none: never worked out from the amount and the units. |
 | `amount` | `Money` or `None` | The cash it moved, signed by what it did to the account's cash: positive in (a sale, a dividend, a contribution), negative out (a purchase, a fee, a withdrawal). `None` where it moved none, such as a split: never zero. |
 | `description` | `str` | The custodian's own words, for a person. Nothing branches on it. |
-| `raw_record` | `RawRecordRef` | The raw record it was converted from, `plugin.raw_record(key)`. Required. |
+| `raw_record` | `RawRecordRef` | The raw record it was converted from, `role.plugin.raw_record(key)`. Required. |
 | `provenance` | sequence of `Provenance` | One for each value the plugin closed rather than read: an instrument a named person linked (`meridian.edge.supplied("instrument_id", person)`), a settlement date derived by a named rule. |
 
 Activity is never netted or deduplicated against holdings: a sweep fund's purchases are reported as the custodian lists them.
@@ -4393,7 +4556,7 @@ What an activity was, in the platform's own words, never a custodian's.
 
 ### `ActivityRecordedEvent` { #activityrecordedevent }
 
-An activity, as the street store announced it when it was recorded (W2.12), and each item of [`list_activities`](#list_activities). The `activity_recorded` handler of [`receive`](python-sdk.md#receive) is handed one.
+An activity, as the street store announced it when it was recorded (W2.12), and each item of [`list_activities`](#list_activities). The `activity_recorded` handler of [their role classes' `on_<event>` methods](python-sdk.md#events) is handed one.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -4418,7 +4581,7 @@ One re-resolution of an activity, as the street keeps it beside the activity as 
 
 ### `ActivityReResolvedEvent` { #activityreresolvedevent }
 
-A re-resolution, as the street store announced it when it was recorded (W2.16). The `activity_re_resolved` handler of [`receive`](python-sdk.md#receive) is handed one, caught up after a gap from `list_activities`' `re_resolutions`.
+A re-resolution, as the street store announced it when it was recorded (W2.16). The `activity_re_resolved` handler of [their role classes' `on_<event>` methods](python-sdk.md#events) is handed one, caught up after a gap from `list_activities`' `re_resolutions`.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -4428,7 +4591,7 @@ A re-resolution, as the street store announced it when it was recorded (W2.16). 
 
 ### `SyncStatusRecordedEvent` { #syncstatusrecordedevent }
 
-A sync status the street store heard and kept (W2.13), and each item of [`list_sync_statuses`](#list_sync_statuses). The `sync_status_recorded` handler of [`receive`](python-sdk.md#receive) is handed one.
+A sync status the street store heard and kept (W2.13), and each item of [`list_sync_statuses`](#list_sync_statuses). The `sync_status_recorded` handler of [their role classes' `on_<event>` methods](python-sdk.md#events) is handed one.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -4863,7 +5026,7 @@ The envelope every lake row carries as its first field, `meridian.ObservationMet
 | `valid_from_ns`, `valid_until_ns` | `int` | by the plugin | When the value was in force, the end exclusive; 0 for an instant or a value in force until the next. A day still forming ends after now. |
 | `business_date` | `datetime.date` or `str` | by the plugin | A daily value's business date, in the dataset's day; empty for one that is not daily. |
 | `source_times` | sequence of `SourceTime` | by the plugin | The source's own times, each a `kind` (`event`, `consolidated`, `reported`, `vendor_received`, `published`) once, and `at_ns`. |
-| `raw` | `RawRecordRef` | by the plugin | The raw record it was converted from, `plugin.raw_record(key)`. |
+| `raw` | `RawRecordRef` | by the plugin | The raw record it was converted from, `role.plugin.raw_record(key)`. |
 | `unconverted` | sequence of `AsReported` | by the plugin | A value that failed conversion, as reported, such as a venue's code the deployment does not hold. |
 | `closed_day` | `DateCheck` or `None` | by the lake | Added in contract 23. On a daily row dated on a closed day of its dataset's calendar, the date, each calendar with its version, why (a weekend, a named holiday, or outside coverage) and the holiday's name. Unset otherwise. |
 | `sent_at_ns` | `int` | stamped | The envelope's publication time. |
@@ -4989,4 +5152,4 @@ service PluginOperations {
 }
 ```
 
-Each `…Params` message keeps the field numbers of the domain message it stands for and drops the fields the sidecar stamps, so its encoding is the domain message's. `acting_for` is field 1000 on the eleven operations that take it, a `meridian.v1.CallerAssertion`. The SDK decodes it from the base64url `Meridian-Caller` header you pass. A number is a `Decimal` message, `high` and `low` halves of a 128-bit integer and a `scale` of 0 to 18, and an amount a `Money` message, a `Decimal` and a `currency_code`. `Identifier`, `MissReason` and the other types are plugin-facing mirrors of the domain types. `Receive` is a stream: each item a `Delivery`, a row's message beside what is known of it, or a `Lost` where the sidecar dropped deliveries. The SDK's [`receive`](python-sdk.md#receive) reads it, and catches up from the store where it missed something.
+Each `…Params` message keeps the field numbers of the domain message it stands for and drops the fields the sidecar stamps, so its encoding is the domain message's. `acting_for` is field 1000 on the eleven operations that take it, a `meridian.v1.CallerAssertion`. The SDK decodes it from the base64url `Meridian-Caller` header you pass. A number is a `Decimal` message, `high` and `low` halves of a 128-bit integer and a `scale` of 0 to 18, and an amount a `Money` message, a `Decimal` and a `currency_code`. `Identifier`, `MissReason` and the other types are plugin-facing mirrors of the domain types. `Receive` is a stream: each item a `Delivery`, a row's message beside what is known of it, or a `Lost` where the sidecar dropped deliveries. The SDK's [their role classes' `on_<event>` methods](python-sdk.md#events) reads it, and catches up from the store where it missed something.

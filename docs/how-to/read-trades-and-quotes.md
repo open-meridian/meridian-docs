@@ -322,7 +322,7 @@ A plugin reads nothing it is not entitled to, whatever its role.
 - [The lake](../concepts/the-lake.md): trades, quotes and who reads them.
 - [`list_trades`](../api/typed-operations.md#list_trades),
   [`list_quotes`](../api/typed-operations.md#list_quotes) and
-  [Receive](../api/python-sdk.md#receive).
+  [Events](../api/python-sdk.md#events).
 - [Write a data plugin against its suite](write-a-data-plugin.md): recording them.
 - [Using a data plugin](using-a-data-plugin.md#the-data-plugins): the
   sources that stream them.

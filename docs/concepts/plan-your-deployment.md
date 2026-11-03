@@ -253,6 +253,8 @@ A need no row covers is met in one of three ways, in this order:
 
 ## Related
 
+- [Service levels](service-levels.md): where a deployment runs, the
+  failures each level rides out, and the chart values that reach it.
 - [Roles](roles.md): what each role does, what it leaves to another, and
   how an idea maps to the least roles.
 - [The book of record](the-book-of-record.md): how an account enters the

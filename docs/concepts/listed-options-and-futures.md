@@ -202,18 +202,18 @@ the series first.
 
 ## For a plugin's author
 
-The SDK's helpers, from SDK 0.33.0:
+The SDK's helpers, in `meridian.helpers`:
 
-- `meridian.roles.chains`: `osi_symbol`, `osi_terms` and `osi_key` for the
+- `meridian.helpers.chains`: `osi_symbol`, `osi_terms` and `osi_key` for the
   OSI symbol; `option_series`, `statistic` and `series_meta` to record a
-  chain; `read_chain`, `read_open_interest` and `want_series` to read one
+  chain; `read_expirations`, `read_chain`, `read_open_interest` and `want_series` to read one
   and ask for a series.
-- `meridian.roles.lifecycle`: `expiry`, `exercise`, `assignment` and
+- `meridian.helpers.lifecycle`: `expiry`, `exercise`, `assignment` and
   `variation` built as the broker states them and sent once by `report`;
   `exercise_by_exception` (`EXERCISE_THRESHOLD`, a cent) and `propose` for
   `servicing`; `due_for_release` and `release` for `operations`;
   `read_events`.
-- `meridian.roles.packages`: `legs` in lowest terms (`MOST_LEGS`, 16),
+- `meridian.helpers.packages`: `legs` in lowest terms (`MOST_LEGS`, 16),
   `propose`, and `report_fill` with each `LegFill`.
 
 See [Record and read an option chain](../how-to/record-and-read-an-option-chain.md)
