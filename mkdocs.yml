@@ -109,96 +109,125 @@ nav:
       - Build with an AI agent: getting-started/build-with-an-ai-agent.md
   - Concepts:
       - concepts/index.md
-      - Architecture: concepts/architecture.md
-      - Plan your deployment: concepts/plan-your-deployment.md
-      - Service levels: concepts/service-levels.md
-      - Projects and deployments: concepts/projects-and-deployments.md
-      - Plugins, roles and grants: concepts/plugins.md
-      - Registries: concepts/registries.md
-      - Roles: concepts/roles.md
-      - Access: concepts/access.md
-      - Accounts: concepts/accounts.md
-      - The book of record: concepts/the-book-of-record.md
-      - The custodian's activity: concepts/the-custodians-activity.md
-      - The archive: concepts/the-archive.md
-      - Instruments: concepts/instruments.md
-      - One ID per instrument: concepts/one-id.md
-      - Listed options and futures: concepts/listed-options-and-futures.md
-      - Bonds and fixed income: concepts/bonds-and-fixed-income.md
-      - Companies and corporate actions: concepts/companies-and-corporate-actions.md
-      - Event groups: concepts/event-groups.md
-      - The lake: concepts/the-lake.md
-      - Rates: concepts/rates.md
-      - Data age and liveness: concepts/data-age-and-liveness.md
-      - Licences and entitlements: concepts/licences-and-entitlements.md
-      - The analytics component: concepts/the-analytics-component.md
-      - Scenarios: concepts/scenarios.md
-      - Execution costs: concepts/execution-costs.md
-      - Money and instruments: concepts/money-and-instruments.md
-      - Venues: concepts/venues.md
-      - Dates and time: concepts/dates-and-time.md
-      - Tickets and the inbox: concepts/tickets-and-the-inbox.md
-      - Prepared changes: concepts/prepared-changes.md
-      - Service accounts: concepts/service-accounts.md
-      - The order lifecycle: concepts/the-order-lifecycle.md
-      - Placement types and RFQ quotes: concepts/placement-types-and-rfq-quotes.md
-      - FX netting: concepts/fx-netting.md
-      - The agents' guard: concepts/the-agents-guard.md
-      - Booking: concepts/booking.md
-      - Settlement calendars: concepts/settlement-calendars.md
-      - Development deployments: concepts/development-deployments.md
+      - Core:
+          - Deployment:
+              - Architecture: concepts/architecture.md
+              - Plan your deployment: concepts/plan-your-deployment.md
+              - Service levels: concepts/service-levels.md
+              - Projects and deployments: concepts/projects-and-deployments.md
+              - Development deployments: concepts/development-deployments.md
+          - The master:
+              - Instruments: concepts/instruments.md
+              - One ID per instrument: concepts/one-id.md
+              - Money and instruments: concepts/money-and-instruments.md
+              - Venues: concepts/venues.md
+              - Dates and time: concepts/dates-and-time.md
+              - Settlement calendars: concepts/settlement-calendars.md
+          - The book:
+              - The book of record: concepts/the-book-of-record.md
+              - Accounts: concepts/accounts.md
+              - The custodian's activity: concepts/the-custodians-activity.md
+              - The order lifecycle: concepts/the-order-lifecycle.md
+              - Placement types and RFQ quotes: concepts/placement-types-and-rfq-quotes.md
+              - Booking: concepts/booking.md
+              - Execution costs: concepts/execution-costs.md
+              - The archive: concepts/the-archive.md
+          - The lake:
+              - The lake: concepts/the-lake.md
+              - Data age and liveness: concepts/data-age-and-liveness.md
+              - Rates: concepts/rates.md
+              - The analytics component: concepts/the-analytics-component.md
+              - Scenarios: concepts/scenarios.md
+          - Roles and plugins:
+              - Plugins, roles and grants: concepts/plugins.md
+              - Roles: concepts/roles.md
+              - Registries: concepts/registries.md
+              - Access: concepts/access.md
+              - Service accounts: concepts/service-accounts.md
+              - Prepared changes: concepts/prepared-changes.md
+              - The agents' guard: concepts/the-agents-guard.md
+              - Tickets and the inbox: concepts/tickets-and-the-inbox.md
+          - Data sources and terms:
+              - Licences and entitlements: concepts/licences-and-entitlements.md
+      - By asset class:
+          - Equities:
+              - Equities: concepts/equities.md
+              - Companies and corporate actions: concepts/companies-and-corporate-actions.md
+          - FX:
+              - FX: concepts/fx.md
+              - FX netting: concepts/fx-netting.md
+          - Crypto: concepts/crypto.md
+          - Options: concepts/listed-options-and-futures.md
+          - Fixed income: concepts/bonds-and-fixed-income.md
+          - Prediction markets:
+              - Prediction markets: concepts/prediction-markets.md
+              - Event groups: concepts/event-groups.md
   - How-to:
       - how-to/index.md
-      - Integrations: how-to/integrations.md
-      - Choose how people sign in: how-to/choose-sign-in.md
-      - Give people access: how-to/administer-access.md
-      - Reset a lost password: how-to/reset-a-lost-password.md
-      - Recover administration: how-to/recover-administration.md
-      - Set a plugin's settings: how-to/set-a-plugins-settings.md
-      - Build a plugin's page: how-to/build-a-plugin-page.md
-      - Prove a plugin against a released runtime: how-to/prove-a-plugin-against-a-released-runtime.md
-      - Keep what your custody plugin converts: how-to/keep-what-the-edge-converts.md
-      - Report the custodian's activity: how-to/report-the-custodians-activity.md
-      - Keep older records in the archive: how-to/keep-older-records-in-the-archive.md
-      - License and entitle a dataset: how-to/license-and-entitle-a-dataset.md
-      - Using a data plugin: how-to/using-a-data-plugin.md
-      - Using a custody plugin: how-to/using-a-custody-plugin.md
-      - Using an operations plugin: how-to/using-an-operations-plugin.md
-      - Using a reporting plugin: how-to/using-a-reporting-plugin.md
-      - Add a prediction-market plugin: how-to/add-a-prediction-market-plugin.md
-      - Write a data plugin against its suite: how-to/write-a-data-plugin.md
-      - Write a pricing plugin: how-to/write-a-pricing-plugin.md
-      - Record rates in a data plugin: how-to/record-rates.md
-      - Record and read an option chain: how-to/record-and-read-an-option-chain.md
-      - Set staleness thresholds and the stale-reference action: how-to/set-staleness-thresholds.md
-      - Set the FX pivot currencies: how-to/set-the-fx-pivot-currencies.md
-      - Run a TCA job and read its costs: how-to/read-execution-costs.md
-      - Read trades and quotes: how-to/read-trades-and-quotes.md
-      - Value the book: how-to/value-the-book.md
-      - Watch the market on the Board: how-to/watch-the-board.md
-      - Offer your pages to agents: how-to/offer-your-pages-to-agents.md
-      - Let your agent manage a plugin: how-to/let-your-agent-manage-a-plugin.md
-      - Run a plugin's work as a service account: how-to/run-a-plugins-work-as-a-service-account.md
-      - Route orders through a connectivity plugin: how-to/route-orders-through-a-connectivity-plugin.md
-      - Answer a venue-originated fill: how-to/answer-a-venue-originated-fill.md
-      - Place manually or by RFQ: how-to/place-manually-or-by-rfq.md
-      - Net FX orders: how-to/net-fx-orders.md
-      - Set trading instructions: how-to/set-trading-instructions.md
-      - Advising on tickets: how-to/advise-on-tickets.md
-      - Working your tickets: how-to/work-your-tickets.md
-      - Write a plugin's documentation: how-to/write-a-plugins-documentation.md
-      - Release a plugin version: how-to/release-a-plugin.md
-      - Publish a plugin to a registry: how-to/publish-a-plugin.md
-      - Install a plugin from a registry: how-to/install-from-a-registry.md
-      - Upgrade a deployment: how-to/upgrade-a-deployment.md
-      - Review provisional records and the migration: how-to/review-provisional-records.md
-      - Back up and restore a deployment: how-to/back-up-and-restore.md
-      - Remove or start over: how-to/remove-or-start-over.md
-      - Troubleshoot an install: how-to/troubleshoot-install.md
+      - Run a deployment:
+          - Upgrade a deployment: how-to/upgrade-a-deployment.md
+          - Back up and restore a deployment: how-to/back-up-and-restore.md
+          - Review provisional records and the migration: how-to/review-provisional-records.md
+          - Keep older records in the archive: how-to/keep-older-records-in-the-archive.md
+          - Remove or start over: how-to/remove-or-start-over.md
+          - Troubleshoot an install: how-to/troubleshoot-install.md
+          - Choose how people sign in: how-to/choose-sign-in.md
+          - Give people access: how-to/administer-access.md
+          - Reset a lost password: how-to/reset-a-lost-password.md
+          - Recover administration: how-to/recover-administration.md
+          - Install a plugin from a registry: how-to/install-from-a-registry.md
+          - Set a plugin's settings: how-to/set-a-plugins-settings.md
+          - Let your agent manage a plugin: how-to/let-your-agent-manage-a-plugin.md
+          - Advising on tickets: how-to/advise-on-tickets.md
+          - Working your tickets: how-to/work-your-tickets.md
+      - Build a plugin:
+          - Build a plugin's page: how-to/build-a-plugin-page.md
+          - Offer your pages to agents: how-to/offer-your-pages-to-agents.md
+          - Run a plugin's work as a service account: how-to/run-a-plugins-work-as-a-service-account.md
+          - Prove a plugin against a released runtime: how-to/prove-a-plugin-against-a-released-runtime.md
+          - Write a plugin's documentation: how-to/write-a-plugins-documentation.md
+          - Release a plugin version: how-to/release-a-plugin.md
+          - Publish a plugin to a registry: how-to/publish-a-plugin.md
+      - Data:
+          - Integrations: how-to/integrations.md
+          - Using a data plugin: how-to/using-a-data-plugin.md
+          - License and entitle a dataset: how-to/license-and-entitle-a-dataset.md
+          - Write a data plugin against its suite: how-to/write-a-data-plugin.md
+          - Record rates in a data plugin: how-to/record-rates.md
+          - Read trades and quotes: how-to/read-trades-and-quotes.md
+          - Set staleness thresholds and the stale-reference action: how-to/set-staleness-thresholds.md
+          - Write a pricing plugin: how-to/write-a-pricing-plugin.md
+      - Trading:
+          - Route orders through a connectivity plugin: how-to/route-orders-through-a-connectivity-plugin.md
+          - Place manually or by RFQ: how-to/place-manually-or-by-rfq.md
+          - Answer a venue-originated fill: how-to/answer-a-venue-originated-fill.md
+          - Set trading instructions: how-to/set-trading-instructions.md
+          - Run a TCA job and read its costs: how-to/read-execution-costs.md
+      - Operations:
+          - Using a custody plugin: how-to/using-a-custody-plugin.md
+          - Keep what your custody plugin converts: how-to/keep-what-the-edge-converts.md
+          - Report the custodian's activity: how-to/report-the-custodians-activity.md
+          - Using an operations plugin: how-to/using-an-operations-plugin.md
+      - Reporting:
+          - Using a reporting plugin: how-to/using-a-reporting-plugin.md
+          - Value the book: how-to/value-the-book.md
+          - Watch the market on the Board: how-to/watch-the-board.md
+      - By asset class:
+          - FX:
+              - Net FX orders: how-to/net-fx-orders.md
+              - Set the FX pivot currencies: how-to/set-the-fx-pivot-currencies.md
+          - Options:
+              - Record and read an option chain: how-to/record-and-read-an-option-chain.md
+          - Prediction markets:
+              - Add a prediction-market plugin: how-to/add-a-prediction-market-plugin.md
   - Tutorials:
       - tutorials/index.md
-      - Change your plugin's page, live: tutorials/change-the-page-live.md
-      - Record a holdings statement: tutorials/record-a-holdings-statement.md
+      - 1. Change your plugin's page, live: tutorials/change-the-page-live.md
+      - 2. Record a holdings statement: tutorials/record-a-holdings-statement.md
+      - 3. Structure a plugin: tutorials/structure-a-plugin.md
+      - 4. Fast data retrieval: tutorials/fast-data-retrieval.md
+      - 5. Build a live page: tutorials/live-pages.md
+      - 6. Analytics: tutorials/analytics.md
   - API reference:
       - api/index.md
       - Command line: api/cli.md

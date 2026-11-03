@@ -11,6 +11,7 @@ piece of data lives.
 |---|---|
 | [Architecture](architecture.md) | The two halves of Open Meridian — the platform and your deployment — what runs in each, and what crosses between them |
 | [Plan your deployment](plan-your-deployment.md) | A firm's profile answered in three layers — core as its books and records, plugins by role, configuration — with what exists, what is planned and what to build, worked for three firms |
+| [Service levels](service-levels.md) | Desktop, single node, multi-node and multi-zone: what each rides out, the chart values that reach it, the hot layer, and what comes in a later chart release |
 | [Projects and deployments](projects-and-deployments.md) | How a deployment is registered on the platform, how it proves who it is, and the one-time codes it is set up with |
 | [Plugins, roles and grants](plugins.md) | What a plugin is, what it may do on the bus, how that is decided, and how people reach its pages, by Manage, Open and View |
 | [Registries](registries.md) | Where a plugin comes from: a deployment's own Local registry and the platform's Community and Verified ones, the phases they open in, who publishes, how the platform builds and checks each version, and what a deployment verifies before it installs one |
@@ -81,3 +82,8 @@ piece of data lives.
     carries its own documentation, read before it is launched, and the
     platform's Community registry lists Open Meridian's own plugins. Where a page
     describes something that is specified but not built, it says so.
+
+**By asset class.** [Equities](equities.md), [FX](fx.md), [Crypto](crypto.md),
+[Options](listed-options-and-futures.md), [Fixed income](bonds-and-fixed-income.md)
+and [Prediction markets](prediction-markets.md) each gather the pages above
+that their records, prices, orders and plugins use.

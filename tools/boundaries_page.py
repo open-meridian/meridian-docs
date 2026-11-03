@@ -84,6 +84,16 @@ GUIDES = [
      "a firm's profile answered in three layers: core as its books and records, the plugins by role "
      "(existing, planned in a named release, or to build yourself) and configuration, "
      "with what is missing named as a spec to bring, each plugin's registry and who checks it; three worked profiles"),
+    ("concepts/service-levels.md", "Service levels",
+     "Desktop, single node, multi-node and multi-zone: the failures each rides out, the chart values "
+     "that reach it (standby, readyLagMs, leases, zones), the hot layer's bounds and from_memory"),
+    ("concepts/bonds-and-fixed-income.md", "Bonds and fixed income",
+     "the bond, pool, TBA, CMO and CD templates, offered terms, percent of par, the factor as the "
+     "security's, provisional bookings revised or claimed, half-even pool cash, and in force"),
+    ("tutorials/fast-data-retrieval.md", "Fast data retrieval",
+     "subscriptions not polling, the hot layer, latest and listing reads, fields asked, batching"),
+    ("tutorials/live-pages.md", "Build a live page",
+     "pages.live_values and LiveValue: source, age, staleness only in session, FX_WEEK, never blank"),
     ("how-to/integrations.md", "Integrations",
      "the released plugins, the service each works with, its roles, asset classes, environments, "
      "and version, filterable by role, asset class and environment"),

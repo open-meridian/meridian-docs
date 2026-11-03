@@ -41,7 +41,7 @@ dataset it used.
 ## Read the rows
 
 ```python
-page = await plugin.list_execution_costs(
+page = await role.list_execution_costs(
     account_id="ACC-12",
     trade_date="2026-10-22",
     benchmarks=["arrival", "placement_arrival"],

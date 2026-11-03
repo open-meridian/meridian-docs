@@ -33,6 +33,7 @@ The table must be present: an upload without it is refused. The command line rea
 |---|---|---|---|
 | `roles` | list of strings | `[]` | The roles the plugin asks for, from the deployment's fixed list (below). Its grants on the bus are the union of its roles' grants. Empty is a plugin admitted with no topics, as the reference plugin is. |
 | `interface` | boolean | `false` | Whether the plugin serves a page through its sidecar. It is shown in the catalogue (`page: yes` or `no` in `meridian plugin list`). |
+| `name` | string | `[project] name` | The plugin's name in Meridian, apart from its Python project: its registry listing, `plugin publish` and `plugin release` (the push scope too) and `plugin upload`'s catalogue entry use it. A project named `plugin-databento` lists as `databento` with `name = "databento"`. |
 | `declaration` | string | none | The version's declaration, as `"<module>:<attribute>"`, naming a `meridian.Declaration`: its settings, its interface, whether it reads external accounts and its documentation. `meridian plugin upload` reads it from the built image with `meridian-declaration`, and the texts in `docs/` beside it. A plugin on SDK 0.29.0 names one: a version uploaded without it is refused at registration. `meridian plugin check` fails one naming a module or an attribute the plugin does not have. See [The whole declaration](python-sdk.md#the-whole-declaration). |
 
 ### Rules

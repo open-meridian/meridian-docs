@@ -33,7 +33,22 @@ backups set up. See [Back up and restore a deployment](back-up-and-restore.md). 
 changes on the way, release by release, is in the
 [release notes](../api/python-sdk.md#release-notes).
 
-!!! note "Upgrading to chart 0.1.313"
+!!! note "Upgrading to chart 0.1.408"
+    Chart releases are numbered by the CI run that tested them, so the
+    numbers jump: the release after 0.1.344 is 0.1.406, and 0.1.408 is the
+    current one. The upgrade adds each store's change log, the table a
+    standby follows, and the stores' hot layers, each bounded within the
+    component's memory limit (see
+    [Service levels](../concepts/service-levels.md#the-hot-layer)). Every
+    `standby` value defaults to 0, so a deployment keeps one member of each
+    component until you ask for more. It also brings
+    [bonds and fixed income](../concepts/bonds-and-fixed-income.md): the
+    debt templates, pools' factors in the lake, and the book's fixed-income
+    records. Plugins keep running as they are: one built on an older SDK
+    registers and sends what it did; move it with
+    [`meridian plugin migrate`](../api/cli.md#plugin-migrate).
+
+!!! note "Upgrading from a chart before 0.1.313"
     The upgrade to chart 0.1.313 migrates the
     instrument store (a listed series' terms, and the company records), the
     conductor (the deployment's settings kept one record each, and starter

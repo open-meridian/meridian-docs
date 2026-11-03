@@ -62,7 +62,7 @@ interface = true
 declaration = "my_plugin.declaration:DECLARATION"
 ```
 
-The plugin connects with the same declaration, `meridian.connect(declaration=DECLARATION)`. The SDK
+The plugin connects with the same declaration, `meridian.run(declaration=DECLARATION, roles=[...])`. The SDK
 reads each section, and puts its name, its `sha256:` digest and its size in the declaration. It
 parses no Markdown.
 

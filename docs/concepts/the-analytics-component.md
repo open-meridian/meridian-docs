@@ -64,7 +64,7 @@ job = analytics.job(
     business_date="2026-10-22",           # the book at its end, the lake at its closes
     reporting_currency="INS-...",         # USD's cash instrument, say
 )
-answer = await analytics.Jobs().run(plugin, job)        # inline, or waited for
+answer = await analytics.Jobs().run(self, job)          # in a role class: inline, or waited for
 for figure in answer.figures("exposure"):
     print(figure.breakdown, figure.value, figure.currency_instrument_id)
 ```

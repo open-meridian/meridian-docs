@@ -279,6 +279,7 @@ import uuid
 from decimal import Decimal
 
 import meridian
+from meridian.roles import custody
 
 log = logging.getLogger("holdings_demo")
 
@@ -287,11 +288,11 @@ CUSTODIAN = "Demo Securities"  # where the source says the account is held
 EXTERNAL_ACCOUNT = "DEMO-ACCT-1"  # the account as the source names it
 
 
-async def record_demo_statement(plugin: meridian.Plugin) -> None:
+async def record_demo_statement(role: custody.Role) -> None:
     now = time.time_ns()
     try:
         # W2.1: how fresh this source's data is for the account.
-        await plugin.report_sync_status(
+        await role.report_sync_status(
             source=SOURCE,
             external_account_id=EXTERNAL_ACCOUNT,
             connection_healthy=True,
@@ -304,7 +305,7 @@ async def record_demo_statement(plugin: meridian.Plugin) -> None:
         # the deployment mints its own record for it, and answers that. Stated
         # less, or matching several records, it is a miss.
         symbol = meridian.Identifier(scheme="symbol", value="ACME", source=SOURCE)
-        resolved = await plugin.resolve_identifier(
+        resolved = await role.resolve_identifier(
             identifiers=[symbol],
             as_of_ns=now,
             stated_description="Acme Corp common stock",  # as the source describes it
@@ -315,7 +316,7 @@ async def record_demo_statement(plugin: meridian.Plugin) -> None:
 
         # W2.2: open one statement for the account, saying how many rows will
         # follow, with its figures as the source reported them.
-        opened = await plugin.record_holdings_statement(
+        opened = await role.record_holdings_statement(
             source=SOURCE,
             external_statement_id=f"demo-{uuid.uuid4()}",
             external_account_id=EXTERNAL_ACCOUNT,
@@ -338,7 +339,7 @@ async def record_demo_statement(plugin: meridian.Plugin) -> None:
 
         # W2.3: one row. Resolved, it names the instrument. Missed, it
         # carries what we held, and is recorded rather than dropped.
-        row = await plugin.record_holding(
+        row = await role.record_holding(
             statement_id=opened.statement_id,
             instrument_id=resolved.instrument_id if resolved.found else "",
             unresolved_identifiers=[] if resolved.found else [symbol],
@@ -375,20 +376,23 @@ source that reports no buying power sends none, which is not zero. See
 
 ## 8. Call it on start
 
-Open `src/holdings_demo/__main__.py`. Import the new function next to the page import:
+Open `src/holdings_demo/page.py`. Its custody class reports the accounts the plugin reaches in
+its `on_start`; record the statement just after, on the same role object. Import the new function
+at the top:
 
-```python title="src/holdings_demo/__main__.py"
-from .page import REACHES, TITLE, pages, reports
+```python title="src/holdings_demo/page.py"
 from .statement import record_demo_statement
 ```
 
-Then record the statement just after the plugin reports itself healthy, which is after it has
-reported its accounts:
+and call it at the end of the class's `on_start`:
 
-```python title="src/holdings_demo/__main__.py"
-        await plugin.report(healthy=True, detail="started")
-        await record_demo_statement(plugin)
-        await stopped.wait()
+```python title="src/holdings_demo/page.py"
+class Custody(custody.Role):
+    async def on_start(self) -> None:
+        if reports(self.plugin):
+            await self.report_external_accounts(accounts=REACHES)
+            log.info("reported %d external account(s) to link", len(REACHES))
+            await record_demo_statement(self)
 ```
 
 Save, and wait for `ready` on the last revision.

@@ -42,6 +42,7 @@ derived series and saved scenarios, and corporate actions.
 | **Derived series** | A value a `signal` plugin computed from the lake, an underlying's 30-day IV say, recorded into its own dataset with the rule it used and every dataset it read: see [Derived series](#derived-series). |
 | **Saved scenario** | A scenario or a scenario set a `signal` plugin saved, by its row key: see [Scenarios](scenarios.md). |
 | **Corporate action** | A company's declared cash dividend, its security and its issuer each a subject: see [Companies and corporate actions](companies-and-corporate-actions.md). |
+| **Factor** | An agency pool's or REMIC class's factor for a month, exactly as published, with its record and payment dates and the pool's WAC, WAM and WALA where stated; a correction is the row's next version. See [Bonds and fixed income](bonds-and-fixed-income.md#the-factor) |
 
 **An FX rate is a price**: the price of one currency's cash instrument in
 another, EUR at 1.0842 USD, of kind `mid`, `bid`, `ask` or `close`. An FX
@@ -353,6 +354,7 @@ conflated, catch up by reading the latest in force.
 | Listed series | `portfolio`, `signal`, `oms` and `ems` |
 | Statistics | `portfolio`, `reporting`, `signal` |
 | Corporate actions | `portfolio`, `reporting`, `signal` |
+| Factors | `operations`, `portfolio`, `reporting`, `servicing`, `signal` |
 | Derived series and saved scenarios | `compliance`, `portfolio`, `reporting`, `signal` |
 | Outcomes | `reporting`, `portfolio`, `compliance`, `signal`, and `operations`, which reads the lake for outcomes alone, to explain a payout's break |
 | The datasets a plugin may read | `reporting`, `portfolio`, `compliance`, `signal` and `ems` |

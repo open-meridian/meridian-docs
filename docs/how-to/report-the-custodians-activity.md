@@ -20,7 +20,7 @@ as an ISO 8601 date, beside how fresh the history is. Report it as it
 changes, with `state` saying what holds:
 
 ```python
-await plugin.report_sync_status(
+await role.report_sync_status(
     source="myvendor",
     external_account_id="acct-1",
     state=meridian.SyncState.SYNC_STATE_CURRENT,
@@ -79,7 +79,7 @@ def activity_of(account: str, row: dict, instrument_id: str) -> meridian.Custodi
         price=money(row.get("price"), row["currency"]),
         amount=money(row.get("amount"), row["currency"]),
         description=row.get("description", ""),
-        raw_record=plugin.raw_record(f"activities/{account}/{row['id']}"),
+        raw_record=role.plugin.raw_record(f"activities/{account}/{row['id']}"),
     )
 ```
 
@@ -107,7 +107,7 @@ def activity_of(account: str, row: dict, instrument_id: str) -> meridian.Custodi
 
 ```python
 try:
-    reply = await plugin.record_activity(
+    reply = await role.record_activity(
         external_account_id="acct-1", source="myvendor", activity=activity_of("acct-1", row, instrument_id),
     )
 except meridian.NotLinked:
@@ -138,7 +138,7 @@ later, is re-resolved, never sent again: sent again it would be answered
 `already_recorded` and change nothing.
 
 ```python
-reply = await plugin.re_resolve_activity(
+reply = await role.re_resolve_activity(
     external_account_id="acct-1",
     source="myvendor",
     external_activity_id=row["id"],            # as first reported
@@ -204,7 +204,7 @@ An `operations` plugin reads an account's activity by trade date, and is told
 from when the source can read it:
 
 ```python
-page = await plugin.list_activities(account_id=account, trade_date_from=last_reconciled_date)
+page = await role.list_activities(account_id=account, trade_date_from=last_reconciled_date)
 page.history_from   # "" where the read names no account, or the source has not said
 ```
 
@@ -212,12 +212,13 @@ It hears each activity as it is recorded, so a break waiting on its cause can
 be compared again:
 
 ```python
-async def activity_recorded(heard: meridian.Heard) -> None:
-    each = heard.message            # an ActivityRecordedEvent
-    ...                             # compare the account's statement again
+class Operations(operations.Role):
+    async def on_activity_recorded(self, heard: meridian.Heard) -> None:   # required of operations
+        each = heard.message            # an ActivityRecordedEvent
+        ...                             # compare the account's statement again
 
-
-await plugin.receive(activity_recorded=activity_recorded, sync_status_recorded=sync_status_recorded)
+    async def on_sync_status_recorded(self, heard: meridian.Heard) -> None:
+        ...
 ```
 
 It reads and hears each re-resolution too. The activities
@@ -230,12 +231,10 @@ latest = {each.activity_id: each.instrument_id for each in page.re_resolutions} 
 instrument = latest.get(item.activity_id, item.activity.instrument_id)
 
 
-async def activity_re_resolved(heard: meridian.Heard) -> None:
+# in the same class:
+async def on_activity_re_resolved(self, heard: meridian.Heard) -> None:
     re = heard.message.re_resolution   # activity_id, instrument_id, provenance, resolved_at_ns
     ...                                # compare the account's statement again
-
-
-await plugin.receive(activity_recorded=activity_recorded, activity_re_resolved=activity_re_resolved)
 ```
 
 A break's candidate cause links the activity that explains it by value, an

@@ -17,7 +17,7 @@ side and quantity from them: leave them out, or state them as the book
 would, since a stated value that differs is refused, naming it.
 
 ```python
-reply = await plugin.propose_order(
+reply = await role.propose_order(
     account_id="ACC-ALLOC",                      # the allocation account
     net_member_order_ids=["ORD-...", "ORD-...", "ORD-..."],
     order_type="market",
@@ -47,7 +47,7 @@ account. A cross goes to no venue and names no placement. Say which
 convention set its rate:
 
 ```python
-await plugin.report_execution(
+await role.report_execution(
     order_id=net.order_id,
     account_id="ACC-FUND-A",
     kind="internal_cross",

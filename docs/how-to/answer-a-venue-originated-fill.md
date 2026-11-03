@@ -99,19 +99,18 @@ admin sets; core never answers one on its own.
 placement, and hears what became of it:
 
 ```python
-await plugin.report_execution(
+await role.report_execution(
     venue_account_code="X12345", instrument_id=aapl, side="buy",
     venue_order_id="V-9921", venue_client_order_id="app-77",
     venue_execution_id="F-1", quantity=Decimal("5"), price=Money(Decimal("227.10"), "USD"),
     trade_time_ns=at, trade_date="2026-10-13", settlement_date="2026-10-14",
-    kind="venue_reported", raw_record=plugin.raw_record(key),
+    kind="venue_reported", raw_record=role.plugin.raw_record(key),
 )
 
-async def answered(heard: meridian.Heard) -> None:
+# in the connectivity class:
+async def on_execution_recorded(self, heard: meridian.Heard) -> None:
     execution = heard.message.execution      # its state matched or dont_know
     ...                                      # send BN or Q, where the catalogue says the venue takes it
-
-await plugin.receive(execution_recorded=answered, placement_updated=on_placement)
 ```
 
 Its catalogue says what the venue takes
@@ -124,13 +123,13 @@ accept created.
 acting for the person, or as its service account:
 
 ```python
-listed = await plugin.list_orders(execution_state="unmatched")
-await plugin.accept_execution(execution_ids=[e1, e2], order_id=order_id,
+listed = await role.list_orders(execution_state="unmatched")
+await role.accept_execution(execution_ids=[e1, e2], order_id=order_id,
                               note="Placed by the PM in the broker's app.",
                               acting_for=request.caller.header)
-await plugin.accept_execution(execution_ids=[e3], new_order=ops.NewOrderFromExecutions(sleeve="core"),
+await role.accept_execution(execution_ids=[e3], new_order=ops.NewOrderFromExecutions(sleeve="core"),
                               note="Liquidation by the broker.", acting_for=request.caller.header)
-await plugin.dont_know_execution(execution_ids=[e4], reason="other", text="Not our account's order.",
+await role.dont_know_execution(execution_ids=[e4], reason="other", text="Not our account's order.",
                                  acting_for=request.caller.header)
 ```
 

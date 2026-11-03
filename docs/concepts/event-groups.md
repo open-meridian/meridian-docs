@@ -115,8 +115,8 @@ any moment:
 
 ```python
 groups = meridian.EventGroups()
-await groups.catch_up(plugin)                     # on start, and after a gap
-await plugin.receive(event_group_changed=groups.heard, ...)
+await groups.catch_up(role)                       # in on_start, and after a gap
+# and in the role class: async def on_event_group_changed(self, heard): groups.heard(heard)
 for group in groups.holding("INS-...", at_ns=moment):
     if groups.mutually_exclusive(group) and groups.exhaustive(group):
         ...

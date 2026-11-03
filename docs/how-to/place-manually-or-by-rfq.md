@@ -14,7 +14,7 @@ A trade agreed by phone or chat names no connectivity plugin. It names its
 counterparty as its destination, and its evidence:
 
 ```python
-reply = await plugin.create_placement(
+reply = await role.create_placement(
     order_id=order_id,
     placement_type="manual",
     destination="VEN-...",                      # the counterparty
@@ -30,7 +30,7 @@ Then enter its fills as the `ems`'s manual executions, for the person, with
 the counterparty's execution ID where it gave one:
 
 ```python
-await plugin.report_execution(
+await role.report_execution(
     placement_id=reply.placement.placement_id,
     kind="manual",
     venue_execution_id="CP-4471",               # the counterparty's, if any
@@ -57,7 +57,7 @@ person pick:
 from meridian.roles import ems
 
 quotes = ems.open_quotes(placement)              # best first for the firm's side
-await plugin.pick_placement_quote(
+await role.pick_placement_quote(
     placement_id=placement.placement_id,
     quote_id=chosen.quote_id,                    # any open quote, not only the best
     reason="best all-in after the dealer's settlement terms",

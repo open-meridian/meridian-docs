@@ -72,7 +72,7 @@ grid = meridian.ScenarioSet(name="AAPL grid", axes=[
     signal.date_steps([1, 7, 30]),                     # today, forward by days, and to settlement
 ])
 row = signal.saved("aapl-grid", dataset=wants.dataset("scenarios"), scenario_set=grid)
-await plugin.record_scenarios(scenarios=[row])
+await role.record_scenarios(scenarios=[row])
 again = await signal.read_scenarios(plugin, ["aapl-grid"])
 ```
 
