@@ -65,6 +65,9 @@ class Reporting(reporting.Role):
     async def on_position_changed(self, heard: meridian.Heard) -> None:
         self.dirty.add(heard.message.position.account_id)     # note it; the work is in run()
 
+    async def on_job_finished(self, heard: meridian.Heard) -> None:
+        await self.jobs.heard(heard)                           # a job answered later is waited for here
+
     async def run(self) -> None:
         while True:                                            # restarted after a backoff if it fails
             due = self.dirty or set(self.state.accounts)       # changed ones, else all on the cadence

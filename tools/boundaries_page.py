@@ -723,11 +723,11 @@ def store_page(fields: dict, store: str, vendored: dict) -> str:
     if retired:
         add("## Retired { #retired }\n")
         add("Entries no longer in the interface, kept for the history; a name is never reused.\n")
-        add("| Entry | Retired in | Use instead |")
-        add("|---|---|---|")
+        add("| Entry | Use instead |")
+        add("|---|---|")
         for entry in retired:
             successor = (entry.get("deprecated") or {}).get("use")
-            add(f"| `{entry['name']}` | {entry['retired']} | {f'`{successor}`' if successor else 'nothing'} |")
+            add(f"| `{entry['name']}` | {f'`{successor}`' if successor else 'nothing'} |")
         add("")
     add("---\n")
     add(f"Generated from [`boundaries/fields.json`]({SCHEMA_WEB}/blob/{rev}/boundaries/fields.json) "
@@ -737,14 +737,14 @@ def store_page(fields: dict, store: str, vendored: dict) -> str:
 
 def field_section(entry: dict, heading: str) -> str:
     lines = [f"### {heading} {{ #{entry['name']} }}\n"]
-    facts = [f"*{entry['type']}*", f"since {entry['since']}", entry.get("stability", "stable")]
+    facts = [f"*{entry['type']}*", entry.get("stability", "stable")]
     deprecated = entry.get("deprecated")
     if deprecated:
-        facts.append(f"**deprecated in {deprecated['version']}**")
+        facts.append("**deprecated**")
     lines.append(" · ".join(facts) + "\n")
     if deprecated:
         use = f" Use [`{deprecated['use']}`](#{deprecated['use']}) instead." if deprecated.get("use") else ""
-        lines.append(f'!!! warning "Deprecated in {deprecated["version"]}"')
+        lines.append('!!! warning "Deprecated"')
         lines.append(f"    {prose(deprecated['why'])}.{use}\n")
     lines.append(f"{prose(entry['intent'][0].upper() + entry['intent'][1:])}.\n")
     rows = [("Means", entry.get("meaning")), ("Does not mean", entry.get("not_meaning")),
@@ -760,7 +760,7 @@ def field_section(entry: dict, heading: str) -> str:
     if entry.get("required"):
         uses = []
         for use in entry["required"]:
-            text = f"`{use['row']}` from {use['since']}"
+            text = f"`{use['row']}`"
             if use.get("unless"):
                 text += f", unless {prose(use['unless'])}"
             uses.append(text)
@@ -775,12 +775,9 @@ def field_section(entry: dict, heading: str) -> str:
         for value in entry["allowed"]:
             note = ""
             if value.get("deprecated"):
-                note = f" *Deprecated in {value['deprecated']['version']}: {cell(value['deprecated']['why'])}.*"
+                note = f" *Deprecated: {cell(value['deprecated']['why'])}.*"
             lines.append(f"| `{value['value']}` | {cell(value['meaning'])}{note} |")
         lines.append("")
-    if entry.get("changes"):
-        lines.append("Changes: " + "; ".join(
-            f"{change['version']}, {change['kind']}: {prose(change['what'])}" for change in entry["changes"]) + ".\n")
     return "\n".join(lines)
 
 

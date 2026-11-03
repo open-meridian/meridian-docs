@@ -45,8 +45,7 @@ version, by that name, approving its roles (see
 meridian plugin launch open-meridian/snaptrade <version> --instance snaptrade
 ```
 
-For a Verified version you can approve no role beyond those its review approved. Each launch of a
-registry version is verified again.
+Each launch of a registry version is verified again.
 
 An instance already running a local version of the same plugin is offered **Move to this listing**
 in the same sheet. The move is checked as an update, keeps the instance's ID, and is recorded.

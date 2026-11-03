@@ -10,8 +10,7 @@ for whoever writes the `ems` or connectivity plugin. What the book does is
 on [The order lifecycle](../concepts/the-order-lifecycle.md#venue-originated-fills).
 
 !!! note "Who answers"
-    The accept and the DK are an `ems`'s acts: the sample plugins' `ems`
-    offers them, or a firm writes its own. The connectivity plugins that
+    The accept and the DK are acts of a plugin holding the `ems` role. The connectivity plugins that
     report venue-originated fills are Alpaca, Tradier and SnapTrade; none
     of their brokers takes an acknowledgement, so a DK tells the broker
     nothing.
