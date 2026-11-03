@@ -1,6 +1,6 @@
 # Companies and corporate actions
 
-Added in contract 28. A dividend is declared by a company about its
+A dividend is declared by a company about its
 shares; a filing is made by a company, about itself or about another's.
 The lake names the company as a subject of its own, beside the security,
 so a reader can ask either. This page explains the **company kind**, the
@@ -33,7 +33,7 @@ miss by `ENT-` ID alone is not asked about.
 
 ## A subject's role
 
-From contract 28 a row's subject may carry its **role**
+A row's subject may carry its **role**
 (`SubjectRef.role`), so one row can name a security and its issuer, or a
 holder and what it holds: `subject`, `holder`, `held`, `issuer`,
 `reporting_owner`, `filer`, `underlying` or `rater`. A read naming a subject
@@ -48,7 +48,7 @@ SDK 0.33.0 the typed operations take only it (see
 A `data` plugin records each corporate action a company declares
 ([`record_corporate_actions`](../api/typed-operations.md#record_corporate_actions)),
 its subjects the security and, beside it, its issuer as a company in the
-`issuer` role. In contract 28 the one kind is a **declared cash dividend**,
+`issuer` role. Today the one kind is a **declared cash dividend**,
 `CORPORATE_ACTION_KIND_CASH_DIVIDEND`:
 
 | Field | What |
@@ -75,7 +75,7 @@ nothing. The dividends' dataset is named in the answer's provenance (see
 
 ## What core does not serve yet { #not-served-yet }
 
-Contract 28 also carries the rest of the filings slice, which core serves
+The interface also carries the rest of the filings slice, which core serves
 in a later chart release on the same contract: **filings**
 (`record_filings`, `list_filings`, among them an 8-K's earnings date),
 **reported facts** (`record_reported_facts`, `list_reported_facts`),
@@ -92,4 +92,4 @@ presents none names them not presented. See
 
 - [The lake](the-lake.md): datasets, reads and who reads what.
 - [Instruments](instruments.md) and [One ID per instrument](one-id.md).
-- [Typed operations: contract 28's](../api/typed-operations.md#contract-v28s-operations).
+- [Typed operations: Listed options and futures, companies, derived series and scenarios](../api/typed-operations.md#options-companies-and-scenarios).

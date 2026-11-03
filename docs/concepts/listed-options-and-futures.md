@@ -1,6 +1,6 @@
 # Listed options and futures
 
-Added in contract 28. A listed option or a future is an instrument like any
+A listed option or a future is an instrument like any
 other: one platform `INS-` record, minted from a template, held in the book
 in lots. What sets it apart is that an exchange lists thousands of series
 under each underlying, most of which a firm never trades, and that each
@@ -45,7 +45,7 @@ per contract) and, where it is physically delivered, its
 `first_notice_date`. A commodity is a referential record of its own type,
 `commodity`, which the platform's staff seed and nobody holds.
 
-**Each field has a requirement level** (contract 28): `mint`, needed to
+**Each field has a requirement level**: `mint`, needed to
 mint the record; `complete`, needed before the book takes it; or `optional`.
 A field may be `repeated`, as FIX's repeating groups are; the deliverable is
 one.
@@ -202,18 +202,18 @@ the series first.
 
 ## For a plugin's author
 
-The SDK's helpers, from SDK 0.33.0:
+The SDK's helpers, in `meridian.helpers`:
 
-- `meridian.roles.chains`: `osi_symbol`, `osi_terms` and `osi_key` for the
+- `meridian.helpers.chains`: `osi_symbol`, `osi_terms` and `osi_key` for the
   OSI symbol; `option_series`, `statistic` and `series_meta` to record a
-  chain; `read_chain`, `read_open_interest` and `want_series` to read one
+  chain; `read_expirations`, `read_chain`, `read_open_interest` and `want_series` to read one
   and ask for a series.
-- `meridian.roles.lifecycle`: `expiry`, `exercise`, `assignment` and
+- `meridian.helpers.lifecycle`: `expiry`, `exercise`, `assignment` and
   `variation` built as the broker states them and sent once by `report`;
   `exercise_by_exception` (`EXERCISE_THRESHOLD`, a cent) and `propose` for
   `servicing`; `due_for_release` and `release` for `operations`;
   `read_events`.
-- `meridian.roles.packages`: `legs` in lowest terms (`MOST_LEGS`, 16),
+- `meridian.helpers.packages`: `legs` in lowest terms (`MOST_LEGS`, 16),
   `propose`, and `report_fill` with each `LegFill`.
 
 See [Record and read an option chain](../how-to/record-and-read-an-option-chain.md)
@@ -225,4 +225,4 @@ and the [Python SDK](../api/python-sdk.md#listed-options-and-futures).
 - [Scenarios](scenarios.md): the shocks a grid applies.
 - [One ID per instrument](one-id.md): templates and the platform's records.
 - [The book of record](the-book-of-record.md) and [The order lifecycle](the-order-lifecycle.md).
-- [Typed operations: contract 28's](../api/typed-operations.md#contract-v28s-operations).
+- [Typed operations: Listed options and futures, companies, derived series and scenarios](../api/typed-operations.md#options-companies-and-scenarios).

@@ -69,7 +69,7 @@ members, each installed as its own version, never one merged plugin. The
 platform publishes five, by `open-meridian`: `equities-options`, `fx`,
 `crypto`, `event-contracts` and `multi-asset`. Each pack's page on the
 platform, under [its plugins](https://open-meridian.com/plugins), lists
-its members and which are preselected. From contract 28 the deployment
+its members and which are preselected. The deployment
 installs a pack and keeps it, at the dashboard or with the CLI.
 
 **Install it.** On **Browse**, switch from **Plugins** to **Starter
@@ -110,7 +110,7 @@ Through an agent, the same is done with core's
 [starter pack tools](../api/core-tools.md#starter-packs), each act with a
 note.
 
-**From the command line,** CLI 0.1.53 installs a pack through the
+**From the command line,** CLI 0.1.58 installs a pack through the
 deployment, as the sheet does, and reads and keeps it with
 [`meridian plugin pack`](../api/cli.md#meridian-plugin-pack):
 
@@ -127,7 +127,7 @@ you choose: add one with `--with`, leave a preselected one out with
 `--without`. The plan is shown version by version and asked about first;
 `--yes` approves it without asking. The command follows the install one
 line a member, then lists `meridian plugin launch` for each member ready to
-launch. A deployment whose core is older than contract 28 installs no pack,
+launch. A deployment whose core is older than chart 0.1.313 installs no pack,
 and the CLI says so in one line.
 
 ## Update it
@@ -159,7 +159,7 @@ with a note.
 
 A deployment with no route to the platform installs from a **plugin bundle** carried in by hand.
 
-On a connected machine with CLI 0.1.53:
+On a connected machine with CLI 0.1.58:
 
 ```bash
 meridian plugin download open-meridian/snaptrade@0.20.0
@@ -167,7 +167,7 @@ meridian plugin download open-meridian/snaptrade@0.20.0
 
 It signs in to the platform in your browser the first time, asks where the version is, pulls it,
 and verifies the image, its provenance, bill of materials, scan results and listing statement
-against the platform's keys this CLI release carries: CLI 0.1.53 carries the platform's
+against the platform's keys this CLI release carries: CLI 0.1.58 carries the platform's
 registry-signing key, version 1. Only then does it write
 `open-meridian-snaptrade-0.20.0.plugin-bundle.tar` (`--to` names another file), with the
 version's documentation and a dated copy of the signing keys' status. `--registry` names the

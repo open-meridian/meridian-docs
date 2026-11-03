@@ -60,6 +60,11 @@
       "write",
       "admin"
     ],
+    "behaviour_kinds": [
+      "value",
+      "steps",
+      "acts"
+    ],
     "stores": [
       "bor",
       "entity",
@@ -747,7 +752,7 @@
         "about": {
           "shape": "text",
           "required": false,
-          "says": "for a case about one kind of data -- closes, bars, trades, quotes, prices on a venue -- that kind, in the contract's words (contract v19), or from contract v22 one kind of work -- calendars, settlement dates, locates, compliance waits, and from contract v23 outcomes, disputed outcomes and venue-originated fills, a custodian's plan fund codes, sweep funds, splits and currencies not stated, and a venue's charges without a fill, busts and value-date rolls, and from contract v25 give-ups, and from contract v27 latency reports until v28, when core receives them and every case about them is required (rulings 515 and 518); a plugin that declares it never publishes that kind, or whose work never uses it, marks the case not presented, with why, which is no exemption from the rest"
+          "says": "for a case about one kind of data -- closes, bars, trades, quotes, prices on a venue -- that kind, in the contract's words (contract v19), or from contract v22 one kind of work -- calendars, settlement dates, locates, compliance waits, and from contract v23 outcomes, disputed outcomes and venue-originated fills, a custodian's plan fund codes, sweep funds, splits and currencies not stated, and a venue's charges without a fill, busts and value-date rolls, and from contract v25 give-ups, and from contract v27 latency reports until v28, when core receives them and every case about them is required (rulings 515 and 518), and from contract v29 every reader case -- one whose expectations are all reads or hears -- the kind it reads (rulings 638 and 661), and publication times, so a source that states none marks its feed-delay case not presented (ruling 667), and from contract v29 too a required act a plugin's work genuinely never makes -- ordering a listed series, proposing a package, releasing an unreported expiry -- the kind it acts on, and a latency report it cannot measure, a pre-trade check's data age where it checks no reference price (ruling 942); a plugin that declares it never publishes that kind, or whose work never uses it, marks the case not presented, with why, which is no exemption from the rest"
         },
         "about_field": {
           "shape": "text",
@@ -783,6 +788,91 @@
           "shape": "list of any",
           "required": false,
           "says": "in place of fields, for a case whose situation the contract answers in more than one way (contract v23): each way's fields, written as fields are, the message matched by one of them in full; each names every field one way needs, never fewer"
+        }
+      }
+    },
+    "behaviours": {
+      "says": "one module's behaviour cases: what every SDK carrying the module's helper or a role's common logic does, held by each SDK's own runner in its own tests; plugins never run them",
+      "parts": {
+        "module": {
+          "shape": "text",
+          "required": true,
+          "says": "the module, its file named for it (sessions, calendars, debt, data-wants, data-option-chains)"
+        },
+        "since": {
+          "shape": "text",
+          "required": true,
+          "says": "the SDK release the module's first case arrived in (0.35.0)"
+        },
+        "says": {
+          "shape": "text",
+          "required": true,
+          "says": "what the cases hold an SDK to"
+        },
+        "cases": {
+          "shape": "list of behaviour_case",
+          "required": true,
+          "says": "every case; an SDK carrying the module's subject runs them all, and one with no adapter fails"
+        }
+      }
+    },
+    "behaviour_case": {
+      "says": "one behaviour case: a subject given inputs, and what it answers or sends",
+      "parts": {
+        "name": {
+          "shape": "text",
+          "required": true,
+          "says": "unique among every module's cases"
+        },
+        "subject": {
+          "shape": "text",
+          "required": true,
+          "says": "what it holds, by a path the same in every SDK (helpers.sessions.Backoff, roles.data.Wants), each SDK's adapter mapping it to its own"
+        },
+        "kind": {
+          "shape": "one of behaviour_kinds",
+          "required": true,
+          "says": "value: given inputs, the answer or the refusal; steps: calls and clock moves on a fake clock, each with its answer; acts: deliveries and a fake source, the rows sent"
+        },
+        "given": {
+          "shape": "any",
+          "required": false,
+          "says": "what the subject is made with, in the contract's words: a number as a decimal string, a moment in seconds of the fake clock"
+        },
+        "call": {
+          "shape": "text",
+          "required": false,
+          "says": "for a value case: the call, by its language-neutral name"
+        },
+        "args": {
+          "shape": "any",
+          "required": false,
+          "says": "for a value case: the call's arguments, by name"
+        },
+        "expect": {
+          "shape": "any",
+          "required": false,
+          "says": "for a value case: the answer, or `refused` naming the field refused"
+        },
+        "steps": {
+          "shape": "list of any",
+          "required": false,
+          "says": "for a steps case: each step a `call` with its `args`, a `clock` moved to first where it names one, and what it `expect`s: a value, or `at_least` and `at_most` for one within a jitter, or `refused` naming the field or word the call is refused by"
+        },
+        "answers": {
+          "shape": "any",
+          "required": false,
+          "says": "for an acts case: each row the fake source or the store answers, by its row, with the message it answers"
+        },
+        "heard": {
+          "shape": "list of any",
+          "required": false,
+          "says": "for an acts case: each delivery, by its row, with its message"
+        },
+        "sends": {
+          "shape": "list of expectation",
+          "required": false,
+          "says": "for an acts case: the rows sent, each matched as a suite case's expect is"
         }
       }
     },
@@ -878,6 +968,13 @@
         "shape": "suite",
         "required": true,
         "says": "one role's conformance suite, its file named for the role"
+      }
+    },
+    "behaviours/*.yaml": {
+      "behaviours": {
+        "shape": "behaviours",
+        "required": true,
+        "says": "one module's behaviour cases (SDK 0.35), its file named for the module"
       }
     }
   }

@@ -231,7 +231,7 @@ PLAN_CODES = meridian.Setting(
 
 DECLARATION = meridian.Declaration(settings=[PLAN_CODES], reads_external_accounts=True)
 
-async with await meridian.connect(declaration=DECLARATION) as plugin:
+async with await meridian.connect(declaration=DECLARATION, roles=[Custody()]) as plugin:
     async for current in plugin.settings():
         links = {
             (row["account"], row["code"]): row

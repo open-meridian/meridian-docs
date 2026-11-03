@@ -24,8 +24,8 @@ recorded: the plugin reports the miss, and the Data sources page counts it.
 ## What it holds
 
 Twelve data types, each one message per row: prices, bars, trades, quotes,
-an event contract's outcome, from contract 27 rates and execution costs,
-and from contract 28 a chain's listed series and statistics, a signal's
+an event contract's outcome, rates and execution costs,
+and a chain's listed series and statistics, a signal's
 derived series and saved scenarios, and corporate actions.
 
 | Type | What one row is |
@@ -37,11 +37,12 @@ derived series and saved scenarios, and corporate actions.
 | **Outcome** | What an event contract pays, as its venue determined it, at one stage: see [An event contract's outcome](#an-event-contracts-outcome). |
 | **Rate** | A reference rate's fixing, an average, an index level or a curve's point, its value with its unit, convention and tenor: see [Rates](rates.md). |
 | **Execution cost** | One execution's cost against one benchmark, recorded by the analytics component, the lake's first row scoped to an account: see [Execution costs](execution-costs.md). |
-| **Listed series** | Added in contract 28. One series of an underlying's chain, its terms as its template's fields, keyed by its OSI symbol or its ticker and MIC, never minted: see [Listed options and futures](listed-options-and-futures.md#the-chain-read-never-minted). |
-| **Statistic** | Added in contract 28. A count for a trading date: a series' open interest, volume or block volume, or a share's short and total volume reported to a FINRA facility. |
-| **Derived series** | Added in contract 28. A value a `signal` plugin computed from the lake, an underlying's 30-day IV say, recorded into its own dataset with the rule it used and every dataset it read: see [Derived series](#derived-series). |
-| **Saved scenario** | Added in contract 28. A scenario or a scenario set a `signal` plugin saved, by its row key: see [Scenarios](scenarios.md). |
-| **Corporate action** | Added in contract 28. A company's declared cash dividend, its security and its issuer each a subject: see [Companies and corporate actions](companies-and-corporate-actions.md). |
+| **Listed series** | One series of an underlying's chain, its terms as its template's fields, keyed by its OSI symbol or its ticker and MIC, never minted: see [Listed options and futures](listed-options-and-futures.md#the-chain-read-never-minted). |
+| **Statistic** | A count for a trading date: a series' open interest, volume or block volume, or a share's short and total volume reported to a FINRA facility. |
+| **Derived series** | A value a `signal` plugin computed from the lake, an underlying's 30-day IV say, recorded into its own dataset with the rule it used and every dataset it read: see [Derived series](#derived-series). |
+| **Saved scenario** | A scenario or a scenario set a `signal` plugin saved, by its row key: see [Scenarios](scenarios.md). |
+| **Corporate action** | A company's declared cash dividend, its security and its issuer each a subject: see [Companies and corporate actions](companies-and-corporate-actions.md). |
+| **Factor** | An agency pool's or REMIC class's factor for a month, exactly as published, with its record and payment dates and the pool's WAC, WAM and WALA where stated; a correction is the row's next version. See [Bonds and fixed income](bonds-and-fixed-income.md#the-factor) |
 
 **An FX rate is a price**: the price of one currency's cash instrument in
 another, EUR at 1.0842 USD, of kind `mid`, `bid`, `ask` or `close`. An FX
@@ -51,7 +52,7 @@ way reads the rate a source quotes that way, or inverts it itself, as the
 [analytics component](the-analytics-component.md#the-pricing-models) does,
 so the lake never holds a value no source stated.
 
-**Liveness, delay and staleness** (contract 27). A dataset carries its
+**Liveness, delay and staleness**. A dataset carries its
 declared delay, its plugin admin's staleness threshold and its last sign of
 life: see [Data age and liveness](data-age-and-liveness.md).
 
@@ -90,7 +91,7 @@ instants and name **no business date**: see [Dates and time](dates-and-time.md).
 
 ### Derived series { #derived-series }
 
-Added in contract 28. A `signal` plugin may record what it computes from
+A `signal` plugin may record what it computes from
 the lake back into the lake, as a row of its **own** dataset
 ([`record_derived_series`](../api/typed-operations.md#record_derived_series)):
 each value names its subject, its own name for the series (`iv30`, an
@@ -345,15 +346,16 @@ conflated, catch up by reading the latest in force.
 
 | Data | Read and heard by |
 |---|---|
-| Prices and bars | `reporting`, `portfolio`, `compliance`, `signal`; and from contract 27 `operations`, for closes and other conflated prices, to value a foreign-cash cost at a trade date's FX close |
+| Prices and bars | `reporting`, `portfolio`, `compliance`, `signal`; and `operations`, for closes and other conflated prices, to value a foreign-cash cost at a trade date's FX close |
 | Trades and quotes | `signal` and `ems` |
 | Rates | `reporting`, `portfolio`, `compliance`, `signal` |
 | Execution costs | `reporting`, `portfolio`, `compliance`, `signal`, `oms`, `ems`, `operations`, each within its read scope's accounts |
 | A dataset's liveness | `reporting`, `portfolio`, `compliance`, `signal` and `ems` |
-| Listed series | `portfolio`, `signal`, `oms` and `ems` (added in contract 28) |
-| Statistics | `portfolio`, `reporting`, `signal` (added in contract 28) |
-| Corporate actions | `portfolio`, `reporting`, `signal` (added in contract 28) |
-| Derived series and saved scenarios | `compliance`, `portfolio`, `reporting`, `signal` (added in contract 28) |
+| Listed series | `portfolio`, `signal`, `oms` and `ems` |
+| Statistics | `portfolio`, `reporting`, `signal` |
+| Corporate actions | `portfolio`, `reporting`, `signal` |
+| Factors | `operations`, `portfolio`, `reporting`, `servicing`, `signal` |
+| Derived series and saved scenarios | `compliance`, `portfolio`, `reporting`, `signal` |
 | Outcomes | `reporting`, `portfolio`, `compliance`, `signal`, and `operations`, which reads the lake for outcomes alone, to explain a payout's break |
 | The datasets a plugin may read | `reporting`, `portfolio`, `compliance`, `signal` and `ems` |
 
@@ -394,7 +396,7 @@ serves on its pages under Manage, the same pages on every one: see
 
 ## What core does not serve yet { #not-served-yet }
 
-Contract 28 carries three parts that core serves in later chart releases
+The interface carries three parts that core serves in later chart releases
 on the same contract, one release each, in the order below, without a
 contract change. Until a deployment's chart
 serves one, its typed operations are answered `UNAVAILABLE`, nothing
@@ -413,7 +415,7 @@ The SDK's helpers for the first two already exist: `meridian.roles.data.quality`
 judges a row at the edge, `meridian.roles.signal.escalate` records an
 assessment, and `meridian.roles.data.filings` records the filings slice
 (see [Python SDK](../api/python-sdk.md#the-filings-slice-and-quality-states)).
-A plugin built on them runs on any contract-28 deployment; what it sends to
+A plugin built on them runs on any deployment on chart 0.1.313 or later; what it sends to
 a part not yet served is refused as above, and the SDK's quality checks
 mark rows at the edge whether or not the lake acts on the mark.
 
@@ -442,5 +444,5 @@ every few seconds, conflated, with no tape: see
   [its operations](../api/typed-operations.md#record_prices), trades and
   quotes from [`record_trades`](../api/typed-operations.md#record_trades),
   outcomes from [`record_outcomes`](../api/typed-operations.md#record_outcomes).
-- [Listed options and futures](listed-options-and-futures.md), [Scenarios](scenarios.md) and [Companies and corporate actions](companies-and-corporate-actions.md): contract 28's kinds.
+- [Listed options and futures](listed-options-and-futures.md), [Scenarios](scenarios.md) and [Companies and corporate actions](companies-and-corporate-actions.md): their kinds.
 - [The lake's data dictionary](../boundaries/lake.md).

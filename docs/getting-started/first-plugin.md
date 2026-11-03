@@ -12,9 +12,8 @@ It works on any deployment. For the faster loop where each save runs at once, se
 
 - A deployment you installed with [Install a deployment](installation.md).
 - You hold **deployment admin** on it. Only a deployment admin brings plugins in.
-- The `meridian` CLI 0.1.53 (`meridian --version`; update with `meridian upgrade`). Its
-  `plugin new` writes a plugin on SDK 0.33.0, so the deployment must serve contract 28 (chart
-  0.1.313 or later).
+- The `meridian` CLI 0.1.58 (`meridian --version`; update with `meridian upgrade`). Its
+  `plugin new` writes a plugin on SDK 0.35.0, so the deployment must run chart 0.1.408. `meridian plugin migrate` moves it to SDK 0.35.5, the latest (step 3).
 - Docker on this machine. `meridian plugin upload` builds the plugin's image here, from its own
   `Dockerfile`.
 
@@ -76,11 +75,11 @@ may run it later; see [Publish a plugin to a registry](../how-to/publish-a-plugi
 |---|---|
 | `src/my_plugin/declaration.py` | The version's declaration: its pages, whether it reads external accounts, and its documentation in `docs/`. `[tool.meridian]` names it, `meridian plugin upload` reads it from the built image, and the plugin registers with exactly this one. |
 | `docs/` | Its documentation, one Markdown file per section, `overview.md`, `setup.md`, `troubleshooting.md`, `terms.md` and `pages.md`, each a short prompt to replace with your own words. A deployment admin reads it before launching the plugin. See [Write a plugin's documentation](../how-to/write-a-plugins-documentation.md). |
-| `src/my_plugin/__main__.py` | Connects to the sidecar with its declaration, logs who it was launched as and what it may do, serves the pages, and reports itself healthy. |
-| `src/my_plugin/page.py` | The pages people see through the dashboard, each a view function declared with the levels it serves: **Setup** (`/setup`), at `admin`, says what the plugin is and what the deployment lets it do, shows no account's data, and is where an admin links the external account the plugin reports to one of the deployment's accounts; **Accounts** (`/`), at `write` and `read`, shows the accounts the person may read and write through the plugin, and under Open an **Open a statement** button, in the page's header (its `head_actions` block) above the table. |
+| `src/my_plugin/__main__.py` | The entry point: `meridian.run(declaration=DECLARATION, roles=[CUSTODY], pages=pages, port=PORT)` registers the plugin's role classes on its sidecar with its declaration, serves the pages, and reports itself healthy until it is stopped. |
+| `src/my_plugin/page.py` | Its custody role class, `Custody(custody.Role)`, whose acts the pages make (`CUSTODY.record_holdings_statement(...)`), and the pages people see through the dashboard, each a view function declared with the levels it serves: **Setup** (`/setup`), at `admin`, says what the plugin is and what the deployment lets it do, shows no account's data, and is where an admin links the external account the plugin reports to one of the deployment's accounts; **Accounts** (`/`), at `write` and `read`, shows the accounts the person may read and write through the plugin, and under Open an **Open a statement** button, in the page's header (its `head_actions` block) above the table. |
 | `src/my_plugin/templates/` | The pages' Jinja2 templates, `setup.html` and `accounts.html`, each extending the kit's base template. |
-| `pyproject.toml` | The package, pinned exactly to the SDK, `open-meridian==0.33.0`. Its `[tool.meridian]` table declares the plugin's `roles`, whether it serves a page, and names its `declaration`. |
-| `Dockerfile` | Builds on the SDK's base image of the same version, `ghcr.io/open-meridian/plugin-python:0.33.0`. |
+| `pyproject.toml` | The package, pinned exactly to the SDK, `open-meridian==0.35.0`. Its `[tool.meridian]` table declares the plugin's `roles`, whether it serves a page, and names its `declaration`. |
+| `Dockerfile` | Builds on the SDK's base image of the same version, `ghcr.io/open-meridian/plugin-python:0.35.0`. |
 | `tests/test_page.py` | Tests of the pages, run by `meridian plugin check --run-tests`: each page under each level, no account data under Manage, linking on Setup, and the statement button under Open, including what the page says while nothing is linked. |
 | `.github/workflows/check.yaml` | A CI workflow that runs `meridian plugin check --run-tests` on a push to `main`, on each pull request, and when run by hand (`workflow_dispatch`). |
 | `hooks/pre-push` | A pre-push hook, CI-first: a branch's push runs nothing, its pull request's CI being the gate; a tag push runs nothing either; and a push straight to `main` runs `meridian plugin check --run-tests` first. Turn it on with `git config core.hooksPath hooks`. |
@@ -88,7 +87,7 @@ may run it later; see [Publish a plugin to a registry](../how-to/publish-a-plugi
 | `README.md`, `.gitignore`, `.dockerignore` | The usual. |
 
 **Link, then record.** The new plugin reports the external account its connection reaches
-(`report_external_accounts`, in `__main__.py`). An admin of the plugin links it to one of the
+(`report_external_accounts`, in its custody class's `on_start`). An admin of the plugin links it to one of the
 deployment's accounts on **Setup**, under Manage. Only then is what the plugin records for that
 external account taken, and for that account. **Open a statement** opens an empty holdings statement
 for the linked external account, sent for the person asking, so the sidecar decides whether they may;
@@ -113,6 +112,14 @@ A bare `pip install` outside a virtual environment is refused by some Pythons, s
 macOS (`externally-managed-environment`). `--run-tests` runs the tests with `.venv/bin/python` when
 the plugin has a `.venv`, and `.dockerignore` keeps the `.venv` out of the image.
 
+**Move it to the latest SDK.** `plugin new` writes the plugin on SDK 0.35.0. Commit it, then
+move it to 0.35.5, which changes only the two pins, `pyproject.toml`'s and the `Dockerfile`'s:
+
+```bash
+git init -q && git add -A && git commit -qm "From meridian plugin new"
+meridian plugin migrate
+```
+
 The reference plugin asks for no roles:
 
 ```toml title="pyproject.toml"
@@ -121,7 +128,7 @@ roles = []
 interface = true
 ```
 
-That is a plugin admitted with no topics. It can serve pages and read who is asking, and nothing
+That is a plugin admitted with no topics: its custody class is not started, and the SDK logs that. Launched with `custody`, the same plugin starts it. It can serve pages and read who is asking, and nothing
 more. Who may use it is not declared here: a person's level on each of a plugin's roles is `admin`, `read` or `write`, the same for every plugin, and a deployment admin grants it (see
 [Give people access](../how-to/administer-access.md)). See [Plugin manifest](../api/plugin-manifest.md) for every key.
 
@@ -175,7 +182,7 @@ meridian plugin list
 
 ```text
 Versions:
-  my-plugin 0.1.0  roles: none  page: yes  SDK 0.33.0
+  my-plugin 0.1.0  roles: none  page: yes  SDK 0.35.5
     documentation: https://meridian.localhost/admin/plugins/versions/my-plugin/0.1.0/documentation
 Launches:
   my-plugin  my-plugin 0.1.0  launched

@@ -4,13 +4,13 @@ Every instrument a deployment holds is named by the
 platform's `INS-` ID, and a record the platform has not answered for yet is
 a **provisional** local record (see [One ID per instrument](../concepts/one-id.md)).
 This page is for a deployment admin: where to see those records and why
-each is waiting, how the upgrade to contract 24 migrates the records you
+each is waiting, how the upgrade to chart 0.1.305 migrates the records you
 already hold, and the usage report's setting.
 
 ## Before you start
 
 - You are a deployment admin. The **Instruments** page is theirs.
-- Back up the deployment before upgrading to contract 24 (see
+- Back up the deployment before upgrading to chart 0.1.305 (see
   [Back up and restore a deployment](back-up-and-restore.md)). The
   migration rewrites nothing, but the records the platform mints and the
   replacements it makes are recorded for good.
@@ -58,7 +58,7 @@ answers, its history reading across the link; nobody needs to act.
 
 ## The upgrade's migration
 
-At the upgrade to contract 24 the instrument store sends every `LCL-`
+At the upgrade to chart 0.1.305 the instrument store sends every `LCL-`
 record it holds to the platform as a matching request, in batches of at
 most 100, at the pace the platform's licence list names. The run is a view
 of the store, so it resumes where it stopped if the deployment restarts.

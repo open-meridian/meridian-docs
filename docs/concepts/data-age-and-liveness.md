@@ -80,7 +80,7 @@ condition but held is refused `invalid`, naming `hold_cause`.
 
 ## Latency, reported to core { #latency }
 
-Changed in contract 28. A data or connectivity plugin records its sessions'
+A data or connectivity plugin records its sessions'
 latency (round trip, a venue's order acknowledgement and fill delay, each
 dataset's feed delay, gaps, reconnects, its send backlog and clock skew) as
 histograms, and an `ems` records the age of what it checks. From SDK
@@ -132,11 +132,11 @@ go to the deployment admins.
 The suite cases about latency, the data suite's `reports-its-feed-delay`,
 connectivity's `reports-a-sessions-round-trip` and the ems's
 `reports-its-pre-trade-checks-data-age`, are required of every plugin
-holding the role from contract 28.
+holding the role.
 
 ## What a deployment admin permits { #what-a-deployment-admin-permits }
 
-Added in contract 28. Whether an `ems`'s admin may choose **Warn** at all is
+Whether an `ems`'s admin may choose **Warn** at all is
 the deployment's: a deployment admin's **Stale reference actions
 permitted**, on the dashboard's settings home page (`/admin#stale-reference`),
 **Refuse only** (the default) or **Refuse or warn**, its last change
@@ -158,7 +158,7 @@ where it is permitted, refusing otherwise. Through an agent:
 - **Each plugin's consumer lag and its conflation counts**, and the page
   hop's age.
 - **Quality states**: a row's assessment and quarantine, which core serves
-  in a later chart release on contract 28 (see
+  in a later chart release (see
   [The lake: what core does not serve yet](the-lake.md#not-served-yet)).
 
 ## Related

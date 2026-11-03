@@ -1,6 +1,6 @@
 # Scenarios
 
-Added in contract 28. A **scenario** says how the market moves: spot up 5%,
+A **scenario** says how the market moves: spot up 5%,
 volatility down 2 points, a week forward. Open Meridian writes every
 scenario in one **common format**, so a grid a person saves on one plugin's
 page, a stress a risk plugin runs and the analytics component's
@@ -72,7 +72,7 @@ grid = meridian.ScenarioSet(name="AAPL grid", axes=[
     signal.date_steps([1, 7, 30]),                     # today, forward by days, and to settlement
 ])
 row = signal.saved("aapl-grid", dataset=wants.dataset("scenarios"), scenario_set=grid)
-await plugin.record_scenarios(scenarios=[row])
+await role.record_scenarios(scenarios=[row])
 again = await signal.read_scenarios(plugin, ["aapl-grid"])
 ```
 

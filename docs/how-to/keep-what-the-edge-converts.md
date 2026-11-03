@@ -7,7 +7,7 @@ written from the contract alone reconciles any custodian the same way. This page
 custody plugin does for each, with [plugin-snaptrade](https://github.com/open-meridian/plugin-snaptrade)
 as the worked example.
 
-You need CLI 0.1.53 and SDK 0.33.0 or later (contract 28).
+You need CLI 0.1.58 and SDK 0.35.5 or later.
 
 A custody plugin also reports each activity on an account, each with a raw
 record of its own: see [Report the custodian's activity](report-the-custodians-activity.md).
@@ -42,8 +42,7 @@ declaration = "my_plugin.declaration:DECLARATION"
 ```
 
 ```python
-async with await meridian.connect(declaration=DECLARATION) as plugin:
-    ...
+meridian.run(declaration=DECLARATION, roles=[Custody()], pages=pages, port=PORT)
 ```
 
 `meridian plugin upload` runs the SDK's `meridian-declaration` in the image it built, with no
@@ -53,7 +52,7 @@ A plugin holding no edge role (`connectivity`, `custody`, `data`, `confirmation`
 (`edge-storage`), and the deployment refuses it at registration.
 
 Each time the plugin meets a name it declared as not carried, it counts it:
-`plugin.note_not_carried("myvendor:position", "open_pnl")`. The counts ride on its heartbeat and
+`self.plugin.note_not_carried("myvendor:position", "open_pnl")` in a role class. The counts ride on its heartbeat and
 are drawn on its Summary, by name only, and they stay in the deployment.
 
 ## Keep the raw record, and name it on every row
@@ -66,9 +65,9 @@ your declaration says.
 Every row and statement then names the raw record it was converted from:
 
 ```python
-await plugin.record_holding(
+await self.record_holding(          # in the plugin's custody class
     ...,
-    raw_record=plugin.raw_record("ACCT-1/20261003T120000Z/positions"),
+    raw_record=self.plugin.raw_record("ACCT-1/20261003T120000Z/positions"),
 )
 ```
 

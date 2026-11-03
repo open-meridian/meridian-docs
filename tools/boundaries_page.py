@@ -82,11 +82,21 @@ GUIDES = [
      "filing a ticket for a person, an edge plugin's archive, the lake, and pages"),
     ("concepts/plan-your-deployment.md", "Plan your deployment",
      "a firm's profile answered in three layers: core as its books and records, the plugins by role "
-     "(existing, planned in a named release, or to build against the contract) and configuration, "
+     "(existing, planned in a named release, or to build yourself) and configuration, "
      "with what is missing named as a spec to bring, each plugin's registry and who checks it; three worked profiles"),
+    ("concepts/service-levels.md", "Service levels",
+     "Desktop, single node, multi-node and multi-zone: the failures each rides out, the chart values "
+     "that reach it (standby, readyLagMs, leases, zones), the hot layer's bounds and from_memory"),
+    ("concepts/bonds-and-fixed-income.md", "Bonds and fixed income",
+     "the bond, pool, TBA, CMO and CD templates, offered terms, percent of par, the factor as the "
+     "security's, provisional bookings revised or claimed, half-even pool cash, and in force"),
+    ("tutorials/fast-data-retrieval.md", "Fast data retrieval",
+     "subscriptions not polling, the hot layer, latest and listing reads, fields asked, batching"),
+    ("tutorials/live-pages.md", "Build a live page",
+     "pages.live_values and LiveValue: source, age, staleness only in session, FX_WEEK, never blank"),
     ("how-to/integrations.md", "Integrations",
      "the released plugins, the service each works with, its roles, asset classes, environments, "
-     "status, version and contract, filterable by role, asset class, environment and status"),
+     "and version, filterable by role, asset class and environment"),
     ("how-to/prove-a-plugin-against-a-released-runtime.md", "Prove a plugin against a released runtime",
      "an end-to-end check of what a plugin records, on core's plugin harness: a real sidecar, street store and book"),
     ("how-to/build-a-plugin-page.md", "Build a plugin's page",
@@ -103,11 +113,11 @@ GUIDES = [
      "five, its datasets' licences, entitlements and source priority, at the deployment admin's level; "
      "the prepared changes' seven and the accounts a plugin may link to; the deployment's settings "
      "(the agents' guard, the time zone, the FX pivot currencies, the model routing), an account's "
-     "execution costs, event groups and the lake's bounded query; from contract 28 starter packs, "
+     "execution costs, event groups and the lake's bounded query; starter packs, "
      "the data age, the series request rule and the stale reference actions permitted"),
     ("concepts/the-lake.md", "The lake",
      "prices and bars by dataset from data plugins: versions, reads by business date and as of a "
-     "recorded time, the source priority, wants, kept or served; contract 28's kinds, and what core "
+     "recorded time, the source priority, wants, kept or served; its kinds, and what core "
      "does not serve yet"),
     ("concepts/rates.md", "Rates",
      "the lake's rates: fixings, averages, index levels and curves' points, each a value with its "
@@ -262,7 +272,19 @@ def step_key(step: str) -> tuple:
     return tuple(int(part) for part in re.findall(r"\d+", step))
 
 
+# The schema's words name the contract revision that brought a thing; the
+# docs describe the current release only, so those markers are left out.
+_REVISION_MARKERS = (
+    (re.compile(r";\s*contract \d+'s core release \w+\)"), ")"),
+    (re.compile(r";\s*contract v?\d+\)"), ")"),
+    (re.compile(r"\s*\((?:from )?contract v?\d+[^)]*\)"), ""),
+    (re.compile(r",?\s*from contract v?\d+(?: as amended [\d-]+)?"), ""),
+)
+
+
 def prose(text: str) -> str:
+    for pattern, replacement in _REVISION_MARKERS:
+        text = pattern.sub(replacement, text)
     return text.replace(" -- ", " — ")
 
 
@@ -271,7 +293,7 @@ def operation_target(op: dict) -> tuple[str, str, str]:
     roles = op.get("roles", {})
     if roles.get("publishes") or roles.get("reads"):
         return TYPED_OPERATIONS, snake(op["name"]), snake(op["name"])
-    return SDK, "receive", op["name"]
+    return SDK, "events", op["name"]
 
 
 def every_plugin_target(call: dict) -> tuple[str, str, str]:
@@ -341,7 +363,7 @@ def roles_page(roles: dict, vendored: dict) -> str:
     add("A plugin's **roles** decide what it may do on the bus: the operations it may call, the "
         "queries it may ask and the deliveries it hears. This page is each role's entry: the person "
         "or desk whose job it does (its persona), its function and duties, what it leaves to which other role, and "
-        f"what it holds at contract {contract}. Then the principles a plugin must fit, and the method "
+        f"what it holds today. Then the principles a plugin must fit, and the method "
         "that turns an idea for a plugin into the least roles it needs, with worked examples.\n")
     add("**Roles are fixed, and nobody can change a role's grants, not even for one plugin.** So an "
         "idea is mapped to the least roles that hold what it needs, or reshaped until it fits. "
@@ -358,11 +380,11 @@ def roles_page(roles: dict, vendored: dict) -> str:
                  "The entries for " + ", ".join(f"`{n}`" for n in proposed) + " are proposed")
         add('!!! note "Proposed entries"')
         add(f"    {which}: its persona, function, duties and what it leaves to others may still be "
-            "revised. Its scope is generated from the contract, and is exact.\n")
+            "revised. Its scope is generated from the interface, and is exact.\n")
 
     add("## The thirteen roles { #the-roles }\n" if len(entries) == 13 else
         f"## The {len(entries)} roles {{ #the-roles }}\n")
-    add(f"| Role | Function | Persona | At contract {contract} |")
+    add("| Role | Function | Persona | Today |")
     add("|---|---|---|---|")
     for r in entries:
         counts = [f"{kind} {len(r['scope'].get(kind, []))}"
@@ -388,9 +410,9 @@ def roles_page(roles: dict, vendored: dict) -> str:
                                  if r["edge"] else "none; it keeps nothing it cannot lose."))
         parts = scope_line(r, by_name)
         if parts:
-            add(f"- **At contract {contract}:** " + "; ".join(parts) + ".")
+            add("- **Today:** " + "; ".join(parts) + ".")
         else:
-            add(f"- **At contract {contract}:** nothing yet. No workflow names this role, so a plugin "
+            add(f"- **Today:** nothing yet. No workflow names this role, so a plugin "
                 "holding only it is admitted with no topics; it can still serve a page.")
         add("")
 
@@ -443,7 +465,7 @@ def roles_page(roles: dict, vendored: dict) -> str:
         add("See [Plugin manifest](../api/plugin-manifest.md#roles).\n")
 
     add("## Worked examples { #examples }\n")
-    add("Each names what it needs and the contract version that grants it. Where a request breaks a "
+    add("Each names what it needs and the release that grants it. Where a request breaks a "
         "principle, it says which, and the shape that fits.\n")
     for e in roles["examples"]:
         add(f"### “{prose(e['request'])}”\n")
@@ -467,8 +489,7 @@ def roles_page(roles: dict, vendored: dict) -> str:
                 who = role_link(need["role"], names)
                 if "row" in need:
                     page, anchor, shown = operation_target(by_name[need["row"]])
-                    add(f"    - {who} {need['as']} [`{shown}`]({relative(page, anchor)}): "
-                        f"from contract {need['granted']}")
+                    add(f"    - {who} {need['as']} [`{shown}`]({relative(page, anchor)}))")
                 else:
                     add(f"    - {who}, {prose(need['what'])}: not yet; {prose(need['pending'])}")
         add(f"- **Available:** {prose(e['available'])}")
@@ -476,7 +497,7 @@ def roles_page(roles: dict, vendored: dict) -> str:
 
     add("---\n")
     add(f"Generated from [`boundaries/roles.json`]({SCHEMA_WEB}/blob/{rev}/boundaries/roles.json) "
-        f"in meridian-schema at `{rev[:7]}`, contract {contract}.")
+        f"in meridian-schema at `{rev[:7]}`.")
     return "\n".join(out) + "\n"
 
 
@@ -491,7 +512,7 @@ def index_entries(roles: dict, vendored: dict, site_url: str, directory_urls: bo
     sections: dict[str, list[tuple[str, str, str]]] = {}
     sections["Roles"] = [
         ("Roles", at(ROLES_PAGE),
-         f"each role's persona, function, duties, what it leaves to another role and what it holds at contract {contract}"),
+         f"each role's persona, function, duties, what it leaves to another role and what it holds today"),
         ("Principles", at(ROLES_PAGE, "principles"),
          f"the {len(roles['philosophy'])} principles a request must fit before any role is chosen"),
         ("From an idea to the least roles", at(ROLES_PAGE, "method"),
@@ -504,11 +525,11 @@ def index_entries(roles: dict, vendored: dict, site_url: str, directory_urls: bo
     for op in sorted(roles["operations"], key=lambda o: step_key(o["step"])):
         page, anchor, shown = operation_target(op)
         holders = "; ".join(f"{BY[kind]} {', '.join(who)}" for kind, who in op["roles"].items())
-        how = ", with receive" if page == SDK else ""
+        how = f", heard as on_{snake(op['name'])}" if page == SDK else ""
         article = "an" if op["kind"][0] in "aeiou" else "a"
         ops.append((shown, at(page, anchor),
                     f"{op['name']}, {op['step']} {op['title']}: {article} {op['kind']}, {holders}{how}"))
-    sections[f"Operations at contract {contract}"] = ops
+    sections["Operations"] = ops
 
     fields = fields or {"stores": [], "entries": []}
     dictionary = []
@@ -518,7 +539,7 @@ def index_entries(roles: dict, vendored: dict, site_url: str, directory_urls: bo
         dictionary.append((title, at(store_page_path(store)),
                            f"{line}: {len(entries)} entries, each field's meaning, bounds and required uses"))
     if dictionary:
-        sections[f"Data dictionary at contract {contract}"] = dictionary
+        sections["Data dictionary"] = dictionary
 
     sections["What every plugin does"] = [
         (shown, at(page, anchor), f"{call['step']} {call['title']}, through the SDK")
@@ -538,7 +559,7 @@ def index(roles: dict, vendored: dict, site_name: str, site_url: str, directory_
         f"> {site_name} is the open-source OEMS you run yourself and build on with plugins. A plugin "
         "talks only to its own sidecar, and the roles it holds, from a fixed list, decide what it may "
         "do. This index is for an agent building a plugin: the roles, the principles a plugin must fit, "
-        f"the method that maps a request to the least roles, every operation a plugin may take at contract {contract}, "
+        f"the method that maps a request to the least roles, every operation a plugin may take, "
         "and each store's data dictionary.",
         "",
         "Roles are fixed and their grants generated: nobody can change a role's grants, not even for "
@@ -659,7 +680,7 @@ def store_page(fields: dict, store: str, vendored: dict) -> str:
     out: list[str] = []
     add = out.append
     add(f"# {title}\n")
-    add(f"{prose(line[0].upper() + line[1:])}. This is its data dictionary at contract {contract}: "
+    add(f"{prose(line[0].upper() + line[1:])}. This is its data dictionary today: "
         "one entry for every field of its messages a plugin meets, saying what the field is for, what a "
         "value means and does not mean, what empty means, who fills it, its bounds and the operations a "
         "write must carry it on. Each entry is anchored by its name, the name a refusal's path resolves "
@@ -701,7 +722,7 @@ def store_page(fields: dict, store: str, vendored: dict) -> str:
             add(field_section(entry, f"`{entry['name']}`"))
     if retired:
         add("## Retired { #retired }\n")
-        add("Entries no longer in the contract, kept for the history; a name is never reused.\n")
+        add("Entries no longer in the interface, kept for the history; a name is never reused.\n")
         add("| Entry | Retired in | Use instead |")
         add("|---|---|---|")
         for entry in retired:
@@ -710,7 +731,7 @@ def store_page(fields: dict, store: str, vendored: dict) -> str:
         add("")
     add("---\n")
     add(f"Generated from [`boundaries/fields.json`]({SCHEMA_WEB}/blob/{rev}/boundaries/fields.json) "
-        f"in meridian-schema at `{rev[:7]}`, contract {contract}.")
+        f"in meridian-schema at `{rev[:7]}`.")
     return "\n".join(out) + "\n"
 
 

@@ -123,14 +123,15 @@ and nothing it reads leaves the deployment.
 ## Build your own
 
 A reporting plugin of your own uses what the sample does. You need CLI
-0.1.53 and SDK 0.33.0 or later (contract 28):
+0.1.58 and SDK 0.35.5 or later:
 
 - **The reads.** A `reporting` plugin reads positions with
   [`list_positions`](../api/typed-operations.md#list_positions) and prices
   with [`list_prices`](../api/typed-operations.md#list_prices), by business
   date, as of a recorded time, from the deployment's default sources, named
   datasets or side by side, and hears new prices for the subjects it names
-  with `receive(prices_recorded=..., subjects=...)`. See
+  with its reporting class's `on_prices_recorded`, for the subjects its
+  `subjects()` names. See
   [The lake in the Python SDK](../api/python-sdk.md#the-lake). A
   `reporting` plugin reads prices and bars, never trades or quotes.
 - **Its currency, by its code.** A `reporting` plugin names its reporting currency by its ISO 4217 code and has core resolve
@@ -138,7 +139,7 @@ A reporting plugin of your own uses what the sample does. You need CLI
   [`resolve_identifier`](../api/typed-operations.md#resolve_identifier):
 
     ```python
-    found = await plugin.resolve_identifier(
+    found = await self.resolve_identifier(   # in the reporting class
         identifiers=[meridian.Identifier(scheme="iso4217", value="EUR")], as_of_ns=day_ns)
     euro = found.instrument_id if found.found else ""
     ```

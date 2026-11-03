@@ -33,8 +33,23 @@ backups set up. See [Back up and restore a deployment](back-up-and-restore.md). 
 changes on the way, release by release, is in the
 [release notes](../api/python-sdk.md#release-notes).
 
-!!! note "Upgrading to contract 28"
-    The upgrade to contract 28 (chart 0.1.313 or later) migrates the
+!!! note "Upgrading to chart 0.1.408"
+    Chart releases are numbered by the CI run that tested them, so the
+    numbers jump: the release after 0.1.344 is 0.1.406, and 0.1.408 is the
+    current one. The upgrade adds each store's change log, the table a
+    standby follows, and the stores' hot layers, each bounded within the
+    component's memory limit (see
+    [Service levels](../concepts/service-levels.md#the-hot-layer)). Every
+    `standby` value defaults to 0, so a deployment keeps one member of each
+    component until you ask for more. It also brings
+    [bonds and fixed income](../concepts/bonds-and-fixed-income.md): the
+    debt templates, pools' factors in the lake, and the book's fixed-income
+    records. Plugins keep running as they are: one built on an older SDK
+    registers and sends what it did; move it with
+    [`meridian plugin migrate`](../api/cli.md#plugin-migrate).
+
+!!! note "Upgrading from a chart before 0.1.313"
+    The upgrade to chart 0.1.313 migrates the
     instrument store (a listed series' terms, and the company records), the
     conductor (the deployment's settings kept one record each, and starter
     packs) and the dashboard's notices, each adding to what is held. The
@@ -56,7 +71,7 @@ changes on the way, release by release, is in the
     later chart release on the same contract (see
     [The lake](../concepts/the-lake.md#not-served-yet)).
 
-    Upgrading from a chart before contract 27 (chart 0.1.309) also rebuilds each
+    Upgrading from a chart before chart 0.1.309 also rebuilds each
     account's projection from its journal once, as the book's snapshots
     change format, so every lot relieved before it gains its
     [proceeds](../concepts/the-book-of-record.md#a-closed-lots-proceeds);
@@ -74,7 +89,7 @@ changes on the way, release by release, is in the
     attribution terms registers, and rates resolve by their publisher's own
     codes (see
     [The licence list](../concepts/one-id.md#the-licence-list)).
-    Upgrading from a chart before contract 26 also adds
+    Upgrading from a chart before chart 0.1.308 also adds
     [the analytics component](../concepts/the-analytics-component.md): two
     Deployments, a coordinator and a worker, on an image of its own,
     `ghcr.io/open-meridian/meridian-analytics`, sized by the chart's
@@ -83,11 +98,10 @@ changes on the way, release by release, is in the
     deployment admin routes one; and the book records
     [the agents' guard](../concepts/the-agents-guard.md) on, once, as its
     own entry, a connectivity plugin reporting no environment for its
-    session being live for agents. From one before contract 25, it starts
+    session being live for agents. From one before chart 0.1.306, it starts
     the book's snapshots, one every `bor.snapshotInterval` entries (default
     1,000), and gives the **Plugins** page **Browse** and **Registries**
-    (see [Registries](../concepts/registries.md)); from one before contract
-    24, it runs that release's instrument migration (see
+    (see [Registries](../concepts/registries.md)); from one before chart 0.1.305, it runs that release's instrument migration (see
     [Review provisional records and the migration](review-provisional-records.md)).
     `meridian status` shows the release, each component and plugin, and the
     book's health after the upgrade.

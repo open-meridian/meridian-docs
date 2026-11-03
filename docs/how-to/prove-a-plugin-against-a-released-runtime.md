@@ -39,7 +39,7 @@ each commit of meridian-core after the runtime image of that commit, with the sa
 |---|---|
 | `compose.yaml` | The deployment without its plugins: `keys`, which draws the run's keys and passwords; Postgres; NATS configured for the plugins, their roles and their datasets; the stores migrated; street, the book (`bor`), the lake, instrument, the stand-in `platform`, conductor, `people` and a development dashboard; and, in the compose profile `runner`, the `runner` and `store` |
 | `harness.py` | The runner, standard library only: does what an admin does in the dashboard (the commands in [step 5](#5-drive-it-as-an-admin-would)); and `compose`, which writes the plugins' half of the deployment |
-| `platform.py` | The stand-in for the platform, standard library only: the currencies, seed settlement calendars, venues and test equity it holds, and contract v24's one-ID routes |
+| `platform.py` | The stand-in for the platform, standard library only: the currencies, seed settlement calendars, venues and test equity it holds, and the one-ID routes |
 | `street.sql` | The street store as stable, sorted lines, which `store street` prints |
 | `book.sql` | The book of record as stable, sorted lines, which `store book` prints |
 | `activity.sql` | The custodian's activity and each connection's latest sync status, which `store activity` prints |
@@ -68,9 +68,8 @@ HARNESS_IMAGE ?= ghcr.io/open-meridian/meridian-harness:<commit>@sha256:<digest>
 ```
 
 Both pull without a token. Keep the two tags the same: a harness and a runtime of different commits
-may disagree about the dashboard's pages the runner reads. Choose a commit whose contract version is
-your SDK's: a sidecar refuses an SDK of another contract version. Move the pins together, by a
-deliberate commit, and with your SDK when a contract version changes.
+may disagree about the dashboard's pages the runner reads. Choose a commit whose runtime accepts your SDK: a sidecar refuses an SDK newer than it serves. Move the pins together, by a
+deliberate commit, and with your SDK when the SDK's release needs a newer runtime.
 
 ## 2. Copy the harness out of its image
 
@@ -124,7 +123,7 @@ on its next start. You need no override for that.
 
 ### Hold each registration to its declaration { #hold-each-registration-to-its-declaration }
 
-From contract v25 a plugin declaring v25 registers exactly the declaration its version was uploaded
+A plugin declaring v25 registers exactly the declaration its version was uploaded
 with, or its sidecar refuses it, naming the first difference. The harness performs no upload, so
 list each plugin with `"declaration": PATH`, and its sidecar holds it to that file instead: the
 SDK's JSON as `meridian-declaration` prints it from the plugin's own image, which is what
@@ -255,7 +254,7 @@ venue. The runner's `instrument` command takes `--ask-platform`, asking the plat
 record from its page as a deployment admin's button does, so a `compute_date` for that equity
 gives its settlement date in a harness run (T+1) rather than "rule not held".
 
-Core 15f6b22's runtime and harness serve contract v25, released 2026-10-17 in chart 0.1.307,
+Core 15f6b22's runtime and harness serve SDK 0.29.0's plugins, released 2026-10-17 in chart 0.1.307,
 pinned by digest as in [step 1](#1-pin-a-runtime-image-and-its-harness):
 
 ```makefile
@@ -272,8 +271,7 @@ FIGI its source confirms, so a record your plugin states with another
 identifier alone stays a provisional local record, as in a deployment. In
 the harness's environment, `HARNESS_LICENCE` names the licence list's
 schemes, `HARNESS_PLATFORM_MINTS` the FIGIs its source confirms, and
-`HARNESS_PLATFORM_V24=0` serves none of the routes, as a platform before
-contract v24, which the deployment treats as not reached. The runner's
+`HARNESS_PLATFORM_V24=0` serves none of the routes, as a platform before the one-ID revision, which the deployment treats as not reached. The runner's
 `instrument ID --ask-platform`, with nothing else, asks the platform about
 a record and completes nothing, so a provisional record the platform holds
 resolves; and a new command, `core-form PAGE POST FIELD=VALUE...
@@ -332,7 +330,7 @@ position|<account>|<instrument>|<side>|<quantity>|<settle-date quantity>|<market
 statement|<account>|<source>|<expected rows>|<complete or open>|<buying power>|<margin requirement>|<maintenance excess>|<currency assumed>
 pending|<account>|<instrument>|<side>|<value date>|<quantity>
 closed|<account>|<instrument>|<side>|<field>|<kind>
-amended|<account>|<instrument>|<side>|<contract version>|<field>|<raw record's key>
+amended|<account>|<instrument>|<side>|<interface version>|<field>|<raw record's key>
 ```
 
 - `<account>` is the account's name, since its ID is minted per run.
@@ -495,7 +493,7 @@ e2e: image
 	$(E2E_RUN) unlinked --expect 3 || fail "the dashboard did not count the three accounts left unlinked"
 ```
 
-From contract v25 a plugin registers exactly the declaration its version was uploaded with, so a
+A plugin registers exactly the declaration its version was uploaded with, so a
 stand-in run beside it, such as the desk, registers its interface in a declaration too,
 `meridian.connect(declaration=meridian.Declaration(interface=...))`, and the target prints the
 stand-in's declaration from the same image, its directory mounted, as it prints the plugin's (see

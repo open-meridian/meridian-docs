@@ -25,7 +25,7 @@ A job names four things:
 | **Inputs, by reference** | The book's watermark, the lake's recorded-time cut-off (its as-of) and the source choice, one of each for the whole job. Unset, each is now and the deployment's source priority, resolved and named in the answer. |
 | **A what-if** | Optionally, trades added to one account's positions, answered beside the base. Never a book record. |
 
-From contract 27 a job may also name:
+A job may also name:
 
 - **A business date**, an ISO 8601 date in the deployment's
   [time zone](dates-and-time.md), in place of the watermark and the as-of:
@@ -40,7 +40,7 @@ From contract 27 a job may also name:
   provenance. Without one each account is answered in its base currency,
   and an account with none is not evaluated, `CONVERSION_MISSING`.
 
-From contract 28 it may also name **chains**, the listed series the
+It may also name **chains**, the listed series the
 [options measures](#options-measures) read, and **a scenario set**, inline
 (`scenario_set`) or saved in the lake by its row key and version
 (`scenario_ref`), which the scenario grid applies (see
@@ -61,10 +61,10 @@ job = analytics.job(
     analytics.measure("exposure", by=["asset_class", "currency"]),
     analytics.measure("historical_var"),
     accounts=["ACC-12"],
-    business_date="2026-10-22",           # contract 27: the book at its end, the lake at its closes
-    reporting_currency="INS-...",         # contract 27: USD's cash instrument, say
+    business_date="2026-10-22",           # the book at its end, the lake at its closes
+    reporting_currency="INS-...",         # USD's cash instrument, say
 )
-answer = await analytics.Jobs().run(plugin, job)        # inline, or waited for
+answer = await analytics.Jobs().run(self, job)          # in a role class: inline, or waited for
 for figure in answer.figures("exposure"):
     print(figure.breakdown, figure.value, figure.currency_instrument_id)
 ```
@@ -90,7 +90,7 @@ parameter that changes its number fixed by that version.
 [`list_measure_definitions`](../api/typed-operations.md#list_measure_definitions)
 answers them, with their parameters, the breakdowns each allows and the
 scale it rounds to. Each is served at version 1, and `pnl` at version 2
-too (from contract 27); the options measures of contract 28 are
+too (from chart 0.1.309); the options measures are
 [below](#options-measures):
 
 | Definition | What it answers | Breakdowns | Scale |
@@ -103,7 +103,7 @@ too (from contract 27); the options measures of contract 28 are
 | `expected_shortfall` | The mean loss beyond historical value at risk, on the same terms | as `historical_var` | 2 |
 | `resolution_payoff` | Each account's P&L if each member of an event group resolves YES | account | 2 |
 | `implied_distribution` | Each outcome's price over the sum of the group's prices, as a numerator and a denominator, beside the raw sum | none | 18 |
-| `execution_cost` | Added in contract 27. Each execution's cost against each standard benchmark, in basis points, and each account's notional-weighted mean per benchmark; under the breakdown `benchmark`; each result recorded in the lake. See [Execution costs](execution-costs.md) | account | 4 |
+| `execution_cost` | Each execution's cost against each standard benchmark, in basis points, and each account's notional-weighted mean per benchmark; under the breakdown `benchmark`; each result recorded in the lake. See [Execution costs](execution-costs.md) | account | 4 |
 
 **Realized P&L** (`pnl` version 2) is each closed lot's proceeds less the
 cost of the quantity relieved, as the book records them on the lot (see
@@ -157,7 +157,7 @@ currency, goes leg by leg: each leg a price in the lake of the currency in
 hand in another instrument, of kind `close`, then `mid`, then `last`; the
 shortest chain, at most three legs, each named in the answer.
 
-**Inverted and crossed fiat legs** (contract 27). Data plugins publish a
+**Inverted and crossed fiat legs**. Data plugins publish a
 market's own direction only, and the lake never inverts or crosses. Where a
 **fiat** cash leg has no direct rate in the direction needed, the component
 derives one:
@@ -179,7 +179,7 @@ evaluated, `LOCAL_RECORD`, never zero.
 
 ### Options measures { #options-measures }
 
-Added in contract 28. A job may name **chains** (`Job.chains`), each an
+A job may name **chains** (`Job.chains`), each an
 underlying's [listed series](listed-options-and-futures.md) in an
 expiration window, or by their keys, and ask the options measures over
 them. A job of chain measures alone names no account; the scenario grid
@@ -262,12 +262,11 @@ reads the table and
 [`dashboard__set_model_routing`](../api/core-tools.md#dashboard__set_model_routing)
 sets it, with a note; the set can be prepared for a person to make.
 
-**Routed only to a model it declares** (contract 27). A `pricing` plugin's
+**Routed only to a model it declares**. A `pricing` plugin's
 version declares the model ids and versions it answers, 1 to 32, in its
 declaration (`PluginDeclaration.pricing_models`). Routing a model id to an
 instance whose launched version does not list it is refused
-`FAILED_PRECONDITION`, naming `implementation`. A version built before
-contract 27 declares none, and routing to it is not checked.
+`FAILED_PRECONDITION`, naming `implementation`. A version built before SDK 0.32.0 declares none, and routing to it is not checked.
 
 When a job needs a routed model, the component sends that plugin alone a
 **price batch**: one per model id, its units each an instrument under one
@@ -291,9 +290,9 @@ Every answer carries its **provenance**: the book's watermark and the
 lake's as-of it read at; each dataset read; each instrument, with its
 record's version, its template and template version and its calculation
 version; each model with the implementation that answered it; the measures
-asked; each event group at the version read; from contract 28 each chain
+asked; each event group at the version read; each chain
 read and the scenario set; the routing table's version;
-the component's version; and the **answer hash**. From contract 27 it also
+the component's version; and the **answer hash**. It also
 names the job's `business_date`; `input_prices`, each position's input
 price (its instrument, price, dataset, row key, version and source time);
 and `conversion_legs`, each leg from one cash instrument to another, its
@@ -317,7 +316,7 @@ computed, `computed_as`: every figure but the options models' is `exact`,
 and theirs `COMPUTED_AS_MODEL`; a reader treats an unset value as exact,
 and any other as a model's. Each figure names its scenario, `scenario_key`:
 the base, the what-if, a historical day by its date, an outcome by its
-member, or from contract 28 a scenario set's point
+member, or a scenario set's point
 (`SCENARIO_KIND_SCENARIO_POINT`, with the saved set's row key, version and
 the point's axis positions).
 
@@ -343,11 +342,11 @@ A position or a measure the component cannot answer is listed under
 | `NOT_EVALUATED_REASON_SCHEME_NOT_HELD` | A breakdown by a scheme the deployment does not hold, named in `detail` |
 | `NOT_EVALUATED_REASON_GROUP_NOT_EXHAUSTIVE` | An implied distribution over a group not stated exhaustive; the raw prices and their sum are still answered |
 | `NOT_EVALUATED_REASON_HISTORY_INSUFFICIENT` | Too few closes for the definition's window |
-| `NOT_EVALUATED_REASON_COST_MISSING` | Added in contract 27. A lot's cost the book does not record, which realized P&L needs |
-| `NOT_EVALUATED_REASON_BELOW_INTRINSIC` | Added in contract 28. A quote below the option's intrinsic value, which no volatility prices |
-| `NOT_EVALUATED_REASON_FIT_FAILED` | Added in contract 28. A surface slice that failed its fit or its no-arbitrage checks, naming the expiry |
+| `NOT_EVALUATED_REASON_COST_MISSING` | A lot's cost the book does not record, which realized P&L needs |
+| `NOT_EVALUATED_REASON_BELOW_INTRINSIC` | A quote below the option's intrinsic value, which no volatility prices |
+| `NOT_EVALUATED_REASON_FIT_FAILED` | A surface slice that failed its fit or its no-arbitrage checks, naming the expiry |
 
-From contract 28 a series not evaluated names its key (`NotEvaluated.series_key`).
+A series not evaluated names its key (`NotEvaluated.series_key`).
 A series no model binding covers is `IMPLEMENTATION_UNAVAILABLE`.
 
 ## Current limits
@@ -379,7 +378,7 @@ component's places. What a job and its answer carry, field by field, is in
 
 ## Related
 
-- [Contract 26's operations](../api/typed-operations.md#contract-v26s-operations):
+- [The analytics component's operations](../api/typed-operations.md#analytics-and-event-groups):
   [`run_job`](../api/typed-operations.md#run_job) and the other reads, and
   the pricing seam's two.
 - [Write a pricing plugin](../how-to/write-a-pricing-plugin.md), from

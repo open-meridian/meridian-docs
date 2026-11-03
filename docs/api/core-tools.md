@@ -27,7 +27,7 @@ and 27, eight read and set [the deployment's settings](#the-deployments-settings
 routing), one reads an account's
 [execution costs](#dashboard__list_execution_costs), one the
 [event groups](#dashboard__list_event_groups), and one is the lake's
-[bounded query](#dashboard__query_lake). From contract 28, six work
+[bounded query](#dashboard__query_lake). Six work
 [starter packs](#starter-packs), one reads the Data sources page's
 [Age tab](#dashboard__read_data_age), three read and set the
 [series request rule](#listed-series) and ask for series, and two read and
@@ -103,7 +103,7 @@ such as `ACCESS_LEVEL_ADMIN`; a time is nanoseconds since the epoch; a
 decimal is a string. A time a tool takes back as its lock against a change
 made meanwhile, such as `against_updated_at_ns`, is a decimal string, in and
 out: an integer is still accepted up to 2^53, and one above it is refused,
-naming the field. Changed in contract 24.
+naming the field. 
 
 ## Who may call them
 
@@ -111,7 +111,7 @@ naming the field. Changed in contract 24.
 |---|---|---|
 | [`dashboard__list_plugins`](#dashboard__list_plugins) | reads | Anyone holding a level on a plugin, or the deployment admin |
 | [`dashboard__read_plugin_summary`](#dashboard__read_plugin_summary) | reads | An admin of any of the plugin's roles, or the deployment admin |
-| [`dashboard__read_plugin_documentation`](#dashboard__read_plugin_documentation) | reads | Anyone holding a level on the instance; by name and version, the deployment admin. Added in contract 25. |
+| [`dashboard__read_plugin_documentation`](#dashboard__read_plugin_documentation) | reads | Anyone holding a level on the instance; by name and version, the deployment admin. |
 | [`dashboard__read_moves`](#dashboard__read_moves) | reads | An admin of any of the plugin's roles |
 | [`dashboard__read_plugin_settings`](#dashboard__read_plugin_settings) | reads | An admin of any of the plugin's roles |
 | [`dashboard__set_plugin_settings`](#dashboard__set_plugin_settings) | acts | An admin of any of the plugin's roles; a setting serving several roles, an admin of every one |
@@ -123,14 +123,14 @@ naming the field. Changed in contract 24.
 | [`dashboard__read_plugin_catalogue`](#dashboard__read_plugin_catalogue) | reads | The deployment admin |
 | [`dashboard__launch_plugin`](#dashboard__launch_plugin) | acts | The deployment admin |
 | [`dashboard__stop_plugin`](#dashboard__stop_plugin) | acts | The deployment admin |
-| [`dashboard__retire_plugin_version`](#dashboard__retire_plugin_version) | acts | The deployment admin, once loosened from May not. Added in contract 25. |
-| [`dashboard__search_registry_plugins`](#dashboard__search_registry_plugins) | reads | The deployment admin. Added in contract 25. |
-| [`dashboard__read_registry_plugin`](#dashboard__read_registry_plugin) | reads | The deployment admin. Added in contract 25. |
-| [`dashboard__install_plugin`](#dashboard__install_plugin) | acts | The deployment admin, once loosened from May not. Added in contract 25. |
-| [`dashboard__update_plugin`](#dashboard__update_plugin) | acts | The deployment admin; a plugin's admin where the roles are unchanged; once loosened from May not. Added in contract 25. |
-| [`dashboard__acknowledge_pull`](#dashboard__acknowledge_pull) | acts | The deployment admin, once loosened from May not. Added in contract 25. |
-| [`dashboard__read_registries`](#dashboard__read_registries) | reads | The deployment admin. Added in contract 25. |
-| [`dashboard__set_reports_plugin_usage`](#dashboard__set_reports_plugin_usage) | acts | The deployment admin, once loosened from May not. Added in contract 25. |
+| [`dashboard__retire_plugin_version`](#dashboard__retire_plugin_version) | acts | The deployment admin, once loosened from May not. |
+| [`dashboard__search_registry_plugins`](#dashboard__search_registry_plugins) | reads | The deployment admin. |
+| [`dashboard__read_registry_plugin`](#dashboard__read_registry_plugin) | reads | The deployment admin. |
+| [`dashboard__install_plugin`](#dashboard__install_plugin) | acts | The deployment admin, once loosened from May not. |
+| [`dashboard__update_plugin`](#dashboard__update_plugin) | acts | The deployment admin; a plugin's admin where the roles are unchanged; once loosened from May not. |
+| [`dashboard__acknowledge_pull`](#dashboard__acknowledge_pull) | acts | The deployment admin, once loosened from May not. |
+| [`dashboard__read_registries`](#dashboard__read_registries) | reads | The deployment admin. |
+| [`dashboard__set_reports_plugin_usage`](#dashboard__set_reports_plugin_usage) | acts | The deployment admin, once loosened from May not. |
 | [`dashboard__list_datasets`](#dashboard__list_datasets) | reads | The deployment admin |
 | [`dashboard__set_dataset_licence`](#dashboard__set_dataset_licence) | acts | The deployment admin |
 | [`dashboard__set_dataset_entitlement`](#dashboard__set_dataset_entitlement) | acts | The deployment admin |
@@ -149,14 +149,14 @@ naming the field. Changed in contract 24.
 | [`dashboard__set_trading_instruction`](#dashboard__set_trading_instruction) | acts | The deployment admin, on any target; a plugin's admin, on their plugin or a person, service account or account within it; once an admin loosens it from May not |
 | [`dashboard__list_account_attributes`](#dashboard__list_account_attributes) | reads | The deployment admin |
 | [`dashboard__set_account_attribute`](#dashboard__set_account_attribute) | acts | The deployment admin, once loosened from May not |
-| [`dashboard__close_account`](#dashboard__close_account) | acts | The deployment admin, once loosened from May not. Added in contract 24. |
-| [`dashboard__read_book_health`](#dashboard__read_book_health) | reads | The deployment admin. Added in contract 25. |
+| [`dashboard__close_account`](#dashboard__close_account) | acts | The deployment admin, once loosened from May not. |
+| [`dashboard__read_book_health`](#dashboard__read_book_health) | reads | The deployment admin. |
 | [`dashboard__list_calendars`](#dashboard__list_calendars) | reads | The deployment admin |
 | [`dashboard__read_calendar`](#dashboard__read_calendar) | reads | The deployment admin |
-| [`dashboard__set_local_record_orders`](#dashboard__set_local_record_orders) | acts | The deployment admin, once loosened from May not. Added in contract 24. |
-| [`dashboard__apply_migration`](#dashboard__apply_migration) | acts | The deployment admin; agents may only prepare it until loosened. Added in contract 24. |
-| [`dashboard__set_reports_usage`](#dashboard__set_reports_usage) | acts | The deployment admin. Added in contract 24. |
-| [`dashboard__set_licensed_schemes`](#dashboard__set_licensed_schemes) | acts | The deployment admin, once loosened from May not. Added in contract 25. |
+| [`dashboard__set_local_record_orders`](#dashboard__set_local_record_orders) | acts | The deployment admin, once loosened from May not. |
+| [`dashboard__apply_migration`](#dashboard__apply_migration) | acts | The deployment admin; agents may only prepare it until loosened. |
+| [`dashboard__set_reports_usage`](#dashboard__set_reports_usage) | acts | The deployment admin. |
+| [`dashboard__set_licensed_schemes`](#dashboard__set_licensed_schemes) | acts | The deployment admin, once loosened from May not. |
 
 "An admin of a role" is `admin` on that role of the plugin, at **Manage**,
 held through the delegation (see [Admin per role](../concepts/access.md#admin-per-role));
@@ -203,21 +203,21 @@ where the plugin's own page says), `where` and `deployment_admins`); `figures`,
 `not_carried_seen`, `tool_refusals` and `stored`, what
 storage holds of each kind of raw record; and on an edge plugin keeping raw
 records, the `holds` over it, `archived`, what the archive holds of each
-kind, and its `archive` as allowed. Added in contract 28: `latency`, the
+kind, and its `archive` as allowed. `latency`, the
 Status's latency line, each series the plugin reports (a session and its
 metric, or a dataset and its hop) with its ceiling, its p99 over the last
 minute and its open latency or backlog episodes, and since when (see
 [Data age and liveness](../concepts/data-age-and-liveness.md#latency)). A
 deployment admin who administers none of its roles reads the Overview's
 parts alone. Nothing of a raw record's
-content is answered. Changed in contract 25: what the version declares and
+content is answered. What the version declares and
 its tools are answered by
 [`dashboard__read_plugin_documentation`](#dashboard__read_plugin_documentation),
 not here.
 
 ### `dashboard__read_plugin_documentation`
 
-Added in contract 25. A version's **Documentation**, as its tab and its page show it (see
+A version's **Documentation**, as its tab and its page show it (see
 [Write a plugin's documentation](../how-to/write-a-plugins-documentation.md)).
 
 **Input:** `plugin_instance_id`, for the version an instance was launched from, at any level on
@@ -427,7 +427,7 @@ is refused.
 
 ### `dashboard__retire_plugin_version`
 
-Added in contract 25. Retires a version from the catalogue: it is no longer
+Retires a version from the catalogue: it is no longer
 listed or launchable, and its image is released from the deployment's own
 registry; its record is kept. At the deployment admin's level; it can be
 prepared, and agents may not make it until the deployment admin loosens it.
@@ -440,7 +440,7 @@ it.
 
 ## The Plugins page's registries { #the-plugins-pages-registries }
 
-Added in contract 25. The deployment admin's **Plugins** page, `/admin/plugins/versions`: its
+The deployment admin's **Plugins** page, `/admin/plugins/versions`: its
 **Browse** and **Registries** tabs, a listing's page, and the **Install**, **Update** and **Keep or
 stop** sheets (see [Install a plugin from a registry](../how-to/install-from-a-registry.md)). Each
 answer carries the page's `notice` where the page shows one, and marks the vendor's words as the
@@ -530,7 +530,7 @@ no person, account, instrument or local plugin.
 
 ## Starter packs { #starter-packs }
 
-Added in contract 28. The **Plugins** page's **Browse** tab, its
+The **Plugins** page's **Browse** tab, its
 **Starter packs** view, a pack's install sheet and the pack's own page,
 the setup checklist (see
 [Install a plugin from a registry](../how-to/install-from-a-registry.md#a-starter-pack)).
@@ -639,14 +639,14 @@ and, at the page, [License and entitle a dataset](../how-to/license-and-entitle-
 A tool's answer is what the page shows the same person, read from the same
 rows. **None reads a price**: prices are the reading roles', on their
 plugins' pages. A read answers `outcome: "unchanged"`, as core's other
-reads do. Changed in contract 23: `dashboard__list_datasets` and
+reads do. `dashboard__list_datasets` and
 `dashboard__list_source_priorities` answered `outcome: "read"` before, so a
 client written against them accepts either. A licence records
 what was entered; no answer says the deployment meets a vendor's terms.
 
 ### `dashboard__read_data_age`
 
-Added in contract 28. The page's **Age** tab (see
+The page's **Age** tab (see
 [Data age and liveness](../concepts/data-age-and-liveness.md#latency)).
 
 **Input:** nothing.
@@ -671,12 +671,12 @@ The page's **Datasets** and **Entitlements** tabs.
 | `dataset`, `instance` | The dataset's ID, the instance, a colon and its key (`alpaca-1:daily`), and the instance serving it. |
 | `vendor`, `aggregator` | Who originated it, and who carries it where an aggregator does, as the plugin names them: others' words, screened. |
 | `catalogue_entry` | The catalogue's entry as the plugin declared it ([`DatasetDeclaration`](../boundaries/sidecar.md#meridian.v1.DatasetDeclaration)): data types and fields, modes, cadence, history, its default licence, its day's zone and end, its venue. Screened as others' words. |
-| `licence` | The licence enforced: `set_by_the_deployment`, false while it is the catalogue's default; `kept`, `retention_days`, `derived_use`, `display`, `default_fields`, `personal_use`; and who set it, when, the `acting_through_delegation` and `client_name`, and its `note`. Added in contract 27: `derived_use_terms`, the terms' answer, `not_restricted`, `internal_only` or `redistribution_needs_licence`, read from the boolean `derived_use` where the licence states none. Added in chart 0.1.311: the attribution terms the plugin's catalogue declares, `redistribution` (`not_allowed`, `licence_required` or `allowed_with_attribution`, empty for none stated), `attribution_required`, `attribution_text`, `copyright_class` (`public_domain`, `copyright_citation_required` or `copyright_preapproval_required`, empty for none stated), `no_more_restrictive_terms` and `not_affiliated_notice`, the two texts screened as others' words. Added in contract 28: `eligibility`, who may take it as its terms state (`uses`, `buyer_revenue_below`, `buyer_revenue_at_least`, `buyer_revenue_currency_code`), where stated; shown, never enforced. |
+| `licence` | The licence enforced: `set_by_the_deployment`, false while it is the catalogue's default; `kept`, `retention_days`, `derived_use`, `display`, `default_fields`, `personal_use`; and who set it, when, the `acting_through_delegation` and `client_name`, and its `note`. `derived_use_terms`, the terms' answer, `not_restricted`, `internal_only` or `redistribution_needs_licence`, read from the boolean `derived_use` where the licence states none. Added in chart 0.1.311: the attribution terms the plugin's catalogue declares, `redistribution` (`not_allowed`, `licence_required` or `allowed_with_attribution`, empty for none stated), `attribution_required`, `attribution_text`, `copyright_class` (`public_domain`, `copyright_citation_required` or `copyright_preapproval_required`, empty for none stated), `no_more_restrictive_terms` and `not_affiliated_notice`, the two texts screened as others' words. `eligibility`, who may take it as its terms state (`uses`, `buyer_revenue_below`, `buyer_revenue_at_least`, `buyer_revenue_currency_code`), where stated; shown, never enforced. |
 | `entitlements` | Each instance entitled now: `instance`, `allowed`, `fields` (none for every field), who set it, when, the delegation and client, and its `note`. |
 | `unconverted_count` | How many of its values its plugin left unconverted. |
 | `miss_count` | How many identifiers and venues its plugin reported missing. |
-| `closed_day_count` | Added in contract 23. How many of its daily rows are dated on a closed day of its calendar, the page's **Closed days**. See [A daily value on a closed day](../concepts/the-lake.md#a-daily-value-on-a-closed-day). |
-| `outside_coverage_count` | Added in contract 23. How many are dated outside its calendar's coverage, counted apart, shown beside the closed days ("(2 outside)"). |
+| `closed_day_count` | How many of its daily rows are dated on a closed day of its calendar, the page's **Closed days**. See [A daily value on a closed day](../concepts/the-lake.md#a-daily-value-on-a-closed-day). |
+| `outside_coverage_count` | How many are dated outside its calendar's coverage, counted apart, shown beside the closed days ("(2 outside)"). |
 | `one_person_warning` | Where its terms are one person's and more than one person holds `read` or `write` on a plugin entitled to it, the warning naming them; otherwise `null`. |
 
 ### `dashboard__set_dataset_licence`
@@ -693,10 +693,10 @@ The **Licence** dialog: replaces a dataset's licence whole.
 | `derived_use`, `display` | Required: whether derived data may be made, and whether it may be shown. |
 | `default_fields` | The fields readable by default, by their dictionary entries, at most 64; none for every field. |
 | `personal_use` | Required: whether its terms are one person's. |
-| `eligibility` | Added in contract 28. Who may take it, as its terms state: `uses` (`personal`, `commercial`), `buyer_revenue_below` or `buyer_revenue_at_least` as a decimal, and `buyer_revenue_currency_code`, ISO 4217. Unset keeps the declared eligibility. Shown, never enforced. |
+| `eligibility` | Who may take it, as its terms state: `uses` (`personal`, `commercial`), `buyer_revenue_below` or `buyer_revenue_at_least` as a decimal, and `buyer_revenue_currency_code`, ISO 4217. Unset keeps the declared eligibility. Shown, never enforced. |
 | `note` | Required: why. |
 
-Changed in contract 28: every term the input leaves unstated, the six
+Every term the input leaves unstated, the six
 attribution terms, the meters and the eligibility among them, is kept at
 the value the plugin's catalogue declares, so setting a licence never
 clears them.
@@ -737,8 +737,7 @@ The **Priority** tab.
 **Input:** nothing.
 
 **Answer:** `priorities`, each with its `data_type` (`meridian.v1.Price` or
-`meridian.v1.Bar`, `meridian.v1.Trade` or `meridian.v1.Quote`, or from
-contract 27 `meridian.v1.Rate`), its `kind` for a price (`close`, `last`, `nav`,
+`meridian.v1.Bar`, `meridian.v1.Trade` or `meridian.v1.Quote`, or from chart 0.1.309 `meridian.v1.Rate`), its `kind` for a price (`close`, `last`, `nav`,
 `settlement`; `null` for any other type), its `datasets` first to last, who set it,
 `updated_at_ns`, the delegation and client, and its `note`. A change is
 sent against `updated_at_ns`.
@@ -752,7 +751,7 @@ kind's.
 
 | Argument | What it takes |
 |---|---|
-| `data_type` | Required: `meridian.v1.Price`, `meridian.v1.Bar`, `meridian.v1.Trade`, `meridian.v1.Quote` or, added in contract 27, `meridian.v1.Rate`, the [rates](../concepts/rates.md) a default read takes. |
+| `data_type` | Required: `meridian.v1.Price`, `meridian.v1.Bar`, `meridian.v1.Trade`, `meridian.v1.Quote` or, `meridian.v1.Rate`, the [rates](../concepts/rates.md) a default read takes. |
 | `kind` | For a price, required: `close`, `last`, `nav` or `settlement`. Any other type names none. |
 | `datasets` | Required: 1 to 16, first to last, each declared for the data type. |
 | `against_updated_at_ns` | Required: the priority's `updated_at_ns` as read, 0 where none is set. |
@@ -766,7 +765,7 @@ where another set it since it was read: nothing was changed; read it again.
 
 ### `dashboard__query_lake`
 
-Added in contract 26. One read-only query over one of the lake's kinds,
+One read-only query over one of the lake's kinds,
 within a plugin instance the person holds `read` on: answered from the
 datasets that instance is entitled to and the fields its entitlements let
 it read, and only a kind one of its roles reads (`reporting` reads no
@@ -774,7 +773,7 @@ trades or quotes). Nothing is recorded but the call. See
 [`query_lake`](typed-operations.md#query_lake), which a plugin calls.
 
 **Input:** `plugin_instance_id`; `kind`, one of `prices`, `bars`,
-`trades`, `quotes`, `outcomes` or, added in contract 27, `rates`;
+`trades`, `quotes`, `outcomes` or, `rates`;
 `subjects`, up to 500 instrument IDs; business dates (`from_date`,
 `to_date`) or valid times (`valid_from_ns`, `valid_until_ns`, decimal
 strings); `as_of_ns`, a recorded time; `sources` (`default`, `named` or
@@ -980,8 +979,7 @@ book. No account's positions or orders.
 **Answer:** `accounts`, each with its `account_id`, `base_currency_code`,
 `lot_relief_default` (`first_in_first_out`, `last_in_first_out`,
 `highest_cost`, `lowest_cost` or `average_cost`, empty where not set),
-`waits_for_compliance`, `error_account` and `allocation_account` (added in
-contract 24), and `opening_balance_as_of`, the date its opening
+`waits_for_compliance`, `error_account` and `allocation_account` (added in chart 0.1.305), and `opening_balance_as_of`, the date its opening
 balance stands for, empty for none.
 
 ### `dashboard__set_account_attribute`
@@ -992,7 +990,7 @@ entry.
 **Input:** `account_id`, `note` (kept as the entry's reason), and exactly one of `base_currency_code`
 (three capital letters), `lot_relief_default` (as above),
 `waits_for_compliance` (`false` lets a release pass the gate without a
-compliance verdict), or `error_account` (added in contract 24; an error
+compliance verdict), or `error_account` (an error
 account, where a booking's overfills and errors are booked) or
 `allocation_account` (a block order's account until its allocations are
 booked out). See [Booking](../concepts/booking.md).
@@ -1007,7 +1005,7 @@ and the `entry_id`.
 
 ### `dashboard__read_book_health`
 
-Added in contract 25. Per account in the book of record, the book's own
+Per account in the book of record, the book's own
 working, as `meridian status` reads it under **Book health**: never an
 account's positions or orders. At the deployment admin's level, read only.
 
@@ -1021,7 +1019,7 @@ yet). See [The book's resources](../concepts/the-book-of-record.md#the-books-res
 
 ### `dashboard__set_local_record_orders`
 
-Added in contract 24. The Trading instructions page's **Allow orders on local
+The Trading instructions page's **Allow orders on local
 records**: whether an order may name a local record, one the platform has
 not answered for yet (see
 [Orders on local records](../concepts/the-order-lifecycle.md#orders-on-local-records)).
@@ -1043,7 +1041,7 @@ across the deployment, naming no account and no order.
 
 ### `dashboard__close_account`
 
-Added in contract 24. The Accounts tab's **Close**: closes an account,
+The Accounts tab's **Close**: closes an account,
 never deleting it, its holdings and history still readable (see
 [Closing an account](../concepts/accounts.md#closing-an-account)). A
 deployment admin's; a call by anyone else is refused `not_permitted`. It
@@ -1071,7 +1069,7 @@ withdraws it at the page, or with **Unlink all and close**.
 
 ## The Instruments page's provisional records { #the-instruments-pages-v24-additions }
 
-Added in contract 24. The Instruments tools take and answer the provisional
+The Instruments tools take and answer the provisional
 records (see [One ID per instrument](../concepts/one-id.md)):
 `dashboard__list_instruments_to_complete` takes `provisional`, the
 provisional records alone, complete or not, each with its
@@ -1087,7 +1085,7 @@ sent names its `migration_section` and, where the platform answered, the
 
 ### `dashboard__apply_migration`
 
-Added in contract 24. The Provisional tab's **Exact lines** and
+The Provisional tab's **Exact lines** and
 **Uncertain lines** dialogs: makes the upgrade's migration lines, or holds
 them back (see
 [Make the lines](../how-to/review-provisional-records.md#make-the-lines)).
@@ -1131,7 +1129,7 @@ change's record.
 
 ### `dashboard__set_licensed_schemes`
 
-Added in contract 25. The **Licensed identifiers** tab's licensed schemes:
+The **Licensed identifiers** tab's licensed schemes:
 the identifier schemes the deployment declares it is licensed for, which
 the weekly usage report carries. At the deployment admin's level; it can be
 prepared, and agents may not make it until the deployment admin loosens it.
@@ -1156,15 +1154,14 @@ The calendars and date rules the deployment holds, one line each at its
 latest version.
 
 **Input:** `cursor`, the `next_cursor` of the page before; `page_size`, 1
-to 200; and, as the instrument store's list takes them (added in contract
-23):
+to 200; and, as the instrument store's list takes them (added in chart 0.1.303):
 `kind`, one calendar kind, none for every kind; and `query`, text matched,
 ignoring case, on the name and the subject's codes.
 
 **Answer:** `calendars`, each with its `calendar_id` (`CAL-…`), `name`,
 `kind` (`CALENDAR_KIND_CURRENCY`, `CALENDAR_KIND_TRADING` or
 `CALENDAR_KIND_SECURITIES_SETTLEMENT`), `version`, `coverage_to_date` and
-`refreshed_at_ns`, and its subject as platform IDs (added in contract 23):
+`refreshed_at_ns`, and its subject as platform IDs:
 `instrument_id` (a currency's cash instrument), `venue_ids`, or
 `settlement_system` (its name and country); `rules`, each with its `kind`
 (`DATE_RULE_KIND_SETTLEMENT` or `DATE_RULE_KIND_SPOT`), `subject` (such as
@@ -1193,7 +1190,7 @@ weekend day that is a business day), `name` and `source`; its `coverage`
 Six settings of the whole deployment, each a deployment admin's, read and
 set from the dashboard's settings: the agents' guard on the home page,
 **Model routing** under **Plugins**, **Time zone** and **FX pivot
-currencies** under **Deployment**, and from contract 28 **Stale reference
+currencies** under **Deployment**, and **Stale reference
 actions permitted** and **Series request rule** on the settings home page
 (the second's tools are under [Listed series](#listed-series)). A read by anyone else, or a set, is
 refused `not_permitted`. Each set takes a `note`, is its own record naming
@@ -1203,7 +1200,7 @@ set is a person's alone, whatever any level says.
 
 ### `dashboard__read_agent_orders_demo_only`
 
-Added in contract 26. [The agents' guard](../concepts/the-agents-guard.md),
+[The agents' guard](../concepts/the-agents-guard.md),
 "Agents may place orders on demo connections only".
 
 **Input:** nothing.
@@ -1213,7 +1210,7 @@ its `label`; and `can_be_turned_off`, `false` in this release.
 
 ### `dashboard__set_agent_orders_demo_only`
 
-Added in contract 26. Records the guard on again, with why. Off is refused
+Records the guard on again, with why. Off is refused
 in this release. An agent may prepare it and never make it.
 
 **Input:** `agent_orders_demo_only`, `true`; `note`.
@@ -1222,7 +1219,7 @@ in this release. An agent may prepare it and never make it.
 
 ### `dashboard__read_deployment_time_zone`
 
-Added in contract 26. The deployment's time zone, by which a
+The deployment's time zone, by which a
 [business date](../concepts/dates-and-time.md) is read.
 
 **Input:** nothing.
@@ -1237,7 +1234,7 @@ own cut, such as FX's 17:00 New York.
 
 ### `dashboard__set_deployment_time_zone`
 
-Added in contract 26. Sets the time zone.
+Sets the time zone.
 
 **Input:** `deployment_time_zone`, an IANA time-zone ID, refused naming it
 where the time-zone database holds none; `note`.
@@ -1246,7 +1243,7 @@ where the time-zone database holds none; `note`.
 
 ### `dashboard__read_fx_pivot_currencies`
 
-Added in contract 27. The fiat currencies a valuation crosses through, in
+The fiat currencies a valuation crosses through, in
 order, where the lake holds no rate between two currencies in either
 direction (see
 [Set the FX pivot currencies](../how-to/set-the-fx-pivot-currencies.md)).
@@ -1260,7 +1257,7 @@ apply; its `label`; and `changed_at_ns` and `changed_by`.
 
 ### `dashboard__set_fx_pivot_currencies`
 
-Added in contract 27. Orders the pivots.
+Orders the pivots.
 
 **Input:** `fx_pivot_currencies`, one to four fiat currencies' cash
 instruments by their `INS-` IDs, in order, none twice; `note`. An ID that
@@ -1275,7 +1272,7 @@ is no fiat cash instrument, a token's included, is refused, naming it.
 
 ### `dashboard__list_model_routing`
 
-Added in contract 26. The analytics component's routing table: which
+The analytics component's routing table: which
 implementation prices each model id, `cash`, `quoted_price` and
 `binary_event`, across the deployment, `built-in` or a launched `pricing`
 plugin's instance (see
@@ -1289,12 +1286,12 @@ analytics answer's provenance names.
 
 ### `dashboard__set_model_routing`
 
-Added in contract 26. Routes a model id.
+Routes a model id.
 
 **Input:** `model_id`, one of `cash`, `quoted_price` or `binary_event`;
 `implementation`, `built-in` or a launched `pricing` plugin's instance ID;
 `note`. An instance that is not a `pricing` plugin the deployment runs is
-refused, naming `implementation`; changed in contract 27, so is one whose
+refused, naming `implementation`, so is one whose
 launched version does not declare the model id.
 
 **Answer:** `outcome: "made"`, with the table as the list answers it. A
@@ -1303,7 +1300,7 @@ evaluated.
 
 ### `dashboard__read_stale_reference_actions_permitted`
 
-Added in contract 28. **Stale reference actions permitted**: whether an execution
+**Stale reference actions permitted**: whether an execution
 plugin's admin may choose **Warn**, beside **Refuse**, when a placement's
 reference price is past its ceiling (see
 [Data age and liveness](../concepts/data-age-and-liveness.md#what-a-deployment-admin-permits)).
@@ -1315,7 +1312,7 @@ only, by default), and the last change and who made it.
 
 ### `dashboard__set_stale_reference_actions_permitted`
 
-Added in contract 28. **Refuse only** or **Refuse or warn**.
+**Refuse only** or **Refuse or warn**.
 
 **Input:** `warn_permitted`, `true` or `false`; `note`.
 
@@ -1324,7 +1321,7 @@ Each change is its own record.
 
 ## Listed series { #listed-series }
 
-Added in contract 28. **Series request rule** on the settings home page
+**Series request rule** on the settings home page
 and its **Request series records** dialog, a deployment admin's: which wants for a
 listed option or future series the deployment does not hold are asked of
 the platform with no person, and asking for series by hand (see
@@ -1380,7 +1377,7 @@ nothing sent. A key no listed series row holds is refused, naming it.
 
 ### `dashboard__list_execution_costs`
 
-Added in contract 27. One account's
+One account's
 [execution costs](../concepts/execution-costs.md), the analytics
 component's rows in the lake. At the read level on that account: a person
 who holds `read` or `write` on it through any plugin, or a deployment
@@ -1405,7 +1402,7 @@ admin. Read only.
 
 ### `dashboard__list_event_groups`
 
-Added in contract 26. The [event groups](../concepts/event-groups.md) a
+The [event groups](../concepts/event-groups.md) a
 venue states its event contracts in, as an instrument page's **Event
 groups** tab draws them. Read only.
 

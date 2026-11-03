@@ -8,9 +8,9 @@ plugins of a pair pass it unchanged. This page starts one from the template
 and holds it to the suite. How a person then uses it is
 [Using a data plugin](using-a-data-plugin.md).
 
-You need CLI 0.1.53 and SDK 0.33.0 or later (contract 28): `meridian plugin new
---role data` writes this template on the role's common part, for a runtime
-serving contract 28. A plugin made by an older CLI moves with
+You need CLI 0.1.58 and SDK 0.35.5 or later: `meridian plugin new
+--role data` writes this template on the role's common part, on SDK 0.35.0,
+for a runtime on chart 0.1.408 or later. It, and a plugin made by an older CLI, moves to 0.35.5 with
 [`meridian plugin migrate`](../api/cli.md#plugin-migrate), then maps any new
 cases as [below](#hold-it-to-the-suite).
 
@@ -21,7 +21,7 @@ meridian plugin new my-prices --role data
 cd my-prices
 ```
 
-It writes a whole plugin holding `data`, pinned to `open-meridian==0.33.0`,
+It writes a whole plugin holding `data`, pinned to `open-meridian==0.35.0`,
 that puts a stand-in vendor's daily closes and bars into the lake:
 
 | File | What it is |
@@ -40,7 +40,7 @@ conversion, and the Datasets page fills its rows from what it kept
 `.event_contracts` do a venue's whole work for a venue listing pairs or
 binary event contracts, with their pages and the checks a plugin runs
 (`meridian.roles.data.testing`); a venue of event contracts also reports
-how it groups them by event (see [Event groups](../concepts/event-groups.md)). A plugin made by an older CLI moves to the latest SDK, 0.33.0, with
+how it groups them by event (see [Event groups](../concepts/event-groups.md)). A plugin made by an older CLI moves to the latest SDK, 0.35.5, with
 `meridian plugin migrate`; see
 [Each role's common logic](../api/python-sdk.md#each-roles-common-logic).
 
@@ -323,7 +323,7 @@ NOT_PRESENTED = {
 report = run("data", PRODUCERS, not_presented=NOT_PRESENTED, instance_id="reference-1")
 ```
 
-**Contract 27's markers.** The data suite's seven rates cases are `about:
+**Rates' markers.** The data suite's seven rates cases are `about:
 rates`, mapped by a rates publisher's plugin (see
 [Record rates in a data plugin](record-rates.md)) and named by every other;
 `records-a-datasets-liveness` is `about: streams`, for a source that is
@@ -331,7 +331,7 @@ polled; `queries-the-lake-within-bounds` is `about: trades`; and
 `an-exact-price` and `a-want-recorded-against` are `about: closes` from SDK
 0.32.1.
 
-**Contract 28's markers.** `reports-its-feed-delay` is required of every
+**Latency's and chains' markers.** `reports-its-feed-delay` is required of every
 data plugin: its `roles.Latency` reports the feed delay, and
 `meridian.roles.data.testing.feed_delay` maps the case for the SDK's
 kinds. The chain's cases are `about: option chains`; the filings slice's

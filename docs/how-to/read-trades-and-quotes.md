@@ -7,7 +7,7 @@ orders in real time. This page writes a plugin holding one of them that
 reads a day's trades, hears each new one, catches up what it missed, and
 reads the latest quotes, then holds it to its role's suite.
 
-You need CLI 0.1.53 and SDK 0.33.0 or later (contract 28). The lake's trades and
+You need CLI 0.1.58 and SDK 0.35.5 or later. The lake's trades and
 quotes operations are `preview`.
 
 ## Which role
@@ -35,8 +35,8 @@ meridian plugin new my-desk
 cd my-desk
 ```
 
-It writes the plugin on open-meridian 0.33.0. A plugin an older CLI wrote
-moves with [`meridian plugin migrate`](../api/cli.md#plugin-migrate), which
+It writes the plugin on open-meridian 0.35.0. It, and a plugin an older CLI wrote,
+moves to 0.35.5 with [`meridian plugin migrate`](../api/cli.md#plugin-migrate), which
 works only on what git holds: commit it first. Then, in `pyproject.toml`:
 
 ```toml
@@ -53,7 +53,7 @@ lies within one day of each dataset, as the dataset declares its day:
 from meridian.plugin.v1 import operations_pb2 as ops
 
 held = [ops.SubjectRef(entity_id=btc), ops.SubjectRef(entity_id=spy)]
-day = await plugin.list_trades(subjects=held, valid_from_ns=open_ns, valid_until_ns=now_ns)
+day = await role.list_trades(subjects=held, valid_from_ns=open_ns, valid_until_ns=now_ns)
 for trade in day.trades:
     price = meridian.as_money(trade.price)          # names its cash instrument
     counts_for_close = trade.attributes.consolidated.close == ops.ELIGIBLE_ELIGIBLE
@@ -73,21 +73,26 @@ datasets, or every entitled dataset side by side.
 ## Hear each new trade, and catch up
 
 ```python
-async def on_trade(heard: meridian.Heard) -> None:
-    trade = heard.message.trade        # every trade, once, in its dataset's order
-    if heard.caught_up:
-        ...                            # read back after a loss: a late print among them
-    vendor = heard.dataset.vendor if heard.dataset else ""
+import meridian
+from meridian.roles import signal
 
-async def on_quote(heard: meridian.Heard) -> None:
-    quote = heard.message.quote        # the latest per subject, dataset, venue and asset
 
-await plugin.receive(
-    trades_recorded=on_trade,
-    quotes_recorded=on_quote,
-    subjects=[btc, spy],               # by instrument ID; none named, none heard
-)
+class Signal(signal.Role):
+    def subjects(self):
+        return [BTC, SPY]                  # by instrument ID; none named, none heard
+
+    async def on_trades_recorded(self, heard: meridian.Heard) -> None:
+        trade = heard.message.trade        # every trade, once, in its dataset's order
+        if heard.caught_up:
+            ...                            # read back after a loss: a late print among them
+        vendor = heard.dataset.vendor if heard.dataset else ""
+
+    async def on_quotes_recorded(self, heard: meridian.Heard) -> None:
+        quote = heard.message.quote        # the latest per subject, dataset, venue and asset
 ```
+
+When the subjects change, return the new ones from `subjects()` and call
+`self.hear_again()`.
 
 **Trades are never conflated.** Every trade recorded is handed on. When the
 sidecar drops some because the plugin was too slow, or the stream breaks,
@@ -101,7 +106,7 @@ To catch up yourself, for example after your own restart with a watermark
 you kept:
 
 ```python
-late = await plugin.list_trades(subjects=held, after_watermark=day.watermark)
+late = await role.list_trades(subjects=held, after_watermark=day.watermark)
 ```
 
 Older than the lake keeps is answered `beyond_history`. A dataset licensed
@@ -114,7 +119,7 @@ the latest again.
 ## Read the latest quotes
 
 ```python
-latest = await plugin.list_quotes(subjects=held)
+latest = await role.list_quotes(subjects=held)
 for quote in latest.quotes:
     bid = meridian.as_money(quote.bid) if quote.HasField("bid") else None   # an empty side is unset
 ```
@@ -159,7 +164,7 @@ def hearing(*heard_rows):
             return None
         for row, message, _ in heard_rows:
             recorder.answer(row, lambda _, message=message: message)
-        await recorder.receive(**{arm: heard for _, _, arm in heard_rows}, subjects=["LCL-BTC"])
+        await recorder.hear(recorder.bind(Signal()))   # the plugin's class hears each row given
     return produce
 
 def then(*steps):
@@ -322,7 +327,7 @@ A plugin reads nothing it is not entitled to, whatever its role.
 - [The lake](../concepts/the-lake.md): trades, quotes and who reads them.
 - [`list_trades`](../api/typed-operations.md#list_trades),
   [`list_quotes`](../api/typed-operations.md#list_quotes) and
-  [Receive](../api/python-sdk.md#receive).
+  [Events](../api/python-sdk.md#events).
 - [Write a data plugin against its suite](write-a-data-plugin.md): recording them.
 - [Using a data plugin](using-a-data-plugin.md#the-data-plugins): the
   sources that stream them.

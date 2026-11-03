@@ -269,11 +269,11 @@ async def link(request: meridian.Request) -> str:
     caller, form, plugin = request.caller, request.form, request.plugin
     external = form["external_account_id"]
     if form["intent"] == "link":
-        await plugin.link_external_account(
+        await role.link_external_account(
             external_account_id=external, account_id=form["account_id"], acting_for=caller.header,
         )
     elif form["intent"] == "create" and caller.deployment_admin:
-        await plugin.link_external_account(
+        await role.link_external_account(
             external_account_id=external,
             new_account_name=form["new_account_name"],
             new_account_custodian=form.get("new_account_custodian", ""),
@@ -281,7 +281,7 @@ async def link(request: meridian.Request) -> str:
             acting_for=caller.header,
         )
     elif form["intent"] == "unlink":
-        await plugin.link_external_account(external_account_id=external, acting_for=caller.header)
+        await role.link_external_account(external_account_id=external, acting_for=caller.header)
     return ...  # the page again, saying what was done
 ```
 

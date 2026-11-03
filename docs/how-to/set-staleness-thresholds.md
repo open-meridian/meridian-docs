@@ -8,10 +8,8 @@ plugin's author, how a data plugin records liveness and an `ems` makes its
 check. What each number means is in
 [Data age and liveness](../concepts/data-age-and-liveness.md).
 
-You need a deployment on contract 28 (chart 0.1.313 or later) and plugins
-on SDK 0.33.0 or later. On contract 27 the thresholds and the desk's
-setting work as below, but there is no deployment's permission: the
-`ems`'s admin chooses.
+You need a deployment (chart 0.1.408) and plugins on SDK
+0.35.5 or later.
 
 ## A dataset's threshold
 
@@ -84,18 +82,18 @@ before each placement with `roles.ems.ReferenceCheck`:
 from meridian import roles
 from meridian.roles import ems
 
-liveness = roles.Liveness()            # kept from receive(liveness_recorded=liveness.heard)
+liveness = roles.Liveness()            # kept by the ems class's on_liveness_recorded: liveness.heard(heard)
 check = ems.ReferenceCheck(
     action=config.stale_reference_action,
     after_ns=ems.after_ns(config.stale_reference_after),
     liveness=liveness,
 )
-await check.permitted(plugin)         # the deployment's Stale reference setting, read as the plugin
+await check.permitted(self)           # in the ems class: the deployment's Stale reference setting
 stale = check.stale(price, dataset=dataset_ref, asset_class="equity", sessions=sessions)
 if stale is not None and check.refuses:
-    await check.hold(plugin, order_id, stale)
+    await check.hold(self, order_id, stale)
 else:
-    await plugin.create_placement(..., **check.placement(stale))
+    await self.create_placement(..., **check.placement(stale))
 ```
 
 `dataset_ref` is the price's dataset from
