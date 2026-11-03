@@ -1916,6 +1916,40 @@
       }
     },
     {
+      "name": "FactorsRecorded",
+      "step": "W10.5",
+      "title": "Record, sequence and publish each row",
+      "kind": "event",
+      "topic": "platform.lake.{dataset}.event.factors-recorded",
+      "roles": {
+        "hears": [
+          "operations",
+          "portfolio",
+          "reporting",
+          "servicing",
+          "signal"
+        ]
+      },
+      "stability": "preview",
+      "message": "meridian.v1.FactorsRecordedEvent",
+      "parameters": [
+        {
+          "name": "factor",
+          "type": "message Factor",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        }
+      ],
+      "result": "",
+      "result_fields": [],
+      "refusals": [],
+      "methods": {
+        "python": "Operations.factors_recorded"
+      }
+    },
+    {
       "name": "FilingsRecorded",
       "step": "W10.5",
       "title": "Record, sequence and publish each row",
@@ -3774,6 +3808,238 @@
       }
     },
     {
+      "name": "ListExpirations",
+      "step": "W10.6",
+      "title": "Read prices, bars, trades and quotes, point in time, by source",
+      "kind": "query",
+      "topic": "platform.lake.query.list-expirations",
+      "roles": {
+        "reads": [
+          "ems",
+          "oms",
+          "portfolio",
+          "signal"
+        ]
+      },
+      "stability": "preview",
+      "message": "meridian.v1.ListExpirationsRequest",
+      "parameters": [
+        {
+          "name": "underlying_id",
+          "type": "string",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "instrument_type",
+          "type": "enum InstrumentType",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "expiration_from",
+          "type": "string",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "expiration_to",
+          "type": "string",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        }
+      ],
+      "result": "meridian.v1.ListExpirationsReply",
+      "result_fields": [
+        {
+          "name": "expirations",
+          "type": "repeated message Expiration",
+          "repeated": true,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "unanswered",
+          "type": "repeated message Unanswered",
+          "repeated": true,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "datasets",
+          "type": "repeated message DatasetRef",
+          "repeated": true,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "watermark",
+          "type": "message Watermark",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        }
+      ],
+      "refusals": [],
+      "methods": {
+        "python": "Operations.list_expirations"
+      }
+    },
+    {
+      "name": "ListFactors",
+      "step": "W10.6",
+      "title": "Read prices, bars, trades and quotes, point in time, by source",
+      "kind": "query",
+      "topic": "platform.lake.query.list-factors",
+      "roles": {
+        "reads": [
+          "operations",
+          "portfolio",
+          "reporting",
+          "servicing",
+          "signal"
+        ]
+      },
+      "stability": "preview",
+      "message": "meridian.v1.ListFactorsRequest",
+      "parameters": [
+        {
+          "name": "subjects",
+          "type": "repeated message SubjectRef",
+          "repeated": true,
+          "required": false,
+          "required_unless": "",
+          "bounds": {
+            "count": [
+              1,
+              500
+            ]
+          }
+        },
+        {
+          "name": "from_date",
+          "type": "string",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "to_date",
+          "type": "string",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "sources",
+          "type": "message SourceChoice",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "as_of_ns",
+          "type": "int64",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "page_size",
+          "type": "uint32",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {
+            "range": {
+              "least": "0",
+              "most": "500"
+            },
+            "past": "capped"
+          }
+        },
+        {
+          "name": "cursor",
+          "type": "string",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "after_watermark",
+          "type": "message Watermark",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        }
+      ],
+      "result": "meridian.v1.ListFactorsReply",
+      "result_fields": [
+        {
+          "name": "factors",
+          "type": "repeated message Factor",
+          "repeated": true,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "unanswered",
+          "type": "repeated message Unanswered",
+          "repeated": true,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "datasets",
+          "type": "repeated message DatasetRef",
+          "repeated": true,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "watermark",
+          "type": "message Watermark",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "next_cursor",
+          "type": "string",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        }
+      ],
+      "refusals": [],
+      "methods": {
+        "python": "Operations.list_factors"
+      }
+    },
+    {
       "name": "ListFilings",
       "step": "W10.6",
       "title": "Read prices, bars, trades and quotes, point in time, by source",
@@ -4990,6 +5256,35 @@
           "required": false,
           "required_unless": "",
           "bounds": {}
+        },
+        {
+          "name": "expiration_from",
+          "type": "string",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "expiration_to",
+          "type": "string",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "fields",
+          "type": "repeated string",
+          "repeated": true,
+          "required": false,
+          "required_unless": "",
+          "bounds": {
+            "count": [
+              0,
+              32
+            ]
+          }
         }
       ],
       "result": "meridian.v1.ListQuotesReply",
@@ -5723,6 +6018,19 @@
           "required": false,
           "required_unless": "",
           "bounds": {}
+        },
+        {
+          "name": "paths",
+          "type": "repeated string",
+          "repeated": true,
+          "required": false,
+          "required_unless": "",
+          "bounds": {
+            "count": [
+              0,
+              64
+            ]
+          }
         }
       ],
       "result": "meridian.v1.ListSeriesReply",
@@ -5985,6 +6293,35 @@
           "required": false,
           "required_unless": "",
           "bounds": {}
+        },
+        {
+          "name": "expiration_from",
+          "type": "string",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "expiration_to",
+          "type": "string",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "fields",
+          "type": "repeated string",
+          "repeated": true,
+          "required": false,
+          "required_unless": "",
+          "bounds": {
+            "count": [
+              0,
+              32
+            ]
+          }
         }
       ],
       "result": "meridian.v1.ListStatisticsReply",
@@ -6291,6 +6628,35 @@
           "required": false,
           "required_unless": "",
           "bounds": {}
+        },
+        {
+          "name": "expiration_from",
+          "type": "string",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "expiration_to",
+          "type": "string",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "fields",
+          "type": "repeated string",
+          "repeated": true,
+          "required": false,
+          "required_unless": "",
+          "bounds": {
+            "count": [
+              0,
+              32
+            ]
+          }
         }
       ],
       "result": "meridian.v1.ListTradesReply",
@@ -6687,6 +7053,43 @@
         },
         {
           "name": "standing",
+          "type": "bool",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "expiration_from",
+          "type": "string",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "expiration_to",
+          "type": "string",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "series_keys",
+          "type": "repeated message Identifier",
+          "repeated": true,
+          "required": false,
+          "required_unless": "",
+          "bounds": {
+            "count": [
+              0,
+              500
+            ]
+          }
+        },
+        {
+          "name": "all_series",
           "type": "bool",
           "repeated": false,
           "required": false,
@@ -7586,6 +7989,44 @@
           "type": "enum PositionEffect",
           "repeated": false,
           "required": false,
+          "required_unless": "the order is a package, whose legs carry it, or its instrument is no option or future",
+          "bounds": {}
+        },
+        {
+          "name": "price_basis",
+          "type": "enum PriceBasis",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "limit_yield",
+          "type": "message QuotedYield",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "limit_spread_bps",
+          "type": "Decimal",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {
+            "digits": 38,
+            "scale": [
+              0,
+              18
+            ]
+          }
+        },
+        {
+          "name": "benchmark_instrument_id",
+          "type": "string",
+          "repeated": false,
+          "required": false,
           "required_unless": "",
           "bounds": {}
         }
@@ -8300,6 +8741,28 @@
           "required": false,
           "required_unless": "",
           "bounds": {}
+        },
+        {
+          "name": "page_size",
+          "type": "int32",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {
+            "range": {
+              "least": "0",
+              "most": "500"
+            },
+            "past": "capped"
+          }
+        },
+        {
+          "name": "cursor",
+          "type": "string",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
         }
       ],
       "result": "meridian.v1.JobAnswer",
@@ -8331,6 +8794,14 @@
         {
           "name": "provenance",
           "type": "message AnswerProvenance",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "next_cursor",
+          "type": "string",
           "repeated": false,
           "required": false,
           "required_unless": "",
@@ -9242,6 +9713,7 @@
       "topic": "platform.lake.command.record-derived-series",
       "roles": {
         "publishes": [
+          "data",
           "signal"
         ]
       },
@@ -9413,6 +9885,82 @@
       ],
       "methods": {
         "python": "Operations.record_encumbrances"
+      }
+    },
+    {
+      "name": "RecordFactors",
+      "step": "W10.4",
+      "title": "Record prices, bars, trades and quotes in batches",
+      "kind": "command",
+      "topic": "platform.lake.command.record-factors",
+      "roles": {
+        "publishes": [
+          "data"
+        ]
+      },
+      "stability": "preview",
+      "message": "meridian.v1.RecordFactorsRequest",
+      "parameters": [
+        {
+          "name": "factors",
+          "type": "repeated message Factor",
+          "repeated": true,
+          "required": false,
+          "required_unless": "",
+          "bounds": {
+            "count": [
+              1,
+              500
+            ]
+          }
+        },
+        {
+          "name": "want_id",
+          "type": "string",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        }
+      ],
+      "result": "meridian.v1.RecordObservationsReply",
+      "result_fields": [
+        {
+          "name": "recorded",
+          "type": "uint32",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "restated",
+          "type": "uint32",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "unchanged",
+          "type": "uint32",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "watermark",
+          "type": "message Watermark",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        }
+      ],
+      "refusals": [],
+      "methods": {
+        "python": "Operations.record_factors"
       }
     },
     {
@@ -12255,6 +12803,177 @@
           "required": false,
           "required_unless": "",
           "bounds": {}
+        },
+        {
+          "name": "price_basis",
+          "type": "enum PriceBasis",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "yield",
+          "type": "message QuotedYield",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "trade_time_precision",
+          "type": "enum TimePrecision",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "factor_used",
+          "type": "Decimal",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {
+            "digits": 38,
+            "scale": [
+              0,
+              18
+            ],
+            "range": {
+              "least": "0"
+            }
+          }
+        },
+        {
+          "name": "settlement_date_unknown",
+          "type": "bool",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "contra_party_type",
+          "type": "enum ContraPartyType",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "parties",
+          "type": "repeated message Party",
+          "repeated": true,
+          "required": false,
+          "required_unless": "",
+          "bounds": {
+            "count": [
+              0,
+              8
+            ]
+          }
+        },
+        {
+          "name": "capacity",
+          "type": "enum Capacity",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "no_remuneration",
+          "type": "bool",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "affiliate_back_to_back",
+          "type": "bool",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "special_price",
+          "type": "bool",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "weighted_average_price",
+          "type": "bool",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "primary_market",
+          "type": "bool",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "list_offering_price_takedown",
+          "type": "bool",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "traded_flat",
+          "type": "bool",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "stipulated",
+          "type": "bool",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "portfolio_trade",
+          "type": "bool",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "special_price_reason",
+          "type": "string",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {
+            "length": [
+              0,
+              50
+            ]
+          }
+        },
+        {
+          "name": "treasury_trade_modifier",
+          "type": "enum TreasuryTradeModifier",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
         }
       ],
       "result": "meridian.v1.FactReply",
@@ -14171,6 +14890,39 @@
       "refusals": [],
       "methods": {
         "python": "Operations.run_job"
+      }
+    },
+    {
+      "name": "SeriesRecorded",
+      "step": "W10.5",
+      "title": "Record, sequence and publish each row",
+      "kind": "event",
+      "topic": "platform.lake.{dataset}.event.series-recorded",
+      "roles": {
+        "hears": [
+          "ems",
+          "oms",
+          "portfolio",
+          "signal"
+        ]
+      },
+      "stability": "preview",
+      "message": "meridian.v1.SeriesRecordedEvent",
+      "parameters": [
+        {
+          "name": "series",
+          "type": "message ListedSeries",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        }
+      ],
+      "result": "",
+      "result_fields": [],
+      "refusals": [],
+      "methods": {
+        "python": "Operations.series_recorded"
       }
     },
     {
