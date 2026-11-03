@@ -55,7 +55,7 @@ the platform's curation has vetted the venue and the deployment holds it, it
 resolves like any other.
 
 A plugin never adds a venue, and neither does a deployment: a new venue is a
-new record in the venue master, never a change to the contract.
+new record in the venue master, never a change to the interface.
 
 ## Where a deployment names a venue
 

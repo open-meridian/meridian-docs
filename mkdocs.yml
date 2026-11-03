@@ -118,7 +118,7 @@ nav:
               - Development deployments: concepts/development-deployments.md
           - The master:
               - Instruments: concepts/instruments.md
-              - One ID per instrument: concepts/one-id.md
+              - The instrument master: concepts/one-id.md
               - Money and instruments: concepts/money-and-instruments.md
               - Venues: concepts/venues.md
               - Dates and time: concepts/dates-and-time.md

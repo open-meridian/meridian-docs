@@ -633,7 +633,7 @@ At most 8 figures; a label of 1 to 40 characters, given once; a text of at most 
 
 | Raises | When |
 |---|---|
-| `ValueError` | A bound is broken, for example `9 figures; a plugin reports at most 8`, `figures[0].label is 44 characters; a label is at most 40`, or `figures[0].state is 'amber', which the contract does not define`. |
+| `ValueError` | A bound is broken, for example `9 figures; a plugin reports at most 8`, `figures[0].label is 44 characters; a label is at most 40`, or `figures[0].state is 'amber', which the interface does not define`. |
 | `TypeError` | A value is none of a figure's kinds, a `datetime` has no timezone, or one `Figure` is given where a list is. |
 
 The sidecar checks them again. A heartbeat it refuses still says the plugin is alive; the plugin is then reported not healthy, the refusal as its why, with no figures. Core draws no figures for a plugin that is not registered or has fallen silent, since they would be stale; its status says why.
@@ -2161,8 +2161,8 @@ and [Scenarios](../concepts/scenarios.md).
 
 ### The filings slice and quality states { #the-filings-slice-and-quality-states }
 
-Core serves quality states from chart 0.1.314 and the filings slice in a later chart release: see
-[The lake: what core does not serve yet](../concepts/the-lake.md#not-served-yet).
+Core serves both: see
+[The lake: filings, quality states and data use](../concepts/the-lake.md#not-served-yet).
 Declared cash dividends, recorded with this module, are served.
 
 | Module | Names | What |
@@ -2331,7 +2331,7 @@ The package installs one command, `meridian-dev run`. On a development deploymen
 
 ## Release notes { #release-notes }
 
-Each release of the SDK, the contract it declares, the runtime it needs, and the CLI whose `plugin new` writes a plugin on it. What a plugin's author does to move to it is in [Moving a plugin to a new release](#moving-a-plugin-to-a-new-release).
+Each release of the SDK, the interface version it declares, the runtime it needs, and the CLI whose `plugin new` writes a plugin on it. What a plugin's author does to move to it is in [Moving a plugin to a new release](#moving-a-plugin-to-a-new-release).
 
 !!! note "0.35.5: additive"
     open-meridian 0.35.5 holds the FX week once:
@@ -2431,10 +2431,7 @@ Each release of the SDK, the contract it declares, the runtime it needs, and the
     (`meridian.roles.data.quality`); a licence's eligibility
     (`DataEligibility`). `meridian plugin migrate` rewrites a wire
     `SubjectRef` handed to the SDK (see [0.32.3 to 0.33.0](#0323-to-0330)).
-    It needs a deployment (chart 0.1.313 or later); core
-    serves the filings slice, quality states and the data-use counts in a
-    later chart release on the same contract (see
-    [The lake](../concepts/the-lake.md#not-served-yet)). CLI 0.1.53's
+    It needs a deployment (chart 0.1.313 or later). CLI 0.1.53's
     `plugin new` writes a plugin on it. Its base image is
     `ghcr.io/open-meridian/plugin-python:0.33.0`.
 
@@ -2686,9 +2683,7 @@ Each release of the SDK, the contract it declares, the runtime it needs, and the
     connectivity plugins the user may route through
     (`connectivity_instance_ids`). A placement carries its own change
     requests (`change_requests`). A connectivity plugin reports fills on
-    the `ems`'s placements and records no order and creates no placement; a
-    venue-originated fill is not supported in chart 0.1.301, its handling
-    planned for a later release. The order path's and the
+    the `ems`'s placements and records no order and creates no placement. The order path's and the
     calendars' operations are `preview`. At the upgrade to chart 0.1.301 the
     book records that every account it holds waits for compliance, each
     its own entry, and no connectivity plugin is available or linked, each
@@ -3107,7 +3102,7 @@ Then, by hand where they apply:
 
 ### 0.29.0 to 0.30.0 { #0290-to-0300 }
 
-Released 2026-10-18. Not breaking: the contract is unchanged, and a plugin
+Released 2026-10-18. Not breaking: the interface is unchanged, and a plugin
 left on 0.29.0 keeps working. `meridian plugin migrate --to 0.30.0` moves
 the pins and moves a plugin's copied middle layer onto the SDK's helpers
 (see [Each role's common logic](#each-roles-common-logic)):

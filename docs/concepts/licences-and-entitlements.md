@@ -52,11 +52,10 @@ state**, and `dashboard__list_datasets` answers it. It is shown, never
 enforced: whether the firm is eligible is the deployment admin's to judge
 from the terms.
 
-**What the deployment counts** (not served yet). The interface also carries the deployment's counts of its use of a licensed dataset, display persons
+**What the deployment counts.** Core keeps the deployment's counts of its use of a licensed dataset, display persons
 and non-display plugins against the dataset's meters with their CSV
-export, and the professional test a person answers on first access. Core
-serves them in a later chart release (see
-[The lake: what core does not serve yet](the-lake.md#not-served-yet)).
+export, and the professional test a person answers on first access (see
+[The lake: filings, quality states and data use](the-lake.md#not-served-yet)).
 
 **The one-person warning.** A dataset whose terms are one person's is
 flagged on the Data sources page, and in `dashboard__list_datasets`, where
@@ -97,7 +96,7 @@ specified for later.
 
 **A pricing tier is a dataset.** A source's higher-resolution feed, or its
 data at a different price, is a dataset of its own, licensed and entitled
-per plugin instance like any other, with nothing more in the contract. So a
+per plugin instance like any other, with nothing more in the interface. So a
 deployment admin can give the live trades to an `ems` plugin and the
 closes to everything else. Trades and quotes are read only by plugins
 holding `signal` or `ems`, whatever

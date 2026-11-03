@@ -3,8 +3,7 @@
 A deployment can run on a laptop or across a cluster's zones, and the
 failures it rides out grow with where it runs. This page names four levels,
 each by where a deployment runs, says what each needs and the chart values
-that reach it, and marks what chart 0.1.408 delivers today and what comes in
-a later chart release.
+that reach it, as chart 0.1.408 delivers them.
 
 It states tested behaviour only. It is no service agreement, no uptime
 figure and no claim of readiness for any regulation. Recovery times are
@@ -18,11 +17,7 @@ Real hardware may fail in ways the tests' injections do not reach.
 | **Desktop** | Trying Open Meridian, building a plugin | A pod lost, by restart | The default; `meridian up` | Measured, [below](#desktop) |
 | **Single node** | An individual or a small firm on one server | A pod lost, by restart; a lost volume, by restoring a backup | The default, plus scheduled backups kept off the machine | One server, and backup storage off it |
 | **Multi-node** | A firm on several servers in one site | A pod or a node lost, by a warm standby taking over | A warm standby per writer, `<component>.standby: 1` | Three nodes |
-| **Multi-zone** | A firm that must ride out a zone | A pod, a node or a zone lost | A warm standby per writer, spread over three zones, `zones` | Three nodes, one per zone, or more |
-
-The database's own failover, a broker cluster of three, and one setting that
-names a level (`resilience.profile`) come in **a later chart release**: see
-[What comes later](#what-comes-later).
+| **Multi-zone** | A firm spread over a site's zones | A pod or a node lost, each writer and its standby in different zones | A warm standby per writer, spread over three zones, `zones` | Three nodes, one per zone, or more |
 
 ## How a component fails over { #how-a-component-fails-over }
 
@@ -67,10 +62,6 @@ bound:
 |---|---|---|
 | Tolerant, the default | A writer's process killed (the lake, the book); a component cut from its database by a network policy | Back by restart within 2 minutes |
 | A warm standby per writer, three zones | A writer's process killed (the lake, the book, the street, the instrument store); a writer's node paused past its lease; a writer cut from the broker and the API server but not its database; a writer's node stopped; a component cut from its database | The book, the street and the instrument store answering again within 10 seconds, the lake's writes within 15 seconds |
-
-The design's targets for the full HA configuration, the database's
-failover and a zone's included, are larger than what CI injects today, and
-are proven by a CI failure test before this page states them.
 
 ## Desktop { #desktop }
 
@@ -150,8 +141,7 @@ standby on another node could not start, and the chart refuses
 `conductor.standby: 1` with a generated key. A deployment whose key the
 chart generated keeps its conductor without a standby.
 
-The database stays one instance at this level today: see
-[What comes later](#what-comes-later).
+The database stays one instance at this level.
 
 ## Multi-zone { #multi-zone }
 
@@ -172,8 +162,7 @@ zones: [zone-a, zone-b, zone-c]
 meridian upgrade-deployment -f multi-node.yaml -f multi-zone.yaml
 ```
 
-Riding out the loss of a zone's database needs the database's own
-failover, which comes in a later chart release.
+The database stays one instance.
 
 ## The chart's values { #the-charts-values }
 
@@ -213,22 +202,6 @@ lake keeps within its 1 GiB limit.
 `from_memory`, true when every row the read returned was answered from
 memory, and `layer`, which layer answered it, or `record` where any row came
 from the database. `meridian logs` shows them.
-
-## What comes later { #what-comes-later }
-
-These are designed and come in **a later chart release**:
-
-- **The database's failover**: a database standby the chart brings, or an
-  external managed database with a synchronous standby, each tested by a CI
-  failure test.
-- **The broker at three**: a NATS cluster with replicated streams.
-- **`resilience.profile: ha`**: one value naming the HA configuration, which
-  the chart refuses without the deployment's key in `key.existingSecret`,
-  and a read of the deployment's profile from the CLI and the dashboard,
-  saying what to change to meet a level.
-
-Until then, a level above Single node depends on its database's own
-availability.
 
 ## Related
 

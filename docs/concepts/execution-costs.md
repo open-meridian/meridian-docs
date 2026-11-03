@@ -22,7 +22,7 @@ force at four moments:
 
 Three arrival times, because the desk, the broker and the decision are each
 evaluated from their own moment, as equity TCA conventionally separates
-them. The contract also names `TCA_BENCHMARK_INTERVAL_VWAP`, which needs
+them. The interface also names `TCA_BENCHMARK_INTERVAL_VWAP`, which needs
 trades, and `TCA_BENCHMARK_FIX`, a named fixing the deployment licenses;
 version 1 measures neither.
 
@@ -118,15 +118,6 @@ outside it is refused `PERMISSION_DENIED`, naming `account_id`.
 **Live, at the desk.** An `ems` computes its own live "vs arrival" from
 the quotes and trades it reads, by the same definitions. Nothing records
 that: the stored row is post-trade only.
-
-## Not built yet
-
-- **Interval VWAP and a fixing** as benchmarks, which a version-1 job does
-  not read.
-- **A default source per benchmark**: a job names its sources, or the
-  source priority decides.
-- **Pre-trade expected costs**, which are a plugin's or later work, and
-  peers: a deployment measures only its own flow.
 
 ## Related
 

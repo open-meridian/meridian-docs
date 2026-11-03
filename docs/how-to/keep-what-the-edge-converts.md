@@ -1,9 +1,9 @@
 # Keep what your custody plugin converts
 
-A plugin at the edge speaks to a vendor and converts what the vendor says into the contract's words.
-The contract asks it to keep what it converted from ("the edge keeps its own"),
+A plugin at the edge speaks to a vendor and converts what the vendor says into the interface's words.
+The interface asks it to keep what it converted from ("the edge keeps its own"),
 say how it came by every value the vendor did not send, and count each asset once, so that a reader
-written from the contract alone reconciles any custodian the same way. This page shows what a
+written from the interface alone reconciles any custodian the same way. This page shows what a
 custody plugin does for each, with [plugin-snaptrade](https://github.com/open-meridian/plugin-snaptrade)
 as the worked example.
 

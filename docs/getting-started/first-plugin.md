@@ -195,7 +195,7 @@ administrators are admins of every plugin, through **All plugins (admin)**, so t
 hold on it; see [Manage, Open and View](../concepts/plugins.md#manage-open-and-view).
 
 Choose **Manage**. The plugin's area opens, at `https://meridian.localhost/plugins/my-plugin?level=admin`,
-on its **Summary**, which the dashboard draws: the plugin's status, its version and its contract.
+on its **Summary**, which the dashboard draws: the plugin's status, its version and its interface version.
 The reference plugin reports no figures, so there are no tiles below it. After **Summary** and
 **Settings** come its pages at `admin`: here one, **Setup**, served from the plugin's own name,
 `https://my-plugin.plugins.meridian.localhost/`. It shows who you are signed in as, the instance, its

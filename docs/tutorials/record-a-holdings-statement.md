@@ -7,7 +7,7 @@ lets it write: a role, an account, and a link from the source's name for that ac
 made on the plugin's own **Setup** page under Manage.
 
 !!! warning "What this tutorial cannot show yet"
-    Read this first. The tutorial runs end to end, but three things are not built yet:
+    Read this first. The tutorial runs end to end, with three limits:
 
     - **You cannot read the result back here.** No dashboard page lists statements or custodial
       positions yet, and the SDK's reads of them, `list_statements` and
@@ -16,7 +16,8 @@ made on the plugin's own **Setup** page under Manage.
     - **The data is made up.** So that you need no broker account, this plugin calls no broker. It
       reports two invented accounts and records one invented holding.
     - **Nothing here trades.** Holdings are read-only records of what a custodian says you hold.
-      Order routing and execution are not built.
+      Trading is a connectivity plugin's: see
+      [Route orders through a connectivity plugin](../how-to/route-orders-through-a-connectivity-plugin.md).
 
 Allow 30 minutes.
 

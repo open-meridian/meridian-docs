@@ -11,10 +11,10 @@ piece of data lives.
 |---|---|
 | [Architecture](architecture.md) | The two halves of Open Meridian — the platform and your deployment — what runs in each, and what crosses between them |
 | [Plan your deployment](plan-your-deployment.md) | A firm's profile answered in three layers — core as its books and records, plugins by role, configuration — with what exists, what is planned and what to build, worked for three firms |
-| [Service levels](service-levels.md) | Desktop, single node, multi-node and multi-zone: what each rides out, the chart values that reach it, the hot layer, and what comes in a later chart release |
+| [Service levels](service-levels.md) | Desktop, single node, multi-node and multi-zone: what each rides out, the chart values that reach it, and the hot layer |
 | [Projects and deployments](projects-and-deployments.md) | How a deployment is registered on the platform, how it proves who it is, and the one-time codes it is set up with |
 | [Plugins, roles and grants](plugins.md) | What a plugin is, what it may do on the bus, how that is decided, and how people reach its pages, by Manage, Open and View |
-| [Registries](registries.md) | Where a plugin comes from: a deployment's own Local registry and the platform's Community and Verified ones, the phases they open in, who publishes, how the platform builds and checks each version, and what a deployment verifies before it installs one |
+| [Registries](registries.md) | Where a plugin comes from: a deployment's own Local registry and the platform's Community one, who publishes, how the platform builds and checks each version, and what a deployment verifies before it installs one |
 | [Roles](roles.md) | Each of the fifteen roles, `reference` and `pricing` among them: its persona, duties, what it leaves to another role and what it holds; the principles a plugin must fit, and how an idea maps to the least roles |
 | [Access](access.md) | How people sign in to a deployment, and how the dashboard decides what each of them may reach, per role of a plugin: the access levels and account access, and a person's own settings |
 | [Accounts](accounts.md) | The firm's accounts, how an account at a broker or custodian is tied to one, the accounts a plugin may link to and each account's attributes in the book |
@@ -60,8 +60,8 @@ piece of data lives.
     service account, preparing by default. The order path takes orders
     proposed, released, placed at a venue through a connectivity plugin and
     filled, their state decided by the book, with settlement calendars and
-    venue-originated fills; the connectivity plugins a deployment can launch
-    are tested against a simulated brokerage only. Booking books an order's
+    venue-originated fills, through the released connectivity plugins
+    Alpaca, Tradier, OANDA and SnapTrade. Booking books an order's
     executions to its accounts, and every
     instrument is named by the platform's `INS-` ID, a deployment keeping
     local records, never priced, until the platform answers. The analytics
@@ -77,11 +77,10 @@ piece of data lives.
     and kept in the book through their lifecycle events, with package
     orders; a signal saves scenarios and derived series; a company's
     declared dividends reach the lake; and a starter pack installs from
-    Browse or the CLI. The filings slice, quality states and the data-use
-    counts are in the contract and served by core in a later release. A plugin
+    Browse or the CLI. The lake keeps the filings slice and quality states,
+    and the deployment counts its data use. A plugin
     carries its own documentation, read before it is launched, and the
-    platform's Community registry lists Open Meridian's own plugins. Where a page
-    describes something that is specified but not built, it says so.
+    platform's Community registry lists Open Meridian's own plugins.
 
 **By asset class.** [Equities](equities.md), [FX](fx.md), [Crypto](crypto.md),
 [Options](listed-options-and-futures.md), [Fixed income](bonds-and-fixed-income.md)

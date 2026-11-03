@@ -9,20 +9,17 @@ order, or answer it **DK** (don't know). This page is for that trader, and
 for whoever writes the `ems` or connectivity plugin. What the book does is
 on [The order lifecycle](../concepts/the-order-lifecycle.md#venue-originated-fills).
 
-!!! note "Tested against a simulated venue"
-    Core proves the accept and the DK with a stand-in `ems`
-    page (its **Unmatched fills**) against a simulated venue that takes
-    FIX's acknowledgements; no broker is reached. Their operations are
-    `preview`. No `ems` plugin offering these acts is released yet: an
-    `ems` is yours to build. The connectivity plugins that report
-    venue-originated fills are Alpaca, Tradier and SnapTrade, each tested
-    against a simulated brokerage only; none of their brokers takes an acknowledgement, so a DK tells
-    the broker nothing.
+!!! note "Who answers"
+    The accept and the DK are an `ems`'s acts: the sample plugins' `ems`
+    offers them, or a firm writes its own. The connectivity plugins that
+    report venue-originated fills are Alpaca, Tradier and SnapTrade; none
+    of their brokers takes an acknowledgement, so a DK tells the broker
+    nothing.
 
 ## Where they show
 
 On the **`ems` plugin's page**, for the accounts it may read, and flagged on
-the **operations plugins' pages**. In core's stand-in, **Unmatched fills**
+the **operations plugins' pages**. In an `ems`'s page, **Unmatched fills**
 lists them one line each (the execution, account, instrument, side,
 quantity, venue order and trade date), with **Accept** and **DK** on each
 line. An unmatched fill waits with no time limit. The dashboard shows none.

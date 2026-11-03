@@ -96,7 +96,7 @@ It advises, failing nothing, on:
   split it under more `##` headings;
 - a link the tab will show as plain text;
 - text matching the screen's shape rules: chat markup, answer-shaped text, instruction words
-  (beyond the contract's own allocation, trading, settlement, execution and handling
+  (beyond the interface's own allocation, trading, settlement, execution and handling
   instructions), text addressed to the reader (`you need to ...`, which setup steps often say), a
   tool's name, a role marker such as `system:`, or talk of an agent's prompt. The deployment and
   the platform keep such a section, show it to people marked **Screened**, and withhold it from

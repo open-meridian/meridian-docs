@@ -82,12 +82,3 @@ live shape has no development endpoint at all.
     deployment your firm depends on with `--development`. Because the choice
     is made at install, a firm's deployment cannot become one without being
     installed again as one.
-
-## Not built yet
-
-- **Following a repository.** Having a development deployment follow a
-  branch, so that each push is running within seconds without anybody's
-  terminal, is specified and not built.
-- **Agents without a person.** The loop runs on a person's own delegation,
-  made by signing in through a browser on the same machine as the CLI. A coding agent running
-  in the cloud, with no browser beside it, cannot sign in yet.

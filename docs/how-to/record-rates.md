@@ -91,7 +91,7 @@ await feed.record("ust_par", rows)
 ```
 
 `rates.tenor` reads a publisher's labels (`1 Mo`, `13 WEEKS`, `10 Yr`,
-`3M`, `ON`) as the contract's tenor; a fraction of a month, such as
+`3M`, `ON`) as the interface's tenor; a fraction of a month, such as
 `1.5 Month`, is refused, for the plugin to name a maturity date or a whole
 tenor instead. `Feed.record` sends 500 rows a batch, against a want where
 they answer one, and through the plugin's `Wants`, which counts them and

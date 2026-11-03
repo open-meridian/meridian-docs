@@ -44,8 +44,8 @@ The **Why** column reads one of:
   the platform's licence list, such as a vendor's own code alone, so there
   is nothing to send. It resolves once the platform can match it, for
   instance when the licence list gains a scheme it carries.
-- **with the platform's staff; asked again daily**. The platform's source
-  could not confirm the security, and its staff review it.
+- **under review; asked again daily**. The security could not be
+  confirmed automatically, and is reviewed outside the deployment.
 - **class needed: no asset class stated**. Set the record's asset class
   on the **To complete** tab: the book refuses a position on it until
   then.
@@ -72,8 +72,8 @@ under **The upgrade's migration**:
 - **Matched**: the platform holds the security.
 - **Minted**: the platform's source confirmed it, and the platform minted
   it.
-- **Near match**: minted, and flagged for the platform's staff to review.
-- **With the platform's staff**: the request waits for their review.
+- **Near match**: minted, and flagged for review.
+- **Under review**: the request waits for review outside the deployment.
 - **Kept local**: nothing on the licence list to look for.
 - **Not reached**: the platform could not be reached.
 - **Held back**: lines you held back.
@@ -86,8 +86,8 @@ how many are still to send.
 ### Make the lines
 
 A line is a record the platform answered: **Already held**, **Matched**,
-**Minted** or **Near match**. Nothing is applied without you. Records with
-the platform's staff, kept local or not reached are no lines: each stays
+**Minted** or **Near match**. Nothing is applied without you. Records under
+review, kept local or not reached are no lines: each stays
 provisional, and resolves on its own once the platform answers.
 
 Beside the counts, two buttons open the lines, each with its count:

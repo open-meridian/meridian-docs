@@ -23,7 +23,7 @@ talks to it and to nothing else.
 
 This is what makes a plugin small. Access control, transport, correlation and
 health are the sidecar's, implemented once, so a plugin author writes against
-one local surface and gets all of them. That surface is the contract in
+one local surface and gets all of them. That surface is the interface in
 meridian-schema; the operations a plugin's roles may take are listed in
 [Typed operations](../api/typed-operations.md), and in Python the
 [SDK](../api/python-sdk.md) wraps them.
@@ -205,10 +205,10 @@ plugin may be launched more than once — `snaptrade-1` and `snaptrade-2` from
 one image — and each instance has its own pod, its own broker credential and
 its own page. `meridian plugin stop <instance>` is launching's inverse.
 
-!!! note "Launching from the dashboard"
-    Today a plugin is uploaded, launched and stopped from the CLI; see
-    [the CLI reference](../api/cli.md). A page in the dashboard offering the
-    same launch to an administrator is specified and not built yet.
+!!! note "Launching"
+    A plugin is uploaded from the CLI, and launched and stopped from the
+    dashboard's **Plugins** page or the CLI; see
+    [the CLI reference](../api/cli.md).
 
 ## A plugin's page
 
@@ -288,7 +288,7 @@ from the version's declaration (see
 A stopped instance keeps Summary, Settings and Documentation.
 
 - **Summary**: the plugin's status, which is core's to say (its health and
-  why, the version running and the contract it registered with, any
+  why, the version running and the interface version it registered with, any
   warnings, and what it received and did not carry), then the
   figures the plugin reports about its own work, each a tile, such as
   SnapTrade's Connections, Accounts reached and Last read. A figure is a

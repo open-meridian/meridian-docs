@@ -327,7 +327,7 @@ permissions always have: `write` on `operations` through one permission and
   command, with the account among that role's write accounts and in the
   plugin's write scope, and otherwise refuses it, naming each role that
   holds the command and what the person holds on it. It works the role out
-  from the contract; the plugin names none on what it sends. A page's
+  from the interface; the plugin names none on what it sends. A page's
   declared roles decide what is shown, never what is admitted.
 - **One account scope per plugin.** What a plugin may read and write as
   itself is the union over its roles, and its links and storage stay one

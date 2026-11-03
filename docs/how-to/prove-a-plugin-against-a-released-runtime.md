@@ -16,7 +16,7 @@ the worked example.
     `docker compose … --profile runner down -v` (see [step 4](#4-give-every-compose-command-both-files-and-the-runtime)).
     To run a deployment, [install one](../getting-started/installation.md).
 
-It names no plugin and adds nothing to the contract: your plugin reaches it only through its
+It names no plugin and adds nothing to the interface: your plugin reaches it only through its
 sidecar, as it reaches any deployment.
 
 ## What you need

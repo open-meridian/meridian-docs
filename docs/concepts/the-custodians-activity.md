@@ -155,7 +155,7 @@ shows it.
 
 ## How operations explains a break
 
-How a plugin matches is its own behaviour, as reconciling is. The contract's
+How a plugin matches is its own behaviour, as reconciling is. The interface's
 `operations` suite asks for a reinvestment and a split each to explain the
 units they added, for activity heard after a break to bring it up to date,
 and for activity to book nothing by itself. What follows is what the sample

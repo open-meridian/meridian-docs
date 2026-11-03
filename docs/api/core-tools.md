@@ -935,7 +935,7 @@ admin.
 
 **Input:** nothing.
 
-**Answer:** `instructions`, each with its `target` (the contract's own
+**Answer:** `instructions`, each with its `target` (the interface's own
 fields, only those set: `all_accounts`, `account_id`, `instance_id`,
 `subject`, `service_account_id`), `target_said` (the target in words, as
 the page shows it), `value` (`active`, `pause` or `stop`), `setter_level`
@@ -953,7 +953,7 @@ The page's **Set an instruction** dialog.
 
 | Argument | What it is |
 |---|---|
-| `target` | What it is on, the contract's fields, one target: `{"all_accounts": true}` (a deployment admin's); `{"instance_id": "…"}`, a plugin; or `account_id`, `subject` (a person, by their deployment-local subject) or `service_account_id`, each beside the plugin's `instance_id` where it is within one. A plugin's admin always names their plugin. A user group is not a target yet, and `target.user_group_id` is refused |
+| `target` | What it is on, the interface's fields, one target: `{"all_accounts": true}` (a deployment admin's); `{"instance_id": "…"}`, a plugin; or `account_id`, `subject` (a person, by their deployment-local subject) or `service_account_id`, each beside the plugin's `instance_id` where it is within one. A plugin's admin always names their plugin. A user group is not a target yet, and `target.user_group_id` is refused |
 | `value` | `active`, `pause` or `stop` |
 | `note` | Why, kept as the instruction's reason |
 
@@ -1104,7 +1104,7 @@ At least one line is named. The exact lines are one change, each
 uncertain line its own; two records answered by one `INS-` ID are a
 duplicate line, made together. More than 500 exact lines are successive
 changes, in order. The change is made whole or refused whole, naming by
-its path each line that is not one the platform answered (with its staff,
+its path each line that is not one the platform answered (under review,
 kept local or not reached); a line already made is unchanged.
 
 **Answer:** `outcome: "made"`, with the migration's `migration_counts`
@@ -1369,7 +1369,7 @@ venue's MIC in `source` for a future or a future option), its
 ```
 
 **Answer:** each series with its record where held or minted,
-`pending_review` where the platform's staff review it, or `refused_by_rule`
+`pending_review` where it is reviewed first, or `refused_by_rule`
 where the rule does not allow its cause or the day's limit is reached,
 nothing sent. A key no listed series row holds is refused, naming it.
 

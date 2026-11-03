@@ -43,7 +43,7 @@ commodity's referential record), its exchange's `product_code` (`ES`, `CL`),
 `settlement_method`, `contract_multiplier` (what a one-point move is worth
 per contract) and, where it is physically delivered, its
 `first_notice_date`. A commodity is a referential record of its own type,
-`commodity`, which the platform's staff seed and nobody holds.
+`commodity`, which the platform seeds and nobody holds.
 
 **Each field has a requirement level**: `mint`, needed to
 mint the record; `complete`, needed before the book takes it; or `optional`.
@@ -76,7 +76,7 @@ record exists:
 
 FIGI is kept where a series has one. A series is matched on these
 identifiers only; its terms are checked when it is minted, and a
-disagreement is minted and flagged for the platform's staff.
+disagreement is minted and flagged for review.
 
 ## The chain: read, never minted
 
@@ -120,11 +120,11 @@ plugin asks with
 naming each series by its key and its underlying, and its cause: `order` or
 `standing`. Each series is answered with its `INS-` record where the
 deployment holds one or the platform matches or mints it; `pending_review`
-where the platform's staff review it first; or `refused_by_rule`, with
+where it is reviewed first; or `refused_by_rule`, with
 nothing sent, where the deployment's rule does not allow it. A key no chain
 row holds is refused, naming it. The platform verifies a series against
 OpenFIGI first and, where OpenFIGI holds none, mints it from the chain as
-the stated source and flags it for its staff.
+the stated source and flags it for review.
 
 **The series request rule** is a deployment admin's, **Series request
 rule** on the dashboard's settings home page (`/admin#series-rule`):

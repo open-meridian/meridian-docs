@@ -70,15 +70,6 @@ filled quantity is its allocation's. Whether netting is fair, whether one
 fund always takes the cross, is a `compliance` plugin's rule; the book
 checks only that the net balances.
 
-## Not built yet
-
-- **Cross-currency netting**, EUR/USD against USD/JPY, which needs
-  triangulated amounts and a rule for the residual currency.
-- **Funding FX from equity orders**: an `oms` may propose the FX orders
-  itself.
-- **Settlement netting**, one payment per currency per value date, which
-  is settlement's, not the order path's.
-
 ## Related
 
 - [Net FX orders](../how-to/net-fx-orders.md): an `oms` proposing a net

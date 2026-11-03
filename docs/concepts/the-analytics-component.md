@@ -353,9 +353,7 @@ A series no model binding covers is `IMPLEMENTATION_UNAVAILABLE`.
 
 - **No staleness bound.** The component sets no maximum age per source, so
   the latest price valid at the as-of is used however old it is, and
-  `PRICE_STALE` does not arise from a job. The check at use, against the
-  dataset's threshold in session, is not built yet (see
-  [Data age and liveness](data-age-and-liveness.md#not-built-yet)).
+  `PRICE_STALE` does not arise from a job.
 - **The historical window's days** are the business dates the lake's
   closes carry, not a settlement calendar's days.
 - **Interval VWAP and a fixing** are not measured by `execution_cost`

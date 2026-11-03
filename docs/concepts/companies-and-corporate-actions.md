@@ -15,7 +15,7 @@ window (`cik`, the SEC's Central Index Key, and `lei`, the Legal Entity
 Identifier), and its former names, each with the dates it was used. The
 platform mints it from EDGAR's submissions by CIK or from GLEIF by LEI. A
 filer the platform cannot type as a company, such as a natural person, is
-queued for its staff and never minted.
+never minted.
 
 Your deployment's instrument store keeps each company record it is
 answered, every version its own row. A `data` plugin resolves one with
@@ -26,8 +26,7 @@ identifier's window. Two companies named at once are refused.
 **A miss asks the platform.** Resolved by identifiers and not held, the
 store asks the platform, sending only the `cik` or `lei` in a scheme on the
 [licence list](one-id.md#the-licence-list), never a name. A company the
-platform matches or mints is kept and answers. One queued for the
-platform's staff, or a platform not reached, leaves the resolve a miss,
+platform matches or mints is kept and answers. One not matched, or a platform not reached, leaves the resolve a miss,
 refused naming `identifiers`, nothing kept; the next miss asks again. A
 miss by `ENT-` ID alone is not asked about.
 
@@ -73,20 +72,17 @@ an expiry moves that series' model price, and one going ex after it changes
 nothing. The dividends' dataset is named in the answer's provenance (see
 [Options measures](the-analytics-component.md#options-measures)).
 
-## What core does not serve yet { #not-served-yet }
+## The rest of the filings slice { #not-served-yet }
 
-The interface also carries the rest of the filings slice, which core serves
-in a later chart release on the same contract: **filings**
-(`record_filings`, `list_filings`, among them an 8-K's earnings date),
-**reported facts** (`record_reported_facts`, `list_reported_facts`),
+Beside declared dividends, the lake keeps the rest of the filings slice:
+**filings** (`record_filings`, `list_filings`, among them an 8-K's earnings
+date), **reported facts** (`record_reported_facts`, `list_reported_facts`),
 **holdings reports and holdings** (`record_holdings_reports`,
 `record_holdings`, `list_holdings`) and **rating actions**
-(`record_rating_actions`, `list_rating_actions`). Until then a deployment
-answers each `UNAVAILABLE`, nothing serving it (the Python SDK raises
-`CallFailed`, `kind="no handler"`). The data suite's cases about them carry
-`about: filings`, `holdings` and `ratings`, so a plugin whose source
-presents none names them not presented. See
-[The lake: what core does not serve yet](the-lake.md#not-served-yet).
+(`record_rating_actions`, `list_rating_actions`). The data suite's cases
+about them carry `about: filings`, `holdings` and `ratings`, so a plugin
+whose source presents none names them not presented. See
+[The lake: filings, quality states and data use](the-lake.md#not-served-yet).
 
 ## Related
 

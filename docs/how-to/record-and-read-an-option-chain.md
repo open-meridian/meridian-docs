@@ -105,8 +105,8 @@ answer = await chains.want_series(plugin, aapl, chains.osi_key(symbol),
                                   note="Proposing a protective put", acting_for=caller)
 ```
 
-Each series answers with its `INS-` record, `pending_review` while the
-platform's staff review it, or `refused_by_rule` where the deployment's
+Each series answers with its `INS-` record, `pending_review` while it is
+reviewed, or `refused_by_rule` where the deployment's
 **Series request rule** does not allow its cause, or the day's limit is
 reached. A deployment admin sets the rule on the dashboard's settings home
 page, **Series request rule** (`/admin#series-rule`), and may ask for

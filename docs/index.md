@@ -15,11 +15,17 @@ is live in about a second on a development deployment.
 This site is how it works. For what it is and why, see
 [open-meridian.com](https://open-meridian.com).
 
-!!! note "What is live, and what is next"
-    Live now: the deployment you run yourself, one identity for every
-    instrument, your own sign-in and permissions, plugins you write in Python,
-    live as you save them, and brokerage holdings read through SnapTrade. Next:
-    order routing and execution, built in the open.
+!!! note "What is live"
+    **Live now:** the deployment you run yourself; one identity for every
+    instrument; your own sign-in and permissions; plugins you write in
+    Python, live as you save them; holdings and activity through custody
+    plugins; and market data through data plugins. **Order routing and
+    execution** run through the released connectivity plugins, Alpaca,
+    Tradier, OANDA and SnapTrade, each enabled for trading per connection by
+    an admin, in the venue's practice, paper or sandbox environment where it
+    offers one, or live. The [agents' guard](concepts/the-agents-guard.md)
+    keeps agents' orders to demo connections, and an order's executions are
+    [booked](concepts/booking.md) to its accounts.
 
 ## Where to start
 

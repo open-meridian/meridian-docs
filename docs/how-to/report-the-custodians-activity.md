@@ -11,7 +11,7 @@ never a source, and what operations does with it, is in
 
 You need CLI 0.1.58 and SDK 0.35.5 or later. The activity operations,
 `record_activity`, `list_activities`, `list_sync_statuses` and
-`re_resolve_activity`, are `preview` in the contract.
+`re_resolve_activity`, are `preview` in the interface.
 
 ## Say how far back the history reaches
 

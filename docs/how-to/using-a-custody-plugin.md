@@ -23,7 +23,6 @@ splits) not presented, with why. SnapTrade holds `connectivity` beside
 Each plugin's connectivity reports fills of orders placed in the broker's
 own app as [venue-originated fills](answer-a-venue-originated-fill.md); none
 of the three brokers takes an acknowledgement, so a DK tells it nothing.
-Each is tested against a simulated brokerage only.
 
 ## The first-use path
 

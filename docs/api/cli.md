@@ -72,7 +72,7 @@ These are read before any command runs.
 | `--platform` | `<url>` | `https://open-meridian.com` | The platform the deployment reports to. Used by `doctor` and `up`. `up` passes it to the chart only when you give it. `plugin release`, `plugin publish`, `plugin key` and `plugin download` sign in to it. |
 | `--image` | `<ref>` | `ghcr.io/open-meridian/meridian-runtime:latest` | The runtime image. Used by `doctor` and `up`. `up` passes it to the chart only when you give it. `plugin migrate` reads it as something else: the SDK image its steps run in (see [`meridian plugin migrate`](#plugin-migrate)). |
 | `-h`, `--help` | | | Print the usage text and exit 0. After a command, that command's own lines and flags. |
-| `-v` | | | Reserved for verbose output, which is not built yet. It prints a note saying so and is otherwise ignored. |
+| `-v` | | | Reserved: it prints a note and is otherwise ignored. |
 
 ## Exit codes
 
@@ -249,7 +249,7 @@ It works in four steps, and stops at the step that fails.
     - the chart version is published, and it is the chart the release was installed from;
     - it is not older than the installed version. If it is the same, it says so and exits 0.
 
-    Two more are printed as `unknown` every time, because they are not built: whether the upgrade is within the skip policy, which is not ruled yet, and whether every installed plugin's runtime floor is met, which nothing declares yet. `unknown` does not stop it, and does not mean it passed.
+    Two more are always printed as `unknown`: whether the upgrade is within the skip policy, and whether every installed plugin's runtime floor is met. `unknown` does not stop it, and does not mean it passed.
 
     If the deployment's own values set `image.tag`, it says so as `worth`: the upgrade keeps that tag rather than moving to the chart's.
 
