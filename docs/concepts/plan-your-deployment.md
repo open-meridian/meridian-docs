@@ -143,7 +143,7 @@ reports to its investors, and trades through the order path.
 | Investor reports, kept as sent | [`reporting`](roles.md#reporting) | Yours | Local | Build your own: it reads positions and the lake's prices today |
 | An agent drafting an adjustment that a person makes | any | Any | — | Exists: [Prepared changes](prepared-changes.md) |
 | A nightly job running as a named account | any | Any | — | Exists: [Service accounts](service-accounts.md) |
-| Orders decided, worked and sent | [`portfolio`](roles.md#portfolio), [`oms`](roles.md#oms), [`ems`](roles.md#ems) | Yours | Local | Build your own: the interface carries it; see [The order lifecycle](the-order-lifecycle.md) |
+| Orders decided, worked and sent | [`portfolio`](roles.md#portfolio), [`oms`](roles.md#oms), [`ems`](roles.md#ems) | Yours | Local | Build your own: see [The order lifecycle](the-order-lifecycle.md) |
 | Orders placed at a broker | [`connectivity`](roles.md#connectivity) | SnapTrade; Alpaca, Tradier and OANDA | Community | Exists, trading enabled per connection: see [Route orders through a connectivity plugin](../how-to/route-orders-through-a-connectivity-plugin.md) |
 
 **Configuration.** Accounts carry an owner label per fund or sleeve, and

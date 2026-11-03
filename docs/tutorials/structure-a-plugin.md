@@ -33,12 +33,23 @@ class Lake(data.Role):
         await self.wants.read_licences()             # what it may record, before anything is heard
 
     async def on_observations_wanted(self, heard: meridian.Heard) -> None:
-        await self.wants.hear(heard, self.state.answer)
+        await self.wants.hear(heard, self.answer)
+
+    async def answer(self, want, key, subjects, kinds) -> dict[str, str]:
+        """Record what the vendor has for `subjects`; answer what is declined, by subject."""
+        prices, missing = await self.state.vendor.closes(subjects, want)
+        if prices:
+            await self.record_prices(prices=prices, want_id=want.want_id)
+        return {subject: "not_covered" for subject in missing}
 ```
 
+`data.Wants` hears the want, calls `answer` with the want, its dataset's
+key, its subjects and its kinds, declines what it answers as declined, and
+counts what was recorded.
+
 - **State is shared by passing it.** One `State` object holds what the
-  plugin's classes and pages share: its settings, its venue client, what it
-  has fetched. Each class is given it.
+  plugin's classes and pages share: its settings, its venue client
+  (`state.vendor`), what it has fetched. Each class is given it.
 - **Acts go through the role object.** A helper making an act is given the
   role object (`data.Wants(self, ...)`), never the connection. A page acts
   through the role object the plugin hands it.
@@ -138,10 +149,17 @@ Hold each class to its role's suite, through the suites' recorder: it stands
 in for the sidecar, records every act, and hands the class each row it hears.
 
 ```python title="tests/test_lake.py"
+from meridian.plugin.v1 import operations_pb2 as ops
 from meridian.suites import Recorder
 
 from my_closes.lake import Lake
 from my_closes.state import State
+
+
+def a_want_for_spy() -> ops.ObservationsWantedEvent:
+    want = ops.ObservationsWantedEvent(want_id="W-1", dataset="closes", data_type="prices")
+    want.subjects.add(entity_id="INS-SPY")
+    return want
 
 
 async def test_a_want_is_answered():

@@ -209,6 +209,33 @@
       ],
       "sdk": "0.35.2",
       "contract": 29
+    },
+    "plugin-databento": {
+      "commit": "e9c807c2008170505ecd0fd765ce9ee470e7d0ec",
+      "version": "0.2.0",
+      "roles": [
+        "data"
+      ],
+      "sdk": "0.35.2",
+      "contract": 29
+    },
+    "plugin-massive": {
+      "commit": "12dfc9b440def69a4b35ea9ef5ac8a5ed1038d99",
+      "version": "0.2.0",
+      "roles": [
+        "data"
+      ],
+      "sdk": "0.35.2",
+      "contract": 29
+    },
+    "plugin-unusual-whales": {
+      "commit": "e47d79d3ed70bee87e1b3db8806d40960613f190",
+      "version": "0.2.0",
+      "roles": [
+        "data"
+      ],
+      "sdk": "0.35.2",
+      "contract": 29
     }
   },
   "sdk": {

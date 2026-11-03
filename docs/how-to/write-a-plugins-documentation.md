@@ -21,8 +21,7 @@ One Markdown file per section, each with a fixed name:
 | `docs/pages.md` | no | One sentence per page: who opens it (Manage, Open or View) and what it is for. |
 
 `meridian plugin check` fails a plugin without `overview.md` or `setup.md`, and advises, failing
-nothing, when `troubleshooting.md` or `terms.md` is missing. A Verified plugin needs all four (see
-[Registries](../concepts/registries.md)). Any other file in `docs/`, such as a `README.md` index
+nothing, when `troubleshooting.md` or `terms.md` is missing. Any other file in `docs/`, such as a `README.md` index
 for the repository, is the repository's own: it is not uploaded, and the check says so.
 
 Leave out what the Reference already says. It lists every role and what it reads and publishes,

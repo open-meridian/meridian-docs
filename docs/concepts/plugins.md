@@ -185,7 +185,7 @@ admin may **retire** a version nothing runs or names: it is no longer listed or
 launchable, its image is released from the deployment's registry, and its record is kept.
 
 The deployment's own registry is the **Local** one. A plugin may also come from the
-platform's **Community** or **Verified** registry, listed there as
+platform's **Community** registry, listed there as
 `namespace/plugin`, and is then pulled into the Local registry by digest and
 verified before it is recorded. See [Registries](registries.md).
 

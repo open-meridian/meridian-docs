@@ -99,6 +99,9 @@ A page's request should read what the plugin already holds: its views, or
 what its role class worked out when the data changed.
 
 ```python
+from meridian.roles import signal
+
+
 class Signal(signal.Role):
     def __init__(self):
         self.latest = {}                       # what the page reads

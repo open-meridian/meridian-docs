@@ -60,7 +60,7 @@ The platform builds every version it lists itself. A publisher never pushes an i
    the commit, the tag, the signing key's fingerprint and the builder), its **bill of materials**
    and its scan results to the image, each signed by the platform's key.
 4. When every check passes, the platform signs a **listing statement** for the version and lists
-   it. A Community version is listed then; a Verified one waits for a reviewer.
+   it.
 
 Community copies are held in the platform's public registry,
 `ghcr.io/open-meridian/plugins/<namespace>/<plugin>`, and every reference to one is by digest.
@@ -108,7 +108,7 @@ A deployment admin works with the registries on the dashboard's **Plugins** page
   signatures, the signing key's status at the build, and that the declaration it records is the
   built image's. A version failing any check is refused, naming it. There is no override.
 - **Launch** is as for any version, naming it by its listing: you approve the roles it asks
-  for. For a Verified version, the roles its review approved, and no more.
+  for.
 - **Updates** are offered from the registry a version came from, never a pre-release over a
   release, and applying one is always a person's act. A version asking for more roles waits for a
   deployment admin's approval, showing the difference; a plugin's admin may update where the roles
@@ -142,7 +142,7 @@ Community images are pulled anonymously.
 
 - **Report plugin usage** is a deployment admin's setting on the **Registries** tab, on by default
   and shown at the first install. While on, the conductor sends the platform a weekly report for
-  each installed Community or Verified version: its listing and version, its launched instances,
+  each installed Community version: its listing and version, its launched instances,
   how many people hold each level, and daily counts of the operations, pages and tool calls it
   carried. It names no person, account, instrument or local plugin, and each report sent is kept
   and listed on the tab.

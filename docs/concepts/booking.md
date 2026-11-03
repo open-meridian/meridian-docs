@@ -13,8 +13,7 @@ says whose they are.
 
 !!! note "Preview"
     Booking's operations are `preview`: they may change, with a
-    migration. The `oms` that books is a plugin the firm runs: the
-    sample plugins hold it, or a firm writes its own.
+    migration. The booking is made by a plugin holding the `oms` role.
 
 ## Who does what
 

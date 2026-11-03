@@ -213,6 +213,16 @@ nav:
           - Value the book: how-to/value-the-book.md
           - Watch the market on the Board: how-to/watch-the-board.md
       - By asset class:
+          - Equities:
+              - Read equity and option prices: how-to/read-equity-prices.md
+              - Trade equities through Alpaca or Tradier: how-to/trade-equities.md
+          - Crypto:
+              - Read crypto prices from Coinbase and Kraken: how-to/read-crypto-prices.md
+              - Read Pyth Network prices: how-to/read-pyth-prices.md
+          - Fixed income:
+              - Bring in a bond and complete its terms: how-to/bring-in-a-bond.md
+              - Read curves and prints: how-to/read-curves-and-prints.md
+              - Read agency pool factors: how-to/read-pool-factors.md
           - FX:
               - Net FX orders: how-to/net-fx-orders.md
               - Set the FX pivot currencies: how-to/set-the-fx-pivot-currencies.md

@@ -196,7 +196,7 @@
 - service: Tradier
   plugin: plugin-tradier
   roles: [data, custody, connectivity]
-  assets: [equity, fund, cash]
+  assets: [equity, fund, derivative, cash]
   environments: [sandbox, live, sample-data]
   status: released
   version: "0.14.1"
@@ -273,25 +273,25 @@
 
 # Data and reference: Fannie Mae's and Freddie Mac's pool and REMIC class
 # factors from their monthly disclosure files, and the terms the same files
-# state (README). Settings: the files' location; no sample_data. Listed as
+# state (README). Settings: the files' location; sample_data. Listed as
 # gse-disclosures.
 - service: Fannie Mae and Freddie Mac disclosures
   plugin: plugin-gse-disclosures
   roles: [data, reference]
   assets: [debt]
-  environments: [live]
+  environments: [live, sample-data]
   status: released
   version: "0.1.0"
   contract: 29
 
 # Data and reference: Ginnie Mae's pool and REMIC tranche factors from its
 # monthly factor files, and the terms they state (README). Settings: the
-# files' location; no sample_data. Listed as ginnie-mae.
+# files' location; sample_data. Listed as ginnie-mae.
 - service: Ginnie Mae disclosures
   plugin: plugin-ginnie-mae
   roles: [data, reference]
   assets: [debt]
-  environments: [live]
+  environments: [live, sample-data]
   status: released
   version: "0.1.0"
   contract: 29
@@ -304,6 +304,42 @@
   plugin: plugin-pyth
   roles: [data]
   assets: [crypto, fx, equity]
+  environments: [live, sample-data]
+  status: released
+  version: "0.2.0"
+  contract: 29
+
+# Data: US equities' closes, bars, last sale, quotes and trades, and OPRA
+# option chains with their quotes and trades (README). Settings: an API key;
+# sample_data.
+- service: Databento
+  plugin: plugin-databento
+  roles: [data]
+  assets: [equity, derivative]
+  environments: [live, sample-data]
+  status: released
+  version: "0.2.0"
+  contract: 29
+
+# Data: US stocks' closes, bars, trades and quotes from the SIPs, and option
+# chains from OPRA, real time or delayed (README). Settings: an API key;
+# sample_data.
+- service: Massive
+  plugin: plugin-massive
+  roles: [data]
+  assets: [equity, derivative]
+  environments: [live, sample-data]
+  status: released
+  version: "0.2.0"
+  contract: 29
+
+# Data: option chains and option prints from OPRA, and equities'
+# off-exchange prints from FINRA's TRFs (README). Settings: an API token;
+# sample_data.
+- service: Unusual Whales
+  plugin: plugin-unusual-whales
+  roles: [data]
+  assets: [derivative, equity]
   environments: [live, sample-data]
   status: released
   version: "0.2.0"
