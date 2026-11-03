@@ -9,7 +9,7 @@ pieces a plugin links are Apache-2.0, so a plugin you write stays yours.
 | [meridian-core](https://github.com/open-meridian/meridian-core) | The runtime, in Rust: the bus, the stores, the conductor, the dashboard, one sidecar per plugin, the launcher, and the Helm chart that installs them | AGPL-3.0-or-later |
 | [meridian-cli](https://github.com/open-meridian/meridian-cli) | `meridian`, the command line: checks a cluster, installs a deployment, signs in to one, and brings plugins in and develops them live | AGPL-3.0-or-later |
 | [meridian-python](https://github.com/open-meridian/meridian-python) | The Python SDK for writing plugins, and the reference plugin `meridian plugin new` starts from | Apache-2.0 |
-| [meridian-schema](https://github.com/open-meridian/meridian-schema) | The contract a plugin links: the sidecar's gRPC service, the typed operations a plugin's roles may take, and the metadata every message carries, with Rust and Python code generation | Apache-2.0 |
+| [meridian-schema](https://github.com/open-meridian/meridian-schema) | The interface a plugin links: the sidecar's gRPC service, the typed operations a plugin's roles may take, and the metadata every message carries, with Rust and Python code generation | Apache-2.0 |
 | [meridian-ui](https://github.com/open-meridian/meridian-ui) | The plugin UI kit: the brand's tokens, colour schemes, CSS components and framework-free web components, which the dashboard serves to every plugin's page | Apache-2.0 |
 | [plugin-snaptrade](https://github.com/open-meridian/plugin-snaptrade) | A plugin that reads brokerage accounts through SnapTrade, their positions, cash and freshness, and records them as the custodian's view, with each account's activity as SnapTrade states it. It holds the `custody` and `connectivity` roles, links its accounts on the kit's account map, and is the example other connectors copy | Apache-2.0 |
 | [meridian-docs](https://github.com/open-meridian/meridian-docs) | This site | — |
@@ -31,7 +31,7 @@ preference: it links meridian-core's crates, which are AGPL, so a customer who
 runs the binary can ask for its source.
 
 **meridian-python** and **meridian-schema** are Apache-2.0. A plugin links the
-SDK and the contract, and nothing else from Open Meridian — a plugin talks only
+SDK and the interface, and nothing else from Open Meridian — a plugin talks only
 to its sidecar, and these are the whole of that interface. Apache-2.0 there is
 what lets a vendor, or a firm, keep its plugin to itself.
 

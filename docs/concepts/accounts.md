@@ -275,7 +275,11 @@ it with the street on every statement, recording each difference as a break;
 no statement is ever applied to it. See
 [The book of record](the-book-of-record.md).
 
-!!! note "Not built yet"
-    Orders and executions against an account are on the roadmap. Until they
-    are, every trade made away from the platform shows in the book as a break
-    until it is resolved.
+Orders and executions against an account go through the
+[order path](the-order-lifecycle.md): an order proposed and released for the
+account, placed at a venue through a connectivity plugin, its fills recorded
+in the book and [booked](booking.md) to the account. A trade made away from
+the platform, in the broker's own app, reaches the book as a
+[venue-originated fill](../how-to/answer-a-venue-originated-fill.md), which
+the trader accepts onto an order or rejects; one the book cannot place shows
+as a break until it is resolved.

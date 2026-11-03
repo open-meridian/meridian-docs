@@ -154,7 +154,7 @@ a new instrument the store has never seen, and redeeming a one-time code.
 ## What is not built yet
 
 - **Parts of the order path.** Orders reach venues through the book and
-  are booked to their accounts, but RFQs and axes, confirming an allocation
+  are booked to their accounts, but the sell side's RFQs and axes, confirming an allocation
   with a client, non-order transactions and settlement are not built: see
   [The order lifecycle](the-order-lifecycle.md#not-built-yet) and
   [Booking](booking.md#not-built-yet).

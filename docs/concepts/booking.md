@@ -11,10 +11,10 @@ Booking is its own act and its own record, pointing at the order. The
 order's executions and their positions are what the venue did; the booking
 says whose they are.
 
-!!! note "Proved with stand-in plugins"
-    Every operation on this page is `preview`: it may change in a later release, with a migration. Core proves booking end to end with
-    stand-in plugins only: its order-path test books a block order across
-    two funds. No released plugin holds the `oms` role yet.
+!!! note "Preview"
+    Booking's operations are `preview`: they may change in a later release,
+    with a migration. The `oms` that books is a plugin the firm runs: the
+    sample plugins hold it, or a firm writes its own.
 
 ## Who does what
 
@@ -263,7 +263,7 @@ or a position. There are three kinds:
   recorded and never clears it.
 - **Compliance**: raised by a `compliance` plugin, with `RaiseAlert`.
 
-**The deadline is specified, not built.** The contract specifies an
+**The deadline is specified, not built.** The interface specifies an
 affirmation deadline, the `operations` plugin's time of day in the
 deployment's time zone, and the moment a held booking's alert is due by.
 No plugin can declare it yet, so the alert's `due_by` is unset; whether an

@@ -157,9 +157,6 @@ where it is permitted, refusing otherwise. Through an agent:
   its oldest input's source time.
 - **Each plugin's consumer lag and its conflation counts**, and the page
   hop's age.
-- **Quality states**: a row's assessment and quarantine, which core serves
-  in a later chart release (see
-  [The lake: what core does not serve yet](the-lake.md#not-served-yet)).
 
 ## Related
 

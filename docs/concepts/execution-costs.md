@@ -22,7 +22,7 @@ force at four moments:
 
 Three arrival times, because the desk, the broker and the decision are each
 evaluated from their own moment, as equity TCA conventionally separates
-them. The contract also names `TCA_BENCHMARK_INTERVAL_VWAP`, which needs
+them. The interface also names `TCA_BENCHMARK_INTERVAL_VWAP`, which needs
 trades, and `TCA_BENCHMARK_FIX`, a named fixing the deployment licenses;
 version 1 measures neither.
 

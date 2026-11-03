@@ -9,19 +9,17 @@ nothing, or it reports a fact from the venue, which the book never refuses
 for the state it arrives in. An order's status is derived from its journal,
 one entry at a time, and stored nowhere as a fact.
 
-!!! note "Tested against simulated venues"
-    The order path's operations are `preview`: they may change in a later release, with a migration (see
-    [The order path](../api/python-sdk.md#the-order-path)). Core proves the
-    path end to end against a simulated venue only, which takes the FIX
-    acknowledgements, with stand-in plugins for each role; no broker,
-    brokerage, paper account or trading API is reached by those tests. The
-    connectivity plugins a deployment can launch, SnapTrade, Alpaca,
-    Tradier and OANDA, are each tested against a simulated brokerage only (see
-    [Trading through SnapTrade](../how-to/using-a-custody-plugin.md#trading-through-snaptrade)).
+!!! note "Where orders go"
+    The released connectivity plugins, Alpaca, Tradier, OANDA and
+    SnapTrade, place at their brokers, each enabled for trading per
+    connection by an admin of its `connectivity` role, in the broker's
+    practice, paper or sandbox environment where it offers one, or live
+    (see [Route orders through a connectivity plugin](../how-to/route-orders-through-a-connectivity-plugin.md)).
+    Agents' orders are kept to demo connections by
+    [the agents' guard](the-agents-guard.md).
 
 After the fills, the `oms` [books](booking.md) an order's executions to its
-accounts, its operations `preview` too, and proved by core against a
-simulated venue and stand-in plugins only. Whether an order may name a
+accounts, its operations `preview`. Whether an order may name a
 local instrument record is a deployment setting (see
 [Orders on local records](#orders-on-local-records)).
 
@@ -104,7 +102,7 @@ placements may be live at once, at one venue or several.
 ## The transition table
 
 The states, the conditions and every transition between them are one table,
-in the contract before any code. It is published by meridian-schema as
+in the interface before any code. It is published by meridian-schema as
 `boundaries/transitions.json`; core's book is generated from it, and the
 Python SDK carries it as `meridian/transitions.json`, so a plugin written by
 one vendor and another written by a second agree on what "working" means
@@ -174,8 +172,8 @@ The table holds an execution's rows beside the order's
 | e8 | matched | A bust or correction: the position reversed by its own entry | `connectivity` | unchanged |
 
 Each row also names the reason codes a command meeting it may be refused
-with; see [Refusals](#refusals). The table changes only by a contract
-revision, with its migration.
+with; see [Refusals](#refusals). The table changes only by a revision of
+the interface, with its migration.
 
 ## Proposing an order
 

@@ -60,8 +60,8 @@ piece of data lives.
     service account, preparing by default. The order path takes orders
     proposed, released, placed at a venue through a connectivity plugin and
     filled, their state decided by the book, with settlement calendars and
-    venue-originated fills; the connectivity plugins a deployment can launch
-    are tested against a simulated brokerage only. Booking books an order's
+    venue-originated fills, through the released connectivity plugins
+    Alpaca, Tradier, OANDA and SnapTrade. Booking books an order's
     executions to its accounts, and every
     instrument is named by the platform's `INS-` ID, a deployment keeping
     local records, never priced, until the platform answers. The analytics
@@ -77,8 +77,8 @@ piece of data lives.
     and kept in the book through their lifecycle events, with package
     orders; a signal saves scenarios and derived series; a company's
     declared dividends reach the lake; and a starter pack installs from
-    Browse or the CLI. The filings slice, quality states and the data-use
-    counts are in the contract and served by core in a later release. A plugin
+    Browse or the CLI. The lake keeps the filings slice and quality states,
+    and the deployment counts its data use. A plugin
     carries its own documentation, read before it is launched, and the
     platform's Community registry lists Open Meridian's own plugins. Where a page
     describes something that is specified but not built, it says so.

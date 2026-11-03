@@ -935,7 +935,7 @@ admin.
 
 **Input:** nothing.
 
-**Answer:** `instructions`, each with its `target` (the contract's own
+**Answer:** `instructions`, each with its `target` (the interface's own
 fields, only those set: `all_accounts`, `account_id`, `instance_id`,
 `subject`, `service_account_id`), `target_said` (the target in words, as
 the page shows it), `value` (`active`, `pause` or `stop`), `setter_level`
@@ -953,7 +953,7 @@ The page's **Set an instruction** dialog.
 
 | Argument | What it is |
 |---|---|
-| `target` | What it is on, the contract's fields, one target: `{"all_accounts": true}` (a deployment admin's); `{"instance_id": "…"}`, a plugin; or `account_id`, `subject` (a person, by their deployment-local subject) or `service_account_id`, each beside the plugin's `instance_id` where it is within one. A plugin's admin always names their plugin. A user group is not a target yet, and `target.user_group_id` is refused |
+| `target` | What it is on, the interface's fields, one target: `{"all_accounts": true}` (a deployment admin's); `{"instance_id": "…"}`, a plugin; or `account_id`, `subject` (a person, by their deployment-local subject) or `service_account_id`, each beside the plugin's `instance_id` where it is within one. A plugin's admin always names their plugin. A user group is not a target yet, and `target.user_group_id` is refused |
 | `value` | `active`, `pause` or `stop` |
 | `note` | Why, kept as the instruction's reason |
 

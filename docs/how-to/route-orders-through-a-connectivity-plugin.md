@@ -22,14 +22,13 @@ refusal recorded, and the connectivity plugin reaches no account and hears
 nothing. See [The order lifecycle](../concepts/the-order-lifecycle.md#placements-and-the-connectivity-plugins-an-ems-may-use)
 for why it is set up this way.
 
-Core proves the link, the map and the checks against a simulated venue
-only. Three connectivity plugins can be launched: SnapTrade, which holds
-`connectivity` beside `custody`, and Alpaca and Tradier, which hold it beside
-`data` and `custody`, placing at Alpaca's Trading API and at Tradier. Each is
-tested against a simulated brokerage only. Trading is enabled per
-connection or account by an admin of the plugin's `connectivity` role, at
-SnapTrade with **Enable trading** on its **Connections** page (the
-`enable_trading` tool): see
+Four released plugins hold `connectivity`: SnapTrade, beside `custody`,
+placing at the brokerages SnapTrade reaches; and Alpaca, Tradier and OANDA,
+beside `data` and `custody`, placing at Alpaca's Trading API (paper or live),
+at Tradier (its sandbox or live) and at OANDA (practice or live). Trading is
+enabled per connection or account by an admin of the plugin's
+`connectivity` role, with **Enable trading** on its page (each plugin's
+`enable_trading` tool), and at SnapTrade on its **Connections** page: see
 [Trading through SnapTrade](using-a-custody-plugin.md#trading-through-snaptrade).
 Until then every order placed through it there is rejected `unsupported`.
 Each reports fills of orders placed in the broker's own app as

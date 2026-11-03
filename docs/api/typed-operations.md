@@ -139,16 +139,16 @@ Three calls every plugin may make are in the Python SDK rather than here: readin
 | [`record_scenarios`](#record_scenarios) | `RecordScenarios` | W12.8 Save a scenario or a scenario set | command | `signal` | `RecordScenariosResult` |
 | [`list_scenarios`](#list_scenarios) | `ListScenarios` | W12.8 Save a scenario or a scenario set | query | `compliance`, `portfolio`, `reporting`, `signal` | `ListScenariosResult` |
 | [`read_stale_reference_actions_permitted`](#read_stale_reference_actions_permitted) | `ReadStaleReferenceActionsPermitted` | W6.38 Set the stale-reference actions the deployment permits | query | `ems` | `ReadStaleReferenceActionsPermittedResult` |
-| [`record_filings`](#record_filings) | `RecordFilings` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` (served in a later chart release) | `RecordFilingsResult` |
-| [`list_filings`](#list_filings) | `ListFilings` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `portfolio`, `reporting`, `signal` (served in a later chart release) | `ListFilingsResult` |
-| [`record_reported_facts`](#record_reported_facts) | `RecordReportedFacts` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` (served in a later chart release) | `RecordReportedFactsResult` |
-| [`list_reported_facts`](#list_reported_facts) | `ListReportedFacts` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `portfolio`, `reporting`, `signal` (served in a later chart release) | `ListReportedFactsResult` |
-| [`record_holdings_reports`](#record_holdings_reports) | `RecordHoldingsReports` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` (served in a later chart release) | `RecordHoldingsReportsResult` |
-| [`record_holdings`](#record_holdings) | `RecordHoldings` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` (served in a later chart release) | `RecordHoldingsResult` |
-| [`list_holdings`](#list_holdings) | `ListHoldings` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `portfolio`, `reporting`, `signal` (served in a later chart release) | `ListHoldingsResult` |
-| [`record_rating_actions`](#record_rating_actions) | `RecordRatingActions` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` (served in a later chart release) | `RecordRatingActionsResult` |
-| [`list_rating_actions`](#list_rating_actions) | `ListRatingActions` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `portfolio`, `reporting`, `signal` (served in a later chart release) | `ListRatingActionsResult` |
-| [`record_quality_assessments`](#record_quality_assessments) | `RecordQualityAssessments` | W10.12 Escalate a row's quality | command | `signal` (served in a later chart release) | `RecordQualityAssessmentsResult` |
+| [`record_filings`](#record_filings) | `RecordFilings` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` | `RecordFilingsResult` |
+| [`list_filings`](#list_filings) | `ListFilings` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `portfolio`, `reporting`, `signal` | `ListFilingsResult` |
+| [`record_reported_facts`](#record_reported_facts) | `RecordReportedFacts` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` | `RecordReportedFactsResult` |
+| [`list_reported_facts`](#list_reported_facts) | `ListReportedFacts` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `portfolio`, `reporting`, `signal` | `ListReportedFactsResult` |
+| [`record_holdings_reports`](#record_holdings_reports) | `RecordHoldingsReports` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` | `RecordHoldingsReportsResult` |
+| [`record_holdings`](#record_holdings) | `RecordHoldings` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` | `RecordHoldingsResult` |
+| [`list_holdings`](#list_holdings) | `ListHoldings` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `portfolio`, `reporting`, `signal` | `ListHoldingsResult` |
+| [`record_rating_actions`](#record_rating_actions) | `RecordRatingActions` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` | `RecordRatingActionsResult` |
+| [`list_rating_actions`](#list_rating_actions) | `ListRatingActions` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `portfolio`, `reporting`, `signal` | `ListRatingActionsResult` |
+| [`record_quality_assessments`](#record_quality_assessments) | `RecordQualityAssessments` | W10.12 Escalate a row's quality | command | `signal` | `RecordQualityAssessmentsResult` |
 | [`record_factors`](#record_factors) | `RecordFactors` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` | `RecordObservationsReply` |
 | [`list_factors`](#list_factors) | `ListFactors` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `operations`, `portfolio`, `reporting`, `servicing`, `signal` | `ListFactorsReply` |
 | [`list_expirations`](#list_expirations) | `ListExpirations` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `ems`, `oms`, `portfolio`, `signal` | `ListExpirationsReply` |
@@ -232,7 +232,7 @@ A parameter ending `_ns` is a time in nanoseconds, as an `int`. `time.time_ns()`
 Every field the data dictionary types `date` (a business date, an as-of date, a trade date, a value date) takes a `datetime.date`, or its ISO 8601 text, and crosses the wire as the text. Text that is no day that exists (`"2026-02-30"`), text in another form (`"20261009"`) and a `datetime`, which is a moment, raise `ValueError` naming the field before anything is sent; the sidecar refuses an invalid date from a plugin that builds its params by hand. A date read back is the text: `date.fromisoformat(price.meta.business_date)`. See [Dates and time](../concepts/dates-and-time.md).
 
 !!! note
-    The contract names the unit of `_ns` fields but not their epoch. The examples on this page assume the Unix epoch, which is what `time.time_ns()` returns.
+    The interface names the unit of `_ns` fields but not their epoch. The examples on this page assume the Unix epoch, which is what `time.time_ns()` returns.
 
 ### Defaults
 
@@ -3349,9 +3349,8 @@ events in the book), [companies and corporate actions](../concepts/companies-and
 a signal's [derived series](../concepts/the-lake.md#derived-series) and
 [saved scenarios](../concepts/scenarios.md), and an `ems`'s read of the
 [stale-reference actions permitted](../concepts/data-age-and-liveness.md#what-a-deployment-admin-permits).
-Ten more, the filings slice and quality states, are in the contract and
-served by core in a later chart release (see
-[The lake: what core does not serve yet](../concepts/the-lake.md#not-served-yet)).
+Ten more are the filings slice and quality states (see
+[The lake: filings, quality states and data use](../concepts/the-lake.md#not-served-yet)).
 The Python SDK wraps them in `meridian.helpers.chains`, `.lifecycle` and
 `.packages`, and `meridian.roles.signal`, `.data.filings` and `.data.quality` (see
 [Helpers](python-sdk.md#helpers)). Four events
@@ -3854,12 +3853,6 @@ async def read_stale_reference_actions_permitted(self) -> ReadStaleReferenceActi
 
 A data plugin records filings: each its filer and the subjects it is about, each in its role, its accession number, form, kind, filing date and items (an 8-K's 2.02 among them).
 
-!!! note "Not served yet"
-    Core serves this operation in a later chart release.
-    Until then a deployment answers it `UNAVAILABLE`, nothing serving it,
-    which the SDK raises as `CallFailed`, `kind="no handler"`. See
-    [The lake: what core does not serve yet](../concepts/the-lake.md#not-served-yet).
-
 ```python
 async def record_filings(
     self, *, filings: Sequence[Filing] = (), want_id: str = "", acting_for: str | None = None,
@@ -3872,7 +3865,7 @@ async def record_filings(
 | Workflow step | W10.4, Record prices, bars, trades and quotes in batches |
 | Kind | command, on `platform.lake.command.record-filings` |
 | Role | `data` |
-| Served by | the lake, in a later chart release |
+| Served by | the lake |
 
 | Parameter | Meaning |
 |---|---|
@@ -3884,12 +3877,6 @@ async def record_filings(
 ### `list_filings` { #list_filings }
 
 Reads filings by subject, kind and filing date, point in time, or every version recorded after a watermark.
-
-!!! note "Not served yet"
-    Core serves this operation in a later chart release.
-    Until then a deployment answers it `UNAVAILABLE`, nothing serving it,
-    which the SDK raises as `CallFailed`, `kind="no handler"`. See
-    [The lake: what core does not serve yet](../concepts/the-lake.md#not-served-yet).
 
 ```python
 async def list_filings(
@@ -3906,7 +3893,7 @@ async def list_filings(
 | Workflow step | W10.6, Read prices, bars, trades and quotes, point in time, by source |
 | Kind | query, on `platform.lake.query.list-filings` |
 | Role | `portfolio`, `reporting`, `signal` |
-| Served by | the lake, in a later chart release |
+| Served by | the lake |
 
 | Parameter | Meaning |
 |---|---|
@@ -3924,12 +3911,6 @@ async def list_filings(
 
 A data plugin records the facts a filing reports, each a concept, its period and its value, a restatement the next version of its row key.
 
-!!! note "Not served yet"
-    Core serves this operation in a later chart release.
-    Until then a deployment answers it `UNAVAILABLE`, nothing serving it,
-    which the SDK raises as `CallFailed`, `kind="no handler"`. See
-    [The lake: what core does not serve yet](../concepts/the-lake.md#not-served-yet).
-
 ```python
 async def record_reported_facts(
     self, *, facts: Sequence[ReportedFact] = (), want_id: str = "",
@@ -3943,7 +3924,7 @@ async def record_reported_facts(
 | Workflow step | W10.4, Record prices, bars, trades and quotes in batches |
 | Kind | command, on `platform.lake.command.record-reported-facts` |
 | Role | `data` |
-| Served by | the lake, in a later chart release |
+| Served by | the lake |
 
 | Parameter | Meaning |
 |---|---|
@@ -3955,12 +3936,6 @@ async def record_reported_facts(
 ### `list_reported_facts` { #list_reported_facts }
 
 Reads reported facts by subject, concept and period, point in time.
-
-!!! note "Not served yet"
-    Core serves this operation in a later chart release.
-    Until then a deployment answers it `UNAVAILABLE`, nothing serving it,
-    which the SDK raises as `CallFailed`, `kind="no handler"`. See
-    [The lake: what core does not serve yet](../concepts/the-lake.md#not-served-yet).
 
 ```python
 async def list_reported_facts(
@@ -3976,7 +3951,7 @@ async def list_reported_facts(
 | Workflow step | W10.6, Read prices, bars, trades and quotes, point in time, by source |
 | Kind | query, on `platform.lake.query.list-reported-facts` |
 | Role | `portfolio`, `reporting`, `signal` |
-| Served by | the lake, in a later chart release |
+| Served by | the lake |
 
 | Parameter | Meaning |
 |---|---|
@@ -3994,12 +3969,6 @@ async def list_reported_facts(
 
 A data plugin records a holdings report: who reports, the period and its kind.
 
-!!! note "Not served yet"
-    Core serves this operation in a later chart release.
-    Until then a deployment answers it `UNAVAILABLE`, nothing serving it,
-    which the SDK raises as `CallFailed`, `kind="no handler"`. See
-    [The lake: what core does not serve yet](../concepts/the-lake.md#not-served-yet).
-
 ```python
 async def record_holdings_reports(
     self, *, reports: Sequence[HoldingsReport] = (), want_id: str = "",
@@ -4013,7 +3982,7 @@ async def record_holdings_reports(
 | Workflow step | W10.4, Record prices, bars, trades and quotes in batches |
 | Kind | command, on `platform.lake.command.record-holdings-reports` |
 | Role | `data` |
-| Served by | the lake, in a later chart release |
+| Served by | the lake |
 
 | Parameter | Meaning |
 |---|---|
@@ -4025,12 +3994,6 @@ async def record_holdings_reports(
 ### `record_holdings` { #record_holdings }
 
 A data plugin records each holding a report states: the holder, what is held, its quantity and market value, and its share of the class where stated.
-
-!!! note "Not served yet"
-    Core serves this operation in a later chart release.
-    Until then a deployment answers it `UNAVAILABLE`, nothing serving it,
-    which the SDK raises as `CallFailed`, `kind="no handler"`. See
-    [The lake: what core does not serve yet](../concepts/the-lake.md#not-served-yet).
 
 ```python
 async def record_holdings(
@@ -4045,7 +4008,7 @@ async def record_holdings(
 | Workflow step | W10.4, Record prices, bars, trades and quotes in batches |
 | Kind | command, on `platform.lake.command.record-holdings` |
 | Role | `data` |
-| Served by | the lake, in a later chart release |
+| Served by | the lake |
 
 | Parameter | Meaning |
 |---|---|
@@ -4057,12 +4020,6 @@ async def record_holdings(
 ### `list_holdings` { #list_holdings }
 
 Reads holdings, and the reports they came from, by holder or by what is held.
-
-!!! note "Not served yet"
-    Core serves this operation in a later chart release.
-    Until then a deployment answers it `UNAVAILABLE`, nothing serving it,
-    which the SDK raises as `CallFailed`, `kind="no handler"`. See
-    [The lake: what core does not serve yet](../concepts/the-lake.md#not-served-yet).
 
 ```python
 async def list_holdings(
@@ -4079,7 +4036,7 @@ async def list_holdings(
 | Workflow step | W10.6, Read prices, bars, trades and quotes, point in time, by source |
 | Kind | query, on `platform.lake.query.list-holdings` |
 | Role | `portfolio`, `reporting`, `signal` |
-| Served by | the lake, in a later chart release |
+| Served by | the lake |
 
 | Parameter | Meaning |
 |---|---|
@@ -4096,12 +4053,6 @@ async def list_holdings(
 
 A data plugin records a rating action: the rated company or security, the rater in the `rater` role, the rating, its scale and the action.
 
-!!! note "Not served yet"
-    Core serves this operation in a later chart release.
-    Until then a deployment answers it `UNAVAILABLE`, nothing serving it,
-    which the SDK raises as `CallFailed`, `kind="no handler"`. See
-    [The lake: what core does not serve yet](../concepts/the-lake.md#not-served-yet).
-
 ```python
 async def record_rating_actions(
     self, *, actions: Sequence[RatingAction] = (), want_id: str = "",
@@ -4115,7 +4066,7 @@ async def record_rating_actions(
 | Workflow step | W10.4, Record prices, bars, trades and quotes in batches |
 | Kind | command, on `platform.lake.command.record-rating-actions` |
 | Role | `data` |
-| Served by | the lake, in a later chart release |
+| Served by | the lake |
 
 | Parameter | Meaning |
 |---|---|
@@ -4127,12 +4078,6 @@ async def record_rating_actions(
 ### `list_rating_actions` { #list_rating_actions }
 
 Reads a company's or a security's rating history.
-
-!!! note "Not served yet"
-    Core serves this operation in a later chart release.
-    Until then a deployment answers it `UNAVAILABLE`, nothing serving it,
-    which the SDK raises as `CallFailed`, `kind="no handler"`. See
-    [The lake: what core does not serve yet](../concepts/the-lake.md#not-served-yet).
 
 ```python
 async def list_rating_actions(
@@ -4149,7 +4094,7 @@ async def list_rating_actions(
 | Workflow step | W10.6, Read prices, bars, trades and quotes, point in time, by source |
 | Kind | query, on `platform.lake.query.list-rating-actions` |
 | Role | `portfolio`, `reporting`, `signal` |
-| Served by | the lake, in a later chart release |
+| Served by | the lake |
 
 | Parameter | Meaning |
 |---|---|
@@ -4166,12 +4111,6 @@ async def list_rating_actions(
 
 A signal plugin escalates a recorded row's quality, each assessment its own record; a state only escalates.
 
-!!! note "Not served yet"
-    Core serves this operation in a later chart release.
-    Until then a deployment answers it `UNAVAILABLE`, nothing serving it,
-    which the SDK raises as `CallFailed`, `kind="no handler"`. See
-    [The lake: what core does not serve yet](../concepts/the-lake.md#not-served-yet).
-
 ```python
 async def record_quality_assessments(
     self, *, assessments: Sequence[QualityAssessment] = (), acting_for: str | None = None,
@@ -4184,7 +4123,7 @@ async def record_quality_assessments(
 | Workflow step | W10.12, Escalate a row's quality |
 | Kind | command, on `platform.lake.command.record-quality-assessments` |
 | Role | `signal` |
-| Served by | the lake, in a later chart release |
+| Served by | the lake |
 
 | Parameter | Meaning |
 |---|---|
@@ -4384,7 +4323,7 @@ The kind of claim holding an instrument gives. A closed list: a class joins it b
 | `ASSET_CLASS_EVENT_CONTRACT` | 6 | `event_contract`: pays on whether an event happens. |
 | `ASSET_CLASS_CASH` | 7 | `cash`: a holding of a currency's cash instrument. |
 
-What kind of instrument within a class (an ETF within fund, an option within derivative) is its instrument type, which the contract does not carry yet.
+What kind of instrument within a class (an ETF within fund, an option within derivative) is its instrument type, which the interface does not carry yet.
 
 ### `HoldingSide` { #holdingside }
 

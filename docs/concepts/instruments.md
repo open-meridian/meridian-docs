@@ -32,7 +32,7 @@ the record it became, under the deployment-only scheme
 `open_meridian_local`, and is accepted on every write, forever. A position, an order or a
 row in the lake stores the ID and nothing else about identity; everything
 that moves (a ticker, a symbol, a venue's code) is a dated identifier,
-resolved where outside data arrives. The contract says so where an instrument's ID is defined, for
+resolved where outside data arrives. The interface says so where an instrument's ID is defined, for
 every ID a master mints, instruments and venues alike.
 
 **Resolution is dated.** The question is always "which instrument did this

@@ -93,7 +93,7 @@ lookup is a bug waiting for the day an identifier is reassigned.
 **Credentials come from the environment.** Never a literal, never a fixture,
 never a committed configuration file.
 
-## The contract changes only when a workflow demands it
+## The interface changes only when a workflow demands it
 
 Every message in meridian-schema, and every domain message in meridian-core's
 `proto/`, exists because a written workflow step needs it. Nothing enters the
@@ -101,7 +101,7 @@ contract ahead of that, and the gates fail a message that nothing justifies.
 
 So a change to a `.proto`, or anything that would change what a plugin may
 send or receive, is not an ordinary pull request. Open an issue describing
-what a plugin or a person needs to do and cannot; the contract follows from
+what a plugin or a person needs to do and cannot; the interface follows from
 that, not the other way round.
 
 ## Licences, and why a plugin stays yours
@@ -117,7 +117,7 @@ See [Repositories](repositories.md).
 
 Every pull request gets the same review passes in the same order, whether a
 person or an AI agent wrote it: correctness first, then security, then whether
-it respects the contract, then whether it matches what it set out to do.
+it respects the interface, then whether it matches what it set out to do.
 Formatting, link checks and code generation are left to `make ci-local`, not to
 reviewers; a thing a reviewer catches that a gate could have caught is a
 missing gate.

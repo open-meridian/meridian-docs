@@ -61,8 +61,8 @@ plugin that holds that role. Each plugin is one of three things:
 
 - **It exists**: you install it.
 - **It is planned**, in a named release.
-- **You build it**, with an AI agent, against the contract the role already
-  has. [Roles](roles.md#method) maps an idea to the least roles it needs.
+- **You build it**, with an AI agent, against what the role already
+  does today. [Roles](roles.md#method) maps an idea to the least roles it needs.
 
 ### Configuration
 
@@ -99,15 +99,13 @@ Each profile below is a table, one row per need:
 | **Exists** | Built and installable today |
 | **Planned, in a release** | Accepted, and named for a release still to come, below |
 | **Planned, not scheduled** | Accepted, with no release named yet |
-| **Build your own** | The contract already carries it: a firm's agent can write the plugin now |
-| **Spec to bring** | The contract cannot express it yet. A firm describes it, and it lands as an addition at its turn, with nothing renamed |
+| **Build your own** | Open Meridian supports it today: a firm's agent can write the plugin now |
+| **Spec to bring** | Open Meridian cannot record or do it yet. A firm describes it, and it lands as an addition at its turn, with nothing renamed |
 
 Everything marked **Exists** is in the current release; what each release
-added is in the [release notes](../api/python-sdk.md#release-notes). Two
-releases are still to come by name: **live market data**'s professional
-sources, which a fund licenses, following when their keys exist; and **risk
-and compliance**, restricted lists and standing limits in a common form.
-What comes **after the order path** is said so, row by row.
+added is in the [release notes](../api/python-sdk.md#release-notes). One
+release is still to come by name: **risk and compliance**, restricted lists
+and standing limits in a common form.
 
 ## A US individual, accounts at Fidelity through SnapTrade
 
@@ -128,7 +126,7 @@ value. No trading yet.
 | A mutual fund's daily NAV | [`data`](roles.md#data) | Tiingo | Community | Exists: see [Using a data plugin](../how-to/using-a-data-plugin.md#tiingo-mutual-funds-daily-navs) |
 | The book valued, by account and in total | [`reporting`](roles.md#reporting) | The sample reporting plugin | Local | Exists: see [Value the book](../how-to/value-the-book.md) |
 | A plan-only fund valued at the custodian's own mark | [`data`](roles.md#data) | SnapTrade | Community | Planned, not scheduled |
-| Trading from the deployment | [`connectivity`](roles.md#connectivity) | SnapTrade | Community | Exists: trading enabled per connection, tested against a simulated brokerage only; see [Trading through SnapTrade](../how-to/using-a-custody-plugin.md#trading-through-snaptrade) |
+| Trading from the deployment | [`connectivity`](roles.md#connectivity) | SnapTrade | Community | Exists: trading enabled per connection; see [Trading through SnapTrade](../how-to/using-a-custody-plugin.md#trading-through-snaptrade) |
 
 **Configuration.** The person is their own deployment admin and the only
 person with access. SnapTrade's key is a secret setting on its form. Accounts
@@ -153,7 +151,7 @@ reports to its investors, and trades through the order path.
 | Holdings, cash and activity from a custodian or prime broker with no plugin | [`custody`](roles.md#custody) | Yours | Local | Build your own |
 | Holdings and activity read directly from Alpaca or Tradier | [`custody`](roles.md#custody) | Alpaca, Tradier | Community | Exists: see [Using a custody plugin](../how-to/using-a-custody-plugin.md) |
 | Opening balances, daily reconciliation, breaks resolved by people | [`operations`](roles.md#operations) | The sample operations plugin, or yours | Local | Exists |
-| Consolidated end-of-day prices under the fund's own licence | [`data`](roles.md#data) | Databento, Massive | Planned | Planned, in live market data |
+| Consolidated end-of-day prices under the fund's own licence | [`data`](roles.md#data) | Databento, Massive | Community | Exists |
 | Mutual fund NAVs | [`data`](roles.md#data) | Tiingo, under the fund's own licence | Community | Exists: see [Using a data plugin](../how-to/using-a-data-plugin.md#tiingo-mutual-funds-daily-navs) |
 | Exchange rates | [`data`](roles.md#data) | The Federal Reserve Board's H.10 rates, the ECB's reference rates | Community | Exists: see [Using a data plugin](../how-to/using-a-data-plugin.md#the-federal-reserve-board) |
 | Reference rates and Treasury curves | [`data`](roles.md#data) | The New York Fed, US Treasury, FRED | Community | Exists: see [Using a data plugin](../how-to/using-a-data-plugin.md#the-new-york-fed-the-us-treasury-and-fred) |
@@ -165,7 +163,7 @@ reports to its investors, and trades through the order path.
 | An agent drafting an adjustment that a person makes | any | Any | — | Exists: [Prepared changes](prepared-changes.md) |
 | A nightly job running as a named account | any | Any | — | Exists: [Service accounts](service-accounts.md) |
 | Orders decided, worked and sent | [`portfolio`](roles.md#portfolio), [`oms`](roles.md#oms), [`ems`](roles.md#ems) | Yours | Local | Build your own: the interface carries it; see [The order lifecycle](the-order-lifecycle.md) |
-| Orders placed at a broker | [`connectivity`](roles.md#connectivity) | SnapTrade; Alpaca and Tradier | Community | Exists, each tested against a simulated brokerage only: see [Route orders through a connectivity plugin](../how-to/route-orders-through-a-connectivity-plugin.md) |
+| Orders placed at a broker | [`connectivity`](roles.md#connectivity) | SnapTrade; Alpaca, Tradier and OANDA | Community | Exists, trading enabled per connection: see [Route orders through a connectivity plugin](../how-to/route-orders-through-a-connectivity-plugin.md) |
 
 **Configuration.** Accounts carry an owner label per fund or sleeve, and
 account groups follow them: operations staff hold `write` on the accounts
@@ -195,15 +193,15 @@ deployment records and checks, and the firm answers to MAS.
 | Positions, cash and activity from the carrying broker for US equities | [`custody`](roles.md#custody) | Alpaca, its Broker API | Planned | Planned, not scheduled |
 | Spot crypto balances and activity from an exchange | [`custody`](roles.md#custody) | Yours, reading OKX | Local | Build your own |
 | Crypto prices | [`data`](roles.md#data) | Coinbase and Kraken; OKX later | Community; planned | Coinbase and Kraken exist: see [Using a data plugin](../how-to/using-a-data-plugin.md#coinbase-and-kraken); OKX planned |
-| US equity prices under the firm's licence | [`data`](roles.md#data) | Databento, Massive | Planned | Planned, in live market data |
-| Money in, out and between accounts, and journals between the firm's accounts and its clients' | [`custody`](roles.md#custody), or [`settlement`](roles.md#settlement) for a separate payment rail | The carrying broker's plugin | Planned | Planned, after the order path |
-| A firm-account mark, and custodial, joint and trust accounts | core | none | — | Planned, after the order path |
+| US equity prices under the firm's licence | [`data`](roles.md#data) | Databento, Massive | Community | Exists |
+| Money in, out and between accounts, and journals between the firm's accounts and its clients' | [`custody`](roles.md#custody), or [`settlement`](roles.md#settlement) for a separate payment rail | The carrying broker's plugin | Planned | Planned, not scheduled |
+| A firm-account mark, and custodial, joint and trust accounts | core | none | — | Planned, not scheduled |
 | Opening a client's account at the carrying broker | [`custody`](roles.md#custody) | The carrying broker's plugin | Planned | Planned, not scheduled |
 | A client's identity checks, the identity data kept in the plugin's storage | to settle in the spec | Yours, for a KYC provider | Local | Spec to bring |
 | Statements, confirmations and tax forms a client can list | core, the file in the plugin's storage | The carrying broker's plugin | Planned | Planned, not scheduled |
 | Clients reaching their own accounts through the firm's app | [`portfolio`](roles.md#portfolio) and [`reporting`](roles.md#reporting) | Yours, acting as a service account | Local | Build your own |
-| The Travel Rule's information on each crypto transfer, and proof a client owns a self-hosted address | [`custody`](roles.md#custody) | Yours | Local | Spec to bring: an on-chain transfer's details are not in the contract yet |
-| Orders for US equities and crypto | [`oms`](roles.md#oms), [`connectivity`](roles.md#connectivity) | The carrying broker's and the exchange's | Planned | Planned: the interface carries the order path; these plugins come after it |
+| The Travel Rule's information on each crypto transfer, and proof a client owns a self-hosted address | [`custody`](roles.md#custody) | Yours | Local | Spec to bring: an on-chain transfer's details are not recorded yet |
+| Orders for US equities and crypto | [`oms`](roles.md#oms), [`connectivity`](roles.md#connectivity) | The carrying broker's and the exchange's | Planned | Planned, not scheduled: the order path is built, and these plugins are not yet |
 | Returns to the regulator, kept as sent | [`reporting`](roles.md#reporting) | Yours | Local | Build your own: a `reporting` plugin reads the orders and executions too |
 
 **Configuration.** A hold of five years on every edge plugin's raw records,
@@ -231,8 +229,8 @@ A need no row covers is met in one of three ways, in this order:
    core: a hold's length, a window, a region, an egress address, a
    threshold. If the setting exists, set it; if it is planned, the plan says
    in which release.
-2. **Build a plugin for it, with an agent.** Where the contract already
-   expresses what the need records, a firm's agent writes the plugin against
+2. **Build a plugin for it, with an agent.** Where Open Meridian already
+   records what the need records, a firm's agent writes the plugin against
    it and the instructions every new plugin carries. Start with
    [Your first plugin](../getting-started/first-plugin.md) and
    [Build with an AI agent](../getting-started/build-with-an-ai-agent.md);
@@ -244,11 +242,11 @@ A need no row covers is met in one of three ways, in this order:
    prove it with
    [Prove a plugin against a released runtime](../how-to/prove-a-plugin-against-a-released-runtime.md),
    and ship it with [Release a plugin version](../how-to/release-a-plugin.md).
-3. **Bring a spec.** Where the contract cannot express it, describe it: who
+3. **Bring a spec.** Where Open Meridian cannot record or do it yet, describe it: who
    needs it, what must be recorded, which rule asks for it, and for how
    long. Open an issue with **Suggest an improvement** on
    [meridian-core](https://github.com/open-meridian/meridian-core/issues).
-   It lands as an addition to the contract at its turn, with nothing renamed
+   It lands as an addition at its turn, with nothing renamed
    or reshaped, as every revision so far has.
 
 ## Related

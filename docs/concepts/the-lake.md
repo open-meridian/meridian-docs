@@ -192,7 +192,7 @@ or each of Polymarket's tokens.
 | Its stage | `OUTCOME_STAGE_PROPOSED`, `_DETERMINED`, `_DISPUTED` or `_FINAL`. |
 | Its times | Valid from the determination; `settled_at_ns`, when the venue paid out, 0 until then. No business date: an outcome is not a daily value. |
 
-**Each change of stage is a new version** under the contract's one row key,
+**Each change of stage is a new version** under the interface's one row key,
 as any restatement is: a disputed resolution restated is version 2, and a
 read as of a recorded time before it answers version 1. Void is not a
 determination until a venue reports one.
@@ -394,30 +394,32 @@ plugins' pages. Each data plugin shows its own connection and what it
 serves on its pages under Manage, the same pages on every one: see
 [Using a data plugin](../how-to/using-a-data-plugin.md).
 
-## What core does not serve yet { #not-served-yet }
+## Filings, quality states and data use { #not-served-yet }
 
-The interface carries three parts that core serves in later chart releases
-on the same contract, one release each, in the order below, without a
-contract change. Until a deployment's chart
-serves one, its typed operations are answered `UNAVAILABLE`, nothing
-serving them (the Python SDK raises `CallFailed`, `kind="no handler"`), its
-tools are not listed, and each suite case about it carries its `about`
-marker, so a plugin whose source or work presents none names it not
-presented:
+Core serves three more parts of the lake and the deployment's use of it:
 
-| Part | Its operations | Served from |
-|---|---|---|
-| **Quality states**: a row's state (`valid`, `suspicious`, `invalid`) and reasons as the edge judged it (`ObservationMeta.quality`, `.quality_reasons`), a signal's escalation and invalid rows held from default reads | [`record_quality_assessments`](../api/typed-operations.md#record_quality_assessments), `SourceChoice.include_quarantined` | chart 0.1.314 (core d6781a1). Before it the lake judged nothing: a row was kept with whatever state its plugin set, a default read held no invalid row back, and `include_quarantined` was not acted on |
-| **Filings, reported facts, holdings reports and holdings, and rating actions**, an 8-K's earnings date among the filings | [`record_filings`](../api/typed-operations.md#record_filings), [`list_filings`](../api/typed-operations.md#list_filings), [`record_reported_facts`](../api/typed-operations.md#record_reported_facts), [`list_reported_facts`](../api/typed-operations.md#list_reported_facts), [`record_holdings_reports`](../api/typed-operations.md#record_holdings_reports), [`record_holdings`](../api/typed-operations.md#record_holdings), [`list_holdings`](../api/typed-operations.md#list_holdings), [`record_rating_actions`](../api/typed-operations.md#record_rating_actions), [`list_rating_actions`](../api/typed-operations.md#list_rating_actions) | the next chart release |
-| **The data-use counts and the professional test**: display persons and non-display plugins counted against a dataset's meters, their CSV export, and a person's self-certification on first access | `dashboard__read_data_use`, `dashboard__export_data_use`, `dashboard__answer_professional_test` (core's tools) | the one after |
+- **Quality states**: a row's state (`valid`, `suspicious`, `invalid`) and
+  reasons as the edge judged it (`ObservationMeta.quality`,
+  `.quality_reasons`), a signal's escalation
+  ([`record_quality_assessments`](../api/typed-operations.md#record_quality_assessments)),
+  invalid rows held from default reads, and `SourceChoice.include_quarantined`.
+- **Filings, reported facts, holdings reports and holdings, and rating
+  actions**, an 8-K's earnings date among the filings:
+  [`record_filings`](../api/typed-operations.md#record_filings),
+  [`list_filings`](../api/typed-operations.md#list_filings) and the
+  operations beside them.
+- **The data-use counts and the professional test**: display persons and
+  non-display plugins counted against a dataset's meters, their CSV export,
+  and a person's self-certification on first access, through core's tools
+  `dashboard__read_data_use`, `dashboard__export_data_use` and
+  `dashboard__answer_professional_test`.
 
-The SDK's helpers for the first two already exist: `meridian.roles.data.quality`
-judges a row at the edge, `meridian.roles.signal.escalate` records an
-assessment, and `meridian.roles.data.filings` records the filings slice
-(see [Python SDK](../api/python-sdk.md#the-filings-slice-and-quality-states)).
-A plugin built on them runs on any deployment on chart 0.1.313 or later; what it sends to
-a part not yet served is refused as above, and the SDK's quality checks
-mark rows at the edge whether or not the lake acts on the mark.
+The SDK's helpers record them: `meridian.roles.data.quality` judges a row at
+the edge, `meridian.roles.signal.escalate` records an assessment, and
+`meridian.roles.data.filings` records the filings slice (see
+[Python SDK](../api/python-sdk.md#the-filings-slice-and-quality-states)).
+Each suite case about them carries its `about` marker, so a plugin whose
+source presents none names it not presented.
 
 ## Valuing the book, and the Board
 

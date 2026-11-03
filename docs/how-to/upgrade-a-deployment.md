@@ -66,10 +66,7 @@ changes on the way, release by release, is in the
     a desk whose admin chose **Warn** refuses until a deployment admin
     permits **Refuse or warn**. The options measures price at the US
     Treasury's par yield curve, so a deployment running them launches a
-    rates plugin recording it (see [Rates](../concepts/rates.md)). Core
-    serves the filings slice, quality states and the data-use counts in a
-    later chart release on the same contract (see
-    [The lake](../concepts/the-lake.md#not-served-yet)).
+    rates plugin recording it (see [Rates](../concepts/rates.md)).
 
     Upgrading from a chart before chart 0.1.309 also rebuilds each
     account's projection from its journal once, as the book's snapshots

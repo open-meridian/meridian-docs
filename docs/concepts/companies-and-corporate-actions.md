@@ -73,20 +73,17 @@ an expiry moves that series' model price, and one going ex after it changes
 nothing. The dividends' dataset is named in the answer's provenance (see
 [Options measures](the-analytics-component.md#options-measures)).
 
-## What core does not serve yet { #not-served-yet }
+## The rest of the filings slice { #not-served-yet }
 
-The interface also carries the rest of the filings slice, which core serves
-in a later chart release on the same contract: **filings**
-(`record_filings`, `list_filings`, among them an 8-K's earnings date),
-**reported facts** (`record_reported_facts`, `list_reported_facts`),
+Beside declared dividends, the lake keeps the rest of the filings slice:
+**filings** (`record_filings`, `list_filings`, among them an 8-K's earnings
+date), **reported facts** (`record_reported_facts`, `list_reported_facts`),
 **holdings reports and holdings** (`record_holdings_reports`,
 `record_holdings`, `list_holdings`) and **rating actions**
-(`record_rating_actions`, `list_rating_actions`). Until then a deployment
-answers each `UNAVAILABLE`, nothing serving it (the Python SDK raises
-`CallFailed`, `kind="no handler"`). The data suite's cases about them carry
-`about: filings`, `holdings` and `ratings`, so a plugin whose source
-presents none names them not presented. See
-[The lake: what core does not serve yet](the-lake.md#not-served-yet).
+(`record_rating_actions`, `list_rating_actions`). The data suite's cases
+about them carry `about: filings`, `holdings` and `ratings`, so a plugin
+whose source presents none names them not presented. See
+[The lake: filings, quality states and data use](the-lake.md#not-served-yet).
 
 ## Related
 

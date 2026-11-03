@@ -23,7 +23,7 @@ talks to it and to nothing else.
 
 This is what makes a plugin small. Access control, transport, correlation and
 health are the sidecar's, implemented once, so a plugin author writes against
-one local surface and gets all of them. That surface is the contract in
+one local surface and gets all of them. That surface is the interface in
 meridian-schema; the operations a plugin's roles may take are listed in
 [Typed operations](../api/typed-operations.md), and in Python the
 [SDK](../api/python-sdk.md) wraps them.
@@ -288,7 +288,7 @@ from the version's declaration (see
 A stopped instance keeps Summary, Settings and Documentation.
 
 - **Summary**: the plugin's status, which is core's to say (its health and
-  why, the version running and the contract it registered with, any
+  why, the version running and the interface version it registered with, any
   warnings, and what it received and did not carry), then the
   figures the plugin reports about its own work, each a tile, such as
   SnapTrade's Connections, Accounts reached and Last read. A figure is a
