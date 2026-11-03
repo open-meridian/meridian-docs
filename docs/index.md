@@ -31,58 +31,46 @@ This site is how it works. For what it is and why, see
 
 <div class="grid cards" markdown>
 
--   **Getting started**
+-   **[Getting started](getting-started/installation.md)**
 
     ---
 
     Install the command line, bring a deployment up on your laptop, and run
     your first plugin.
 
-    [Install a deployment](getting-started/installation.md)
-
--   **Build with an AI agent**
+-   **[Build with an AI agent](getting-started/build-with-an-ai-agent.md)**
 
     ---
 
     Every new plugin carries `AGENTS.md`, the instructions any coding agent
     follows to build it and change it live.
 
-    [Build with an AI agent](getting-started/build-with-an-ai-agent.md)
-
--   **Concepts**
+-   **[Concepts](concepts/index.md)**
 
     ---
 
     The platform and your deployment, plugins and their grants, access,
     accounts and instruments.
 
-    [Architecture](concepts/architecture.md)
-
--   **How-to**
+-   **[How-to](how-to/index.md)**
 
     ---
 
     Goal-oriented recipes: sign-in, access, a lost password, releasing a
     plugin, starting over.
 
-    [How-to guides](how-to/index.md)
-
--   **Tutorials**
+-   **[Tutorials](tutorials/index.md)**
 
     ---
 
     Runnable walkthroughs, from changing a plugin's page live to recording a
     holdings statement.
 
-    [Tutorials](tutorials/index.md)
-
--   **API reference**
+-   **[API reference](api/index.md)**
 
     ---
 
     Every command, the Python SDK, and the typed operations a plugin calls.
-
-    [API reference](api/index.md)
 
 </div>
 

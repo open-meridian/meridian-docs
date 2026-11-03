@@ -40,3 +40,15 @@
 .md-typeset .om-integrations td code { white-space: nowrap; }
 .om-nowrap { white-space: nowrap; }
 .md-typeset .om-integrations__empty { margin: .6em 0 1em; padding: .6em .8em; border-left: .2rem solid var(--md-accent-fg-color); background-color: var(--md-code-bg-color); }
+
+/* Home page cards: the whole card is the link (its title's), not a line at
+   its foot. The title link stretches over the card, so any click on it goes
+   where the title says. */
+.md-typeset .grid.cards > ul > li { position: relative; }
+.md-typeset .grid.cards > ul > li > p:first-child a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+.md-typeset .grid.cards > ul > li > p:first-child a { color: inherit; }
+.md-typeset .grid.cards > ul > li:hover { border-color: var(--md-accent-fg-color); }
