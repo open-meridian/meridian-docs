@@ -12,8 +12,8 @@ order's executions and their positions are what the venue did; the booking
 says whose they are.
 
 !!! note "Preview"
-    Booking's operations are `preview`: they may change in a later release,
-    with a migration. The `oms` that books is a plugin the firm runs: the
+    Booking's operations are `preview`: they may change, with a
+    migration. The `oms` that books is a plugin the firm runs: the
     sample plugins hold it, or a firm writes its own.
 
 ## Who does what
@@ -263,12 +263,11 @@ or a position. There are three kinds:
   recorded and never clears it.
 - **Compliance**: raised by a `compliance` plugin, with `RaiseAlert`.
 
-**The deadline is specified, not built.** The interface specifies an
-affirmation deadline, the `operations` plugin's time of day in the
-deployment's time zone, and the moment a held booking's alert is due by.
-No plugin can declare it yet, so the alert's `due_by` is unset; whether an
-alert is overdue, once it carries one, will be a reader's comparison
-against the deployment's clock.
+**The deadline.** An `operations` plugin declares its affirmation
+deadline (`Declaration(affirmation_deadline=...)`, minutes after midnight in
+the deployment's time zone), and a held booking's alert is due by that time
+on its trade date (`due_by`). Whether an alert is overdue is a reader's
+comparison against the deployment's clock.
 
 An alert's reason and acknowledgement are text written by people, and
 reach an agent as data, never instructions.
@@ -320,14 +319,6 @@ are one instrument (see [One ID per instrument](one-id.md)).
 - **`INVALID_ARGUMENT`**, naming the field: an error-account allocation
   with the cause other and no text; a sleeve cross naming an order of
   another account or instrument, or two orders of one side.
-
-## Not built yet { #not-built-yet }
-
-- **Confirming an allocation with a client** (`confirmation`), and matching
-  a trade's confirmation to a booking.
-- **Non-order transactions** and settlement; an allocation's settled
-  quantity and dates.
-- **Period close**, and an event contract's payout.
 
 ## Related
 

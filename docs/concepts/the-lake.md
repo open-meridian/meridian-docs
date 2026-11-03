@@ -197,9 +197,8 @@ as any restatement is: a disputed resolution restated is version 2, and a
 read as of a recorded time before it answers version 1. Void is not a
 determination until a venue reports one.
 
-**The lake records the outcome, not the payout.** Paying holders is a
-servicing entitlement, in a later release, so the book keeps the position
-until then. A `reporting` plugin may value a final outcome at its
+**The lake records the outcome, not the payout.** The book keeps the
+position. A `reporting` plugin may value a final outcome at its
 settlement value, by its own policy, and a custodian's payout shows as a
 break, which `operations` may explain with the outcome's row key as its
 event reference.

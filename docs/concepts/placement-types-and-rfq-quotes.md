@@ -139,13 +139,6 @@ execution.
   whose venue takes no RFQ marks it not presented, with why (see
   [A case not presented](../api/python-sdk.md#a-case-not-presented)).
 
-## Not built yet
-
-- **The sell side**: an RFQ received from a client, recorded in the lake,
-  and the firm's response to it; and axes. A placement's `rfq_id` and
-  `axe_id`, and an order's axe fields, are carried empty, and an order of
-  quantity 0, a pass, is refused.
-
 ## Related
 
 - [The order lifecycle](the-order-lifecycle.md): placements, the

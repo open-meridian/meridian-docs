@@ -2431,10 +2431,7 @@ Each release of the SDK, the interface version it declares, the runtime it needs
     (`meridian.roles.data.quality`); a licence's eligibility
     (`DataEligibility`). `meridian plugin migrate` rewrites a wire
     `SubjectRef` handed to the SDK (see [0.32.3 to 0.33.0](#0323-to-0330)).
-    It needs a deployment (chart 0.1.313 or later); core
-    serves the filings slice, quality states and the data-use counts in a
-    later chart release (see
-    [The lake](../concepts/the-lake.md#not-served-yet)). CLI 0.1.53's
+    It needs a deployment (chart 0.1.313 or later). CLI 0.1.53's
     `plugin new` writes a plugin on it. Its base image is
     `ghcr.io/open-meridian/plugin-python:0.33.0`.
 
@@ -2686,9 +2683,7 @@ Each release of the SDK, the interface version it declares, the runtime it needs
     connectivity plugins the user may route through
     (`connectivity_instance_ids`). A placement carries its own change
     requests (`change_requests`). A connectivity plugin reports fills on
-    the `ems`'s placements and records no order and creates no placement; a
-    venue-originated fill is not supported in chart 0.1.301, its handling
-    planned for a later release. The order path's and the
+    the `ems`'s placements and records no order and creates no placement. The order path's and the
     calendars' operations are `preview`. At the upgrade to chart 0.1.301 the
     book records that every account it holds waits for compliance, each
     its own entry, and no connectivity plugin is available or linked, each

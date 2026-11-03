@@ -119,15 +119,6 @@ outside it is refused `PERMISSION_DENIED`, naming `account_id`.
 the quotes and trades it reads, by the same definitions. Nothing records
 that: the stored row is post-trade only.
 
-## Not built yet
-
-- **Interval VWAP and a fixing** as benchmarks, which a version-1 job does
-  not read.
-- **A default source per benchmark**: a job names its sources, or the
-  source priority decides.
-- **Pre-trade expected costs**, which are a plugin's or later work, and
-  peers: a deployment measures only its own flow.
-
 ## Related
 
 - [Run a TCA job and read its costs](../how-to/read-execution-costs.md).

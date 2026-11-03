@@ -15,7 +15,7 @@ is live in about a second on a development deployment.
 This site is how it works. For what it is and why, see
 [open-meridian.com](https://open-meridian.com).
 
-!!! note "What is live, and what is next"
+!!! note "What is live"
     **Live now:** the deployment you run yourself; one identity for every
     instrument; your own sign-in and permissions; plugins you write in
     Python, live as you save them; holdings and activity through custody
@@ -26,11 +26,6 @@ This site is how it works. For what it is and why, see
     offers one, or live. The [agents' guard](concepts/the-agents-guard.md)
     keeps agents' orders to demo connections, and an order's executions are
     [booked](concepts/booking.md) to its accounts.
-
-    **Next:** risk and compliance, restricted lists and standing limits in a
-    common form; and the database's failover, the broker at three and
-    `resilience.profile: ha`, in a later chart release (see
-    [Service levels](concepts/service-levels.md#what-comes-later)).
 
 ## Where to start
 

@@ -774,25 +774,6 @@ an `INVALID_ARGUMENT` a `CallFailed` of kind `"invalid"` naming the fields,
 and a `PERMISSION_DENIED` a `NotGranted` (see
 [Exceptions](../api/python-sdk.md#exceptions)).
 
-## Not built yet { #not-built-yet }
-
-- **The sell side's RFQs and axes**: their references are carried empty
-  on the order and the placement, and an order of 0 quantity, a pass, is
-  refused. The buy side's RFQ is built: see
-  [RFQ placements](placement-types-and-rfq-quotes.md#rfq-placements).
-- **Confirming an allocation with a client**, non-order transactions and
-  settlement: see [Booking](booking.md#not-built-yet).
-- **Other named links** between orders -- street orders, two-way quotes,
-  alternatives, baskets -- wait for their slices. The split link, the
-  block and,, the [net](fx-netting.md) are the ones there
-  are.
-- **A trading instruction on a user group**, until groups are resolved to
-  their people.
-- **Derivative terms** on an execution, which come with the instrument
-  templates for options and futures.
-- **The fast tiers**: every order-path act is acknowledged after its entry
-  commits, on disk.
-
 ## Related
 
 - [Route orders through a connectivity plugin](../how-to/route-orders-through-a-connectivity-plugin.md):

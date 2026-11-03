@@ -205,10 +205,10 @@ plugin may be launched more than once — `snaptrade-1` and `snaptrade-2` from
 one image — and each instance has its own pod, its own broker credential and
 its own page. `meridian plugin stop <instance>` is launching's inverse.
 
-!!! note "Launching from the dashboard"
-    Today a plugin is uploaded, launched and stopped from the CLI; see
-    [the CLI reference](../api/cli.md). A page in the dashboard offering the
-    same launch to an administrator is specified and not built yet.
+!!! note "Launching"
+    A plugin is uploaded from the CLI, and launched and stopped from the
+    dashboard's **Plugins** page or the CLI; see
+    [the CLI reference](../api/cli.md).
 
 ## A plugin's page
 

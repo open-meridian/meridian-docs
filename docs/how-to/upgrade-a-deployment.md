@@ -288,11 +288,6 @@ Answer `y`. It rolls back, then waits, up to `--timeout`, for that revision's mi
 one and for every component on its template, as an upgrade does. `--yes` answers for a script. See
 [`meridian rollback-deployment`](../api/cli.md#meridian-rollback-deployment).
 
-!!! note "Not checked yet"
-    Two checks are planned and not built, and the command says so each time rather than passing
-    them: whether an upgrade skips more versions than is supported, and whether every installed
-    plugin runs on the new version. Neither has anything to check against yet.
-
 ## To upgrade from your own pipeline
 
 Firms usually apply an upgrade through their own change control: a reviewed version bump, applied by

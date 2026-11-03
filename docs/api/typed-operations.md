@@ -2278,7 +2278,7 @@ Answers the order at proposed, or for a child at released.
 | `customer_id`, `firm_designated_id`, `handling_instructions`, `received_at_ns`, `received_precision`, `quote_at_receipt`, `represents_order_ids` | Fields recorded for reporting, as the proposer knows them |
 | `value_date` | An FX order's value date as `portfolio` states it, an ISO 8601 date; empty is spot, the pair's spot date on the trade date the order opened |
 | `net_member_order_ids` | The `oms`'s [net order](../concepts/fx-netting.md): its members, released FX orders of one pair and one value date, of both sides. See the refusals there |
-| `axe_source`, `axe_counterparty_id` | Carried empty: the sell side's RFQs and axes are not built |
+| `axe_source`, `axe_counterparty_id` | Carried empty |
 | `link` | A child's split link to its parent |
 | `idempotency_key`, `acting_for` | As above |
 
@@ -2362,7 +2362,7 @@ plugins linked to it; no other role creates a placement.
 | `placement_type` | How it is executed, set once: `dma`, `algo` (which needs a `strategy`), `care`, `rfq` or `manual`; DMA, care and manual carry no strategy, and an order of type RFQ takes only RFQ placements, each refused `invalid` naming the field. Unset reads as DMA. See [Placement types](../concepts/placement-types-and-rfq-quotes.md) |
 | `counterparty_contact`, `agreed_at_ns`, `agreed_precision` | A manual placement's trade details, its evidence: the counterparty's contact, and when the trade was agreed with its precision. Its counterparty is its `destination` |
 | `stale_reference` | A placement the `ems` sends past its reference price's ceiling, under **warn**: the book records it with the condition `PLACEMENT_CONDITION_SENT_ON_STALE_REFERENCE` |
-| `rfq_id`, `axe_id` | Carried empty: the sell side's RFQs and axes are not built |
+| `rfq_id`, `axe_id` | Carried empty |
 | `idempotency_key`, `acting_for` | As above |
 
 Answers the placement at queued; the order is working once quantity

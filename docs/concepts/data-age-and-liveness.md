@@ -149,15 +149,6 @@ where it is permitted, refusing otherwise. Through an agent:
 `dashboard__read_stale_reference_actions_permitted` and
 `dashboard__set_stale_reference_actions_permitted`.
 
-## Not built yet { #not-built-yet }
-
-- **The analytics component's check at use**: a job's ceiling per source,
-  a figure's age and ceiling, and a stale figure. Today a job sets no
-  ceiling, and `PRICE_STALE` does not arise from one. A model figure names
-  its oldest input's source time.
-- **Each plugin's consumer lag and its conflation counts**, and the page
-  hop's age.
-
 ## Related
 
 - [Set staleness thresholds and the stale-reference action](../how-to/set-staleness-thresholds.md).

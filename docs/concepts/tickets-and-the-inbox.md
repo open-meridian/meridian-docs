@@ -241,13 +241,6 @@ for an agent that adds advice to open tickets, and
 [Working your tickets](../how-to/work-your-tickets.md), for an agent that reads
 your inbox and reports to you.
 
-!!! note "Coming later"
-    Sending a ticket on to Open Meridian, as a public issue carrying no
-    personal information, is specified and arrives in a later release; a
-    ticket about core or the platform is advised that way now and will be
-    ready to send then. So is an agent drafting an answer that waits for a
-    person to approve it before it is posted in their name.
-
 ## Related
 
 - [Access](access.md): the levels and account permissions visibility is

@@ -103,11 +103,10 @@ the publisher's record (see
 | `data` | Records rates ([`record_rates`](../api/typed-operations.md#record_rates)) |
 | `reporting`, `portfolio`, `compliance`, `signal` | Read them, hear them, and query them |
 
-## Not built yet
-
-- **Filings, fundamentals and economic series**: the lake's later kinds.
-- **A deployment's licence counts**, for rates as for every kind: a
-  dataset of rates is licensed and entitled as any other.
+A dataset of rates is licensed, entitled and counted as any other: see
+[Licences and entitlements](licences-and-entitlements.md). Filings and
+reported facts are kinds of their own: see
+[Companies and corporate actions](companies-and-corporate-actions.md).
 
 ## Related
 

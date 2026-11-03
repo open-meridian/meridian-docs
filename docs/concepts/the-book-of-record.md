@@ -28,9 +28,9 @@ A custody plugin converts what its vendor sends into the street's terms at
 the edge, and may keep the raw records to debug a difference between what the
 vendor said and what it recorded: the SnapTrade plugin keeps its raw
 responses for a stated time and shows them on its own **Raw responses** tab.
-The deployment giving an edge plugin storage of its own for them is specified
-and not built yet, so such a plugin keeps them where its pod lets it, for as
-long as the pod lasts.
+The deployment gives each edge plugin instance storage of its own for them, a
+volume no other plugin mounts, kept across restarts and new versions: see
+[Keep what your custody plugin converts](../how-to/keep-what-the-edge-converts.md).
 
 The book and the street share no key, join or transaction. A break, or an
 opening balance, names the street record it came from by value: the
