@@ -23,7 +23,7 @@ of four kinds:
 | A currency's | The currency's settlement days | The currency's cash instrument |
 | A trading calendar | A venue's trading days | The venues that follow it, by their venue IDs |
 | A securities settlement calendar | A securities settlement system's days | The settlement system, by its name and country |
-| Trading sessions (contract 27) | A venue's sessions within its days | The venues that follow it, by their venue IDs |
+| Trading sessions | A venue's sessions within its days | The venues that follow it, by their venue IDs |
 
 **It says which days are not business days, as data:** its weekend, a set
 of weekdays dated so that a change of weekend takes effect on its day; each
@@ -283,7 +283,7 @@ cash instruments (see [One ID per instrument](one-id.md)).
 
 ## Trading sessions { #trading-sessions }
 
-Added in contract 27. A calendar of the kind
+A calendar of the kind
 `CALENDAR_KIND_TRADING_SESSIONS` holds the hours a venue trades, the
 minimum that [staleness](data-age-and-liveness.md) needs, since a price's
 age counts only in session:

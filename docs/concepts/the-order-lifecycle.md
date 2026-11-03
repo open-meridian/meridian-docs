@@ -10,8 +10,7 @@ for the state it arrives in. An order's status is derived from its journal,
 one entry at a time, and stored nowhere as a fact.
 
 !!! note "Tested against simulated venues"
-    The order path's operations are `preview`: they may change in a later
-    contract version, with a migration (see
+    The order path's operations are `preview`: they may change in a later release, with a migration (see
     [The order path](../api/python-sdk.md#the-order-path)). Core proves the
     path end to end against a simulated venue only, which takes the FIX
     acknowledgements, with stand-in plugins for each role; no broker,
@@ -77,7 +76,7 @@ Beside its state an order holds any of **nine conditions**, each with its
 reason and the actor that set it: **change requested**, **approval
 required**, **awaiting check**, **claimed**, **held**, **paused**,
 **outcome unknown**, **does not tie out** (an overfill or a restatement)
-and **late fact**. From contract 27 a **held** condition may carry a typed
+and **late fact**. A **held** condition may carry a typed
 cause, `HOLD_CAUSE_REFERENCE_PRICE_STALE`, set by an `ems` whose
 pre-trade check found its reference price too old (see
 [Data age and liveness](data-age-and-liveness.md#the-ems-checks-its-reference-price)).
@@ -86,7 +85,7 @@ A **placement** -- the part of an order sent to one connectivity plugin --
 is in one of eight states, **queued**, **sent**, **working**, **done for
 day**, **filled**, **cancelled**, **expired** or **rejected**, with the
 conditions **change requested**, **outcome unknown**, **suspended** and
-**awaiting trigger**, and from contract 27 **sent on stale reference**, the
+**awaiting trigger**, and **sent on stale reference**, the
 record of an `ems`'s warning.
 
 ### Status is derived from the journal
@@ -356,10 +355,10 @@ sent, by the venue's plugin, never refused by core. It also
 says which acknowledgement the venue takes of an accepted or DK'd
 venue-originated fill (`execution_acknowledgement`; see
 [What the venue is told](#what-the-venue-is-told)), unspecified reading as
-none. From contract 27 it lists the
+none. It lists the
 [placement types](placement-types-and-rfq-quotes.md) each code takes.
 
-**How a placement is executed.** From contract 27 every placement states
+**How a placement is executed.** Every placement states
 its type, set once by the `ems`: `dma`, `algo`, `care`, `rfq` or `manual`.
 A manual placement, a trade agreed by phone, reaches no connectivity
 plugin; an RFQ placement carries the dealers' quotes received and the one
@@ -787,7 +786,7 @@ and a `PERMISSION_DENIED` a `NotGranted` (see
   settlement: see [Booking](booking.md#not-built-yet).
 - **Other named links** between orders -- street orders, two-way quotes,
   alternatives, baskets -- wait for their slices. The split link, the
-  block and, from contract 27, the [net](fx-netting.md) are the ones there
+  block and,, the [net](fx-netting.md) are the ones there
   are.
 - **A trading instruction on a user group**, until groups are resolved to
   their people.

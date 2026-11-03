@@ -27,7 +27,7 @@ by any service listed here.
 
 Only released plugins are listed. **Sample data** is a developer's setting,
 offered on a development deployment. **Version** is the plugin's release and
-the contract it is built on: every one is on contract 29. The Federal Reserve
+the contract it is built on: every one is. The Federal Reserve
 Bank of New York, US Treasury and FRED plugins record rates, which belong to
 none of the asset classes, so an asset filter leaves them out; so are Pyth
 Network's metals and commodities.

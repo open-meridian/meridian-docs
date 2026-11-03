@@ -12,8 +12,7 @@ order's executions and their positions are what the venue did; the booking
 says whose they are.
 
 !!! note "Proved with stand-in plugins"
-    Every operation on this page is `preview`: it may change in a later
-    contract version, with a migration. Core proves booking end to end with
+    Every operation on this page is `preview`: it may change in a later release, with a migration. Core proves booking end to end with
     stand-in plugins only: its order-path test books a block order across
     two funds. No released plugin holds the `oms` role yet.
 

@@ -5,7 +5,7 @@ phone as a manual placement, and works an order by asking dealers for
 quotes and picking one. What each type means is in
 [Placement types and RFQ quotes](../concepts/placement-types-and-rfq-quotes.md).
 
-You need SDK 0.32.0 or later and a deployment on contract 27 (chart
+You need SDK 0.32.0 or later and a deployment (chart
 0.1.309 or later).
 
 ## A manual placement

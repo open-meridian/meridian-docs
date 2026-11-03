@@ -1,6 +1,6 @@
 # Scenarios
 
-Added in contract 28. A **scenario** says how the market moves: spot up 5%,
+A **scenario** says how the market moves: spot up 5%,
 volatility down 2 points, a week forward. Open Meridian writes every
 scenario in one **common format**, so a grid a person saves on one plugin's
 page, a stress a risk plugin runs and the analytics component's

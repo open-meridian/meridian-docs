@@ -5,7 +5,7 @@ its **documentation**: a few sections of plain Markdown you write in the plugin'
 carried with each version you upload, and a **Reference** the deployment draws from the version's
 declaration, so it always says what the version really asks for.
 
-You need CLI 0.1.53 and SDK 0.33.0 or later (contract 28). `meridian plugin new` writes a plugin with a
+You need CLI 0.1.58 and SDK 0.35.5 or later. `meridian plugin new` writes a plugin with a
 `docs/` folder already in it, one short prompt in each section for you to replace.
 
 ## The sections
@@ -32,7 +32,7 @@ sections say why and how; the Reference says what.
 
 ## Declare it
 
-The documentation travels in the version's declaration, which from contract 25 is the whole of
+The documentation travels in the version's declaration, which is the whole of
 what the version says about itself: its settings, its interface (its pages, and the tools their
 typed routes make), whether it reads external accounts, and its documentation.
 

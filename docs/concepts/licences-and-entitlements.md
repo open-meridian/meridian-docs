@@ -39,14 +39,11 @@ deployment keeps them with the licence the catalogue defaults, and
 They record what the vendor's terms say, and grant nothing. A deployment
 takes them from chart 0.1.311.
 
-**A licence a person sets keeps the declared terms** (contract 28). Setting
+**A licence a person sets keeps the declared terms**. Setting
 the licence on the Data sources page, or with `dashboard__set_dataset_licence`,
 changes what the person states and keeps every other term at the value the
 catalogue declares: the attribution terms, the meters and the eligibility
-among them. Before contract 28 a licence a person set replaced the
-declared one whole and dropped them.
-
-**Who may take it** (contract 28). The terms may state who is eligible to
+among them. **Who may take it**. The terms may state who is eligible to
 license the data at all, as a vendor's price list does
 (`DatasetLicence.eligibility`): personal use, commercial use, or both, and
 a buyer's annual revenue below or at least a threshold, in an ISO 4217
@@ -55,11 +52,10 @@ state**, and `dashboard__list_datasets` answers it. It is shown, never
 enforced: whether the firm is eligible is the deployment admin's to judge
 from the terms.
 
-**What the deployment counts** (not served yet). Contract 28 also carries
-the deployment's counts of its use of a licensed dataset, display persons
+**What the deployment counts** (not served yet). The interface also carries the deployment's counts of its use of a licensed dataset, display persons
 and non-display plugins against the dataset's meters with their CSV
 export, and the professional test a person answers on first access. Core
-serves them in a later chart release on contract 28 (see
+serves them in a later chart release (see
 [The lake: what core does not serve yet](the-lake.md#not-served-yet)).
 
 **The one-person warning.** A dataset whose terms are one person's is

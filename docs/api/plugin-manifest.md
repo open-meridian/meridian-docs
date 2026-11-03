@@ -14,7 +14,7 @@ name = "reference-plugin"
 version = "0.1.0"
 description = "A Meridian plugin"
 requires-python = ">=3.11"
-dependencies = ["open-meridian==0.33.0"]
+dependencies = ["open-meridian==0.35.5"]
 
 [project.scripts]
 reference-plugin = "reference_plugin.__main__:main"
@@ -33,7 +33,7 @@ The table must be present: an upload without it is refused. The command line rea
 |---|---|---|---|
 | `roles` | list of strings | `[]` | The roles the plugin asks for, from the deployment's fixed list (below). Its grants on the bus are the union of its roles' grants. Empty is a plugin admitted with no topics, as the reference plugin is. |
 | `interface` | boolean | `false` | Whether the plugin serves a page through its sidecar. It is shown in the catalogue (`page: yes` or `no` in `meridian plugin list`). |
-| `declaration` | string | none | The version's declaration, as `"<module>:<attribute>"`, naming a `meridian.Declaration`: its settings, its interface, whether it reads external accounts and its documentation. `meridian plugin upload` reads it from the built image with `meridian-declaration`, and the texts in `docs/` beside it. A plugin on SDK 0.29.0 (contract 25) names one: a version uploaded without it is refused at registration. `meridian plugin check` fails one naming a module or an attribute the plugin does not have. See [The whole declaration](python-sdk.md#the-whole-declaration). |
+| `declaration` | string | none | The version's declaration, as `"<module>:<attribute>"`, naming a `meridian.Declaration`: its settings, its interface, whether it reads external accounts and its documentation. `meridian plugin upload` reads it from the built image with `meridian-declaration`, and the texts in `docs/` beside it. A plugin on SDK 0.29.0 names one: a version uploaded without it is refused at registration. `meridian plugin check` fails one naming a module or an attribute the plugin does not have. See [The whole declaration](python-sdk.md#the-whole-declaration). |
 
 ### Rules
 
@@ -64,14 +64,14 @@ A plugin's roles come from this list of fifteen, from the deployment's contract.
 | `oms` | order management, including tax-lot selection |
 | `operations` | the post-trade pipeline: matching, servicing, reconciliation, settlement |
 | `portfolio` | portfolio construction |
-| `pricing` | pricing models: answers the analytics component's batches for the models its version declares. Added in contract 26. |
-| `reference` | reference and terms data: a security's terms gathered, reconciled and offered to the instrument store. Added in contract 24. |
+| `pricing` | pricing models: answers the analytics component's batches for the models its version declares. |
+| `reference` | reference and terms data: a security's terms gathered, reconciled and offered to the instrument store. |
 | `reporting` | reporting, analytics and valuation |
 | `servicing` | non-trading transactions: corporate actions, lifecycle events, coupons |
 | `settlement` | external settlement rails |
 | `signal` | signal generation |
 
-A role's topics are exactly the rows of the contract that name it, the [typed operations](typed-operations.md) it may take; what each role holds is on [Roles](../concepts/roles.md).
+A role's topics are exactly the rows of the interface that name it, the [typed operations](typed-operations.md) it may take; what each role holds is on [Roles](../concepts/roles.md).
 
 ## Keys outside `[tool.meridian]`
 

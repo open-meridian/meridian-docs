@@ -21,7 +21,7 @@ for placements in general.
 
 **Set once.** A placement's type never changes. Another style of execution
 is another placement, as FIX fixes HandlInst for an order's life. A
-placement with no type stated, made before contract 27 or by a plugin built
+placement with no type stated, made before chart 0.1.309 or by a plugin built
 before it, is read as `dma`, and nothing is backfilled.
 
 **Consistency.** The book refuses, `invalid`, naming the field:
@@ -153,4 +153,4 @@ execution.
 - [Execution costs](execution-costs.md): each fill's cost against the
   standard benchmarks, by placement.
 - [The agents' guard](the-agents-guard.md).
-- [Typed operations: contract 27's](../api/typed-operations.md#contract-v27s-operations).
+- [Typed operations: RFQ quotes, execution costs, rates, liveness and latency](../api/typed-operations.md#rfq-costs-rates-and-liveness).

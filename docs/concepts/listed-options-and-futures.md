@@ -1,6 +1,6 @@
 # Listed options and futures
 
-Added in contract 28. A listed option or a future is an instrument like any
+A listed option or a future is an instrument like any
 other: one platform `INS-` record, minted from a template, held in the book
 in lots. What sets it apart is that an exchange lists thousands of series
 under each underlying, most of which a firm never trades, and that each
@@ -45,7 +45,7 @@ per contract) and, where it is physically delivered, its
 `first_notice_date`. A commodity is a referential record of its own type,
 `commodity`, which the platform's staff seed and nobody holds.
 
-**Each field has a requirement level** (contract 28): `mint`, needed to
+**Each field has a requirement level**: `mint`, needed to
 mint the record; `complete`, needed before the book takes it; or `optional`.
 A field may be `repeated`, as FIX's repeating groups are; the deliverable is
 one.
@@ -225,4 +225,4 @@ and the [Python SDK](../api/python-sdk.md#listed-options-and-futures).
 - [Scenarios](scenarios.md): the shocks a grid applies.
 - [One ID per instrument](one-id.md): templates and the platform's records.
 - [The book of record](the-book-of-record.md) and [The order lifecycle](the-order-lifecycle.md).
-- [Typed operations: contract 28's](../api/typed-operations.md#contract-v28s-operations).
+- [Typed operations: Listed options and futures, companies, derived series and scenarios](../api/typed-operations.md#options-companies-and-scenarios).

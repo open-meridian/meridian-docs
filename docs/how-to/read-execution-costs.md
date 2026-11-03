@@ -5,7 +5,7 @@ reads the costs back: from a plugin with the Python SDK, and through an
 agent. What the numbers mean is in
 [Execution costs](../concepts/execution-costs.md).
 
-You need SDK 0.32.0 or later, a deployment on contract 27 (chart 0.1.309 or
+You need SDK 0.32.0 or later, a deployment (chart 0.1.309 or
 later), and a plugin holding a role that runs jobs (`reporting`,
 `portfolio`, `compliance` or `signal`) with the account in its read scope.
 The costs are measured against the mid of a dataset of quotes the plugin is

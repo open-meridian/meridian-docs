@@ -7,7 +7,7 @@ only what they ticked, recorded as them through that client. Your plugin
 offers its tools there without writing any: the SDK derives a tool from each
 route that declares its inputs as one typed record.
 
-You need CLI 0.1.53 and SDK 0.33.0 or later (contract 28).
+You need CLI 0.1.58 and SDK 0.35.5 or later.
 
 ## Declare a route's inputs as one record
 
@@ -50,7 +50,7 @@ async def confirm(request: meridian.Request) -> meridian.Response:
     record = request.params
     if not record.reason:
         pages.refuse("Give a reason.", ("reason", "required to confirm"))
-    entry = await request.plugin.record_opening_balance(..., acting_for=request.caller.header)
+    entry = await OPERATIONS.record_opening_balance(..., acting_for=request.caller.header)  # the plugin's operations class
     return pages.answer("done.html", Recorded(record.account, entry.entry_id))
 ```
 

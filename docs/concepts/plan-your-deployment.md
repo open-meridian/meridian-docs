@@ -160,11 +160,11 @@ reports to its investors, and trades through the order path.
 | The book valued daily, consolidated and by account | [`reporting`](roles.md#reporting) | The sample reporting plugin, or yours | Local | Exists: see [Value the book](../how-to/value-the-book.md) |
 | Post-trade concentration checks against the book | [`compliance`](roles.md#compliance) | Yours | Local | Build your own: it reads positions and account figures today |
 | Restricted lists and standing limits in a common form | [`compliance`](roles.md#compliance) | Yours | Local | Planned, with risk and compliance |
-| A verdict on each order before it goes out | [`compliance`](roles.md#compliance) | Yours | Local | Build your own: the contract carries it; see [The order lifecycle](the-order-lifecycle.md) |
+| A verdict on each order before it goes out | [`compliance`](roles.md#compliance) | Yours | Local | Build your own: the interface carries it; see [The order lifecycle](the-order-lifecycle.md) |
 | Investor reports, kept as sent | [`reporting`](roles.md#reporting) | Yours | Local | Build your own: it reads positions and the lake's prices today |
 | An agent drafting an adjustment that a person makes | any | Any | — | Exists: [Prepared changes](prepared-changes.md) |
 | A nightly job running as a named account | any | Any | — | Exists: [Service accounts](service-accounts.md) |
-| Orders decided, worked and sent | [`portfolio`](roles.md#portfolio), [`oms`](roles.md#oms), [`ems`](roles.md#ems) | Yours | Local | Build your own: the contract carries it; see [The order lifecycle](the-order-lifecycle.md) |
+| Orders decided, worked and sent | [`portfolio`](roles.md#portfolio), [`oms`](roles.md#oms), [`ems`](roles.md#ems) | Yours | Local | Build your own: the interface carries it; see [The order lifecycle](the-order-lifecycle.md) |
 | Orders placed at a broker | [`connectivity`](roles.md#connectivity) | SnapTrade; Alpaca and Tradier | Community | Exists, each tested against a simulated brokerage only: see [Route orders through a connectivity plugin](../how-to/route-orders-through-a-connectivity-plugin.md) |
 
 **Configuration.** Accounts carry an owner label per fund or sleeve, and
@@ -203,7 +203,7 @@ deployment records and checks, and the firm answers to MAS.
 | Statements, confirmations and tax forms a client can list | core, the file in the plugin's storage | The carrying broker's plugin | Planned | Planned, not scheduled |
 | Clients reaching their own accounts through the firm's app | [`portfolio`](roles.md#portfolio) and [`reporting`](roles.md#reporting) | Yours, acting as a service account | Local | Build your own |
 | The Travel Rule's information on each crypto transfer, and proof a client owns a self-hosted address | [`custody`](roles.md#custody) | Yours | Local | Spec to bring: an on-chain transfer's details are not in the contract yet |
-| Orders for US equities and crypto | [`oms`](roles.md#oms), [`connectivity`](roles.md#connectivity) | The carrying broker's and the exchange's | Planned | Planned: the contract carries the order path; these plugins come after it |
+| Orders for US equities and crypto | [`oms`](roles.md#oms), [`connectivity`](roles.md#connectivity) | The carrying broker's and the exchange's | Planned | Planned: the interface carries the order path; these plugins come after it |
 | Returns to the regulator, kept as sent | [`reporting`](roles.md#reporting) | Yours | Local | Build your own: a `reporting` plugin reads the orders and executions too |
 
 **Configuration.** A hold of five years on every edge plugin's raw records,

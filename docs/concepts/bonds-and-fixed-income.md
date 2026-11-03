@@ -1,6 +1,6 @@
 # Bonds and fixed income
 
-Contract 29 holds fixed income: bonds, agency pools, TBAs, agency CMO
+A deployment holds fixed income: bonds, agency pools, TBAs, agency CMO
 tranches and certificates of deposit. Each is a record under its own
 template, held in face, priced per 100 of face and serviced in the
 [book of record](the-book-of-record.md). Every operation and record here
@@ -179,7 +179,7 @@ own documentation says what it records and what its access needs.
 
 ## Related
 
-- [Typed operations: contract 29's](../api/typed-operations.md#contract-v29s-operations).
+- [Typed operations: Factors and expirations](../api/typed-operations.md#factors-and-expirations).
 - [Booking](booking.md) and [The book of record](the-book-of-record.md).
 - [The lake](the-lake.md) and [Rates](rates.md).
 - [The lake's data dictionary](../boundaries/lake.md) and [the book's](../boundaries/bor.md).

@@ -252,8 +252,7 @@ def table(rows: list, page_file, files) -> str:
             " ".join(f"<code>{_e(r)}</code>" for r in roles),
             _e(", ".join(ASSETS[a] for a in assets)) or "&mdash;",
             _e(", ".join(ENVIRONMENTS[e] for e in environments)),
-            f'<span class="om-nowrap">{_e(row["version"])}</span> '
-            f'<span class="om-nowrap">on v{_e(row["contract"])}</span>',
+            f'<span class="om-nowrap">{_e(row["version"])}</span>',
             guide_link(row, page_file, files),
         )
         body.append(f"<tr{data}>" + "".join(f"<td>{c}</td>" for c in cells) + "</tr>")

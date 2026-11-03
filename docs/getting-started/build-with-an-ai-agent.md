@@ -20,7 +20,8 @@ whoever works on it next has them too. `.dockerignore` keeps them out of the plu
 - A deployment installed **for development**. Development deployments run unreviewed code, so
   never use one your firm depends on. See
   [Development deployments](../concepts/development-deployments.md).
-- The `meridian` CLI 0.1.53, whose `plugin new` builds on SDK 0.33.0 (contract 28). Check with
+- The `meridian` CLI 0.1.58, whose `plugin new` builds on SDK 0.35.0, which
+  `meridian plugin migrate` moves to 0.35.5. Check with
   `meridian --version`; update with `meridian upgrade`.
 - Docker on this machine. The first run builds the plugin's image.
 - A coding agent that can run shell commands in the plugin's directory.
@@ -87,8 +88,7 @@ or tells you how to reshape the idea to fit. For example:
 
 ```text
 Read https://open-meridian.dev/llms.txt and the roles page it links. Following
-the method there, map this to the least roles, and tell me what the contract
-version this plugin's SDK pins already grants: a page that shows each
+the method there, map this to the least roles, and tell me what the SDK version this plugin pins already grants: a page that shows each
 account's latest broker statement.
 ```
 

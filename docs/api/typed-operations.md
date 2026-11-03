@@ -9,13 +9,13 @@ A plugin reaches the Open Meridian bus through its **typed operations** and noth
 
 A plugin never names a topic.
 
-The operations are generated, not written by hand. One generator reads the contract's matrix and domain protos and emits three things that must agree:
+The operations are generated, not written by hand. One generator reads the interface's matrix and domain protos and emits three things that must agree:
 
 - the plugin-facing gRPC service, `meridian.plugin.v1.PluginOperations`;
 - the sidecar's side of it;
 - the Python methods of the role classes, [`meridian.roles.<role>.Role`](python-sdk.md#role-classes).
 
-This page lists every operation in SDK 0.35.5, which declares contract 29: holdings ingestion and [the custodian's activity](../concepts/the-custodians-activity.md), the [book of record](../concepts/the-book-of-record.md)'s commands and reads, instrument and venue resolution, [the lake](../concepts/the-lake.md)'s records and reads, [the order path](#the-order-path), [booking](../concepts/booking.md), the [settlement calendars' reads](#settlement-calendars-reads), and the [one-ID model](../concepts/one-id.md)'s reads, [`list_replacements`](#list_replacements), [`list_templates`](#list_templates) and [`read_template`](#read_template), with `reference`'s [`offer_template_fields`](#offer_template_fields); contract 26's [analytics component, event groups, bounded lake query and agents' guard](#contract-v26s-operations); contract 27's [RFQ quotes, execution costs, rates, liveness and latency](#contract-v27s-operations); and contract 28's [listed options and futures, companies and corporate actions, derived series and saved scenarios, the stale-reference actions permitted, and the filings slice and quality states core serves later](#contract-v28s-operations); and contract 29's [factors and an underlying's expirations](#contract-v29s-operations), with fixed income's prices and fills. A resolve answers whether its record is provisional. The book refuses an entry missing what it requires, `REFUSAL_REASON_INCOMPLETE`, naming each missing field (see [What the book requires](#what-the-book-requires)). A command naming an order, a placement, a change request or a locate by its ID is admitted on the role's grant and held by the book to the plugin's write scope (see [The order lifecycle](../concepts/the-order-lifecycle.md#a-command-naming-a-record-by-its-id)).
+This page lists every operation in SDK 0.35.5: holdings ingestion and [the custodian's activity](../concepts/the-custodians-activity.md), the [book of record](../concepts/the-book-of-record.md)'s commands and reads, instrument and venue resolution, [the lake](../concepts/the-lake.md)'s records and reads, [the order path](#the-order-path), [booking](../concepts/booking.md), the [settlement calendars' reads](#settlement-calendars-reads), and the [one-ID model](../concepts/one-id.md)'s reads, [`list_replacements`](#list_replacements), [`list_templates`](#list_templates) and [`read_template`](#read_template), with `reference`'s [`offer_template_fields`](#offer_template_fields); the [analytics component, event groups, bounded lake query and agents' guard](#analytics-and-event-groups); [RFQ quotes, execution costs, rates, liveness and latency](#rfq-costs-rates-and-liveness); [listed options and futures, companies and corporate actions, derived series and saved scenarios, the stale-reference actions permitted, and the filings slice and quality states core serves later](#options-companies-and-scenarios); and [factors and an underlying's expirations](#factors-and-expirations), with fixed income's prices and fills. A resolve answers whether its record is provisional. The book refuses an entry missing what it requires, `REFUSAL_REASON_INCOMPLETE`, naming each missing field (see [What the book requires](#what-the-book-requires)). A command naming an order, a placement, a change request or a locate by its ID is admitted on the role's grant and held by the book to the plugin's write scope (see [The order lifecycle](../concepts/the-order-lifecycle.md#a-command-naming-a-record-by-its-id)).
 
 Three calls every plugin may make are in the Python SDK rather than here: reading the [prepared change](python-sdk.md#prepared) a page was opened from (`ReadPreparedCall`), saving [a person's own settings](python-sdk.md#own_settings) (`SetOwnSettings`), and calling one of the plugin's own acts as the [service account](../concepts/service-accounts.md) its role runs as (`CallAsServiceAccount`, offered as [`meridian.runs_as`](python-sdk.md#runs_as)). Where the dashboard makes such an act, its route is reached with a service account's claims and sends what it sends for a person, `acting_for` the header it received (see [Acting for a person](#acting-for-a-person)); the book records the service account and its owner as the entry's actor.
 
@@ -56,12 +56,12 @@ Three calls every plugin may make are in the Python SDK rather than here: readin
 | [`decline_want`](#decline_want) | `DeclineWant` | W10.7 Want what a read could not answer | command | `data` | `DeclineWantResult` |
 | [`resolve_venue`](#resolve_venue) | `ResolveVenue` | W3.14 Resolve a venue | query | `data`, `connectivity`, `ems` | `ResolveVenueResult` |
 | [`report_missing_venue`](#report_missing_venue) | `ReportMissingVenue` | W3.15 Report a venue the deployment does not hold | event | `data`, `connectivity` | `Published` |
-| [`list_prices`](#list_prices) | `ListPrices` | W10.6 Read prices and bars, point in time, by source | query | `reporting`, `portfolio`, `compliance`, `signal`, `operations` (added in contract 27) | `ListPricesResult` |
+| [`list_prices`](#list_prices) | `ListPrices` | W10.6 Read prices and bars, point in time, by source | query | `reporting`, `portfolio`, `compliance`, `signal`, `operations` | `ListPricesResult` |
 | [`list_bars`](#list_bars) | `ListBars` | W10.6 Read prices and bars, point in time, by source | query | `reporting`, `portfolio`, `compliance`, `signal` | `ListBarsResult` |
 | [`list_trades`](#list_trades) | `ListTrades` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `signal`, `ems` | `ListTradesResult` |
 | [`list_quotes`](#list_quotes) | `ListQuotes` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `signal`, `ems` | `ListQuotesResult` |
-| [`record_outcomes`](#record_outcomes) | `RecordOutcomes` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` (added in contract 23) | `RecordOutcomesResult` |
-| [`list_outcomes`](#list_outcomes) | `ListOutcomes` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `reporting`, `portfolio`, `compliance`, `signal`, `operations` (added in contract 23) | `ListOutcomesResult` |
+| [`record_outcomes`](#record_outcomes) | `RecordOutcomes` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` | `RecordOutcomesResult` |
+| [`list_outcomes`](#list_outcomes) | `ListOutcomes` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `reporting`, `portfolio`, `compliance`, `signal`, `operations` | `ListOutcomesResult` |
 | [`list_datasets`](#list_datasets) | `ListDatasets` | W10.9 Read the datasets | query | `reporting`, `portfolio`, `compliance`, `signal`, `ems` | `ListDatasetsResult` |
 | [`propose_order`](#propose_order) | `ProposeOrder` | W11.1 Propose an order | command | `portfolio`, `oms`, `ems` | `ProposeOrderResult` |
 | [`record_order`](#record_order) | `RecordOrder` | W11.2 Record an order the book did not create | command | `oms` | `RecordOrderResult` |
@@ -85,75 +85,75 @@ Three calls every plugin may make are in the Python SDK rather than here: readin
 | [`report_venue_catalogue`](#report_venue_catalogue) | `ReportVenueCatalogue` | W11.20 Publish the venue's catalogue | event | `connectivity` | `Published` |
 | [`read_venue_catalogue`](#read_venue_catalogue) | `ReadVenueCatalogue` | W11.20 Publish the venue's catalogue | query | `ems`, `oms` | `ReadVenueCatalogueResult` |
 | [`map_venue_account`](#map_venue_account) | `MapVenueAccount` | W11.22 Map an account to a venue account code | command | `ems` | `MapVenueAccountResult` |
-| [`accept_execution`](#accept_execution) | `AcceptExecution` | W11.23 Accept an unmatched execution to an order | command | `ems` (added in contract 23) | `AcceptExecutionResult` |
-| [`dont_know_execution`](#dont_know_execution) | `DontKnowExecution` | W11.24 Answer an unmatched execution DK | command | `ems` (added in contract 23) | `DontKnowExecutionResult` |
-| [`report_value_date_roll`](#report_value_date_roll) | `ReportValueDateRoll` | W11.25 Report a value-date roll | command | `connectivity` (added in contract 23) | `ReportValueDateRollResult` |
-| [`set_allocation_instruction`](#set_allocation_instruction) | `SetAllocationInstruction` | W11.26 Set an order's allocation instruction | command | `portfolio`, `operations` (added in contract 24), `oms` (added in contract 27) | `SetAllocationInstructionResult` |
-| [`book_order`](#book_order) | `BookOrder` | W11.27 Book an order's executions to its accounts | command | `oms` (added in contract 24) | `BookOrderResult` |
-| [`hand_off_booking`](#hand_off_booking) | `HandOffBooking` | W11.28 Hand off or close a booking | command | `oms` (added in contract 24) | `HandOffBookingResult` |
-| [`correct_booking`](#correct_booking) | `CorrectBooking` | W11.29 Correct a booking | command | `oms`, `operations` (added in contract 24) | `CorrectBookingResult` |
-| [`list_bookings`](#list_bookings) | `ListBookings` | W11.31 Read bookings | query | `oms`, `operations`, `compliance`, `portfolio`, `reporting` (added in contract 24) | `ListBookingsResult` |
-| [`report_give_up`](#report_give_up) | `ReportGiveUp` | W11.32 Report a give-up's answer | command | `connectivity`, `confirmation` (added in contract 24) | `ReportGiveUpResult` |
-| [`record_sleeve_cross`](#record_sleeve_cross) | `RecordSleeveCross` | W11.33 Record a sleeve cross | command | `oms` (added in contract 24) | `RecordSleeveCrossResult` |
-| [`raise_alert`](#raise_alert) | `RaiseAlert` | W11.34 Raise, acknowledge and clear an alert | command | `compliance` (added in contract 24) | `RaiseAlertResult` |
-| [`acknowledge_alert`](#acknowledge_alert) | `AcknowledgeAlert` | W11.34 Raise, acknowledge and clear an alert | command | `compliance` (added in contract 24) | `AcknowledgeAlertResult` |
-| [`list_alerts`](#list_alerts) | `ListAlerts` | W11.35 Hear and read alerts | query | `compliance`, `reporting`, `oms`, `operations` (added in contract 24) | `ListAlertsResult` |
-| [`read_local_record_orders`](#read_local_record_orders) | `ReadLocalRecordOrders` | W11.37 Read whether an order may name a local record | query | `oms`, `ems`, `portfolio`, `compliance` (added in contract 24; `connectivity`'s read dropped in contract 25) | `ReadLocalRecordOrdersResult` |
-| [`list_replacements`](#list_replacements) | `ListReplacements` | W3.22 Catch up on replacements | query | every role (added in contract 24) | `ListReplacementsResult` |
-| [`list_templates`](#list_templates) | `ListTemplates` | W3.24 Read the template catalogue | query | every role (added in contract 24) | `ListTemplatesResult` |
-| [`read_template`](#read_template) | `ReadTemplate` | W3.24 Read the template catalogue | query | every role (added in contract 24) | `ReadTemplateResult` |
-| [`offer_template_fields`](#offer_template_fields) | `OfferTemplateFields` | W3.23 Offer a template's fields | command | `reference` (added in contract 24) | `OfferTemplateFieldsResult` |
+| [`accept_execution`](#accept_execution) | `AcceptExecution` | W11.23 Accept an unmatched execution to an order | command | `ems` | `AcceptExecutionResult` |
+| [`dont_know_execution`](#dont_know_execution) | `DontKnowExecution` | W11.24 Answer an unmatched execution DK | command | `ems` | `DontKnowExecutionResult` |
+| [`report_value_date_roll`](#report_value_date_roll) | `ReportValueDateRoll` | W11.25 Report a value-date roll | command | `connectivity` | `ReportValueDateRollResult` |
+| [`set_allocation_instruction`](#set_allocation_instruction) | `SetAllocationInstruction` | W11.26 Set an order's allocation instruction | command | `portfolio`, `operations`, `oms` | `SetAllocationInstructionResult` |
+| [`book_order`](#book_order) | `BookOrder` | W11.27 Book an order's executions to its accounts | command | `oms` | `BookOrderResult` |
+| [`hand_off_booking`](#hand_off_booking) | `HandOffBooking` | W11.28 Hand off or close a booking | command | `oms` | `HandOffBookingResult` |
+| [`correct_booking`](#correct_booking) | `CorrectBooking` | W11.29 Correct a booking | command | `oms`, `operations` | `CorrectBookingResult` |
+| [`list_bookings`](#list_bookings) | `ListBookings` | W11.31 Read bookings | query | `oms`, `operations`, `compliance`, `portfolio`, `reporting` | `ListBookingsResult` |
+| [`report_give_up`](#report_give_up) | `ReportGiveUp` | W11.32 Report a give-up's answer | command | `connectivity`, `confirmation` | `ReportGiveUpResult` |
+| [`record_sleeve_cross`](#record_sleeve_cross) | `RecordSleeveCross` | W11.33 Record a sleeve cross | command | `oms` | `RecordSleeveCrossResult` |
+| [`raise_alert`](#raise_alert) | `RaiseAlert` | W11.34 Raise, acknowledge and clear an alert | command | `compliance` | `RaiseAlertResult` |
+| [`acknowledge_alert`](#acknowledge_alert) | `AcknowledgeAlert` | W11.34 Raise, acknowledge and clear an alert | command | `compliance` | `AcknowledgeAlertResult` |
+| [`list_alerts`](#list_alerts) | `ListAlerts` | W11.35 Hear and read alerts | query | `compliance`, `reporting`, `oms`, `operations` | `ListAlertsResult` |
+| [`read_local_record_orders`](#read_local_record_orders) | `ReadLocalRecordOrders` | W11.37 Read whether an order may name a local record | query | `oms`, `ems`, `portfolio`, `compliance` (`connectivity`'s read dropped in chart 0.1.306) | `ReadLocalRecordOrdersResult` |
+| [`list_replacements`](#list_replacements) | `ListReplacements` | W3.22 Catch up on replacements | query | every role | `ListReplacementsResult` |
+| [`list_templates`](#list_templates) | `ListTemplates` | W3.24 Read the template catalogue | query | every role | `ListTemplatesResult` |
+| [`read_template`](#read_template) | `ReadTemplate` | W3.24 Read the template catalogue | query | every role | `ReadTemplateResult` |
+| [`offer_template_fields`](#offer_template_fields) | `OfferTemplateFields` | W3.23 Offer a template's fields | command | `reference` | `OfferTemplateFieldsResult` |
 | [`read_calendar`](#read_calendar) | `ReadCalendar` | W3.19 Read a calendar | query | every role | `ReadCalendarResult` |
 | [`compute_date`](#compute_date) | `ComputeDate` | W3.20 Work out a date | query | every role | `ComputeDateResult` |
-| [`report_event_group`](#report_event_group) | `ReportEventGroup` | W3.29 Report an event group | command | `data` (added in contract 26) | `ReportEventGroupResult` |
-| [`list_event_groups`](#list_event_groups) | `ListEventGroups` | W3.30 Read event groups, and hear each change | query | every role but `pricing` (added in contract 26) | `ListEventGroupsResult` |
-| [`query_lake`](#query_lake) | `QueryLake` | W10.10 Query the lake within bounds | query | `compliance`, `data`, `ems`, `operations`, `portfolio`, `reporting`, `signal` (added in contract 26) | `QueryLakeResult` |
-| [`read_agent_orders_demo_only`](#read_agent_orders_demo_only) | `ReadAgentOrdersDemoOnly` | W11.39 Read whether agents' orders are kept to demo connections | query | `compliance`, `ems`, `oms`, `portfolio` (added in contract 26) | `ReadAgentOrdersDemoOnlyResult` |
-| [`run_job`](#run_job) | `RunJob` | W12.1 Run a job | query | `compliance`, `portfolio`, `reporting`, `signal` (added in contract 26) | `RunJobResult` |
-| [`list_measure_definitions`](#list_measure_definitions) | `ListMeasureDefinitions` | W12.1 Run a job | query | `compliance`, `portfolio`, `reporting`, `signal` (added in contract 26) | `ListMeasureDefinitionsResult` |
-| [`list_price_batches`](#list_price_batches) | `ListPriceBatches` | W12.3 Price a batch | query | `pricing` (added in contract 26) | `ListPriceBatchesResult` |
-| [`answer_price_batch`](#answer_price_batch) | `AnswerPriceBatch` | W12.3 Price a batch | command | `pricing` (added in contract 26) | `AnswerPriceBatchResult` |
-| [`list_finished_jobs`](#list_finished_jobs) | `ListFinishedJobs` | W12.4 Finish a job later, and read its answer | query | `compliance`, `portfolio`, `reporting`, `signal` (added in contract 26) | `ListFinishedJobsResult` |
-| [`read_job_answer`](#read_job_answer) | `ReadJobAnswer` | W12.4 Finish a job later, and read its answer | query | `compliance`, `portfolio`, `reporting`, `signal` (added in contract 26) | `ReadJobAnswerResult` |
-| [`record_rates`](#record_rates) | `RecordRates` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` (added in contract 27) | `RecordRatesResult` |
-| [`list_rates`](#list_rates) | `ListRates` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `compliance`, `portfolio`, `reporting`, `signal` (added in contract 27) | `ListRatesResult` |
-| [`record_liveness`](#record_liveness) | `RecordLiveness` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` (added in contract 27) | `RecordLivenessResult` |
-| [`report_latency`](#report_latency) | `ReportLatency` | W4.16 Report a session's latency and a hop's data age | command | `connectivity`, `data`, `ems` (added in contract 27; served from contract 28) | `ReportLatencyResult` |
-| [`report_placement_quote`](#report_placement_quote) | `ReportPlacementQuote` | W11.40 Record a quote received on an RFQ placement | command | `connectivity` (added in contract 27) | `ReportPlacementQuoteResult` |
-| [`pick_placement_quote`](#pick_placement_quote) | `PickPlacementQuote` | W11.41 Pick a quote received on an RFQ placement | command | `ems` (added in contract 27) | `PickPlacementQuoteResult` |
-| [`list_execution_costs`](#list_execution_costs) | `ListExecutionCosts` | W10.11 Record and read execution costs | query | `compliance`, `ems`, `oms`, `operations`, `portfolio`, `reporting`, `signal` (added in contract 27) | `ListExecutionCostsResult` |
-| [`record_series`](#record_series) | `RecordSeries` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` (added in contract 28) | `RecordSeriesResult` |
-| [`list_series`](#list_series) | `ListSeries` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `ems`, `oms`, `portfolio`, `signal` (added in contract 28) | `ListSeriesResult` |
-| [`record_statistics`](#record_statistics) | `RecordStatistics` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` (added in contract 28) | `RecordStatisticsResult` |
-| [`list_statistics`](#list_statistics) | `ListStatistics` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `portfolio`, `reporting`, `signal` (added in contract 28) | `ListStatisticsResult` |
-| [`request_series_records`](#request_series_records) | `RequestSeriesRecords` | W3.31 Ask for a listed series' record when it is wanted | command | `ems`, `oms`, `portfolio`, `signal` (added in contract 28) | `RequestSeriesRecordsResult` |
-| [`record_lifecycle_event`](#record_lifecycle_event) | `RecordLifecycleEvent` | W9.16 Book a listed option's or a future's lifecycle event as the broker reports it | command | `connectivity`, `custody` (added in contract 28) | `RecordLifecycleEventResult` |
-| [`propose_lifecycle_events`](#propose_lifecycle_events) | `ProposeLifecycleEvents` | W9.17 Propose the lifecycle events expected | command | `servicing` (added in contract 28) | `ProposeLifecycleEventsResult` |
-| [`release_lifecycle_event`](#release_lifecycle_event) | `ReleaseLifecycleEvent` | W9.18 Release a proposed lifecycle event no report came for | command | `operations` (added in contract 28) | `ReleaseLifecycleEventResult` |
-| [`list_lifecycle_events`](#list_lifecycle_events) | `ListLifecycleEvents` | W9.19 Read lifecycle events, and hear each | query | `operations`, `portfolio`, `reporting`, `servicing` (added in contract 28) | `ListLifecycleEventsResult` |
-| [`resolve_company`](#resolve_company) | `ResolveCompany` | W3.32 Resolve a company, asking the platform on a miss | query | `data` (added in contract 28) | `ResolveCompanyResult` |
-| [`record_corporate_actions`](#record_corporate_actions) | `RecordCorporateActions` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` (added in contract 28) | `RecordCorporateActionsResult` |
-| [`list_corporate_actions`](#list_corporate_actions) | `ListCorporateActions` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `portfolio`, `reporting`, `signal` (added in contract 28) | `ListCorporateActionsResult` |
-| [`record_derived_series`](#record_derived_series) | `RecordDerivedSeries` | W10.4 Record prices, bars, trades and quotes in batches | command | `signal` (added in contract 28) | `RecordDerivedSeriesResult` |
-| [`list_derived_series`](#list_derived_series) | `ListDerivedSeries` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `compliance`, `portfolio`, `reporting`, `signal` (added in contract 28) | `ListDerivedSeriesResult` |
-| [`record_scenarios`](#record_scenarios) | `RecordScenarios` | W12.8 Save a scenario or a scenario set | command | `signal` (added in contract 28) | `RecordScenariosResult` |
-| [`list_scenarios`](#list_scenarios) | `ListScenarios` | W12.8 Save a scenario or a scenario set | query | `compliance`, `portfolio`, `reporting`, `signal` (added in contract 28) | `ListScenariosResult` |
-| [`read_stale_reference_actions_permitted`](#read_stale_reference_actions_permitted) | `ReadStaleReferenceActionsPermitted` | W6.38 Set the stale-reference actions the deployment permits | query | `ems` (added in contract 28) | `ReadStaleReferenceActionsPermittedResult` |
-| [`record_filings`](#record_filings) | `RecordFilings` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` (added in contract 28; served in a later chart release) | `RecordFilingsResult` |
-| [`list_filings`](#list_filings) | `ListFilings` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `portfolio`, `reporting`, `signal` (added in contract 28; served in a later chart release) | `ListFilingsResult` |
-| [`record_reported_facts`](#record_reported_facts) | `RecordReportedFacts` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` (added in contract 28; served in a later chart release) | `RecordReportedFactsResult` |
-| [`list_reported_facts`](#list_reported_facts) | `ListReportedFacts` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `portfolio`, `reporting`, `signal` (added in contract 28; served in a later chart release) | `ListReportedFactsResult` |
-| [`record_holdings_reports`](#record_holdings_reports) | `RecordHoldingsReports` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` (added in contract 28; served in a later chart release) | `RecordHoldingsReportsResult` |
-| [`record_holdings`](#record_holdings) | `RecordHoldings` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` (added in contract 28; served in a later chart release) | `RecordHoldingsResult` |
-| [`list_holdings`](#list_holdings) | `ListHoldings` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `portfolio`, `reporting`, `signal` (added in contract 28; served in a later chart release) | `ListHoldingsResult` |
-| [`record_rating_actions`](#record_rating_actions) | `RecordRatingActions` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` (added in contract 28; served in a later chart release) | `RecordRatingActionsResult` |
-| [`list_rating_actions`](#list_rating_actions) | `ListRatingActions` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `portfolio`, `reporting`, `signal` (added in contract 28; served in a later chart release) | `ListRatingActionsResult` |
-| [`record_quality_assessments`](#record_quality_assessments) | `RecordQualityAssessments` | W10.12 Escalate a row's quality | command | `signal` (added in contract 28; served in a later chart release) | `RecordQualityAssessmentsResult` |
-| [`record_factors`](#record_factors) | `RecordFactors` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` (added in contract 29) | `RecordObservationsReply` |
-| [`list_factors`](#list_factors) | `ListFactors` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `operations`, `portfolio`, `reporting`, `servicing`, `signal` (added in contract 29) | `ListFactorsReply` |
+| [`report_event_group`](#report_event_group) | `ReportEventGroup` | W3.29 Report an event group | command | `data` | `ReportEventGroupResult` |
+| [`list_event_groups`](#list_event_groups) | `ListEventGroups` | W3.30 Read event groups, and hear each change | query | every role but `pricing` | `ListEventGroupsResult` |
+| [`query_lake`](#query_lake) | `QueryLake` | W10.10 Query the lake within bounds | query | `compliance`, `data`, `ems`, `operations`, `portfolio`, `reporting`, `signal` | `QueryLakeResult` |
+| [`read_agent_orders_demo_only`](#read_agent_orders_demo_only) | `ReadAgentOrdersDemoOnly` | W11.39 Read whether agents' orders are kept to demo connections | query | `compliance`, `ems`, `oms`, `portfolio` | `ReadAgentOrdersDemoOnlyResult` |
+| [`run_job`](#run_job) | `RunJob` | W12.1 Run a job | query | `compliance`, `portfolio`, `reporting`, `signal` | `RunJobResult` |
+| [`list_measure_definitions`](#list_measure_definitions) | `ListMeasureDefinitions` | W12.1 Run a job | query | `compliance`, `portfolio`, `reporting`, `signal` | `ListMeasureDefinitionsResult` |
+| [`list_price_batches`](#list_price_batches) | `ListPriceBatches` | W12.3 Price a batch | query | `pricing` | `ListPriceBatchesResult` |
+| [`answer_price_batch`](#answer_price_batch) | `AnswerPriceBatch` | W12.3 Price a batch | command | `pricing` | `AnswerPriceBatchResult` |
+| [`list_finished_jobs`](#list_finished_jobs) | `ListFinishedJobs` | W12.4 Finish a job later, and read its answer | query | `compliance`, `portfolio`, `reporting`, `signal` | `ListFinishedJobsResult` |
+| [`read_job_answer`](#read_job_answer) | `ReadJobAnswer` | W12.4 Finish a job later, and read its answer | query | `compliance`, `portfolio`, `reporting`, `signal` | `ReadJobAnswerResult` |
+| [`record_rates`](#record_rates) | `RecordRates` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` | `RecordRatesResult` |
+| [`list_rates`](#list_rates) | `ListRates` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `compliance`, `portfolio`, `reporting`, `signal` | `ListRatesResult` |
+| [`record_liveness`](#record_liveness) | `RecordLiveness` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` | `RecordLivenessResult` |
+| [`report_latency`](#report_latency) | `ReportLatency` | W4.16 Report a session's latency and a hop's data age | command | `connectivity`, `data`, `ems` (served) | `ReportLatencyResult` |
+| [`report_placement_quote`](#report_placement_quote) | `ReportPlacementQuote` | W11.40 Record a quote received on an RFQ placement | command | `connectivity` | `ReportPlacementQuoteResult` |
+| [`pick_placement_quote`](#pick_placement_quote) | `PickPlacementQuote` | W11.41 Pick a quote received on an RFQ placement | command | `ems` | `PickPlacementQuoteResult` |
+| [`list_execution_costs`](#list_execution_costs) | `ListExecutionCosts` | W10.11 Record and read execution costs | query | `compliance`, `ems`, `oms`, `operations`, `portfolio`, `reporting`, `signal` | `ListExecutionCostsResult` |
+| [`record_series`](#record_series) | `RecordSeries` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` | `RecordSeriesResult` |
+| [`list_series`](#list_series) | `ListSeries` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `ems`, `oms`, `portfolio`, `signal` | `ListSeriesResult` |
+| [`record_statistics`](#record_statistics) | `RecordStatistics` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` | `RecordStatisticsResult` |
+| [`list_statistics`](#list_statistics) | `ListStatistics` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `portfolio`, `reporting`, `signal` | `ListStatisticsResult` |
+| [`request_series_records`](#request_series_records) | `RequestSeriesRecords` | W3.31 Ask for a listed series' record when it is wanted | command | `ems`, `oms`, `portfolio`, `signal` | `RequestSeriesRecordsResult` |
+| [`record_lifecycle_event`](#record_lifecycle_event) | `RecordLifecycleEvent` | W9.16 Book a listed option's or a future's lifecycle event as the broker reports it | command | `connectivity`, `custody` | `RecordLifecycleEventResult` |
+| [`propose_lifecycle_events`](#propose_lifecycle_events) | `ProposeLifecycleEvents` | W9.17 Propose the lifecycle events expected | command | `servicing` | `ProposeLifecycleEventsResult` |
+| [`release_lifecycle_event`](#release_lifecycle_event) | `ReleaseLifecycleEvent` | W9.18 Release a proposed lifecycle event no report came for | command | `operations` | `ReleaseLifecycleEventResult` |
+| [`list_lifecycle_events`](#list_lifecycle_events) | `ListLifecycleEvents` | W9.19 Read lifecycle events, and hear each | query | `operations`, `portfolio`, `reporting`, `servicing` | `ListLifecycleEventsResult` |
+| [`resolve_company`](#resolve_company) | `ResolveCompany` | W3.32 Resolve a company, asking the platform on a miss | query | `data` | `ResolveCompanyResult` |
+| [`record_corporate_actions`](#record_corporate_actions) | `RecordCorporateActions` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` | `RecordCorporateActionsResult` |
+| [`list_corporate_actions`](#list_corporate_actions) | `ListCorporateActions` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `portfolio`, `reporting`, `signal` | `ListCorporateActionsResult` |
+| [`record_derived_series`](#record_derived_series) | `RecordDerivedSeries` | W10.4 Record prices, bars, trades and quotes in batches | command | `signal` | `RecordDerivedSeriesResult` |
+| [`list_derived_series`](#list_derived_series) | `ListDerivedSeries` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `compliance`, `portfolio`, `reporting`, `signal` | `ListDerivedSeriesResult` |
+| [`record_scenarios`](#record_scenarios) | `RecordScenarios` | W12.8 Save a scenario or a scenario set | command | `signal` | `RecordScenariosResult` |
+| [`list_scenarios`](#list_scenarios) | `ListScenarios` | W12.8 Save a scenario or a scenario set | query | `compliance`, `portfolio`, `reporting`, `signal` | `ListScenariosResult` |
+| [`read_stale_reference_actions_permitted`](#read_stale_reference_actions_permitted) | `ReadStaleReferenceActionsPermitted` | W6.38 Set the stale-reference actions the deployment permits | query | `ems` | `ReadStaleReferenceActionsPermittedResult` |
+| [`record_filings`](#record_filings) | `RecordFilings` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` (served in a later chart release) | `RecordFilingsResult` |
+| [`list_filings`](#list_filings) | `ListFilings` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `portfolio`, `reporting`, `signal` (served in a later chart release) | `ListFilingsResult` |
+| [`record_reported_facts`](#record_reported_facts) | `RecordReportedFacts` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` (served in a later chart release) | `RecordReportedFactsResult` |
+| [`list_reported_facts`](#list_reported_facts) | `ListReportedFacts` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `portfolio`, `reporting`, `signal` (served in a later chart release) | `ListReportedFactsResult` |
+| [`record_holdings_reports`](#record_holdings_reports) | `RecordHoldingsReports` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` (served in a later chart release) | `RecordHoldingsReportsResult` |
+| [`record_holdings`](#record_holdings) | `RecordHoldings` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` (served in a later chart release) | `RecordHoldingsResult` |
+| [`list_holdings`](#list_holdings) | `ListHoldings` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `portfolio`, `reporting`, `signal` (served in a later chart release) | `ListHoldingsResult` |
+| [`record_rating_actions`](#record_rating_actions) | `RecordRatingActions` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` (served in a later chart release) | `RecordRatingActionsResult` |
+| [`list_rating_actions`](#list_rating_actions) | `ListRatingActions` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `portfolio`, `reporting`, `signal` (served in a later chart release) | `ListRatingActionsResult` |
+| [`record_quality_assessments`](#record_quality_assessments) | `RecordQualityAssessments` | W10.12 Escalate a row's quality | command | `signal` (served in a later chart release) | `RecordQualityAssessmentsResult` |
+| [`record_factors`](#record_factors) | `RecordFactors` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` | `RecordObservationsReply` |
+| [`list_factors`](#list_factors) | `ListFactors` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `operations`, `portfolio`, `reporting`, `servicing`, `signal` | `ListFactorsReply` |
 | [`list_expirations`](#list_expirations) | `ListExpirations` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `ems`, `oms`, `portfolio`, `signal` | `ListExpirationsReply` |
 
-**Role** is the plugin role that publishes the step, or the roles that may ask the query, from the contract's matrix. A plugin can call an operation only if it holds one of them, approved when it was launched. Otherwise the call raises `NotGranted`. See [Plugins, roles and grants](../concepts/plugins.md) and [Plugin manifest](plugin-manifest.md).
+**Role** is the plugin role that publishes the step, or the roles that may ask the query, from the interface's matrix. A plugin can call an operation only if it holds one of them, approved when it was launched. Otherwise the call raises `NotGranted`. See [Plugins, roles and grants](../concepts/plugins.md) and [Plugin manifest](plugin-manifest.md).
 
 **Kind** says what comes back:
 
@@ -330,7 +330,7 @@ The sidecar sends the code beside the status: a `meridian.v1.Refusal`, encoded, 
 | `REFUSAL_REASON_UNSPECIFIED` | 0 | | Never sent. A refusal the status already says everything about carries no code. |
 | `REFUSAL_REASON_EXTERNAL_ACCOUNT_NOT_LINKED` | 1 | `FAILED_PRECONDITION` | The operation named an external account nobody has linked to an account. Nothing was recorded, and the next statement after a link records it. |
 | `REFUSAL_REASON_ACTOR_REQUIRED` … `REFUSAL_REASON_INCOMPLETE` | 2 to 11 | `ABORTED` | The book's refusals. See [The book's refusals](#the-books-refusals). |
-| `REFUSAL_REASON_AGENT_LIVE_ORDER` | 31 | `ABORTED` | The book's refusal of an agent's order on a connection that is not demo, added in contract 26. See [The book's refusals](#the-books-refusals). |
+| `REFUSAL_REASON_AGENT_LIVE_ORDER` | 31 | `ABORTED` | The book's refusal of an agent's order on a connection that is not demo. See [The book's refusals](#the-books-refusals). |
 
 A reason is never reused for another cause, and a retired one's number stays reserved. [`record_holding`](#record_holding) can be refused this way, as can [`record_holdings_statement`](#record_holdings_statement), which names its external account too, and [`record_activity`](#record_activity); `report_sync_status` for an unlinked account is not refused.
 
@@ -365,7 +365,7 @@ The book of record refuses with a code, which the sidecar carries beside `ABORTE
 | `REFUSAL_REASON_LATER_ENTRIES_STAND` | 9 | A reversal of an opening balance while a later entry moving the account's positions stands. |
 | `REFUSAL_REASON_IDEMPOTENCY_CONFLICT` | 10 | A key the account's book holds for a different command. |
 | `REFUSAL_REASON_INCOMPLETE` | 11 | An opening balance, or an adjustment opening a lot, missing a field the book requires, nothing applied. Each missing field is in `fields`. See [What the book requires](#what-the-book-requires). |
-| `REFUSAL_REASON_AGENT_LIVE_ORDER` | 31 | Added in contract 26. A placement, or an accept of venue-originated fills to a new order, made through a delegation or by a service account on a connection that is not demo, while [the agents' guard](../concepts/the-agents-guard.md) is on. Refused and recorded: an entry on the order names the `ems`, the connection and the actor, and a refused accept leaves the fills unmatched. A person's own act, and one a person makes from an agent's prepared change, are never refused by it. Check before sending with `Caller.agent_refused`, and offer the person a prepared change rather than retrying. |
+| `REFUSAL_REASON_AGENT_LIVE_ORDER` | 31 | A placement, or an accept of venue-originated fills to a new order, made through a delegation or by a service account on a connection that is not demo, while [the agents' guard](../concepts/the-agents-guard.md) is on. Refused and recorded: an entry on the order names the `ems`, the connection and the actor, and a refused accept leaves the fills unmatched. A person's own act, and one a person makes from an agent's prepared change, are never refused by it. Check before sending with `Caller.agent_refused`, and offer the person a prepared change rather than retrying. |
 
 The order path's other codes, and booking's, are on
 [The order lifecycle](../concepts/the-order-lifecycle.md#refusals) and
@@ -1024,7 +1024,7 @@ async def resolve_identifier(
 | Role | `custody`; `data`, resolving its vendor's codes to the instruments its rows name; `reporting`, read-only; `connectivity` |
 | Served by | the instrument store, the deployment's replica of the security master |
 
-**Provisional.** Changed in contract 24. Nothing matched, the store asks the platform to match or mint the security, within a short bounded wait; answered, the record is the platform's, under its `INS-` ID. Otherwise the store mints a provisional local record, under an `LCL-` ID, and the result's `provisional` is `True`; `minted` keeps its meaning, this resolve created the deployment's record. Test `provisional`, never the `LCL-` prefix: a resolved `LCL-` ID stays `LCL-` and answers as the `INS-` record it became. A source stating less than an identifier, a description and a currency mints nothing: `found` is `False`, `miss_reason` `MISS_REASON_NOT_FOUND`, and the holding is recorded unresolved. No `open_meridian` identifier is added to records. See [One ID per instrument](../concepts/one-id.md).
+**Provisional.** Nothing matched, the store asks the platform to match or mint the security, within a short bounded wait; answered, the record is the platform's, under its `INS-` ID. Otherwise the store mints a provisional local record, under an `LCL-` ID, and the result's `provisional` is `True`; `minted` keeps its meaning, this resolve created the deployment's record. Test `provisional`, never the `LCL-` prefix: a resolved `LCL-` ID stays `LCL-` and answers as the `INS-` record it became. A source stating less than an identifier, a description and a currency mints nothing: `found` is `False`, `miss_reason` `MISS_REASON_NOT_FOUND`, and the holding is recorded unresolved. No `open_meridian` identifier is added to records. See [One ID per instrument](../concepts/one-id.md).
 
 **Read-only, for `reporting`.** A `reporting` plugin names an instrument by an identifier, such as its reporting currency by its ISO 4217 code (`Identifier(scheme="iso4217", value="EUR")`), and the store answers the record it holds for the date. Asked by `reporting`, nothing is minted, joined, offered or listed: nothing matched is `MISS_REASON_NOT_FOUND`, several matched `MISS_REASON_AMBIGUOUS`. Core enforces it, from the asking instance's launched roles (see [Instruments](../concepts/instruments.md#resolving-an-identifier)).
 
@@ -1034,7 +1034,7 @@ async def resolve_identifier(
 
 | Name | Type | Required | Meaning |
 |---|---|---|---|
-| `identifiers` | sequence of `Identifier` | yes, by the contract | At least one. Matched strongest first. An empty set is a miss, `MISS_REASON_NOT_FOUND`, and mints nothing. |
+| `identifiers` | sequence of `Identifier` | yes, by the interface | At least one. Matched strongest first. An empty set is a miss, `MISS_REASON_NOT_FOUND`, and mints nothing. |
 | `as_of_ns` | `int` | no | The reference time: the date the mapping is being asked about. An identifier maps to different instruments over time. |
 | `exchange_mic` | `str` | no | Narrows a symbol match. Empty means unconstrained. |
 | `currency` | `str` | no | Narrows a symbol match. |
@@ -1372,7 +1372,7 @@ async def record_break(
 | `business_date` | `str` | yes | The reconciliation's ISO 8601 business date: first seen for a new break, last seen for one brought up to date. |
 | `candidate_causes` | sequence of [`BreakCause`](#breakcause) | no | The causes the plugin's matching found, for a person to confirm one. |
 | `idempotency_key` | `str` | no | See [Idempotency keys](#idempotency-keys). |
-| `unresolved_identifiers` | sequence of [`Identifier`](python-sdk.md#identifier) | on an unrecognized security | The identifiers the street row carries for a security the deployment could not recognise, as the street recorded them: at least one on `BREAK_CATEGORY_UNRECOGNIZED_SECURITY`, refused on any other category. The book resolves nothing from them. Added in contract 25. |
+| `unresolved_identifiers` | sequence of [`Identifier`](python-sdk.md#identifier) | on an unrecognized security | The identifiers the street row carries for a security the deployment could not recognise, as the street recorded them: at least one on `BREAK_CATEGORY_UNRECOGNIZED_SECURITY`, refused on any other category. The book resolves nothing from them. |
 | `acting_for` | `str` or `None` | no | Unset: the plugin reports the finding as itself. |
 
 Every difference is recorded: a plugin may rank or group breaks for its people, never drop one. A difference that persists is one break, brought up to date by its `break_id`, not a new one each day.
@@ -1944,7 +1944,7 @@ async def resolve_venue(
 | Name | Type | Required | Meaning |
 |---|---|---|---|
 | `identifiers` | sequence of [`Identifier`](python-sdk.md#identifier) | one of these two | A MIC under `iso10383`, or the vendor's own code as a `symbol` with the vendor as its `source`. |
-| `venue_id` | `str` | one of these two | A venue's `VEN-` ID, to read the venue held under it: answered with its record, or a miss where the deployment holds none. Refused, naming `venue_id`, beside `identifiers`. Added in contract 25. |
+| `venue_id` | `str` | one of these two | A venue's `VEN-` ID, to read the venue held under it: answered with its record, or a miss where the deployment holds none. Refused, naming `venue_id`, beside `identifiers`. |
 | `as_of_ns` | `int` | no | The date it is asked about; 0 for now. A MIC names the venue in force then. |
 
 **Returns** `ResolveVenueResult`: `found`, when exactly one venue held is named; `venue`, its [`VenueRecord`](#venuerecord); and `miss_reason`, `MISS_REASON_NOT_FOUND` or `MISS_REASON_AMBIGUOUS`, when not.
@@ -2005,7 +2005,7 @@ async def list_prices(
 | gRPC | `rpc ListPrices(ListPricesParams) returns (ListPricesResult)` |
 | Workflow step | W10.6, Read prices and bars, point in time, by source |
 | Kind | query, on `platform.lake.query.list-prices` |
-| Role | `reporting`, `portfolio`, `compliance`, `signal`; `operations`, for closes and other conflated prices (added in contract 27) |
+| Role | `reporting`, `portfolio`, `compliance`, `signal`; `operations`, for closes and other conflated prices |
 | Served by | the lake |
 
 | Name | Type | Required | Meaning |
@@ -2136,7 +2136,7 @@ latest = await role.list_quotes(subjects=held)      # BTC in USD and in USDC on 
 
 ## An event contract's outcomes { #outcomes }
 
-Added in SDK 0.27.0 (contract 23). This operation is `preview`. A data plugin
+Added in SDK 0.27.0. This operation is `preview`. A data plugin
 records an event contract's outcome, and prices' readers and `operations`
 read it. See
 [An event contract's outcome](../concepts/the-lake.md#an-event-contracts-outcome).
@@ -2207,8 +2207,8 @@ async def list_datasets(self) -> ListDatasetsResult
 **Returns** `ListDatasetsResult`: `datasets`, each a [`DatasetRef`](#datasetref); `licences`, each dataset's licence enforced; and `entitlements`, the plugin's own.
 
 Each `DatasetRef` carries `closed_day_count` and `outside_coverage_count`
-(added in contract 23), and `declared_delay_ns`, `stale_after_ns` and
-`liveness` (added in contract 27; see
+(added in chart 0.1.303), and `declared_delay_ns`, `stale_after_ns` and
+`liveness` (see
 [Data age and liveness](../concepts/data-age-and-liveness.md)).
 
 **A data plugin's own datasets.** Asked by a data plugin, it answers only the datasets its own catalogue declares, each with the licence a deployment admin set on it, so its Datasets page says "Licensed" or "Not licensed yet" exactly; a dataset still on its catalogue's default answers no licence set by the deployment.
@@ -2269,15 +2269,15 @@ Answers the order at proposed, or for a child at released.
 | `order_type`, `limit_price`, `stop_price` | Its type, its limit and a stop's trigger, each a `Money` where given |
 | `time_in_force`, `expire_date`, `expire_time_ns` | Its time in force, and a good-till-date's date or a good-till-time's time |
 | `sleeve` | The part of the account it is for; empty for the unsleeved part |
-| `dealt_currency`, `legs` | On a pair, the dealt currency's cash instrument; legs, each an instrument, a side and a ratio. Changed in contract 28: a [package](../concepts/listed-options-and-futures.md#package-orders) names no top-level instrument and 2 to 16 legs, the ratios whole and in lowest terms, at most one leg in no option or future, no leg in an expired series or one with no `INS-` record; its quantity is package units and its limit one net price per unit, positive a debit |
-| `position_effect` | Added in contract 28. `open` or `close`, required on an order or a leg in an option or a future, refused on any other |
-| `quote_currency` | Added in contract 23. On a pair: the quote currency's cash instrument, the pair's second currency as quoted. One naming the order's own instrument is refused `invalid` naming it; a limit or stop in another currency, naming `limit_price` or `stop_price` |
+| `dealt_currency`, `legs` | On a pair, the dealt currency's cash instrument; legs, each an instrument, a side and a ratio. A [package](../concepts/listed-options-and-futures.md#package-orders) names no top-level instrument and 2 to 16 legs, the ratios whole and in lowest terms, at most one leg in no option or future, no leg in an expired series or one with no `INS-` record; its quantity is package units and its limit one net price per unit, positive a debit |
+| `position_effect` | `open` or `close`, required on an order or a leg in an option or a future, refused on any other |
+| `quote_currency` | On a pair: the quote currency's cash instrument, the pair's second currency as quoted. One naming the order's own instrument is refused `invalid` naming it; a limit or stop in another currency, naming `limit_price` or `stop_price` |
 | `allocation_instruction` | The accounts and amounts or weights it is for; none for the whole in its own account. A child carries none |
 | `execution_instructions`, `lot_relief_method`, `relieve_lot_ids`, `capacity` | The `oms`'s: the standard execution instructions, how a sale relieves lots or the lots it names, and capacity |
 | `direction`, `parties`, `decided_by` | A client's order received, the parties as delivered, and who decided it where that differs from who enters it |
 | `customer_id`, `firm_designated_id`, `handling_instructions`, `received_at_ns`, `received_precision`, `quote_at_receipt`, `represents_order_ids` | Fields recorded for reporting, as the proposer knows them |
-| `value_date` | Added in contract 27. An FX order's value date as `portfolio` states it, an ISO 8601 date; empty is spot, the pair's spot date on the trade date the order opened |
-| `net_member_order_ids` | Added in contract 27. The `oms`'s [net order](../concepts/fx-netting.md): its members, released FX orders of one pair and one value date, of both sides. See the refusals there |
+| `value_date` | An FX order's value date as `portfolio` states it, an ISO 8601 date; empty is spot, the pair's spot date on the trade date the order opened |
+| `net_member_order_ids` | The `oms`'s [net order](../concepts/fx-netting.md): its members, released FX orders of one pair and one value date, of both sides. See the refusals there |
 | `axe_source`, `axe_counterparty_id` | Carried empty: the sell side's RFQs and axes are not built |
 | `link` | A child's split link to its parent |
 | `idempotency_key`, `acting_for` | As above |
@@ -2338,7 +2338,7 @@ order stays proposed, awaiting check, and nothing is refused.
 Sets or clears **claimed**, **held** or **paused** on an order
 (`condition`, `set`), with a `reason`. While an order is claimed only the
 claimant creates or changes its placements and child orders
-(`REFUSAL_REASON_CLAIMED`). Added in contract 27: a hold may carry its
+(`REFUSAL_REASON_CLAIMED`). A hold may carry its
 cause, `hold_cause="reference_price_stale"`, with `stale_reference`, a
 `StaleReference` (the `dataset`, the price's `age_ns` and the `ceiling_ns`
 in force), kept on the held condition so a reader reads the cause typed;
@@ -2359,9 +2359,9 @@ plugins linked to it; no other role creates a placement.
 | `quantity`, `limit_price`, `time_in_force` | The placement's |
 | `strategy` | A `StrategyInstruction` to work at the venue: its kind (VWAP, TWAP, POV, IS), start and end, participation, urgency and limits |
 | `destination`, `route_type`, `handling_instructions` | The destination's venue ID, the route type, and handling instructions, recorded for reporting |
-| `placement_type` | Added in contract 27. How it is executed, set once: `dma`, `algo` (which needs a `strategy`), `care`, `rfq` or `manual`; DMA, care and manual carry no strategy, and an order of type RFQ takes only RFQ placements, each refused `invalid` naming the field. Unset reads as DMA. See [Placement types](../concepts/placement-types-and-rfq-quotes.md) |
-| `counterparty_contact`, `agreed_at_ns`, `agreed_precision` | Added in contract 27. A manual placement's trade details, its evidence: the counterparty's contact, and when the trade was agreed with its precision. Its counterparty is its `destination` |
-| `stale_reference` | Added in contract 27. A placement the `ems` sends past its reference price's ceiling, under **warn**: the book records it with the condition `PLACEMENT_CONDITION_SENT_ON_STALE_REFERENCE` |
+| `placement_type` | How it is executed, set once: `dma`, `algo` (which needs a `strategy`), `care`, `rfq` or `manual`; DMA, care and manual carry no strategy, and an order of type RFQ takes only RFQ placements, each refused `invalid` naming the field. Unset reads as DMA. See [Placement types](../concepts/placement-types-and-rfq-quotes.md) |
+| `counterparty_contact`, `agreed_at_ns`, `agreed_precision` | A manual placement's trade details, its evidence: the counterparty's contact, and when the trade was agreed with its precision. Its counterparty is its `destination` |
+| `stale_reference` | A placement the `ems` sends past its reference price's ceiling, under **warn**: the book records it with the condition `PLACEMENT_CONDITION_SENT_ON_STALE_REFERENCE` |
 | `rfq_id`, `axe_id` | Carried empty: the sell side's RFQs and axes are not built |
 | `idempotency_key`, `acting_for` | As above |
 
@@ -2410,18 +2410,18 @@ A connectivity plugin reports an execution of a placement; the `ems` or the
 | `supersedes`, `effective_date` | For a bust or correction: the execution it supersedes, and the date it takes effect |
 | `counterparty`, `liquidity_indicator`, `venue_id` | The counterparty where known, maker or taker, and the place of execution |
 | `uti`, `uti_generated_by`, `prior_uti`, `upi`, `given_up_to`, `trade_chain_reference`, `settlement_counterparty` | Fields recorded for reporting, as the venue states them |
-| `cross_rate_source` | Added in contract 27. On an internal cross of a [net order](../concepts/fx-netting.md), which convention set its rate: `net_street_rate` or `mid_at_netting`. A cross on an order that is no net, or one with none, is refused `invalid` naming the field |
-| `multi_leg_reporting_type`, `package_execution_id` | Added in contract 28. A package's fill: `package` for the package's own execution, which books nothing, and `leg` for each leg's, naming the package's (FIX 442). A leg's fill names its package execution, and nothing else names one |
-| `instrument_id`, `side`, `venue_order_id`, `venue_client_order_id` | Added in contract 23. A fill on no placement the venue originated: its instrument, side and the venue's order ID, each required on such a fill and refused `invalid` naming it without, and the venue's client order ID where sent. Recorded unmatched |
+| `cross_rate_source` | On an internal cross of a [net order](../concepts/fx-netting.md), which convention set its rate: `net_street_rate` or `mid_at_netting`. A cross on an order that is no net, or one with none, is refused `invalid` naming the field |
+| `multi_leg_reporting_type`, `package_execution_id` | A package's fill: `package` for the package's own execution, which books nothing, and `leg` for each leg's, naming the package's (FIX 442). A leg's fill names its package execution, and nothing else names one |
+| `instrument_id`, `side`, `venue_order_id`, `venue_client_order_id` | A fill on no placement the venue originated: its instrument, side and the venue's order ID, each required on such a fill and refused `invalid` naming it without, and the venue's client order ID where sent. Recorded unmatched |
 | `raw_record`, `idempotency_key`, `acting_for` | As above |
 
 A fee's `kind` is `exchange`, `cancel`, `network`, `financing` or
-`commission` (the last two added in contract 23).
+`commission` (the last two).
 
 ### `report_charge` { #report_charge }
 
 A fee with no fill on a placement (`fee`), such as a venue's cancel fee, or
-a rolling position's financing at a roll (added in contract 23), with its
+a rolling position's financing at a roll, with its
 `trade_date`, `settlement_date` and `raw_record`: it moves cash and counts
 toward no quantity. One naming no placement the book holds, or none, is
 kept unplaced (`UNPLACED_REASON_UNKNOWN_PLACEMENT`).
@@ -2445,7 +2445,7 @@ The orders in the plugin's read scope (`account_id` narrows to one), as of
 now or changed `since` a watermark, answered `as_of`: `orders`,
 `placements`, `executions` and `unplaced_facts`, each in its own list. A
 connectivity plugin reads only the placements naming it, and the orders
-behind them. `execution_state` (added in contract 23; `unmatched`, `matched`,
+behind them. `execution_state` (`unmatched`, `matched`,
 `dont_know`) answers only the executions in that state; `unmatched` leaves
 out a fill superseded by a bust or a correction, and the bust.
 
@@ -2480,12 +2480,12 @@ code (`catalogue`, a `VenueCatalogue`): order types with their time-in-force
 values, the broker's strategies with their parameters (each a name, a type,
 whether it is required, its range or allowed values and its default), and
 eligibility for the instruments it states; and
-`execution_acknowledgement` (added in contract 23), what its venue takes of an accept or a DK
+`execution_acknowledgement`, what its venue takes of an accept or a DK
 (`none`, `bn` or `dont_know_trade`; unset reads as `none`); and
-`environment` (added in contract 26), the environment its session reached,
+`environment`, the environment its session reached,
 read from the vendor's host: `live`, `paper` or `sandbox`, empty for no
 report, which [the agents' guard](../concepts/the-agents-guard.md) counts
-live; and `placement_types` (added in contract 27), the
+live; and `placement_types`, the
 [placement types](../concepts/placement-types-and-rfq-quotes.md) its venue
 takes, beside its order types. Delivered latest per plugin and code; heard
 by the `ems` and the `oms`.
@@ -2509,7 +2509,7 @@ mapped on that plugin for another account is refused.
 
 ### `accept_execution` { #accept_execution }
 
-Added in SDK 0.27.0 (contract 23). The `ems` accepts 1 to 500
+Added in SDK 0.27.0. The `ems` accepts 1 to 500
 unmatched executions of one account, instrument, side, connectivity plugin
 and trade date to an order, for a person or its service account. See
 [Venue-originated fills](../concepts/the-order-lifecycle.md#venue-originated-fills).
@@ -2528,7 +2528,7 @@ Refused `REFUSAL_REASON_EXECUTION_STATE`, `_EXECUTIONS_DIFFER`,
 
 ### `dont_know_execution` { #dont_know_execution }
 
-Added in SDK 0.27.0 (contract 23). The `ems` answers 1 to 500
+Added in SDK 0.27.0. The `ems` answers 1 to 500
 unmatched executions DK (`execution_ids`), with a `reason`, a `DkReason`
 (`unknown_instrument`, `wrong_side`, `quantity_exceeds_order`,
 `no_matching_order`, `price_exceeds_limit`, `calculation_difference`,
@@ -2539,7 +2539,7 @@ keeping `dk_reason` and `dk_text`, and the `journal` reference. Refused
 
 ### `report_value_date_roll` { #report_value_date_roll }
 
-Added in SDK 0.27.0 (contract 23). A connectivity plugin
+Added in SDK 0.27.0. A connectivity plugin
 reports its venue's roll of an account's spot position in a pair to the
 next value date. See
 [A venue's value-date roll](../concepts/the-order-lifecycle.md#a-venues-value-date-roll).
@@ -2561,16 +2561,15 @@ next value date. See
 from date (`UNPLACED_REASON_NOTHING_PENDING`). A missing date or basis, or
 a new date not after the old, is refused `invalid`, naming the field.
 
-## Booking and the one-ID model's operations { #contract-v24s-operations }
+## Booking and the one-ID model's operations { #booking-and-one-id-operations }
 
-Added in SDK 0.28.0 (contract 24). Every one is `preview`. A command acting for
+Added in SDK 0.28.0. Every one is `preview`. A command acting for
 a person takes `acting_for`, as the order path's do. See [Booking](../concepts/booking.md) and
 [One ID per instrument](../concepts/one-id.md).
 
 ### `set_allocation_instruction` { #set_allocation_instruction }
 
-`portfolio`, or `operations` for a client's instruction, or from contract
-27 the `oms`, amends an order's
+`portfolio`, or `operations` for a client's instruction, or from chart 0.1.309 the `oms`, amends an order's
 allocation instruction: `order_id`, `allocation_instruction` (its lines,
 each an account with its amount or weight and its sleeve) and `reason`.
 **Returns** the order. Refused `REFUSAL_REASON_ORDER_STATE` where an
@@ -2717,7 +2716,7 @@ of a recorded time (`as_of_ns`) or its latest version. Answers `found`, the
 (each a date, closed or a weekend business day, its name and its source),
 its `coverage` and its `sources`. A calendar not held is answered not found
 and asked of the platform; a range ending before it starts is refused,
-naming `to_date`. Added in contract 27: a calendar of the kind
+naming `to_date`. A calendar of the kind
 `CALENDAR_KIND_TRADING_SESSIONS` also answers `trading_sessions`, its time
 zone, sessions and the early closes in the range (see
 [Trading sessions](../concepts/settlement-calendars.md#trading-sessions));
@@ -2744,9 +2743,9 @@ question; otherwise the outcome says why nothing was computed:
 naming the field; a cut's zone the deployment does not hold is refused,
 naming `spot.at_ns`.
 
-## Contract 26's operations { #contract-v26s-operations }
+## The analytics component, event groups and the agents' guard { #analytics-and-event-groups }
 
-Added in SDK 0.31.0 (contract 26). Every one is `preview`. They serve
+Added in SDK 0.31.0. Every one is `preview`. They serve
 [the analytics component](../concepts/the-analytics-component.md),
 [event groups](../concepts/event-groups.md),
 [the agents' guard](../concepts/the-agents-guard.md) and the lake's bounded
@@ -2792,7 +2791,7 @@ async def report_event_group(
 | `series_id` | The venue's series for a recurring event, up to 256 characters; empty for none |
 | `valid_from_ns` | When the grouping took effect; 0 for now |
 | `raw_record` | The raw record it was read from (`role.plugin.raw_record(...)`) |
-| `member_bounds` | Added in contract 27. Each range member's `floor`, `cap` and `bound_unit` as the venue states them, each an `EventGroupMemberBound` naming one of the members. The store offers them for the member's record, where a person accepts them; a person's value wins. A bound naming an instrument that is not a member is refused `invalid`, naming `member_bounds[i].instrument_id` |
+| `member_bounds` | Each range member's `floor`, `cap` and `bound_unit` as the venue states them, each an `EventGroupMemberBound` naming one of the members. The store offers them for the member's record, where a person accepts them; a person's value wins. A bound naming an instrument that is not a member is refused `invalid`, naming `member_bounds[i].instrument_id` |
 
 **Returns** `ReportEventGroupResult`: `event_group`, the
 [`EventGroup`](#eventgroup) at its version, under the platform's `EVG-` ID
@@ -2860,7 +2859,7 @@ async def query_lake(
 
 | Parameter | Meaning |
 |---|---|
-| `kind` | `prices`, `bars`, `trades`, `quotes`, `outcomes` or, added in contract 27, `rates`. One the asking role does not read is refused, naming it (see [Who reads what](../concepts/the-lake.md#who-reads-what)) |
+| `kind` | `prices`, `bars`, `trades`, `quotes`, `outcomes` or, `rates`. One the asking role does not read is refused, naming it (see [Who reads what](../concepts/the-lake.md#who-reads-what)) |
 | `subjects` | At most 500 |
 | `sources` | A [`SourceChoice`](#sourcechoice); none set is the deployment's source priority |
 | `valid_from_ns`, `valid_until_ns` | A range of valid times, from inclusive, until exclusive |
@@ -3065,9 +3064,9 @@ has left the component's memory, is a `CallFailed` of kind
 `"handler error"` saying so: run the job again, and its answer hash says
 whether the figures are the same.
 
-## Contract 27's operations { #contract-v27s-operations }
+## RFQ quotes, execution costs, rates, liveness and latency { #rfq-costs-rates-and-liveness }
 
-Added in SDK 0.32.0 (contract 27). Every one is `preview`. They serve
+Added in SDK 0.32.0. Every one is `preview`. They serve
 [placements and RFQ quotes](../concepts/placement-types-and-rfq-quotes.md),
 [execution costs](../concepts/execution-costs.md),
 [the lake's rates](../concepts/rates.md) and
@@ -3080,7 +3079,7 @@ with them, heard through [their role classes' `on_<event>` methods](python-sdk.m
 `rates_recorded` (`reporting`, `portfolio`, `compliance`, `signal`) and
 `liveness_recorded` (those four and the `ems`).
 
-Contract 27 also changes operations listed above:
+These also change operations listed above:
 [`propose_order`](#propose_order) takes a net order's members and a value
 date, [`set_working_condition`](#set_working_condition) a hold's cause,
 [`create_placement`](#create_placement) the placement type, a manual
@@ -3204,9 +3203,8 @@ is refused, naming it. `Wants.liveness(key)` sends one.
 A data, connectivity or `ems` plugin's latency: its sessions' histograms
 and its hops' data age, every 10 seconds.
 
-Changed in contract 28: core's latency monitor receives it, and from SDK
-0.33.0 `roles.Latency.report()` sends it; in SDK 0.32 it sent nothing. A
-contract-27 deployment serves no `report_latency`. See
+Core's latency monitor receives it, and from SDK
+0.33.0 `roles.Latency.report()` sends it; in SDK 0.32 it sent nothing. A deployment before chart 0.1.313 serves no `report_latency`. See
 [Data age and liveness](../concepts/data-age-and-liveness.md#latency).
 
 ```python
@@ -3221,7 +3219,7 @@ async def report_latency(
 | Workflow step | W4.16, Report a session's latency and a hop's data age |
 | Kind | command, on `platform.deployment.command.report-latency` |
 | Role | `data`, `connectivity`, `ems` |
-| Served by | core's latency monitor, in the dashboard, from contract 28 |
+| Served by | core's latency monitor, in the dashboard, |
 
 | Parameter | Meaning |
 |---|---|
@@ -3342,9 +3340,9 @@ and `next_cursor`. The lake's first account-scoped row: a reader reads
 only the accounts its read scope holds. What each row says is in
 [Execution costs](../concepts/execution-costs.md#a-row).
 
-## Contract 28's operations { #contract-v28s-operations }
+## Listed options and futures, companies, derived series and scenarios { #options-companies-and-scenarios }
 
-Added in SDK 0.33.0 (contract 28). Every one is `preview`. They serve
+Added in SDK 0.33.0. Every one is `preview`. They serve
 [listed options and futures](../concepts/listed-options-and-futures.md)
 (a chain's series and statistics, a series asked for, and the lifecycle
 events in the book), [companies and corporate actions](../concepts/companies-and-corporate-actions.md),
@@ -3363,14 +3361,14 @@ come with them, heard through [their role classes' `on_<event>` methods](python-
 `signal`) and `lifecycle_event_recorded` (`operations`, `servicing`,
 `portfolio`, `reporting`).
 
-**`SubjectRef` carries its role.** Changed in contract 28: a row's subject
+**`SubjectRef` carries its role.** A row's subject
 may name its role (`subject`, `holder`, `held`, `issuer`,
 `reporting_owner`, `filer`, `underlying`, `rater`), and a read naming a
 subject in a role answers only rows naming it so. From SDK 0.33.0 every
 typed operation takes `meridian.SubjectRef`, the SDK's own, and refuses the
 wire's.
 
-Contract 28 also changes operations listed above:
+These also change operations listed above:
 [`propose_order`](#propose_order) takes a package's legs with their
 `position_effect`, and an order's own; [`report_execution`](#report_execution)
 a package's fill and each leg's, linked (`multi_leg_reporting_type`,
@@ -3672,7 +3670,7 @@ async def resolve_company(
 
 ### `record_corporate_actions` { #record_corporate_actions }
 
-A data plugin records a company's declared corporate actions; in contract 28, a cash dividend. See [Corporate actions](../concepts/companies-and-corporate-actions.md#corporate-actions).
+A data plugin records a company's declared corporate actions; in chart 0.1.313, a cash dividend. See [Corporate actions](../concepts/companies-and-corporate-actions.md#corporate-actions).
 
 ```python
 async def record_corporate_actions(
@@ -3857,7 +3855,7 @@ async def read_stale_reference_actions_permitted(self) -> ReadStaleReferenceActi
 A data plugin records filings: each its filer and the subjects it is about, each in its role, its accession number, form, kind, filing date and items (an 8-K's 2.02 among them).
 
 !!! note "Not served yet"
-    Core serves this operation in a later chart release on contract 28.
+    Core serves this operation in a later chart release.
     Until then a deployment answers it `UNAVAILABLE`, nothing serving it,
     which the SDK raises as `CallFailed`, `kind="no handler"`. See
     [The lake: what core does not serve yet](../concepts/the-lake.md#not-served-yet).
@@ -3888,7 +3886,7 @@ async def record_filings(
 Reads filings by subject, kind and filing date, point in time, or every version recorded after a watermark.
 
 !!! note "Not served yet"
-    Core serves this operation in a later chart release on contract 28.
+    Core serves this operation in a later chart release.
     Until then a deployment answers it `UNAVAILABLE`, nothing serving it,
     which the SDK raises as `CallFailed`, `kind="no handler"`. See
     [The lake: what core does not serve yet](../concepts/the-lake.md#not-served-yet).
@@ -3927,7 +3925,7 @@ async def list_filings(
 A data plugin records the facts a filing reports, each a concept, its period and its value, a restatement the next version of its row key.
 
 !!! note "Not served yet"
-    Core serves this operation in a later chart release on contract 28.
+    Core serves this operation in a later chart release.
     Until then a deployment answers it `UNAVAILABLE`, nothing serving it,
     which the SDK raises as `CallFailed`, `kind="no handler"`. See
     [The lake: what core does not serve yet](../concepts/the-lake.md#not-served-yet).
@@ -3959,7 +3957,7 @@ async def record_reported_facts(
 Reads reported facts by subject, concept and period, point in time.
 
 !!! note "Not served yet"
-    Core serves this operation in a later chart release on contract 28.
+    Core serves this operation in a later chart release.
     Until then a deployment answers it `UNAVAILABLE`, nothing serving it,
     which the SDK raises as `CallFailed`, `kind="no handler"`. See
     [The lake: what core does not serve yet](../concepts/the-lake.md#not-served-yet).
@@ -3997,7 +3995,7 @@ async def list_reported_facts(
 A data plugin records a holdings report: who reports, the period and its kind.
 
 !!! note "Not served yet"
-    Core serves this operation in a later chart release on contract 28.
+    Core serves this operation in a later chart release.
     Until then a deployment answers it `UNAVAILABLE`, nothing serving it,
     which the SDK raises as `CallFailed`, `kind="no handler"`. See
     [The lake: what core does not serve yet](../concepts/the-lake.md#not-served-yet).
@@ -4029,7 +4027,7 @@ async def record_holdings_reports(
 A data plugin records each holding a report states: the holder, what is held, its quantity and market value, and its share of the class where stated.
 
 !!! note "Not served yet"
-    Core serves this operation in a later chart release on contract 28.
+    Core serves this operation in a later chart release.
     Until then a deployment answers it `UNAVAILABLE`, nothing serving it,
     which the SDK raises as `CallFailed`, `kind="no handler"`. See
     [The lake: what core does not serve yet](../concepts/the-lake.md#not-served-yet).
@@ -4061,7 +4059,7 @@ async def record_holdings(
 Reads holdings, and the reports they came from, by holder or by what is held.
 
 !!! note "Not served yet"
-    Core serves this operation in a later chart release on contract 28.
+    Core serves this operation in a later chart release.
     Until then a deployment answers it `UNAVAILABLE`, nothing serving it,
     which the SDK raises as `CallFailed`, `kind="no handler"`. See
     [The lake: what core does not serve yet](../concepts/the-lake.md#not-served-yet).
@@ -4099,7 +4097,7 @@ async def list_holdings(
 A data plugin records a rating action: the rated company or security, the rater in the `rater` role, the rating, its scale and the action.
 
 !!! note "Not served yet"
-    Core serves this operation in a later chart release on contract 28.
+    Core serves this operation in a later chart release.
     Until then a deployment answers it `UNAVAILABLE`, nothing serving it,
     which the SDK raises as `CallFailed`, `kind="no handler"`. See
     [The lake: what core does not serve yet](../concepts/the-lake.md#not-served-yet).
@@ -4131,7 +4129,7 @@ async def record_rating_actions(
 Reads a company's or a security's rating history.
 
 !!! note "Not served yet"
-    Core serves this operation in a later chart release on contract 28.
+    Core serves this operation in a later chart release.
     Until then a deployment answers it `UNAVAILABLE`, nothing serving it,
     which the SDK raises as `CallFailed`, `kind="no handler"`. See
     [The lake: what core does not serve yet](../concepts/the-lake.md#not-served-yet).
@@ -4169,7 +4167,7 @@ async def list_rating_actions(
 A signal plugin escalates a recorded row's quality, each assessment its own record; a state only escalates.
 
 !!! note "Not served yet"
-    Core serves this operation in a later chart release on contract 28.
+    Core serves this operation in a later chart release.
     Until then a deployment answers it `UNAVAILABLE`, nothing serving it,
     which the SDK raises as `CallFailed`, `kind="no handler"`. See
     [The lake: what core does not serve yet](../concepts/the-lake.md#not-served-yet).
@@ -4195,9 +4193,9 @@ async def record_quality_assessments(
 
 **Returns** `RecordQualityAssessmentsResult`: `recorded`. `meridian.roles.signal.escalate` records them.
 
-## Contract 29's operations { #contract-v29s-operations }
+## Factors and expirations { #factors-and-expirations }
 
-Contract 29 is [bonds and fixed income](../concepts/bonds-and-fixed-income.md).
+These are [bonds and fixed income](../concepts/bonds-and-fixed-income.md).
 Every operation here is `preview`. The SDK's
 [`meridian.helpers.debt`](../concepts/bonds-and-fixed-income.md#the-sdks-helpers)
 wraps the factor's: `debt.factor(...)` builds a row, `debt.read_factors`
@@ -4208,7 +4206,7 @@ classes hearing it: `on_factors_recorded` (`operations`, `portfolio`,
 up by [`list_factors`](#list_factors); and `on_series_recorded` (`ems`,
 `oms`, `portfolio`, `signal`), a listed series recorded.
 
-Contract 29 also changes operations listed above:
+These also change operations listed above:
 
 - [`propose_order`](#propose_order) takes a fixed-income limit,
   `price_basis` with `limit_yield` or `limit_spread_bps` and the
@@ -5028,7 +5026,7 @@ The envelope every lake row carries as its first field, `meridian.ObservationMet
 | `source_times` | sequence of `SourceTime` | by the plugin | The source's own times, each a `kind` (`event`, `consolidated`, `reported`, `vendor_received`, `published`) once, and `at_ns`. |
 | `raw` | `RawRecordRef` | by the plugin | The raw record it was converted from, `role.plugin.raw_record(key)`. |
 | `unconverted` | sequence of `AsReported` | by the plugin | A value that failed conversion, as reported, such as a venue's code the deployment does not hold. |
-| `closed_day` | `DateCheck` or `None` | by the lake | Added in contract 23. On a daily row dated on a closed day of its dataset's calendar, the date, each calendar with its version, why (a weekend, a named holiday, or outside coverage) and the holiday's name. Unset otherwise. |
+| `closed_day` | `DateCheck` or `None` | by the lake | On a daily row dated on a closed day of its dataset's calendar, the date, each calendar with its version, why (a weekend, a named holiday, or outside coverage) and the holiday's name. Unset otherwise. |
 | `sent_at_ns` | `int` | stamped | The envelope's publication time. |
 | `recorded_at_ns`, `version`, `sequence`, `previous_sequence` | `int` | by the lake | When it was recorded, its version under the row key from 1, its sequence in the dataset, and the previous sequence of the same subject. |
 
@@ -5082,11 +5080,11 @@ In a string, spelled as its name without `UNANSWERED_REASON_`, in lower case.
 
 ### `DatasetRef` { #datasetref }
 
-A dataset as a lake answer names it, once: `dataset`, `instance`, `vendor`, `aggregator`, and its catalogue entry as declared, `declaration` ([`DatasetDeclaration`](../boundaries/sidecar.md#meridian.v1.DatasetDeclaration)); and `unconverted_count` and `miss_count`, the values its plugin left unconverted and the identifiers and venues it reported missing; and `closed_day_count` and `outside_coverage_count` (added in contract 23), its daily rows flagged on a closed day of its calendar, and those outside the calendar's coverage, counted apart. Added in contract 27: `declared_delay_ns`, the delay its catalogue declares (0 for real time); `stale_after_ns`, its plugin admin's `stale_after` for it from the **Dataset thresholds** setting (0 for none); and in a listing, `liveness`, the latest `DatasetLiveness` the lake keeps per venue.
+A dataset as a lake answer names it, once: `dataset`, `instance`, `vendor`, `aggregator`, and its catalogue entry as declared, `declaration` ([`DatasetDeclaration`](../boundaries/sidecar.md#meridian.v1.DatasetDeclaration)); and `unconverted_count` and `miss_count`, the values its plugin left unconverted and the identifiers and venues it reported missing; and `closed_day_count` and `outside_coverage_count`, its daily rows flagged on a closed day of its calendar, and those outside the calendar's coverage, counted apart. `declared_delay_ns`, the delay its catalogue declares (0 for real time); `stale_after_ns`, its plugin admin's `stale_after` for it from the **Dataset thresholds** setting (0 for none); and in a listing, `liveness`, the latest `DatasetLiveness` the lake keeps per venue.
 
 ### `Outcome` { #outcome-type }
 
-Added in SDK 0.27.0 (contract 23). An event contract's outcome, `meridian.Outcome(...)`, a frozen dataclass, keyword only. See [An event contract's outcome](../concepts/the-lake.md#an-event-contracts-outcome).
+Added in SDK 0.27.0. An event contract's outcome, `meridian.Outcome(...)`, a frozen dataclass, keyword only. See [An event contract's outcome](../concepts/the-lake.md#an-event-contracts-outcome).
 
 | Field | Meaning |
 |---|---|
@@ -5099,7 +5097,7 @@ Added in SDK 0.27.0 (contract 23). An event contract's outcome, `meridian.Outcom
 
 ### `EventGroup` { #eventgroup }
 
-Added in contract 26. An event group at one version, as
+An event group at one version, as
 [`report_event_group`](#report_event_group) and
 [`list_event_groups`](#list_event_groups) answer it and
 `event_group_changed` delivers it:

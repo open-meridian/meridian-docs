@@ -9,7 +9,7 @@ placement whatever a page drew.
 
 ## The setting
 
-The setting is on by default, and the upgrade to contract 26 records it on,
+The setting is on by default, and the upgrade to chart 0.1.308 records it on,
 as the book's own entry, in every deployment. It **cannot be turned off**
 in this release: the book refuses a change to off, and a deployment admin
 may only record it on again, with a reason.

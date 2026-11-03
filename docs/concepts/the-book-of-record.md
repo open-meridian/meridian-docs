@@ -60,7 +60,7 @@ that read it derive those, joined to reference and market data.
 
 ### A closed lot's proceeds { #a-closed-lots-proceeds }
 
-Added in contract 27. Each relief of a lot is kept on the lot, in
+Each relief of a lot is kept on the lot, in
 `Lot.reliefs`, as a `LotRelief`: the entry that relieved it
 (`relieved_by`), the quantity relieved, the `proceeds` that quantity was
 sold for, in the execution's asset, and the `trade_date`. The book sets
@@ -73,7 +73,7 @@ relief with no execution behind it, a transfer out or a correction, has no
 proceeds and says so, never zero. The lot's list of `relieved_by` entries
 stays.
 
-**At the upgrade to contract 27** each account's projection is rebuilt
+**At the upgrade to chart 0.1.309** each account's projection is rebuilt
 from its journal, as a snapshot of the older format is, so every lot
 relieved before it gains its reliefs, each with its proceeds where an
 execution is behind it. Nothing in the journal is rewritten.
