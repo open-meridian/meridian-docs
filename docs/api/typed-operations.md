@@ -3530,7 +3530,7 @@ async def request_series_records(
 | `note` | Why, kept on the request's record; required when sent for a person |
 | `acting_for` | As above |
 
-**Returns** `RequestSeriesRecordsResult`: `answers`, one per series asked, in order, each its `series_key` and its `instrument_id` where held, matched or minted; `pending_review` where the platform's staff review it, asked again daily; or `refused_by_rule` where the rule does not allow its cause or the day's limit is reached, nothing sent. A key no chain row holds is refused `invalid`, naming `series[n].series_key`. Each request the rule refuses is its own record. `meridian.helpers.chains.want_series` asks for one.
+**Returns** `RequestSeriesRecordsResult`: `answers`, one per series asked, in order, each its `series_key` and its `instrument_id` where held, matched or minted; `pending_review` where it is reviewed first, asked again daily; or `refused_by_rule` where the rule does not allow its cause or the day's limit is reached, nothing sent. A key no chain row holds is refused `invalid`, naming `series[n].series_key`. Each request the rule refuses is its own record. `meridian.helpers.chains.want_series` asks for one.
 
 ### `record_lifecycle_event` { #record_lifecycle_event }
 

@@ -133,19 +133,16 @@ settlement calendar until the next schedules are read. Likewise the
 coverage of the Canadian and Australian dollars', the krona's and the
 krone's calendars ends on 31 December 2026, their sources having published
 nothing later yet (see
-[Where calendars come from](#where-calendars-come-from)). The platform's
-curation reads the next schedules when they are published, and a calendar
-whose coverage ends within a year is flagged to its staff.
+[Where calendars come from](#where-calendars-come-from)). The next schedules
+are read when they are published.
 
 ## Where calendars come from
 
 **The platform keeps them**, as it keeps the
 [venue master](venues.md): the same public fact for every firm, so two
-deployments never break against each other's trades over a holiday. The
-platform's staff, and its curator agent, record each calendar and rule from
-public primary sources, each day and rule citing its source and when it was
-read; every change the curator agent drafts is a proposal a person on the
-staff decides. A deployment holds no licensed vendor's calendar.
+deployments never break against each other's trades over a holiday. Each
+calendar and rule is recorded from public primary sources, each day and rule
+citing its source and when it was read. A deployment holds no licensed vendor's calendar.
 
 **The deployment pulls what it needs**, never the whole set: a currency's
 calendar with its cash instrument, a venue's with the venue, a pair's

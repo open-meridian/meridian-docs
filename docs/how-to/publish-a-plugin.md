@@ -14,10 +14,9 @@ In short:
 Signing the tag yourself and running `meridian plugin publish` is the other way,
 [below](#or-tag-and-publish-by-hand).
 
-!!! note "Who can publish today"
-    The registries are in Phase 0: only Open Meridian's own plugins, under the `open-meridian/`
-    namespace, are published. Outside publishers can't publish yet: the platform refuses their
-    publish, saying so. The Verified registry is not open.
+!!! note "Who publishes"
+    The Community registry lists Open Meridian's own plugins, under the `open-meridian/`
+    namespace; the platform refuses another publisher's publish, saying so.
 
 ## Before you start
 
@@ -28,7 +27,7 @@ Signing the tag yourself and running `meridian plugin publish` is the other way,
 - The plugin passes `meridian plugin check`, with its documentation (see
   [Write a plugin's documentation](write-a-plugins-documentation.md)).
 - Its repository is on GitHub and public, and the plugin's own code is under Apache-2.0.
-- Your organisation on open-meridian.com holds **publisher status**, which platform staff grant.
+- Your organisation on open-meridian.com holds **publisher status** on open-meridian.com.
 - You are an Owner or Admin of the organisation. A member who is not needs **may publish** on the
   plugin's **Publishers** tab, which an Owner or Admin grants.
 
@@ -217,6 +216,6 @@ catalogue pull.
 
 ## Related
 
-- [Registries](../concepts/registries.md): the phases, the checks and what a deployment verifies.
+- [Registries](../concepts/registries.md): the checks and what a deployment verifies.
 - [Command line](../api/cli.md#meridian-plugin-release): `plugin release`, `plugin publish` and `plugin key`.
 - [Release a plugin version](release-a-plugin.md): to your own deployment.

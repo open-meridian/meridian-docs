@@ -16,7 +16,6 @@ it comes from and what was checked before it reached you:
 |---|---|
 | **Local** | Your deployment's own registry, which you or your agent upload to. The platform checks nothing here. Open Meridian's plugins not yet listed in Community are marked Local, as uploaded from their releases |
 | **Community** | The platform's shared registry. The platform builds each version itself and runs its automatic checks before listing it. Open to Open Meridian's own plugins first; SnapTrade is listed there. See [Registries](registries.md) |
-| **Verified** | The platform's shared registry for plugins that pass the automatic checks and a person's review. Not open yet |
 
 Whichever registry a plugin comes from, your firm does its own vendor due
 diligence: the vendor's terms and licences, its security, and whether the

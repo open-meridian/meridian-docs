@@ -49,14 +49,13 @@ plugin.
 
 ## The platform
 
-The platform serves four things, and holds no deployment data at all.
+The platform serves three things, and holds no deployment data at all.
 
 | What | What it is for |
 |---|---|
 | **Projects** | A project gathers the people who administer a set of deployments, each with a role. (Underneath, and in the API, a project is an *organisation*.) |
 | **Deployments** | Each registered deployment has an identifier, `DEP-…`, and the **public** halves of the keys it has enrolled. The platform issues the one-time codes a deployment is set up with. See [Projects and deployments](projects-and-deployments.md). |
-| **The security master** | Instrument identity and symbology, administered by Open Meridian staff, and by AI agents they delegate to, and pulled by every deployment. It is identity, not a data store: prices, yields, ratings and other client-licensed data are never in it. See [Instruments](instruments.md). |
-| **Staff** | Capabilities for the people who operate Open Meridian itself. |
+| **The security master** | The shared IDs a deployment's records can carry. It is identity, not a data store: prices, yields, ratings and other client-licensed data are never in it. See [The platform's security master](one-id.md#the-platforms-security-master). |
 
 The platform never holds a private key. A full copy of its key table would let
 somebody verify a deployment's signatures and forge none of them.

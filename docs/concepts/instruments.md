@@ -71,58 +71,14 @@ earlier-dated report, such as a custodian's older statement, an H.10 rate,
 or a resolve stating no date, finds the record held rather than minting a
 duplicate beside it.
 
-## The security master
+## The platform's security master
 
-The **security master** is on the platform. It holds instrument identity,
-symbology — which identifiers, in which schemes, have meant this instrument
-and over which window — and structure. It is administered by Open Meridian
-staff, and every deployment pulls from it.
-
-It mints a record when a deployment asks for a security it does not hold:
-it verifies the security against a source of its own, such as OpenFIGI for
-a security a FIGI identifies, and mints the record from that source's
-values, held to the security's **template**, never from what the request
-said. A request carries only identifiers in the schemes on the platform's
-licence list, the template and what the source states of the security;
-never a holding, an account or who is asking. A security its source cannot
-confirm goes to the platform's staff. See
-[One ID per instrument](one-id.md#an-ins-record-minted-by-the-platform).
-
-Staff may also delegate its administration to an AI agent, over OAuth, for at
-most 90 days at a time. The agent works through the platform's API or its MCP
-server, under the same rules as a person: every change it makes names the agent
-and the member of staff it acts for. A change that would alter what deployments
-already resolve to — changing or ending an active instrument's identifier,
-decommissioning, reactivating — is filed as a proposal for a person to decide,
-and applied only if the instrument has not changed since. Define and amend can be
-made in bulk, up to 500 instruments at a time, each with its own result.
-
-It changes an instrument by four verbs, and the verb is the transition:
-
-| Verb | What it does |
-|---|---|
-| **Define** | Creates an instrument and its identity |
-| **Amend** | Replaces its identifier set, authoritatively. Not a delta, and it does not change the instrument's state |
-| **Decommission** | Takes it out of use; its identifiers are untouched |
-| **Reactivate** | Brings a decommissioned instrument back |
-
-Every change increments the instrument's version, and the time a change was
-recorded is stamped by the master itself, never supplied by whoever made it,
-so what was known when cannot be back-dated. When a change takes effect in the
-world is a separate thing, which an amend may state: the date, or date and
-time, its identifiers are effective from.
-
-A scheme's name is always lower case (`figi`, `isin`, `cusip`, `sedol`), and a
-lookup matches it in any case. A global identifier already in force on another
-active instrument is warned about before a change is made, since one
-identifier should mean one instrument at a time.
-
-!!! info "Identity, not a data store"
-    The security master holds no prices, yields, ratings, volumes or sector
-    data, now or later. That data is licensed by each firm from its own
-    vendors and lives in the firm's own deployment. Keeping identity apart
-    from data values is what keeps the central service small, and keeps a
-    firm's licensed data in the firm's hands.
+A deployment's instruments are its own records (see
+[The instrument master](one-id.md)). The platform's security master assigns
+the shared IDs those records can carry, and holds identity only: no prices,
+yields, ratings, volumes or sector data, which each firm licenses from its own
+vendors and keeps in its own deployment. See
+[The platform's security master](one-id.md#the-platforms-security-master).
 
 ## Binary event contracts
 
@@ -148,9 +104,6 @@ not a binary event contract, the type on a record not of class
 `event_contract`, and a payout naming no asset or not more than zero are
 refused, naming the field.
 
-- **In the security master**, staff (or their agent) define and amend an
-  instrument with the type and its attributes, and a deployment's pull
-  offers them.
 - **In a deployment**, the deployment admin completes a record on the
   **Instruments** page: the completion form shows the payout (its amount,
   and its asset by ISO 4217 code or by its cash record) and when trading
@@ -287,8 +240,8 @@ matches:
 3. **Answered within a short, bounded wait**, the deployment keeps the
    record under the platform's `INS-` ID from the start, and nobody acts.
 4. **Otherwise the store keeps a local record**, under an `LCL-` ID,
-   provisional, with the reason: the platform not reached, the request with
-   the platform's staff, or nothing on the licence list to look for. The
+   provisional, with the reason: the platform not reached, the request under
+   review, or nothing on the licence list to look for. The
    resolve answers it, and the plugin records against it. It resolves to
    the platform's record on its own once the platform answers.
 

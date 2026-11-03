@@ -1,47 +1,33 @@
 # Registries
 
-A plugin reaches a deployment from a **registry**. There are three, labelled **Local**,
-**Community** and **Verified**. Every deployment has its own Local registry, which you upload to
-yourself. The platform at open-meridian.com keeps the two shared ones, Community and Verified,
-where a plugin built by one organisation is listed for every deployment to find, read and install.
+A plugin reaches a deployment from a **registry**: its own **Local** registry, which you upload to
+yourself, or the platform's shared **Community** registry at open-meridian.com, where Open
+Meridian's own plugins are listed for every deployment to find, read and install, under the
+`open-meridian/` namespace, such as
+[`open-meridian/snaptrade`](https://open-meridian.com/plugins/open-meridian/snaptrade), with five
+starter packs (see
+[Install a plugin from a registry](../how-to/install-from-a-registry.md#a-starter-pack)).
 
 [Who checks a plugin](plan-your-deployment.md#who-checks-a-plugin) says what each registry checks,
 and what your firm checks itself.
 
-## The three registries
+## The registries
 
-| | Local | Community | Verified |
-|---|---|---|---|
-| **Where it is** | Inside your deployment | The platform | The platform |
-| **Who puts a plugin there** | A deployment admin, with `meridian plugin upload` | An organisation holding publisher status, from a signed release tag the platform builds | The same, at the verified grade, after a person's review |
-| **What is checked** | Nothing, by the platform | The [automatic checks](#the-automatic-checks), at build | The automatic checks, a person's review, and a version floor |
-| **Named** | By its bare name, `my-plugin` | `namespace/plugin`, such as `open-meridian/snaptrade` | The same |
-| **Open today** | Yes | To Open Meridian's own plugins (Phase 0, below) | Not yet |
+| | Local | Community |
+|---|---|---|
+| **Where it is** | Inside your deployment | The platform |
+| **Who puts a plugin there** | A deployment admin, with `meridian plugin upload` | An organisation holding publisher status, from a signed release tag the platform builds |
+| **What is checked** | Nothing, by the platform | The [automatic checks](#the-automatic-checks), at build |
+| **Named** | By its bare name, `my-plugin` | `namespace/plugin`, such as `open-meridian/snaptrade` |
 
-A plugin installed from Community or Verified lands in your Local registry under
+A plugin installed from Community lands in your Local registry under
 `plugins/<namespace>/<plugin>`, its version recording the registry it came from and its
-listing, so it can never collide with a plugin you uploaded yourself.
-
-## Phases
-
-The shared registries open in phases:
-
-- **Phase 0, now:** Open Meridian's own plugins are listed in Community, under the
-  `open-meridian/` namespace, such as
-  [`open-meridian/snaptrade`](https://open-meridian.com/plugins/open-meridian/snaptrade), with
-  five starter packs (see
-  [Install a plugin from a registry](../how-to/install-from-a-registry.md#a-starter-pack)).
-- **Outside publishers can't publish yet.** The platform refuses their publish, saying the
-  registries are open only to first-party plugins for now.
-- **Later phases** open publishing to invited organisations, then the Verified registry, and then
-  Community publishing to any organisation.
-
-Open Meridian's own plugins go through Verified's review, as any vendor's do, once Verified opens.
+listing, so it can never collide with a plugin you uploaded yourself. Community lists Open
+Meridian's own plugins: the platform refuses another publisher's publish.
 
 ## Who publishes
 
-- **An organisation holding publisher status**, which platform staff grant and revoke, each grant
-  its own record. A person publishing alone does so as an organisation of one.
+- **An organisation holding publisher status**, granted and revoked on open-meridian.com, each grant its own record. A person publishing alone does so as an organisation of one.
 - **A person** who is an Owner or Admin of that organisation, or who holds the plugin's
   **may publish**, which an Owner or Admin grants on the plugin's page.
 - **A listing** is `namespace/plugin`: the organisation's **namespace**, which can be changed
@@ -162,8 +148,7 @@ Community images are pulled anonymously.
   and listed on the tab.
 - **Installs** are counted when a deployment asks the platform where to pull a version.
 - **A count is shown only once three or more deployments contribute**; below that the public
-  catalogue shows "<3", and other pages read "Fewer than three deployments". Nobody outside the
-  platform's staff sees which deployment installed what.
+  catalogue shows "<3", and other pages read "Fewer than three deployments". No page shows which deployment installed what.
 - **Stars.** An Owner or Admin of an organisation with an enrolled deployment may star a listing
   once, naming the organisation, and take the star back. Who starred is never shown.
 

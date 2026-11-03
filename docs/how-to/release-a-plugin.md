@@ -26,8 +26,7 @@ The version goes up in the change's own pull request: it raises `version` in `py
 `meridian plugin release` refuses a version that `pyproject.toml` does not say, or whose heading is
 missing or dated, and says what to do. Tagging with `git tag -s`, pushing the tag and running
 `meridian plugin publish` yourself is the other way.
-See [Publish a plugin to a registry](publish-a-plugin.md), which also says who can publish today:
-the registries are in Phase 0.
+See [Publish a plugin to a registry](publish-a-plugin.md), which also says who publishes.
 
 ## To release from a development deployment
 

@@ -15,7 +15,7 @@ window (`cik`, the SEC's Central Index Key, and `lei`, the Legal Entity
 Identifier), and its former names, each with the dates it was used. The
 platform mints it from EDGAR's submissions by CIK or from GLEIF by LEI. A
 filer the platform cannot type as a company, such as a natural person, is
-queued for its staff and never minted.
+never minted.
 
 Your deployment's instrument store keeps each company record it is
 answered, every version its own row. A `data` plugin resolves one with
@@ -26,8 +26,7 @@ identifier's window. Two companies named at once are refused.
 **A miss asks the platform.** Resolved by identifiers and not held, the
 store asks the platform, sending only the `cik` or `lei` in a scheme on the
 [licence list](one-id.md#the-licence-list), never a name. A company the
-platform matches or mints is kept and answers. One queued for the
-platform's staff, or a platform not reached, leaves the resolve a miss,
+platform matches or mints is kept and answers. One not matched, or a platform not reached, leaves the resolve a miss,
 refused naming `identifiers`, nothing kept; the next miss asks again. A
 miss by `ENT-` ID alone is not asked about.
 
