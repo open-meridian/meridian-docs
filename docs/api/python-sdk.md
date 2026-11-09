@@ -2105,7 +2105,7 @@ What every plugin of a role must do the same way to fulfil its typed operations 
 
 Where a feed's method had an act's name it is renamed: a pairs feed's `record_trades_of` and `record_quotes_of`, an event-contract feed's `record_outcomes_of` and `record_bars_of`, a listings feed's `seed_symbols`. What faces a vendor, its transport, its pacing, its `Retry-After` and its allowance, stays the plugin's: the data template's `stream.py` and `pacing.py` show one way.
 
-The SDK's `templates/` holds a role template for `connectivity`, `custody`, `data`, `operations`, `pricing` and `reporting`. CLI 0.1.58 writes each, on SDK 0.35.0: `meridian plugin new <name> --role <role>`, then [`meridian plugin migrate`](cli.md#plugin-migrate) to move it to 0.35.5.
+The SDK's `templates/` holds a role template for `connectivity`, `custody`, `data`, `operations`, `pricing` and `reporting`. CLI 0.1.59 writes each, on SDK 0.35.0: `meridian plugin new <name> --role <role>`, then [`meridian plugin migrate`](cli.md#plugin-migrate) to move it to 0.35.5.
 
 ## Helpers { #helpers }
 
@@ -2846,12 +2846,12 @@ Move a plugin one release at a time or several at once: [`meridian plugin migrat
 
 | From | To | Contract | Runtime | `plugin new` writes it from | `plugin migrate` rewrites | Then by hand |
 |---|---|---|---|---|---|---|
-| 0.35.4 | 0.35.5 | 29 | chart 0.1.408 | none: CLI 0.1.58 writes 0.35.0 | nothing: only the pins move | an FX week of the plugin's own replaced by `helpers.sessions.FX_WEEK` |
-| 0.35.3 | 0.35.4 | 29 | chart 0.1.408 | none: CLI 0.1.58 writes 0.35.0 | nothing: only the pins move | a live module of the plugin's own moved onto `pages.live_values` and `LiveValue.of`, its page script onto `<om-live cells>`; a book view's row is keyed `order_id=<id>` alone |
-| 0.35.2 | 0.35.3 | 29 | chart 0.1.408 | none: CLI 0.1.58 writes 0.35.0 | nothing: only the pins move | what `meridian plugin migrate --to 0.35.3` names in a plugin already on 0.35 |
-| 0.35.1 | 0.35.2 | 29 | chart 0.1.408 | none: CLI 0.1.58 writes 0.35.0 | nothing: only the pins move | a `Declaration(settings=Config.declared())` names the class again, `settings=Config` |
-| 0.35.0 | 0.35.1 | 29 | chart 0.1.408 | none: CLI 0.1.58 writes 0.35.0 | nothing: only the pins move | an act on the connection made on the role object holding it |
-| 0.34.0 | 0.35.0 | 29 | chart 0.1.408 | CLI 0.1.55 to 0.1.58 | `receive` calls into role classes' `on_<event>` methods, the SDK's renamed methods, `self.plugin.<act>` onto `self` | see [0.34.0 to 0.35.0](#0340-to-0350) |
+| 0.35.4 | 0.35.5 | 29 | chart 0.1.408 | none: CLI 0.1.59 writes 0.35.0 | nothing: only the pins move | an FX week of the plugin's own replaced by `helpers.sessions.FX_WEEK` |
+| 0.35.3 | 0.35.4 | 29 | chart 0.1.408 | none: CLI 0.1.59 writes 0.35.0 | nothing: only the pins move | a live module of the plugin's own moved onto `pages.live_values` and `LiveValue.of`, its page script onto `<om-live cells>`; a book view's row is keyed `order_id=<id>` alone |
+| 0.35.2 | 0.35.3 | 29 | chart 0.1.408 | none: CLI 0.1.59 writes 0.35.0 | nothing: only the pins move | what `meridian plugin migrate --to 0.35.3` names in a plugin already on 0.35 |
+| 0.35.1 | 0.35.2 | 29 | chart 0.1.408 | none: CLI 0.1.59 writes 0.35.0 | nothing: only the pins move | a `Declaration(settings=Config.declared())` names the class again, `settings=Config` |
+| 0.35.0 | 0.35.1 | 29 | chart 0.1.408 | none: CLI 0.1.59 writes 0.35.0 | nothing: only the pins move | an act on the connection made on the role object holding it |
+| 0.34.0 | 0.35.0 | 29 | chart 0.1.408 | CLI 0.1.55 to 0.1.59 | `receive` calls into role classes' `on_<event>` methods, the SDK's renamed methods, `self.plugin.<act>` onto `self` | see [0.34.0 to 0.35.0](#0340-to-0350) |
 | 0.33.5 | 0.34.0 | 29 | chart 0.1.408 | none | every import of `meridian.roles.chains`, `.packages`, `.lifecycle` or `.debt` onto `meridian.helpers` | see [0.33.5 to 0.34.0](#0335-to-0340) |
 | 0.33.1 | 0.33.5 | 28 | chart 0.1.334 or later for subscriptions | CLI 0.1.54 writes 0.33.3 | nothing: only the pins move | nothing |
 | 0.33.0 | 0.33.1 | 28 | chart 0.1.313 or later | none: CLI 0.1.53 writes 0.33.0 | nothing: only the pins move | a venue keeping bars declares `bars`, names `BARS_DECLARED` in its `venue_cases` and drops `a-daily-bar` from `NOT_PRESENTED`; a plugin's own feed-delay producer standing on the quote can be removed |

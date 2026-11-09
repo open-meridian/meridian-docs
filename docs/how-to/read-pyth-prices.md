@@ -2,7 +2,7 @@
 
 Put Pyth Network's composite prices, each a mid with its confidence
 interval, and its US Treasury par yields into your deployment's lake. You
-need chart 0.1.408 and CLI 0.1.58.
+need chart 0.1.477 and CLI 0.1.59.
 
 Pyth's Hermes API asks for an API key on every price. A key on Pyth's
 Starter plan serves crypto; its Pro plan serves every family: equities,

@@ -20,7 +20,7 @@ whoever works on it next has them too. `.dockerignore` keeps them out of the plu
 - A deployment installed **for development**. Development deployments run unreviewed code, so
   never use one your firm depends on. See
   [Development deployments](../concepts/development-deployments.md).
-- The `meridian` CLI 0.1.58, whose `plugin new` builds on SDK 0.35.0, which
+- The `meridian` CLI 0.1.59, whose `plugin new` builds on SDK 0.35.0, which
   `meridian plugin migrate` moves to 0.35.5. Check with
   `meridian --version`; update with `meridian upgrade`.
 - Docker on this machine. The first run builds the plugin's image.

@@ -7,7 +7,7 @@ written from the interface alone reconciles any custodian the same way. This pag
 custody plugin does for each, with [plugin-snaptrade](https://github.com/open-meridian/plugin-snaptrade)
 as the worked example.
 
-You need CLI 0.1.58 and SDK 0.35.5 or later.
+You need CLI 0.1.59 and SDK 0.35.5 or later.
 
 A custody plugin also reports each activity on an account, each with a raw
 record of its own: see [Report the custodian's activity](report-the-custodians-activity.md).

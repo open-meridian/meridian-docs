@@ -7,7 +7,7 @@ them. A backup is one file that holds what a restore needs to bring the deployme
 that only you can open it.
 
 Backups are made in an image of their own, `ghcr.io/open-meridian/meridian-backup`, which the
-published chart pins to the image built with it. You need CLI 0.1.58.
+published chart pins to the image built with it. You need chart 0.1.477 and CLI 0.1.59.
 
 | To | Run or do |
 |---|---|
@@ -16,6 +16,9 @@ published chart pins to the image built with it. You need CLI 0.1.58.
 | Back up now | `meridian backup` |
 | Back up now and copy the file here | `meridian backup --to <dir>` |
 | Restore a backup | `meridian restore <file> --identity <file>` |
+| Keep a WAL archive, to restore to a time | `meridian upgrade-deployment --set backup.walArchive.enabled=true` |
+| Restore the running deployment to a time | `meridian restore --to-time <time>` |
+| Reach a database you run that has its own CA | Set `database.caSecret` in the chart's values |
 
 You back up and restore with your own cluster rights: the CLI drives your own `kubectl` and, to
 restore, `helm`, and you never run them yourself. The backup itself runs in the cluster, as a Job
@@ -279,6 +282,23 @@ Restored meridian into meridian from meridian-20261012T143005Z.meridian-backup.
 The counts are given by store, and it reads each launched plugin's pod for at most two minutes and
 names only those whose image could not be pulled.
 
+### Into an HA deployment
+
+Where the backup's values give the brought database standbys, as `resilience.profile: ha` does,
+restore starts the database at member 0 alone, loads the dump there and checks every count, then
+brings back the standbys, each cloned from member 0, and only then gives the components the
+database's URL. The plan says so before it asks:
+
+```text
+  ... then start the database the chart brings at its member 0 alone, make meridian and its roles, and load the dump, every table's count checked; then bring back its 2 standbys, each cloned from member 0, before the components are given its URL.
+```
+
+As it goes it says `Brought back the database's 2 standbys, each cloned from member 0`, and the
+report adds `The database's 2 standbys, cloned from it once it was loaded.` If they are not ready
+within `--timeout`, the database stays restored and checked on member 0 and its URL stays withheld,
+since every commit waits for a standby. An HA deployment's key is in the Secret
+`key.existingSecret` names, which restore puts back as it was.
+
 ### After a restore
 
 - The same people, access, accounts, settings and book are there, and secret settings open with the
@@ -316,7 +336,156 @@ anything. The plan names the database by its host and name, never its credential
 else running against it first. Restore adds a container of `backup.image` beside the conductor,
 which reaches the database by the cluster's own path and is gone when the conductor restarts, loads
 the dump in one transaction as the migrating role, and counts every table against the backup's
-before the components are given the URL.
+before the components are given the URL. Where the database has its own CA
+(see [below](#a-database-with-its-own-ca)), it connects with that CA, the server verified by its
+name (`verify-full`), and the plan says so.
+
+## A database with its own CA { #a-database-with-its-own-ca }
+
+A database you run whose server certificate comes from your own certificate authority is named by
+`database.caSecret`: a Secret in the deployment's namespace holding the authority's certificate at
+`ca.crt`. Every connection to that database is then over TLS or not at all, the server verified
+against that authority by the name in the database's URL. Make the Secret as you make your own
+Secrets, for example:
+
+```bash
+kubectl create secret generic meridian-database-ca -n meridian --from-file=ca.crt=<file>
+```
+
+```yaml
+database:
+  caSecret: meridian-database-ca
+```
+
+Give the value at install with `meridian up -f <file>`, or to a running deployment with
+`meridian upgrade-deployment --set database.caSecret=meridian-database-ca`. Empty, as by default, a
+database you run is verified against the public roots, or against the deployment's own authority
+where [TLS inside the cluster](upgrade-a-deployment.md#to-turn-on-tls-inside-the-cluster) is on.
+
+A backup holds the Secret, as it holds every Secret the values name. Restore puts it back and loads
+a dump of that database with it. A backup whose values name a `database.caSecret` it does not hold
+is refused before anything changes, unless the Secret is already in the namespace: make it there,
+then restore again.
+
+## Keep a WAL archive { #keep-a-wal-archive }
+
+The WAL archive keeps the brought database's write-ahead log off the cluster, so the database can
+be restored to any time since the oldest base backup kept. It needs backups set up first
+([above](#turn-backups-on)). Turn it on:
+
+```bash
+meridian upgrade-deployment --set backup.walArchive.enabled=true
+```
+
+The database then runs with pgBackRest beside it. Each backup, scheduled or `meridian backup`,
+adds a full base backup to the archive, and the newest `backup.keep` of them are kept with the WAL
+they need. Take one with `meridian backup` once it is on: a time can be restored from the first
+base backup on. A segment of the log is archived as it fills, or after `timeoutSeconds` when it
+does not, which bounds what a restore into a new cluster can lose.
+
+| Value | Default | Meaning |
+|---|---|---|
+| `backup.walArchive.enabled` | `false` | Keep the archive. |
+| `backup.walArchive.store` | `volume` | Where: `volume`, beside the sealed backups, or an object store, `s3` (or one speaking its API, at `endpoint`), `gcs` or `azure`. |
+| `backup.walArchive.path` | `/wal-archive` | The directory on the backup volume, or the path in `bucket`. |
+| `backup.walArchive.bucket` | none | The object store's bucket; on `azure`, its container. |
+| `backup.walArchive.endpoint`, `region` | none | For `s3`: the store's address and region. Empty for the cloud's own on `gcs` and `azure`. |
+| `backup.walArchive.existingSecret` | none | A Secret holding the store's credentials. Empty on `s3` or `gcs` uses the pod's own identity. |
+| `backup.walArchive.cipherSecret` | none | A Secret holding the archive's passphrase as `pass`. Empty: the chart makes one, and every backup carries it sealed, so a restore into a new cluster reads the archive. |
+| `backup.walArchive.kmsKeyId` | none | For `s3`: the key the store encrypts each object with. |
+| `backup.walArchive.timeoutSeconds` | `60` | The longest a committed transaction waits to be archived. |
+
+With standbys, whichever member is primary archives, so a directory on one node (`backup.path`) is
+refused for the archive: name `backup.existingClaim` on storage every node mounts, or an object
+store.
+
+`meridian status` shows it:
+
+```text
+Database:
+  meridian-meridian-runtime-database  1 member(s), WAL archive on
+    meridian-meridian-runtime-database-0  alone  ready
+  page checksums on, full_page_writes on
+  WAL archive: last segment at 2026-11-09T14:03:54Z (52s ago); not failing
+```
+
+Where the archiver's newest attempt failed, the line says `FAILING now`, with how many times: a
+restore cannot reach past its last segment.
+
+## Restore to a point in time { #restore-to-a-point-in-time }
+
+```bash
+meridian restore --to-time 2026-11-09T13:59:27Z
+```
+
+This restores the running deployment's database, in place, from its WAL archive to the time
+named: the archive's newest base backup before that time, the log replayed to it, and the database
+promoted there on a timeline of its own. What came after the time stays in the archive, on the old
+timeline, and is not in the database. It takes no backup file and no identity.
+
+The time is RFC 3339 with its offset: `2026-11-09T13:59:27Z`, or `2026-11-09T08:59:27-05:00`, with a
+fraction of a second or none. A time after now is refused. So is a deployment that keeps no WAL
+archive, saying how to [turn it on](#keep-a-wal-archive), and one whose database somebody else runs,
+whose provider restores it to a time.
+
+It checks first, then says what it will do and asks:
+
+```text
+Restoring meridian's database, meridian-meridian-runtime-database, in meridian, to 2026-11-09T13:59:27Z:
+  from      its WAL archive: the newest base backup before 2026-11-09T13:59:27Z, the WAL replayed to it, and the database promoted there on a timeline of its own. What came after 2026-11-09T13:59:27Z is kept in the archive, on the old timeline, and is not in the database.
+  archived  its last segment at 2026-11-09T13:59:19Z; the newest WAL is archived before it stops.
+  downtime  proportional to the base backup's size and the WAL replayed; nothing answers until it is done.
+
+  1. The release's CronJobs suspended (the replica comparison, the backup, the scrub), every component stopped, the newest WAL archived, then the database.
+  2. The restore on member 0's volume, in a Job from meridian-meridian-runtime-database-offline.
+  3. The database started, then every component, each to the count it ran at, and each CronJob as it was.
+  If 2026-11-09T13:59:27Z is outside the archive, the restore fails with its own words, the volume stays restorable, and everything stays stopped until a time inside it is named.
+
+Restore it to that time? [y/N]
+```
+
+**What stops.** Everything: every component, the launched plugins among them, and the database.
+Nothing answers until it is done. The release's scheduled jobs, the backup and, with standbys, the
+replica comparison, are suspended while it is stopped, and each is given back as it was when
+everything starts again. Under Patroni the standbys' volumes are deleted and Patroni makes each
+again from member 0. `--yes` answers for a script, and `--timeout` (default `30m`) is how long it
+waits for each step.
+
+```text
+Restored meridian's database to 2026-11-09T13:59:27Z, and started everything again.
+  database-offline: restoring to 2026-11-09 13:59:27+00 from the archive's newest base backup before it
+  database-offline: the base backup restored; the archive replays to 2026-11-09 13:59:27+00, and nothing answers until it is there
+  database-offline: promoted at 2026-11-09 13:59:27+00 on timeline 2: ...
+  database-offline: done in 3s
+```
+
+### A time outside the archive
+
+A time the archive does not reach fails in the restore's own words, and leaves everything stopped,
+the scheduled jobs suspended, and the database's volume restorable. Run the command again with a
+time inside the archive, and it takes it from there:
+
+| It says | Name instead |
+|---|---|
+| `<time> is outside the archive: it is before its oldest base backup ended` | A time after the oldest base backup kept ended. |
+| `<time> is past the archive's end` | A time before the archive's last commit, which it gives, from Postgres's `last completed transaction` line, where that line is shown. |
+
+```bash
+meridian restore --to-time <a time inside the archive>
+```
+
+### While it is stopped
+
+While a restore has the deployment stopped, `meridian status` says so first, since when, and the
+command that resumes it:
+
+```text
+Stopped by `meridian restore --to-time` since 2026-11-09T14:09:04Z:
+  every component and the database stay stopped, and 1 CronJob(s) suspended (meridian-meridian-runtime-database-replicas), until it finishes. While it runs, `meridian logs database-offline -n meridian` says where its act is. If it no longer runs, `meridian restore --to-time <time> -n meridian` takes it from there and starts everything again.
+```
+
+`meridian status --json` gives the same as `stopped_by`. A restore does not start while a Job of an
+earlier one, or of `--enable-checksums`, still runs.
 
 ## Related
 

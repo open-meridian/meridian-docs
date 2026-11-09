@@ -4,7 +4,7 @@
 
 Nothing in a cloud install depends on it. A marketplace listing's form and the deployment's own wizard are the whole path there; `meridian` makes the same things convenient from a terminal. Where it drives `helm` or `kubectl`, it drives your own, and what it tells you to run next is a `meridian` command, never `helm` or `kubectl`: you never run them yourself.
 
-This page describes release 0.1.58 of the command line. `meridian --version` says which one you have. For installing it, see [Install a deployment](../getting-started/installation.md).
+This page describes release 0.1.59 of the command line. `meridian --version` says which one you have. For installing it, see [Install a deployment](../getting-started/installation.md).
 
 ## Synopsis
 
@@ -12,11 +12,13 @@ This page describes release 0.1.58 of the command line. `meridian --version` say
 meridian doctor
 meridian up --id <id> [options]
 meridian down [--release <name>] [--delete-namespace]
-meridian upgrade-deployment [--release <name>] [--chart-version <v>] [options]
+meridian upgrade-deployment [--release <name>] [--chart-version <v>] [-f <file>]... [--set <key>=<value>]... [options]
+meridian upgrade-deployment --enable-checksums [--release <name>] [--yes]
 meridian rollback-deployment [--release <name>] [--to-revision <n>] [--timeout <d>] [--yes]
 meridian backup [--release <name>] [--to <dir>] [--timeout <d>]
 meridian backup key [--to <file>]
 meridian restore <file> --identity <file> [options]
+meridian restore --to-time <time> [--release <name>] [--timeout <d>] [--yes]
 meridian status [--release <name>] [--json]
 meridian logs <component> [--release <name>] [--since <span>] [--previous]
 meridian connect [<address>]
@@ -68,7 +70,7 @@ These are read before any command runs.
 
 | Flag | Argument | Default | Meaning |
 |---|---|---|---|
-| `-n`, `--namespace` | `<name>` | `meridian` | The Kubernetes namespace the deployment goes in. Used by `doctor`, `up`, `down`, `upgrade-deployment`, `rollback-deployment`, `backup`, `status`, `logs` and `plugin gc`. `restore` reads it as where to restore, and defaults to the namespace the backup was taken in. |
+| `-n`, `--namespace` | `<name>` | `meridian` | The Kubernetes namespace the deployment goes in. Used by `doctor`, `up`, `down`, `upgrade-deployment`, `rollback-deployment`, `backup`, `status`, `logs` and `plugin gc`. `restore` reads it as where to restore, and defaults to the namespace the backup was taken in; `restore --to-time` as the running deployment's, `meridian` by default. |
 | `--platform` | `<url>` | `https://open-meridian.com` | The platform the deployment reports to. Used by `doctor` and `up`. `up` passes it to the chart only when you give it. `plugin release`, `plugin publish`, `plugin key` and `plugin download` sign in to it. |
 | `--image` | `<ref>` | `ghcr.io/open-meridian/meridian-runtime:latest` | The runtime image. Used by `doctor` and `up`. `up` passes it to the chart only when you give it. `plugin migrate` reads it as something else: the SDK image its steps run in (see [`meridian plugin migrate`](#plugin-migrate)). |
 | `-h`, `--help` | | | Print the usage text and exit 0. After a command, that command's own lines and flags. |
@@ -114,7 +116,8 @@ The checks run in this order:
 4. No node is short of disk.
 5. The runtime image can be pulled from here.
 6. Each plugin launched in the namespace runs the sidecar its deployment's components run. One that does not is `worth`, with the commands that relaunch it; it never stops an install.
-7. The platform is reachable, and this machine's clock is within the tolerance a signed assertion allows.
+7. Where a deployment runs in the namespace, the database it reaches has data checksums and `full_page_writes` on, as its conductor reads them. Either off is `worth`: for a database the deployment brought without checksums, with [`meridian upgrade-deployment --enable-checksums`](#meridian-upgrade-deployment), which turns them on; for one somebody else runs, with where they are set. Both on is `ok`. Nothing is said where no deployment runs there. Added in CLI 0.1.59.
+8. The platform is reachable, and this machine's clock is within the tolerance a signed assertion allows.
 
 Each result is one of:
 
@@ -234,7 +237,8 @@ Either way, the deployment still exists on the platform. Retiring it there is wh
 ## `meridian upgrade-deployment`
 
 ```text
-meridian upgrade-deployment [--release <name>] [-n <name>] [--chart <ref>] [--chart-version <v>] [-f <file> ...] [--timeout <d>] [--yes]
+meridian upgrade-deployment [--release <name>] [-n <name>] [--chart <ref>] [--chart-version <v>] [-f <file> ...] [--set <key>=<value> ...] [--timeout <d>] [--yes]
+meridian upgrade-deployment --enable-checksums [--release <name>] [-n <name>] [--timeout <d>] [--yes]
 ```
 
 Moves a running deployment to a newer version of its chart, in place, with your own cluster rights. Not to be confused with `meridian upgrade`, which replaces the command line itself. For the whole task, and for upgrading from your own pipeline instead, see [Upgrade a deployment](../how-to/upgrade-a-deployment.md).
@@ -255,7 +259,7 @@ It works in four steps, and stops at the step that fails.
 
 2. **Show and ask.** It prints the release, the namespace, the version and image it is on, the version and image it moves to, and the `helm upgrade` it will run, then asks `Upgrade it?`. Anything but `y` or `yes` is no. With no terminal to ask at, it is refused unless you pass `--yes`.
 
-3. **Apply and wait.** It runs `helm upgrade <release> <chart> --version <v> --namespace <ns> --reset-then-reuse-values --timeout <d>`, never `--wait`. Then it waits, up to `--timeout`, for the new revision's migration Job to complete, every Deployment and StatefulSet of the release to roll out, and every one of their pods to run the image its template names. It prints each thing it is waiting for once, when it first sees it.
+3. **Apply and wait.** It runs `helm upgrade <release> <chart> --version <v> --namespace <ns> --reset-then-reuse-values --timeout <d>`, with `--force-conflicts` under Helm 4 and each `-f` and `--set` given, never `--wait`. Then it waits, up to `--timeout`, for the new revision's migration Job to complete, every Deployment and StatefulSet of the release to roll out, and every one of their pods to run the image its template names. It prints each thing it is waiting for once, when it first sees it.
 
 4. **Clean up and report.** It deletes the finished Jobs of this release from earlier revisions, found by the release's label, and nothing else. Old ReplicaSets are left to the chart's `revisionHistoryLimit`. It then prints the versions it moved between, each component's images and readiness, every container that restarted during the upgrade with the reason Kubernetes gives and the `meridian logs <component> --previous` that shows why, and what it cleaned up.
 
@@ -270,8 +274,12 @@ It never prints the deployment's values, which hold its enrolment code. What it 
 | `--chart-version` | `<v>` | the latest published | The version to move to. It is resolved once, and that version is what is checked and applied. |
 | `--timeout` | `<d>` | `10m` | How long to wait for the migration and every component, and what Helm is given. Written as Helm writes a duration: `10m`, `90s`, `1h30m`. |
 | `-f`, `--values` | `<file>` | none | Chart values to change in the same approved upgrade, each file given to Helm after `--reset-then-reuse-values`, so it is merged over the deployment's own values as Helm merges them (mappings key by key, a key set to null removed), each file over the last. May be repeated. The files are read before anything changes, and one that cannot be read or is not a mapping stops it, as does a deployment whose own values cannot be read. The plan lists each path they set, change or remove, never a value. At the version it is on already, files that change something are an upgrade at that version, and files that change nothing leave nothing to do. |
+| `--set` | `<key>=<value>` | none | A chart value to change in the same approved upgrade, as Helm reads one (`resilience.profile=ha`; several split by commas; `a.list[0]=v`; a list as `{x,y}`), given to Helm after every `-f`. May be repeated. The plan lists each path it sets or changes, never a value, and shows the `--set` in the `helm upgrade` it will run, a value whose key names a secret, password, token, key, code or certificate shown as `<withheld>`. At the version it is on already, a `--set` that changes something is an upgrade at that version. Added in CLI 0.1.59. |
+| `--enable-checksums` | | off | Turn on data checksums in the database the deployment brought, as a step of its own: see [below](#enable-checksums). Taken with `--chart-version`, `-f`, `--set` or `--https`, it is refused. Added in CLI 0.1.59. |
 | `--yes` | | off | Upgrade without being asked. For a script that has already read the plan. |
 | `-n`, `--namespace` | `<name>` | `meridian` | The namespace. |
+
+**A database moving under Patroni.** Where the values give the brought database standbys, as `resilience.profile=ha` does, and it does not yet run under Patroni, the chart moves it in two upgrades: the first moves member 0 alone, keeping its data, and the second, with the same chart and values, adds the standbys, which clone from it. The plan says so before it asks, and the one approval covers both: it runs the second once the first has rolled out and member 0 is ready. If the first stops, it says the second was not run, and run again with the same values it finds the database under Patroni alone and runs the second. If the second stops, the first stays applied, member 0 serving. A move back to `tolerant` is one upgrade. Added in CLI 0.1.59. See [To move to the HA profile, and back](../how-to/upgrade-a-deployment.md#to-move-to-the-ha-profile-and-back).
 
 **Exit codes:**
 
@@ -281,7 +289,21 @@ It never prints the deployment's values, which hold its enrolment code. What it 
 | `1` | A check stopped it (nothing was changed), it was not approved, Helm refused it, the migration failed, or the wait timed out. What is still waited for is listed, and nothing is rolled back. |
 
 Where it stops, it says what to run next, in `meridian` commands alone: `meridian status` for the release's state in Helm's own words, `meridian logs migrate` for a failed migration's log, `meridian logs <component> --previous` for why a container restarted, and [`meridian rollback-deployment`](#meridian-rollback-deployment) to return to the revision it was at.
-| `2` | Asked wrongly, for example a `--timeout` Helm would not read. Nothing was done. |
+| `2` | Asked wrongly, for example a `--timeout` Helm would not read, a `--set` that is not `key=value`, or `--enable-checksums` with another change. Nothing was done. |
+
+### `--enable-checksums` { #enable-checksums }
+
+Added in CLI 0.1.59. Turns on Postgres's data checksums in the database the deployment brought, which one made by an earlier chart has off. No chart version moves with it.
+
+1. **Check.** It changes nothing, and says what to do, unless the release is `deployed`, it brought its database, the chart holds the database's offline CronJob (`<release>-meridian-runtime-database-offline`, which chart 0.1.477 has), and backups are set up. Where the conductor reads checksums on already, it says so and exits 0.
+2. **Show and ask.** It prints the database's size, its members and the downtime, estimated from the size: four minutes to stop and start everything, plus the size at 50 MiB a second, once for member 0 and again for each standby. Then the steps, and `Turn page checksums on?`. With no terminal to ask at, it is refused unless you pass `--yes`.
+3. **Back up.** It takes a backup as [`meridian backup`](#meridian-backup) does. If it fails, nothing is changed.
+4. **Stop.** It records what it stops on the database's StatefulSet, suspends the release's CronJobs, and stops every component, the launched plugins among them; under Patroni with standbys it makes member 0 the primary; then it stops the database.
+5. **Act.** It runs `pg_checksums --enable` on member 0's stopped volume, in a Job made from the offline CronJob, and prints the Job's lines.
+6. **Start.** Under Patroni it deletes the standbys' volumes, which Patroni makes again from member 0. It starts the database, then every component at the count it ran at, and gives each CronJob back as it was.
+7. **Verify.** It reads `data_checksums` again, and reports it on, with the backup it took.
+
+Where it stops, it says what that left. A failed backup, or a stop that did not finish, changes nothing, and everything is started again. A Job that failed leaves the database as it was, since `pg_checksums` marks it last, and everything is started again. A Job still running at `--timeout` leaves everything stopped while it has the volume; once it has ended, run the command again, and it takes it from there. It is refused while a restore has the deployment stopped, or while a Job of an earlier act still runs. A Job that fails or does not finish shows its cause from its log; `meridian logs database-offline` prints it. See [To turn on page checksums](../how-to/upgrade-a-deployment.md#to-turn-on-page-checksums).
 
 ## `meridian rollback-deployment`
 
@@ -350,7 +372,10 @@ Makes the identity backups are sealed to, an age X25519 key pair, and prints its
 
 ```text
 meridian restore <file> --identity <file> [-n <name>] [--release <name>] [--chart <ref>] [--chart-version <v>] [--timeout <d>] [--yes]
+meridian restore --to-time <time> [-n <name>] [--release <name>] [--timeout <d>] [--yes]
 ```
+
+With `--to-time`, it restores the running deployment's database in place instead: see [below](#restore-to-time).
 
 Restores a backup with your own cluster rights, through `kubectl` and `helm`, into a namespace holding no deployment. It checks first, and changes nothing if a check fails:
 
@@ -366,6 +391,8 @@ Then it shows the plan, the backup, the cluster and namespace, the chart and ver
 3. With the database the deployment brings, it starts it, makes the database and its two roles with the backed-up passwords, refuses one that already holds tables, and loads the dump. With a dump of a database somebody else runs (`backup.database: true`), it adds a container of `backup.image` beside the conductor, which reaches the database by the cluster's own path and is gone when the conductor restarts, checks the database is empty, and loads the dump into it in one transaction as the migrating role, the URL reaching it on its standard input. A database somebody else runs that the backup does not hold is reconnected to as it was.
 4. It counts every table's rows against the backup's counts, and stops with the URL withheld if any differs.
 5. It gives the components the database's URL, restarts the conductor and the dashboard, waits for first run to give up its rights, and waits for every component of the release to be ready.
+
+Into a deployment whose brought database has standbys, as `resilience.profile: ha` gives it, step 3 starts the database at member 0 alone, and once the dump is loaded and counted it brings back the standbys, each cloned from member 0, before step 5; the plan and the report say so. Standbys not ready within `--timeout` leave the database restored on member 0 and its URL withheld. Where the values name `database.caSecret`, a dump of a database somebody else runs is loaded over TLS, the server verified against that CA (`verify-full`); a backup that does not hold that Secret is refused before anything changes, unless the namespace has it already. Added in CLI 0.1.59.
 
 Each step is printed on stderr as it is done; on stdout, what was restored, its counts by store (config, book, street, lake, instrument, dashboard), and, after reading each launched plugin's pod for at most two minutes, only those whose image could not be pulled, to upload again with `meridian plugin upload`. A launched plugin not running for another reason is named too, with `meridian status`, which lists each plugin's readiness and restarts, and `meridian logs <instance>`, what it printed. See [Restore a backup](../how-to/back-up-and-restore.md#restore-a-backup).
 
@@ -387,6 +414,32 @@ Each step is printed on stderr as it is done; on stdout, what was restored, its 
 | `1` | Refused or failed: the file does not open with the identity, a member's hash differs, the release is not the backup's, the namespace holds the release or anything a deployment keeps, a left-behind backup volume could not be deleted, the chart is older than the backup's, it was not approved, the database holds tables already, a table's count differs, Helm refused, or a wait timed out. Whatever was made is left, and the database's URL stays withheld if the database was not checked. |
 | `2` | Asked wrongly: no backup file, or more than one, no `--identity`, or a `--timeout` Helm would not read. Nothing was done. |
 
+### `meridian restore --to-time` { #restore-to-time }
+
+```text
+meridian restore --to-time <time> [-n <name>] [--release <name>] [--timeout <d>] [--yes]
+```
+
+Added in CLI 0.1.59. Restores the running deployment's brought database, in place, from its WAL archive (`backup.walArchive`) to a time: the archive's newest base backup before it restored, the log replayed to it, and the database promoted there on a timeline of its own. It takes no backup file and no identity. See [Restore to a point in time](../how-to/back-up-and-restore.md#restore-to-a-point-in-time).
+
+1. **Check.** It changes nothing, and says what to do, if the time is after now, the release is not `deployed`, the deployment brought no database, it keeps no WAL archive (with how to turn it on), the chart has no offline CronJob, or a Job of an earlier act still runs. The archiver's newest attempt failing is `worth`.
+2. **Show and ask.** It prints the database, the time, the archive's last segment, and the steps, and asks `Restore it to that time?`. With no terminal to ask at, it is refused unless you pass `--yes`.
+3. **Stop.** It records what it stops on the database's StatefulSet, suspends the release's CronJobs, stops every component, the launched plugins among them, has the newest WAL archived, and stops the database.
+4. **Restore.** It runs the restore on member 0's volume, in a Job made from `<release>-meridian-runtime-database-offline`, and prints its lines.
+5. **Start.** Under Patroni it deletes the standbys' volumes, which Patroni makes again from member 0. It starts the database, then every component at the count it ran at, and gives each CronJob back as it was.
+
+A time outside the archive fails in the restore's own words, and leaves everything stopped, the CronJobs suspended and the volume restorable: before the oldest base backup ended, it says so; past the archive's end, it says the latest time that can be restored lies before the archive's last commit, gives that commit's time where Postgres's lines include it, and asks for a time before it. Run again with a time inside the archive, it takes it from there, as it does after any restore that did not finish. While it has the deployment stopped, [`meridian status`](#meridian-status) says so and names the command that resumes it.
+
+| Flag | Argument | Default | Meaning |
+|---|---|---|---|
+| `--to-time` | `<time>` | none | The time, RFC 3339 with its offset: `2026-11-08T14:03:07Z` or `2026-11-08T09:03:07-05:00`, a fraction of a second up to six digits or none. |
+| `--release` | `<name>` | `meridian` | The Helm release. |
+| `--timeout` | `<d>` | `30m` | How long to wait for each step. Written as Helm writes a duration. |
+| `--yes` | | off | Restore without being asked. For a script that has already read what it will do. |
+| `-n`, `--namespace` | `<name>` | `meridian` | The namespace. |
+
+**Exit codes:** `0` restored, and everything started again; `1` a check stopped it (nothing was changed), it was not approved, or the restore or a wait failed, said with what it left and what to run; `2` asked wrongly: a time not in RFC 3339, a backup file or `--identity` beside `--to-time`, or a `--timeout` Helm would not read.
+
 ## `meridian status`
 
 ```text
@@ -402,6 +455,12 @@ Then **Components**: each workload the chart runs, named by its `meridian.dev/co
 - how often they restarted, and why and when the last time (`OOMKilled`, `Error`);
 - each pod's own memory against the limit each pod has, as its working set, the way Kubernetes counts it: the pod's usage less its inactive file cache, read from each node's cAdvisor, or from the metrics API (metrics-server) where that read is refused, which it says; `--json` names where the figure came from in `memory_read`. Without either it says memory in use is not known.
 
+Then **Database** (added in CLI 0.1.59): the database the deployment brought, its members, whether it runs under Patroni and whether it keeps a WAL archive; each member as `primary`, `standby` or `alone`, ready or not, and how far a standby is behind the primary; a member whose node is not ready, which waits for it and is never force-deleted; whether data checksums and `full_page_writes` are on, as the conductor reads them, with the [`doctor`](#meridian-doctor) hint where either is off; the WAL archiver's last segment and whether it is failing; the replica comparison's last run, with standbys; and whether TLS inside the cluster is on. For a database somebody else runs it says so, with its settings and address.
+
+Then **Integrity and members** (added in CLI 0.1.59): each store member's own answer, its mode (`writer` or `standby`), whether it is ready, and its lag; and, under the writer, when the store last read its own records again (`<store>.scrub.intervalDays`), how many it checked, and any finding not yet answered.
+
+While a restore to a time or `upgrade-deployment --enable-checksums` has the deployment stopped, a **Stopped by** block comes first (added in CLI 0.1.59): which command, since when, the CronJobs it suspended, `meridian logs database-offline`, which says where its act is, and the command that takes it from there and starts everything again.
+
 Then **Book health**: per account in the book of record, how many of its journal's entries the book replays to answer it since the account's last snapshot, and when that snapshot was taken. Book health is the deployment's own answer, read through the session [`meridian connect`](#meridian-connect) keeps (`--deployment` names one); without a session it says why it was not read, and the rest is still shown.
 
 ```text
@@ -410,6 +469,22 @@ Release: meridian revision 8, deployed, chart meridian-runtime-0.1.… (app …)
 Components:
   bor         1/1 ready  no restarts  memory 201 MiB of 512 MiB (39%)  ghcr.io/open-meridian/meridian-runtime:…
   conductor   1/1 ready  1 restart(s), the last OOMKilled at …  memory 96 MiB of 256 MiB (37%)  ghcr.io/…
+  ...
+
+Database:
+  meridian-meridian-runtime-database  3 member(s), under Patroni, WAL archive on
+    meridian-meridian-runtime-database-0  primary  ready
+    meridian-meridian-runtime-database-1  standby  ready  0 B behind the primary
+    meridian-meridian-runtime-database-2  standby  ready  0 B behind the primary
+  page checksums on, full_page_writes on
+  WAL archive: last segment at … (52s ago); not failing
+  replica comparison: no run kept yet
+  internal TLS on
+
+Integrity and members (each store member's probe):
+  meridian-meridian-runtime-bor-5cdc8c875b-8f8qm  writer, ready, lag 0 ms
+                                                    bor record: not scrubbed yet; no findings
+  meridian-meridian-runtime-bor-5cdc8c875b-rdx4m  standby, ready, lag 0 ms
   ...
 
 Plugins:
@@ -424,7 +499,7 @@ The components are read through your own kubectl and the release through your ow
 | Flag | Argument | Default | Meaning |
 |---|---|---|---|
 | `--release` | `<name>` | `meridian` | The Helm release. |
-| `--json` | | off | One JSON object on stdout: `release`, with `release`, `revision`, `status`, `chart`, `app_version`, `updated` and `description`, or `not_read` with why; `components` and `plugins`, each with `component`, `kind`, `images`, `ready`, `wanted`, `restarts`, `last_restart_reason`, `last_restart_at`, `memory_bytes` (the busiest pod's), `memory_limit_bytes` (each pod's limit) and `pods`, each pod's `pod` and `memory_bytes`, and a plugin also `instance_id`, `plugin_image` and `launched`; `metrics`; and `book_health`, each account's `account_id`, `journal_entries`, `entries_since_snapshot` and `last_snapshot_at_ns`, or `not_read` with why. |
+| `--json` | | off | One JSON object on stdout: `release`, with `release`, `revision`, `status`, `chart`, `app_version`, `updated` and `description`, or `not_read` with why; `components` and `plugins`, each with `component`, `kind`, `images`, `ready`, `wanted`, `restarts`, `last_restart_reason`, `last_restart_at`, `memory_bytes` (the busiest pod's), `memory_limit_bytes` (each pod's limit) and `pods`, each pod's `pod` and `memory_bytes`, and a plugin also `instance_id`, `plugin_image` and `launched`; `metrics`; and `book_health`, each account's `account_id`, `journal_entries`, `entries_since_snapshot` and `last_snapshot_at_ns`, or `not_read` with why. Added in CLI 0.1.59, beside every key it had: `database`, with `statefulset`, `patroni`, `wal_archive`, `wanted` and `members`, each member's `pod`, `role`, `ready`, `node`, `bytes_behind_primary` and `waits_for_node`; `database_settings`, with `data_checksums`, `full_page_writes` and `primary`; `wal_archiver`, with `last_archived_at`, `seconds_since`, `failed` and `failing`; `replica_comparison`, the last run's answer; `internal_tls`; `stopped_by`, with `act`, `command`, `since`, `resumed_by`, `database_members`, `components` and `cronjobs_suspended`, or null; and `probes`, each store member's `component`, `pod`, `member`, `integrity` and `not_read`. |
 
 **Exit codes:** `0` read; `1` no deployment of that release in the namespace, or kubectl failed; `2` asked wrongly.
 
@@ -438,7 +513,7 @@ What a component's pods printed, each line under its pod's name, every container
 
 - a component `meridian status` lists, such as `bor` or `conductor`;
 - a plugin, by its instance, as `meridian status` lists it under Plugins;
-- one of the release's Jobs, such as `migrate`, `key`, `first-run` or `backup`: the newest run of it.
+- one of the release's Jobs, such as `migrate`, `key`, `first-run`, `backup` or `database-offline` (the act of a restore to a time or of `--enable-checksums`): the newest run of it.
 
 Any other is refused, naming the components and plugins there are. It reads through your own kubectl, and changes nothing.
 
@@ -526,8 +601,8 @@ If the deployment can't be reached, the delegation is still forgotten here. It s
 meridian plugin new <name> [--into <dir>] [--role connectivity|custody|data|operations|pricing|reporting]
 ```
 
-!!! note "CLI 0.1.58"
-    CLI 0.1.58 writes SDK 0.35.0's templates: each role the plugin holds is
+!!! note "CLI 0.1.59"
+    CLI 0.1.59 writes SDK 0.35.0's templates: each role the plugin holds is
     one class, `meridian.roles.<role>.Role`, and the plugin enters through
     `meridian.run(declaration=..., roles=[...], ...)` with its classes
     registered there. Move a new plugin to SDK 0.35.5 with
@@ -563,8 +638,8 @@ Writes a working plugin to start from: the Python SDK's reference plugin, rename
 meridian plugin check [--dir <dir>] [--run-tests] [--verified] [--json]
 ```
 
-!!! note "CLI 0.1.58"
-    CLI 0.1.58 reads the current roles and suites: the data suite's
+!!! note "CLI 0.1.59"
+    CLI 0.1.59 reads the current roles and suites: the data suite's
     `records-a-derived-series` and `records-a-pools-factor` can be named in
     `not_presented`, and so can every read the suites mark with its `about`
     (datasets, orders, trading instructions, replacements, templates, event

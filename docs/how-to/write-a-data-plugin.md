@@ -8,7 +8,7 @@ plugins of a pair pass it unchanged. This page starts one from the template
 and holds it to the suite. How a person then uses it is
 [Using a data plugin](using-a-data-plugin.md).
 
-You need CLI 0.1.58 and SDK 0.35.5 or later: `meridian plugin new
+You need CLI 0.1.59 and SDK 0.35.5 or later: `meridian plugin new
 --role data` writes this template on the role's common part, on SDK 0.35.0,
 for a runtime on chart 0.1.408 or later. It, and a plugin made by an older CLI, moves to 0.35.5 with
 [`meridian plugin migrate`](../api/cli.md#plugin-migrate), then maps any new

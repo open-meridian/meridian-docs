@@ -3,7 +3,7 @@
 A deployment can run on a laptop or across a cluster's zones, and the
 failures it rides out grow with where it runs. This page names four levels,
 each by where a deployment runs, says what each needs and the chart values
-that reach it, as chart 0.1.408 delivers them.
+that reach it, as chart 0.1.477 delivers them.
 
 It states tested behaviour only. It is no service agreement, no uptime
 figure and no claim of readiness for any regulation. Recovery times are
@@ -53,6 +53,8 @@ data. What adds a copy is a **warm standby**:
 The default is the **tolerant** one: `standby: 0` for every component, one
 member each, and a component lost is back by Kubernetes restarting it. With
 `standby: 1` the standby takes over without waiting for the restart.
+[The HA profile](#the-ha-profile) sets every standby, and the database's,
+the broker's and the dashboard's counts, at once.
 
 **What CI tests today.** Core's CI installs the chart in both shapes on a
 scratch cluster and injects failures, timing each recovery against its
@@ -141,7 +143,8 @@ standby on another node could not start, and the chart refuses
 `conductor.standby: 1` with a generated key. A deployment whose key the
 chart generated keeps its conductor without a standby.
 
-The database stays one instance at this level.
+The database stays one instance; [the HA profile](#the-ha-profile) adds
+its standbys.
 
 ## Multi-zone { #multi-zone }
 
@@ -162,13 +165,55 @@ zones: [zone-a, zone-b, zone-c]
 meridian upgrade-deployment -f multi-node.yaml -f multi-zone.yaml
 ```
 
-The database stays one instance.
+The database stays one instance; [the HA profile](#the-ha-profile) adds
+its standbys.
+
+## The HA profile { #the-ha-profile }
+
+`resilience.profile` turns every count of the HA configuration on at once,
+each still overridable by its own value:
+
+| Value | `tolerant`, the default | `ha` |
+|---|---|---|
+| `<component>.standby` (`lake`, `bor`, `instrument`, `street`, `conductor`, `launcher`) | 0 | 1 |
+| `database.brought.standbys` | 0 | 2, under Patroni |
+| `broker.replicas` | 1 | 3 |
+| `broker.jetstream.replicas` | 0 | 3, the analytics component's work queue |
+| `dashboard.replicaCount` | 1 | 2 |
+| `analytics.coordinator.replicaCount`, `analytics.worker.replicaCount` | 1 | 2 |
+
+```bash
+meridian upgrade-deployment --set resilience.profile=ha
+```
+
+`ha` needs the deployment's key in a Secret named by `key.existingSecret`,
+as the conductor's standby does; the chart refuses it without one. See
+[To move to the HA profile, and back](../how-to/upgrade-a-deployment.md#to-move-to-the-ha-profile-and-back)
+for the two upgrades a brought database takes to move under Patroni.
+
+**The database.** With standbys, the database the chart brings is a primary
+and two standbys under Patroni, each on its own volume and node. One standby
+is synchronous and strict, so a primary cut off from every standby
+acknowledges no commit alone: the book's, the street store's, the
+instrument store's and the configuration's commits wait for it, and the
+lake's commit locally. The database's Service follows the primary. A
+database that has moved under Patroni stays under it, standbys or none.
+`meridian status` lists its members, each primary or standby, and how far
+each standby is behind.
+
+**The broker.** Three servers, each keeping its JetStream state on a volume
+of its own (`broker.jetstream.size`, `1Gi`), so a server restarted rejoins
+with what it held. A client moves to another server when its own has not
+answered for 2 seconds.
+
+Every count the chart takes is one CI tests, and any other is refused.
 
 ## The chart's values { #the-charts-values }
 
 | Value | Default | What it does |
 |---|---|---|
-| `<component>.standby` | `0` | A warm standby beside the writer: 0 or 1, for `lake`, `bor`, `street`, `instrument`, `conductor` and `launcher`. Any other count is refused, since CI tests one |
+| `resilience.profile` | `tolerant` | `tolerant` or `ha`: [the HA profile](#the-ha-profile) |
+| `<component>.standby` | by the profile: `0`, `1` in `ha` | A warm standby beside the writer: 0 or 1, for `lake`, `bor`, `street`, `instrument`, `conductor` and `launcher`. Any other count is refused, since CI tests one |
 | `<component>.readyLagMs` | `5000` | The lag behind the writer's change log under which a standby is ready |
 | `<component>.replicaCount` | `1` | 0 or 1. Above 1 the chart refuses to render, naming the component and pointing at `standby` |
 | `leases.renewSeconds` | `2` | How often a writer renews its lease, and a standby looks at it |
@@ -176,7 +221,9 @@ The database stays one instance.
 | `zones` | `[]` | The zones members are kept within and spread over; empty spreads over nodes only |
 | `tolerations` | `[]` | More tolerations, after the chart's own 30-second ones |
 | `key.existingSecret` | `""` | The deployment's key as a Secret: required for a conductor standby |
-| `dashboard.replicaCount` | `1` | Must be 1 |
+| `dashboard.replicaCount` | by the profile: `1`, `2` in `ha` | Copies of the dashboard, each reading the same sessions from its tables |
+| `database.brought.standbys` | by the profile: `0`, `2` in `ha` | The brought database's standbys under Patroni: 0 or 2 |
+| `broker.replicas` | by the profile: `1`, `3` in `ha` | The broker's servers: 1 or 3 |
 
 ### The hot layer { #the-hot-layer }
 
