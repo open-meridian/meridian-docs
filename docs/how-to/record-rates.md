@@ -10,7 +10,7 @@ adds what is different for rates.
 
 You need SDK 0.32.3 or later and a deployment on chart 0.1.311 or later,
 which resolves a subject by its administrator's code and takes the
-licence's attribution terms. `meridian plugin new` on CLI 0.1.58 writes a
+licence's attribution terms. `meridian plugin new` on CLI 0.1.59 writes a
 plugin on SDK 0.35.0, which needs a deployment.
 
 ## Declare the dataset

@@ -5,9 +5,9 @@ its open interest from a reading plugin, ask for a series' record before an
 order names it, and run the options measures over it. What each part means
 is in [Listed options and futures](../concepts/listed-options-and-futures.md).
 
-You need SDK 0.35.5 or later, CLI 0.1.58, and a deployment
-(chart 0.1.408) whose platform publishes the `TPL-listed-option`
-template. `meridian plugin new` on CLI 0.1.58 writes a plugin on 0.35.0, which
+You need SDK 0.35.5 or later, CLI 0.1.59, and a deployment
+(chart 0.1.477) whose platform publishes the `TPL-listed-option`
+template. `meridian plugin new` on CLI 0.1.59 writes a plugin on 0.35.0, which
 `meridian plugin migrate` moves to 0.35.5.
 
 ## In a data plugin: record the chain

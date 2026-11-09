@@ -24,6 +24,10 @@ the cluster, and the dashboard does not upgrade itself.
 |---|---|
 | Upgrade to the latest published chart | `meridian upgrade-deployment` |
 | Upgrade to a particular version | `meridian upgrade-deployment --chart-version <v>` |
+| Change a chart value | `meridian upgrade-deployment --set <key>=<value>`, or `-f <file>` |
+| Move to the HA profile, or back | `meridian upgrade-deployment --set resilience.profile=ha` (or `=tolerant`) |
+| Turn on TLS inside the cluster | `meridian upgrade-deployment --set tls.internal.enabled=true` |
+| Turn on page checksums in the database it brought | `meridian upgrade-deployment --enable-checksums` |
 | Return to an earlier revision | `meridian rollback-deployment` |
 | Upgrade from your own pipeline | Plain Helm, Argo CD or Flux, below |
 | Upgrade the command line itself | `meridian upgrade`, which is a different thing |
@@ -33,10 +37,24 @@ backups set up. See [Back up and restore a deployment](back-up-and-restore.md). 
 changes on the way, release by release, is in the
 [release notes](../api/python-sdk.md#release-notes).
 
-!!! note "Upgrading to chart 0.1.408"
+!!! note "Upgrading to chart 0.1.477"
     Chart releases are numbered by the CI run that tested them, so the
-    numbers jump: the release after 0.1.344 is 0.1.406, and 0.1.408 is the
-    current one. The upgrade adds each store's change log, the table a
+    numbers jump; 0.1.477 is the current one. Upgrading to it keeps the
+    counts a deployment runs: `resilience.profile` stays `tolerant`, and
+    TLS inside the cluster and the WAL archive stay off until you turn them
+    on (below, and
+    [Back up and restore](back-up-and-restore.md#keep-a-wal-archive)). Each
+    store's writer now reads its own records again once a week, at low
+    priority (`<store>.scrub.intervalDays`, 7; 0 for never), and
+    `meridian status` shows when it last did and anything it found. A
+    database the deployment brought keeps what it was made with:
+    `meridian status` says whether its page checksums are on, and
+    [`--enable-checksums`](#to-turn-on-page-checksums) turns them on. With
+    Helm 4, the upgrade passes `--force-conflicts` (see
+    [Plain Helm](#plain-helm)).
+
+!!! note "Upgrading from a chart before 0.1.408"
+    The upgrade to chart 0.1.408 adds each store's change log, the table a
     standby follows, and the stores' hot layers, each bounded within the
     component's memory limit (see
     [Service levels](../concepts/service-levels.md#the-hot-layer)). Every
@@ -260,6 +278,177 @@ Where it stops, it names what to run next, in `meridian` commands alone.
 | the migration failed | It names the Job. Read its log with `meridian logs migrate`. The new revision stays applied. Read the log before rolling back: a migration that got part of the way may have changed what the older version reads. |
 | still waiting after the timeout | It lists what it was waiting for, each with why. Nothing is rolled back. `meridian status` shows where each component is. Run it again with a longer `--timeout`: it is at the new version already, so it only waits. |
 
+## To change a chart value
+
+```bash
+meridian upgrade-deployment --set backup.walArchive.enabled=true
+```
+
+`--set <key>=<value>` changes one of the chart's values in the same approved upgrade, read as Helm
+reads it: `a.b=v`, several split by commas, `a.list[0]=v`, a list as `{x,y}`, and `true`, `false`,
+`null` and whole numbers typed. Repeat it for more; each applies over every `-f` file. A value is
+an upgrade even at the chart version the deployment runs already: the version stays, and the value
+changes. At that version, where the values come out as they were, it says there is nothing to do.
+
+The plan names each path that changes, never its value. The `--set` is shown in the `helm upgrade`
+line, except a value whose key names a secret, password, token, key, code or certificate, shown as
+`<withheld>`:
+
+```text
+Upgrading meridian in meridian:
+  from  meridian-runtime 0.1.477 (revision 3), running ghcr.io/open-meridian/meridian-runtime:6126ab4
+  to    meridian-runtime 0.1.477, running ghcr.io/open-meridian/meridian-runtime:6126ab4
+
+  Its values, with --set backup.walArchive.enabled merged over them (values not shown):
+    backup.walArchive: set
+
+  helm upgrade meridian oci://ghcr.io/open-meridian/charts/meridian-runtime --version 0.1.477 --namespace meridian --reset-then-reuse-values --timeout 10m --force-conflicts --set backup.walArchive.enabled=true
+
+Upgrade it? [y/N]
+```
+
+Then it applies and waits as any upgrade does. `--set` goes with `--chart-version` too, to move
+the version and change a value under one approval.
+
+## To move to the HA profile, and back
+
+`resilience.profile` turns every count of the HA configuration on at once: a standby for each
+writer, the database the deployment brought with two standbys under Patroni, the broker at three,
+and the dashboard and the analytics component at two (see
+[Service levels](../concepts/service-levels.md#the-ha-profile)). It needs the deployment's key in a
+Secret named by `key.existingSecret`; the chart refuses `ha` without one.
+
+```bash
+meridian upgrade-deployment --set resilience.profile=ha
+```
+
+A brought database moves under Patroni in the chart's two upgrades. The plan says so before it
+asks, and the one approval covers both:
+
+```text
+  Its values, with --set resilience.profile merged over them (values not shown):
+    resilience: set
+  Its database moves under Patroni, which takes two upgrades, and this one approval covers both. The first moves its member 0 under Patroni alone, keeping its data; once that has rolled out and member 0 is ready, the second, with the same chart and values, adds its 2 standbys, which clone from it. Until member 0 is ready the database answers nobody.
+```
+
+It runs the first, waits for it as for any upgrade, then runs the second:
+
+```text
+The first of two upgrades: the database moves under Patroni, member 0 alone.
+Applied (1 of 2) as revision 5. Waiting for the migration, then every component on its new template (up to 10m).
+...
+Member 0 is ready under Patroni (revision 5). The second upgrade, with the same chart and values, adds its 2 standbys, which clone from it.
+Applied (2 of 2) as revision 6. Waiting for the migration, then every component on its new template (up to 10m).
+...
+Upgraded meridian in meridian: meridian-runtime 0.1.477 -> meridian-runtime 0.1.477, now revision 6.
+```
+
+If the first stops, the second is not run, and it says so. Once member 0 is ready, run the same
+command again: it finds the database under Patroni alone, says that this upgrade is the second,
+and adds the standbys. If the second stops, the first stays applied, with the database under
+Patroni, member 0 alone and serving; the same command adds the standbys.
+
+`meridian status` then lists the database's members:
+
+```text
+Database:
+  meridian-meridian-runtime-database  3 member(s), under Patroni, WAL archive on
+    meridian-meridian-runtime-database-0  primary  ready
+    meridian-meridian-runtime-database-1  standby  ready  0 B behind the primary
+    meridian-meridian-runtime-database-2  standby  ready  0 B behind the primary
+  page checksums on, full_page_writes on
+```
+
+Back to `tolerant` is one upgrade:
+
+```bash
+meridian upgrade-deployment --set resilience.profile=tolerant
+```
+
+Each count returns to one. A database that has moved under Patroni stays under it, with no
+standbys.
+
+## To turn on TLS inside the cluster
+
+```bash
+meridian upgrade-deployment --set tls.internal.enabled=true
+```
+
+The chart makes a certificate authority of its own and each server's certificate from it, kept
+across upgrades, and gives every client the authority's certificate. The deployment's own
+connections inside the cluster then use TLS, and a plain one is refused: the stores', the
+dashboard's and the Jobs' to the database the chart brings, every component's and sidecar's to the
+broker, the brokers' to each other, the database's standbys to their primary, and the dashboard's
+requests to each plugin. A database somebody else runs is then reached over TLS too, its server
+verified against the public roots and this authority, or against
+[`database.caSecret`](back-up-and-restore.md#a-database-with-its-own-ca); one that offers no TLS is
+refused.
+
+It is one upgrade at the version the deployment runs. While it rolls out, each launched plugin's
+pod may restart once. `meridian status` then says `internal TLS on`. It is off by default: a
+desktop's one node has none of these connections on a network.
+
+## To turn on page checksums { #to-turn-on-page-checksums }
+
+```bash
+meridian upgrade-deployment --enable-checksums
+```
+
+With data checksums on, Postgres notices a page corrupted on its disk when it reads it. A database
+the chart makes now has them from the start. One made by an earlier chart has them off:
+`meridian status` says `page checksums off`, and `meridian doctor` says so as `worth` and names
+this command. Turning them on stops the database while `pg_checksums` reads every page, so it is a
+step of its own: it takes no `--chart-version`, `-f`, `--set` or `--https`, and no chart moves with
+it. Where checksums are on already, it says so and changes nothing.
+
+It checks first, and stops, changing nothing, unless the release is deployed, it brought its
+database, the chart holds the step (0.1.477 does), and backups are set up, since it takes one first
+(see [Turn backups on](back-up-and-restore.md#turn-backups-on)). Then it says the downtime, estimated
+from the database's size, and asks:
+
+```text
+Turning on page checksums in meridian-meridian-runtime-database (meridian in meridian):
+  the database  8.7 GiB on member 0's volume, 1 member
+  downtime      about 7 minutes, an estimate: pg_checksums reads and writes every page, taken at 50 MiB/s, and stopping and starting everything takes a few minutes.
+                Nothing answers until it is done.
+
+  1. A backup, now, as `meridian backup` takes one. If it fails, nothing is changed.
+  2. The release's CronJobs suspended (the replica comparison, the backup, the scrub), every component stopped, then the database.
+  3. pg_checksums --enable on member 0's volume, in a Job from meridian-meridian-runtime-database-offline.
+  4. The database started, then every component, each to the count it ran at, and each CronJob as it was.
+  5. data_checksums read again, to say it is on.
+
+Turn page checksums on? [y/N]
+```
+
+The estimate is a cautious one: the database's size at 50 MiB a second, plus four minutes to stop
+and start everything, plus the same again for each standby. What stops is everything: every
+component, the launched plugins among them, and the database. Nothing answers until it is done.
+The release's scheduled jobs, the backup and, with standbys, the replica comparison, are suspended
+while it is stopped, and each is given back as it was. Under Patroni the primary is moved to member
+0 first; afterwards the standbys' volumes are deleted, and Patroni makes each again from member 0.
+At the end it reads the setting again:
+
+```text
+Page checksums are on in meridian's database, meridian-meridian-runtime-database.
+Backed up meridian to meridian-20261109T151322Z.meridian-backup (<bytes> bytes), on the deployment's backup volume.
+  ...
+  database-offline: page checksums enabled: ...
+```
+
+Where it stops:
+
+| It says | What it means |
+|---|---|
+| the backup failed | Nothing was changed. |
+| stopping everything did not finish | The database was not changed, and everything was started again. |
+| the Job failed | `pg_checksums` marks the database last, so it is as it was, without checksums, and everything was started again. The backup taken first is named. |
+| the Job is still running | Everything stays stopped while the Job has the database's volume. Once it has ended, run `meridian upgrade-deployment --enable-checksums` again: it takes it from there, and starts everything. |
+
+While it has the deployment stopped, `meridian status` says so, since when, and the command that
+resumes it (see [`meridian status`](../api/cli.md#meridian-status)). It does not start while a
+restore has the deployment stopped, or while a Job of an earlier one still runs.
+
 ## To roll back
 
 ```bash
@@ -325,6 +514,12 @@ kubectl rollout status -n meridian statefulset -l app.kubernetes.io/instance=mer
 ```
 
 `helm history meridian -n meridian` gives the new revision, the number the migration Job ends with.
+
+With Helm 4, add `--force-conflicts`, as `meridian upgrade-deployment` does: the chart's counts then
+replace the ones a first run or a restore set, as Helm 3 replaced them. A database moving under
+Patroni takes two upgrades with the same values, the second once
+`kubectl rollout status statefulset/meridian-meridian-runtime-database` says the first has rolled out;
+the chart's notes say so after the first.
 
 Do not add `--wait`. Charts up to 0.1.182 mark an upgrade failed under `--wait` on one of their own
 setup resources, although the upgrade worked. Wait with `kubectl` as above.
