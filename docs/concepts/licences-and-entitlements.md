@@ -14,11 +14,23 @@ reading those terms, and keeping to them, stays the firm's.
 
 ## The licence
 
-Each dataset has the licence its plugin's catalogue declares by default,
-what the vendor's standard terms say, until a deployment admin sets the
-deployment's own, which confirms or replaces it. The one enforced is shown
-on the Data sources page with where it came from: *the catalogue's default*,
-or *set by* a person.
+A deployment admin sets each dataset's licence. Until one does, the
+dataset is **kept and read, each use right restrictive**: the lake keeps its
+rows with no retention bound, every field readable and shown, while derived
+data stays inside the deployment, nothing is passed on, nothing is computed
+outside the deployment, and every use the terms could list (training a
+model, replicating the service, making an index) is prohibited. The Data
+sources page says which: *not licensed: kept and read, each use right
+restrictive*, or *set by* a person.
+
+**The vendor's terms and pricing.** A data plugin describes each dataset's
+terms in words: the sources behind the vendor, what it charges and on what
+meters, and what it forbids, in at most 2,000 characters. Data sources shows
+them in the vendor cell's title, the plugin's docs carry them, and
+`dashboard__list_datasets` answers them in the catalogue entry, as the
+plugin's words. They are what an admin, or the admin's agent, reads before
+setting a licence. They grant nothing and are never enforced: the licence a
+deployment admin sets is.
 
 | Term | What it says |
 |---|---|
@@ -29,26 +41,14 @@ or *set by* a person.
 | Default fields | The fields readable by default, each by its [data dictionary](../boundaries/lake.md) entry, such as `meridian.v1.Bar.vwap`; none for every field. |
 | One person's terms | Whether the terms are one person's, as a retail brokerage account holder's market data is (`personal_use`). |
 
-**The vendor's attribution terms.** A catalogue's default licence may also
-state how the vendor asks to be cited and what it allows passed on: its
-copyright class, whether redistribution is allowed, needs a licence or is
-allowed with attribution, the attribution's text, whether downstream terms
-may be no more restrictive, and the vendor's not-affiliated notice. The
-deployment keeps them with the licence the catalogue defaults, and
-`dashboard__list_datasets` answers them, the texts as the plugin's words.
-They record what the vendor's terms say, and grant nothing. A deployment
-takes them from chart 0.1.311.
-
-**A licence a person sets keeps the declared terms**. Setting
-the licence on the Data sources page, or with `dashboard__set_dataset_licence`,
-changes what the person states and keeps every other term at the value the
-catalogue declares: the attribution terms, the meters and the eligibility
-among them. **Who may take it**. The terms may state who is eligible to
-license the data at all, as a vendor's price list does
-(`DatasetLicence.eligibility`): personal use, commercial use, or both, and
+**A licence a person sets replaces the one before it.** Setting the
+licence on the Data sources page, or with `dashboard__set_dataset_licence`,
+records what the person states, and keeps every term it does not state as
+the licence held it. **Who may take it**: a licence may record who is
+eligible to license the data at all, as a vendor's price list says
+(the licence's `eligibility`): personal use, commercial use, or both, and
 a buyer's annual revenue below or at least a threshold, in an ISO 4217
-currency. The licence dialog shows it as **Who may take it, as its terms
-state**, and `dashboard__list_datasets` answers it. It is shown, never
+currency. `dashboard__list_datasets` answers it. It is shown, never
 enforced: whether the firm is eligible is the deployment admin's to judge
 from the terms.
 
@@ -107,9 +107,39 @@ they are entitled to: see [Who reads what](the-lake.md#who-reads-what).
 A reader that names no dataset takes the deployment's **source priority**:
 for each data type (prices, bars, trades and quotes), and for prices each kind (close, last, NAV, settlement), an
 ordered list of datasets, first to last. A read falls
-through to the next where one is silent beyond its cadence, does not cover
-the subject, or is not entitled, and says why. With no priority set, a
-default read takes the datasets in the order the lake lists them.
+through to the next where one is silent beyond its cadence, stalled (no
+sign of life within its stale ceiling), quarantined (its latest rows held
+quarantined), does not cover the subject, or is not entitled, and says why.
+With no priority set, a default read takes the datasets in the order the
+lake lists them.
+
+**Switched to backup source.** Each time a default read switches to the
+next source, and each time it switches back, the lake records it: the data
+type, the datasets from and to, the subjects, why (silent, stalled,
+quarantined, or restored) and when. While a default read stands on a
+backup, Data sources says **switched to backup source** on its priority's
+row and in one line above the tabs, and the Summary of each data plugin
+whose dataset it switched from or to says the same.
+`dashboard__list_source_switches` reads them. A plugin holding a role that
+reads the lake reads the priorities too, each with only the datasets it is
+entitled to read, so its page can say where its values come from next.
+
+## Gaps
+
+In the HA configuration a data plugin's writes reach the lake through a
+write-ahead stream that holds them for a bounded time
+(`lake.writeAhead.maxAge`, 10 minutes). A lake writer gone longer than that
+leaves a **gap** in each dataset whose writes the stream dropped. The lake
+records it: its ID (`GAP-` and a ULID), the dataset (not yet known until
+the dataset writes again), the subjects, the valid range, why and its
+state. Where the dataset declares `backfill`, the lake asks its plugin for
+the span again through the want and the gap is **refetching**, then
+**recovered**; otherwise it is **unrecovered**. Rows inside a gap are never
+invented: a read over it answers what was recorded.
+
+Each gap is a line on Data sources' **Gaps** tab until it is recovered,
+and a **Gap found** notice (`gap_found`) in every deployment admin's
+inbox, once per gap. `dashboard__list_dataset_gaps` reads them.
 
 A priority is replaced whole, against the priority as it was read: a change
 made from a reading older than another person's change is refused as
@@ -125,7 +155,7 @@ saying why. A note is required through the tools, and optional at the page.
 
 ## Through an agent
 
-The Data sources page has five tools on the deployment's MCP surface, at
+The Data sources page has its tools on the deployment's MCP surface, at
 the deployment admin's level: see
 [Core's tools](../api/core-tools.md#the-data-sources-page). None reads a
 price. A tool's answer is the page shown to the same person. Each of the
@@ -150,5 +180,6 @@ should read them with that in mind.
   US Treasury's, FRED's and the ECB's.
 - The data dictionary, field by field:
   [`DatasetLicence`](../boundaries/sidecar.md#meridian.v1.DatasetLicence),
+  [`DatasetGap`](../boundaries/lake.md#meridian.v1.DatasetGap),
   [`DatasetEntitlement`](../boundaries/lake.md#meridian.v1.DatasetEntitlement)
   and [`SourcePriority`](../boundaries/lake.md#meridian.v1.SourcePriority).

@@ -2,8 +2,8 @@
 
 Record the monthly factor of each agency pool and REMIC class you hold, from
 the agencies' disclosure files, and see how the book prices a fill whose
-settlement month's factor is not yet published. You need chart 0.1.477 and
-CLI 0.1.59.
+settlement month's factor is not yet published. You need chart 0.1.538 and
+CLI 0.1.60.
 
 ## 1. Arrange the files
 

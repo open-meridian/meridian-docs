@@ -210,6 +210,41 @@ its own page. `meridian plugin stop <instance>` is launching's inverse.
     dashboard's **Plugins** page or the CLI; see
     [the CLI reference](../api/cli.md).
 
+### Its limits, shards and standby pod { #its-limits-shards-and-standby-pod }
+
+A plugin reaches core only through its sidecar, which holds the plugin to
+its share: at most so many requests in flight at once, so many a second
+with a second's burst, and so many MiB of answers held or paged in flight
+for it. The deployment's chart sets them for every plugin
+(`sidecar.limits.inFlight`, `requestsPerSecond` and `answerMiB`; 16, 400
+and 32 by default). Past one, only that plugin is refused, with a
+retry-after, and the SDK (0.36.0) waits it out. A launch may give an instance its
+own:
+
+- **The Launch sheet**, on the dashboard's **Plugins** page, has **Limits at
+  its sidecar**: **Requests at once**, **Requests a second** and **Answers
+  in flight, MiB**, each left empty for the deployment's. Under them,
+  **Standby pod**, and **Shards** where the version declares more than one
+  (`most_shards`), at most that many.
+- **The CLI**: `meridian plugin launch <name> <version> --instance <id>`
+  with `--in-flight <n>`, `--requests-per-second <n>`, `--answer-mib <n>`,
+  `--shards <n>` and `--standby`. It shows each beside the roles before it
+  asks, and after the launch reads back what the deployment kept.
+  `meridian plugin list` shows each launch's limits, shards and standby.
+- **An agent**: `dashboard__launch_plugin`'s `limits`, `shards` and
+  `standby` (see [Core's tools](../api/core-tools.md#dashboard__launch_plugin)).
+
+```bash
+meridian plugin launch my-data 0.2.0 --instance my-data-1 --in-flight 32 --standby
+```
+
+A value that is not a whole number above 0 is refused naming its field
+(`limits.answer_mib`), and shards past the version's `most_shards` are
+refused naming `shards`. Each launch is its own record, with what it asked.
+
+The deployment keeps the shards and the standby pod on the launch, and the
+plugin runs one pod today.
+
 ## A plugin's page
 
 A plugin that declares `interface = true` serves a page. Each instance's page

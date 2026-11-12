@@ -7,7 +7,7 @@ only what they ticked, recorded as them through that client. Your plugin
 offers its tools there without writing any: the SDK derives a tool from each
 route that declares its inputs as one typed record.
 
-You need CLI 0.1.59 and SDK 0.35.5 or later.
+You need CLI 0.1.60 and SDK 0.36.0 or later.
 
 ## Declare a route's inputs as one record
 

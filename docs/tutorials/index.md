@@ -3,8 +3,8 @@
 A guided path, each step a walkthrough you run yourself with the output you should expect. Start
 with [Your first plugin](../getting-started/first-plugin.md), then follow the steps in order. The
 first two need a deployment installed with `--development`; see
-[Build with an AI agent](../getting-started/build-with-an-ai-agent.md). Each needs SDK 0.35.5,
-CLI 0.1.59 and a deployment on chart 0.1.477.
+[Build with an AI agent](../getting-started/build-with-an-ai-agent.md). Each needs SDK 0.36.0,
+CLI 0.1.60 and a deployment on chart 0.1.538.
 
 | Step | Tutorial | What you learn |
 |---|---|---|

@@ -16,7 +16,7 @@ such as Homebrew's on macOS (`externally-managed-environment`).
 |---|---|
 | PyPI name | `open-meridian` |
 | Import name | `meridian` |
-| Version | 0.35.5 |
+| Version | 0.36.0 |
 | Python | 3.11 or newer |
 | Dependencies | `grpcio>=1.68,<2`, `protobuf>=5.28,<7`, `jinja2>=3.1,<4` (for [pages](#pages)) |
 | Licence | Apache-2.0 |
@@ -24,7 +24,7 @@ such as Homebrew's on macOS (`externally-managed-environment`).
 !!! warning "Not `meridian-sdk`"
     The PyPI package `meridian-sdk` belongs to an unrelated company. Don't install it.
 
-A plugin pins the SDK exactly, `open-meridian==0.35.5`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the interface, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.35.5`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls (see [Moving a plugin to a new release](#moving-a-plugin-to-a-new-release)). CLI 0.1.53's `meridian plugin new` writes a plugin pinned to 0.33.0; `meridian plugin migrate` moves one pinned earlier to it.
+A plugin pins the SDK exactly, `open-meridian==0.36.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the interface, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.36.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls (see [Moving a plugin to a new release](#moving-a-plugin-to-a-new-release)). CLI 0.1.60's `meridian plugin new` writes a plugin pinned to 0.35.0; `meridian plugin migrate` moves it to 0.36.0, which runs on chart 0.1.538.
 
 | Optional extra | Installs | For |
 |---|---|---|
@@ -92,7 +92,7 @@ A version registers exactly the declaration it was uploaded with (see [The whole
 | `Storage`, `RecordKind` | frozen dataclasses | [The archive](#the-archive) |
 | `StoredSpan`, `MoveOutcome` | generated protobuf message and enum | [The archive](#the-archive) |
 | `ActivityKind`, `ActivityRef` | generated protobuf enum and message | [Typed operations](typed-operations.md#activitykind) |
-| `DatasetDeclaration`, `DatasetLicence` | frozen dataclasses | [A data plugin's catalogue](#a-data-plugins-catalogue) |
+| `DatasetDeclaration` | frozen dataclass | [A data plugin's catalogue](#a-data-plugins-catalogue) |
 | `Price`, `Bar`, `ObservationMeta`, `SourceTime` | frozen dataclasses | [Typed operations](typed-operations.md#price) |
 | `SubjectRef` | frozen dataclass | A row's subject: its `entity_id`, and from SDK 0.33.0 its `role`. Changed in SDK 0.33.0: the typed operations take this only, never the wire's (see [0.32.3 to 0.33.0](#0323-to-0330)) |
 | `ObservationMode`, `PriceKind`, `PriceBasis`, `SourceTimeKind`, `UnansweredReason`, `VenueKind`, `Source`, `SourceChoice`, `DatasetRef`, `Unanswered`, `VenueRecord` | generated protobuf enums and messages | [Typed operations](typed-operations.md#types), the lake's |
@@ -111,15 +111,16 @@ A version registers exactly the declaration it was uploaded with (see [The whole
 | `session_ceilings`, `ceilings_from`, `dataset_thresholds`, `stale_reference_action`, `stale_reference_after` | functions | [Typed settings](#typed-settings): latency's and staleness's settings. Added in SDK 0.32.0 |
 | `quality_thresholds` | function | [Typed settings](#typed-settings): a signal's outlier thresholds. Added in SDK 0.33.0 |
 | `ListedSeries`, `Statistic`, `QuoteAtTrade`, `SeriesWant`, `LifecycleEvent`, `LifecycleDelivery`, `DerivedSeries`, `SavedScenario`, `Scenario`, `ScenarioAxis`, `ScenarioSet`, `Shock`, `ShockBucket`, `UnitValue` | frozen dataclasses | [Helpers](#helpers) and [Listed options and futures](typed-operations.md#options-companies-and-scenarios). Added in SDK 0.33.0 |
-| `Filing`, `ReportedFact`, `HoldingsReport`, `Holding`, `CorporateActionAnnounced`, `RatingAction`, `QualityAssessment`, `DataEligibility` | frozen dataclasses | [The filings slice and quality states](#the-filings-slice-and-quality-states); `DataEligibility` on a [catalogue's licence](#a-data-plugins-catalogue). Added in SDK 0.33.0 |
+| `Filing`, `ReportedFact`, `HoldingsReport`, `Holding`, `CorporateActionAnnounced`, `RatingAction`, `QualityAssessment` | frozen dataclasses | [The filings slice and quality states](#the-filings-slice-and-quality-states). Added in SDK 0.33.0 |
 | `RefusedSetting` | frozen dataclass | [`Settings`](#settings): a saved value this version cannot read. Added in SDK 0.31.1 |
-| `analytics`, `Job`, `WhatIf`, `WhatIfTrade`, `ComputedAs`, `NotEvaluatedReason`, `ScenarioKey`, `ScenarioKind`, `PricedUnit`, `Sensitivity` | module, generated protobuf messages and enums | The analytics component and a pricing plugin's answers; see [The analytics component's operations](typed-operations.md#analytics-and-event-groups). Added in SDK 0.31.0 |
+| `analytics`, `Job`, `WhatIf`, `WhatIfTrade`, `ComputedAs`, `NotEvaluatedReason`, `ScenarioKey`, `ScenarioKind`, `PricedUnit`, `Sensitivity` | module, generated protobuf messages and enums | The analytics component and a pricing plugin's answers; see [The analytics component's operations](typed-operations.md#analytics-and-event-groups) and [a standing job](../concepts/the-analytics-component.md#a-standing-job). Added in SDK 0.31.0 |
+| `MeasureRef` | frozen dataclass | A measure a `Job`, a `DerivedSeries` or a `CorporateActionAnnounced` names: its `definition`, `version` and, in a standing job, its `refresh`, `cadence_ns` and `material_move_bp`. `analytics.measure(...)` answers the wire's, which `analytics.job` takes. Added in SDK 0.36.0 |
 | `EventGroups`, `EventGroup`, `EventGroupFlag` | class, generated protobuf message and enum | Event groups; see [`list_event_groups`](typed-operations.md#list_event_groups). Added in SDK 0.31.0 |
 | `reached_environment`, `is_demo`, `connection_badge` | functions | The agents' demo-only guard; see [Typed settings](#typed-settings). Added in SDK 0.31.0 |
 | `CallerMiddleware` | ASGI middleware | [`CallerMiddleware`](#callermiddleware) |
 | `MeridianError`, `Refused`, `NoSidecar`, `NotRegistered`, `NotGranted`, `CallFailed`, `NotLinked`, `CommandRefused` | exceptions | [Exceptions](#exceptions) |
 | `DEFAULT_ADDRESS` | `str` | `"127.0.0.1:9191"`, where a sidecar listens |
-| `SCHEMA_VERSION` | `str` | the interface version sent at registration, `"v29"`; each SDK release's is in the [release notes](#release-notes) |
+| `SCHEMA_VERSION` | `str` | the interface version sent at registration, `"v30"`; each SDK release's is in the [release notes](#release-notes) |
 
 The module `meridian.testing` holds [`PageClient`](#testing) and [`heartbeat`](#testing), for a plugin's own tests.
 
@@ -829,7 +830,7 @@ The sidecar checks each before it leaves, refusing `CallFailed` with `kind="inva
 A data plugin declares the datasets it serves in its declaration, from code, beside its settings and storage: `Declaration(catalogue=[DatasetDeclaration(...)])`. A dataset's ID in a deployment is the instance, a colon and its key, `f"{plugin.identity.instance_id}:daily"`, which each row names.
 
 ```python
-from meridian import DatasetDeclaration, DatasetLicence, Declaration, RecordKind, Storage
+from meridian import DatasetDeclaration, Declaration, RecordKind, Storage
 
 DECLARATION = Declaration(
     settings=SETTINGS,
@@ -842,9 +843,10 @@ DECLARATION = Declaration(
             modes=["pull", "push"],
             cadence=86_400,
             history=3650,
-            licence_default=DatasetLicence(kept=True, personal_use=True),
+            terms_and_pricing="Public market data, free of charge; one person's own use.",
             day_time_zone="Etc/UTC",
             day_end_minute=0,
+            gap_recovery="backfill",
         ),
     ],
 )
@@ -861,15 +863,20 @@ DECLARATION = Declaration(
 | `aggregator` | `str` | Who carries it, where an aggregator does; empty when reached directly. |
 | `cadence` | `int` | Seconds between the source's updates, which say when it is silent; 0 when it updates only when asked. |
 | `history` | `int` | Days of history the source serves; 0 for none stated. |
-| `licence_default` | `DatasetLicence` or `None` | What the vendor's standard terms say. |
+| `terms_and_pricing` | `str` | The vendor's terms and pricing in plain words, at most 2,000 characters: the sources behind it, what it charges and on what meters, what it forbids. Shown on Data sources and in the plugin's docs, read by the deployment admin's agent as data; never a licence, which is the deployment admin's (see [Licences and entitlements](../concepts/licences-and-entitlements.md)). Added in SDK 0.36.0, in place of `licence_default`. |
 | `day_time_zone` | `str` | The IANA zone its business dates are in; empty for a dataset that is not daily. |
 | `day_end_minute` | `int` | Minutes after local midnight the day ends, 0 to 1,439. See [Dates and time](../concepts/dates-and-time.md). |
 | `venue_id` | `str` | The venue the dataset is, a venue master ID (`VEN-`); empty for a consolidated dataset. |
 | `calendar_id` | `str` | The settlement calendar its business dates follow, its `CAL-` ID; empty for none. The lake flags a daily value dated on a day the calendar says is closed, and refuses nothing by it. Added in SDK 0.28.0. |
+| `sessions_calendar_id` | `str` | The trading-sessions calendar its live rows follow, a `CAL-` ID beside `calendar_id`: an FX dataset names the FX week. `helpers.sessions.read_sessions(self, dataset)` reads its sessions. Added in SDK 0.36.0. |
+| `declared_delay_ns`, `price_source_class` | `int`, `str` | How far behind real time the vendor serves it (0 for real time), and the class of source its prices come from (`traded`, `firm_quote`, `composite` or `evaluated`; empty for not stated). See [Data age and liveness](../concepts/data-age-and-liveness.md). |
+| `gap_recovery` | `str` | How a gap in it is recovered: `backfill` (the vendor serves history, so the lake asks again through the want), `stream_only` or `none`; empty reads as `none`. See [Gaps](../concepts/licences-and-entitlements.md#gaps). Added in SDK 0.36.0. |
 
-`DatasetLicence`, keyword only, every field optional: `kept` (`False`: served, not kept), `retention_days` (0 to 36,500; 0 for no limit set), `derived_use` and `derived_use_terms` (`not_restricted`, `internal_only` or `redistribution_needs_licence`), `display`, `default_fields` (at most 64 dictionary entries; none for every field) and `personal_use`. Added in SDK 0.32.2, the vendor's attribution terms, by the wire's names: `redistribution` (`not_allowed`, `licence_required` or `allowed_with_attribution`), `attribution_required`, `attribution_text`, `copyright_class` (`public_domain`, `copyright_citation_required` or `copyright_preapproval_required`) and `no_more_restrictive_terms`; added in SDK 0.32.3, `not_affiliated_notice`. An answer is given by its word, with or without its prefix, and refused when it is none of them. Set these terms only on a deployment on chart 0.1.311 or later: an earlier one refuses the registration of a declaration setting any of them. It records what the vendor's terms say, which a deployment admin confirms or replaces (see [Licences and entitlements](../concepts/licences-and-entitlements.md)), never whether a deployment meets them.
+The catalogue declares no licence: `DatasetLicence` and `DataEligibility` left the SDK in 0.36.0, and `meridian plugin migrate` writes a `licence_default` as `terms_and_pricing` (see [0.35.5 to 0.36.0](#0355-to-0360)). A dataset nobody has licensed is kept and read, each use right read restrictively, until a deployment admin licenses it.
 
-**Raises** `ValueError` when the declaration is built, naming the dataset: a key out of form, a vendor or aggregator too long, a data type or field no dictionary entry names, one named twice, no mode or a mode twice, a negative cadence or history, a zone that is no IANA zone, a day end out of range, a venue that is no `VEN-` ID, a calendar that is no `CAL-` ID, and a catalogue on a version not holding `data`. The upload's JSON carries the catalogue only where one is declared, its modes as words. The sidecar holds a catalogue to the same rules at registration, and refuses the plugin naming the field.
+**Shards.** `Declaration(most_shards=...)`, 0 to 64, is the most pods of one instance its vendor allows; 0 or 1 says it is not shardable. A deployment admin may launch the instance with up to that many shards; the deployment keeps them on the launch, and the plugin runs one pod today (see [Its limits, shards and standby pod](../concepts/plugins.md#its-limits-shards-and-standby-pod)). Added in SDK 0.36.0.
+
+**Raises** `ValueError` when the declaration is built, naming the dataset: a key out of form, a vendor or aggregator too long, a data type or field no dictionary entry names, one named twice, no mode or a mode twice, a negative cadence or history, a zone that is no IANA zone, a day end out of range, a venue that is no `VEN-` ID, a calendar that is no `CAL-` ID, terms and pricing past 2,000 characters, a `gap_recovery` that is none of its three words, `most_shards` outside 0 to 64, and a catalogue on a version not holding `data`. The upload's JSON carries the catalogue only where one is declared, its modes as words. The sidecar holds a catalogue to the same rules at registration, and refuses the plugin naming the field.
 
 ### Recording
 
@@ -906,6 +913,14 @@ named = await role.list_prices(subjects=held, sources=meridian.SourceChoice(name
 ```
 
 and hears what is recorded after with `on_prices_recorded` and `on_bars_recorded`, for the subjects its class's `subjects()` names; see [Events](#events).
+
+**The source priorities.** A role that reads the lake (`reporting`, `portfolio`, `compliance`, `signal`, `ems`, `oms`, `operations`, `servicing`) reads the order a default read takes its sources in, [`list_source_priorities`](typed-operations.md#list_source_priorities): each priority with only the datasets the plugin is entitled to read, and a priority naming none of them not at all, so a page can say which source its values come from next. Setting one stays a deployment admin's. Added in SDK 0.36.0.
+
+```python
+read = await role.list_source_priorities()
+for priority in read.priorities:
+    print(priority.data_type, priority.kind, list(priority.datasets))
+```
 
 ### Rates { #rates }
 
@@ -1757,7 +1772,7 @@ class Pages(title: str = "", *, templates: str | os.PathLike | None = None, kit:
 |---|---|
 | `title` | The heading the base template draws, and the end of each page's `<title>`. |
 | `templates` | The directory `render` reads templates from. A directory that does not exist raises `FileNotFoundError`. |
-| `kit` | The kit version the base template links, at `/.meridian/ui/<kit>/`: `pages.KIT`, 0.16.0 in SDK 0.35.5, whose `<om-live cells>` draws [live values](#live-values). The dashboard answers any 0.x with the newest 0.x it carries. |
+| `kit` | The kit version the base template links, at `/.meridian/ui/<kit>/`: `pages.KIT`, 0.16.0 in SDK 0.36.0, whose `<om-live cells>` draws [live values](#live-values). The dashboard answers any 0.x with the newest 0.x it carries. |
 | `max_body` | The largest request body, in bytes, the pages take: `meridian.pages.MAX_BODY`, 1 MiB, unless said. A larger one is answered 413 before any view runs, so a view need not measure what it is sent. A negative number, or anything but an `int`, raises `ValueError`. |
 
 | Member | Meaning |
@@ -1863,6 +1878,8 @@ The token is an HMAC of the person and the session's level, under a secret the p
 ## Views and live values { #live-values }
 
 **A view** is a targeted read kept open: `await plugin.subscribe(row, *, subjects=(), series_keys=(), all_series=False, expiration_from="", expiration_to="", fields=(), linger=30.0)` answers a `LiveView` of what `row` delivers for the selector, kept current by the SDK from deliveries. A page reads it with no bus call, and the plugin keeps no copy of its own. Identical selectors are one subscription, shared; `close()` it when done, and it is dropped `linger` seconds after its last reader. A loss or a broken stream reads its snapshot again.
+
+**A stream held to its far end.** A view's stream, and the delivery stream, that names the lake's rows or carries a view and hears nothing for `receive.QUIET_SECONDS` (60 seconds, doubling to 15 minutes while nothing comes) is opened again and caught up as after a break, so a far end restarted without breaking the stream never leaves a view frozen. Each read it catches up by is given `receive.READ_SECONDS` (60) to answer. A class that seeds may be handed the latest of what it hears again, as often as every quarter hour while a market is closed: keep each `on_<event>` safe to be handed a row twice. Added in SDK 0.36.0.
 
 **Views are keyed by entity.** A book record in a view is held by its entity, `meridian.views.ENTITY_KEYS`: an order by `order_id`, a placement by `placement_id`, an execution by `execution_id`, a position by its account and instrument, and so on. So an order whose venue's ID is set later is held once, its key `order_id=<id>` alone. A record of a kind not listed is keyed by its own first identifier.
 
@@ -2105,7 +2122,7 @@ What every plugin of a role must do the same way to fulfil its typed operations 
 
 Where a feed's method had an act's name it is renamed: a pairs feed's `record_trades_of` and `record_quotes_of`, an event-contract feed's `record_outcomes_of` and `record_bars_of`, a listings feed's `seed_symbols`. What faces a vendor, its transport, its pacing, its `Retry-After` and its allowance, stays the plugin's: the data template's `stream.py` and `pacing.py` show one way.
 
-The SDK's `templates/` holds a role template for `connectivity`, `custody`, `data`, `operations`, `pricing` and `reporting`. CLI 0.1.59 writes each, on SDK 0.35.0: `meridian plugin new <name> --role <role>`, then [`meridian plugin migrate`](cli.md#plugin-migrate) to move it to 0.35.5.
+The SDK's `templates/` holds a role template for `connectivity`, `custody`, `data`, `operations`, `pricing` and `reporting`. CLI 0.1.60 writes each, on SDK 0.35.0: `meridian plugin new <name> --role <role>`, then [`meridian plugin migrate`](cli.md#plugin-migrate) to move it to 0.36.0.
 
 ## Helpers { #helpers }
 
@@ -2113,7 +2130,7 @@ The SDK's `templates/` holds a role template for `connectivity`, `custody`, `dat
 
 | Module | What |
 |---|---|
-| `meridian.helpers.sessions` | `Supervisor`, one session with a source kept open over the plugin's own `Link` (`open`, `subscribe`, `receive`, `close`): reopened after a drop or a silence with `Backoff`'s jittered waits, a refused key waited out longer, at least a failure's `retry_after`, subscribed to exactly what is wanted, its state for Connection (`SessionState`, `label`), and a catch-up after a reopen. `reopen_on_want=True` opens a new session for what is wanted. Every message received is handed to `heard`, a heartbeat as `[]`. `FX_WEEK`, the FX week's sessions (below) |
+| `meridian.helpers.sessions` | `Supervisor`, one session with a source kept open over the plugin's own `Link` (`open`, `subscribe`, `receive`, `close`): reopened after a drop or a silence with `Backoff`'s jittered waits, a refused key waited out longer, at least a failure's `retry_after`, subscribed to exactly what is wanted, its state for Connection (`SessionState`, `label`), and a catch-up after a reopen. `reopen_on_want=True` opens a new session for what is wanted. Every message received is handed to `heard`, a heartbeat as `[]`. `FX_WEEK`, the FX week's sessions (below). `await read_sessions(self, dataset)`, the trading sessions a dataset's live rows follow, read from its `sessions_calendar_id`, or `None` where it names none (added in SDK 0.36.0) |
 | `meridian.helpers.calendars` | `DayClock.of(declaration)`, a dataset's business day by its declared zone and end minute (`business_date_of`, `close_of`, `opened_at`); `MarketDays(role, calendar_id)`, the deployment's calendar read through a role object (`is_open`, `previous_open`, `next_open`, `business_date_of`) |
 | `meridian.helpers.chains` | A chain's series, keys and reads: see below |
 | `meridian.helpers.packages` | A package's legs, proposal and fill: see below |
@@ -2173,9 +2190,7 @@ Declared cash dividends, recorded with this module, are served.
 | | `Baseline`, `OutlierThresholds`, `assessment` | A signal's robust rolling baseline, its thresholds, and one row's assessment |
 
 A pairs venue numbers its quotes (`Top.sequence`) for the gap check.
-`DatasetLicence.eligibility`, a `DataEligibility`, states who may take a
-dataset: the uses its terms allow (`personal`, `commercial`) and the
-buyer's revenue bounds, shown and never enforced. `ems.ReferenceCheck.permitted`
+`ems.ReferenceCheck.permitted`
 and `warn_permitted` are in [Each role's common logic](#each-roles-common-logic).
 
 ## Typed settings { #typed-settings }
@@ -2293,6 +2308,8 @@ Every exception carries the sidecar's own words, so a log line says whether the 
 | `NotLinked` | as `CallFailed`, with `kind="refused"` | A typed operation named an external account nobody has linked to an account, so nothing was recorded for it. A subclass of `CallFailed`, so code that caught `CallFailed` still catches it. Raised only when the refusal carries the code `REFUSAL_REASON_EXTERNAL_ACCOUNT_NOT_LINKED`. Not worth retrying: the next statement after an admin links the account records it. See [Typed operations](typed-operations.md#an-unlinked-external-account). |
 | `CommandRefused` | as `CallFailed`, with `kind="refused"`; `reason: int`, `reason_name: str`, `fields: tuple[str, ...]` | The book of record refused a command with a code of its own, such as `REFUSAL_REASON_OPENING_BALANCE_RECORDED`; `reason` is the code's number and `reason_name` its name. `fields` names each field an incomplete entry left out, by its path in the call (`positions[0].settled_quantity`, `positions[1].lots[0].terms.cost`), for `REFUSAL_REASON_INCOMPLETE`, and is empty for every other refusal. A subclass of `CallFailed`. Not retried: the same command meets the same refusal. See [Typed operations](typed-operations.md#the-books-refusals). Also the sidecar's refusal of a deletion inside the deployment's hold, `REFUSAL_REASON_WITHIN_HOLD`, from [`delete_unit()`](#delete_unit): the unit is kept, and a later pass may try again once the hold has passed; and the order path's codes beside `ABORTED`: `REFUSAL_REASON_ALLOCATION_UNBALANCED`, `_APPROVAL_REQUIRED`, `_CHECK_BLOCKS`, `_CLAIMED`, `_ORDER_STATE`, `_IDENTIFIER_IN_USE`, `_CONNECTIVITY_NOT_ALLOWED` and `_CONNECTIVITY_LINKED`; and an `ems`'s mapping naming an account not granted to it, `REFUSAL_REASON_ACCOUNT_NOT_LINKABLE`, beside `FAILED_PRECONDITION`. See [The order lifecycle](../concepts/the-order-lifecycle.md#refusals). |
 
+**Refused for load, asked again.** An act or a read refused `RESOURCE_EXHAUSTED` with `REFUSAL_REASON_OVERLOADED` (a core component's budget is full) or `REFUSAL_REASON_RATE_LIMITED` (the plugin passed its limits at its sidecar) is asked again by the SDK after at least the refusal's `retry_after_seconds`, up to a fifth more (`client.LOAD_WAIT_JITTER`), within the call's own deadline, or `client.LOAD_WAIT_MOST_SECONDS` (300) in all where it has none. A bare `RESOURCE_EXHAUSTED`, a count cap that waiting does not clear, is raised at once. `client.load_wait` does this. Added in SDK 0.36.0.
+
 The sidecar's status is mapped onto these for typed operations:
 
 | gRPC status from the sidecar | Raised as |
@@ -2332,6 +2349,24 @@ The package installs one command, `meridian-dev run`. On a development deploymen
 ## Release notes { #release-notes }
 
 Each release of the SDK, the interface version it declares, the runtime it needs, and the CLI whose `plugin new` writes a plugin on it. What a plugin's author does to move to it is in [Moving a plugin to a new release](#moving-a-plugin-to-a-new-release).
+
+!!! note "0.36.0: breaking"
+    open-meridian 0.36.0 declares a new interface version (`SCHEMA_VERSION`
+    `"v30"`) and needs chart 0.1.538. Adds
+    [standing jobs](../concepts/the-analytics-component.md#a-standing-job)
+    (`analytics.job(..., standing=True)`, each measure's `refresh`,
+    `analytics.Jobs().standing` answering a `LiveView`); a stream held to
+    its far end (`receive.QUIET_SECONDS`); an act or read refused for load
+    asked again after its retry-after (`client.load_wait`); a dataset's
+    `terms_and_pricing`, `sessions_calendar_id` and `gap_recovery`, and
+    `Declaration(most_shards=)`; an event contract's terms and category
+    stated at its resolve; a bond's terms offered as a value of its record
+    and a quoted yield whose day count is unstated; the `benchmark_yield`
+    rate kind; and the source priorities read. `DatasetLicence`,
+    `DataEligibility` and `licence_default` are gone. Base image
+    `ghcr.io/open-meridian/plugin-python:0.36.0`; CLI 0.1.60's `plugin new`
+    writes 0.35.0, which `meridian plugin migrate` moves to it. See
+    [0.35.5 to 0.36.0](#0355-to-0360).
 
 !!! note "0.35.5: additive"
     open-meridian 0.35.5 holds the FX week once:
@@ -2846,6 +2881,7 @@ Move a plugin one release at a time or several at once: [`meridian plugin migrat
 
 | From | To | Contract | Runtime | `plugin new` writes it from | `plugin migrate` rewrites | Then by hand |
 |---|---|---|---|---|---|---|
+| 0.35.5 | 0.36.0 | 30 | chart 0.1.538 | none: CLI 0.1.60 writes 0.35.0 | a dataset's `licence_default=DatasetLicence(...)` into `terms_and_pricing="..."`; a base pinned by digest, moved with its digest dropped | see [0.35.5 to 0.36.0](#0355-to-0360) |
 | 0.35.4 | 0.35.5 | 29 | chart 0.1.408 | none: CLI 0.1.59 writes 0.35.0 | nothing: only the pins move | an FX week of the plugin's own replaced by `helpers.sessions.FX_WEEK` |
 | 0.35.3 | 0.35.4 | 29 | chart 0.1.408 | none: CLI 0.1.59 writes 0.35.0 | nothing: only the pins move | a live module of the plugin's own moved onto `pages.live_values` and `LiveValue.of`, its page script onto `<om-live cells>`; a book view's row is keyed `order_id=<id>` alone |
 | 0.35.2 | 0.35.3 | 29 | chart 0.1.408 | none: CLI 0.1.59 writes 0.35.0 | nothing: only the pins move | what `meridian plugin migrate --to 0.35.3` names in a plugin already on 0.35 |
@@ -2876,6 +2912,52 @@ Move a plugin one release at a time or several at once: [`meridian plugin migrat
 | 0.18.0 | 0.19.0 | 14 | | CLI 0.1.34 | nothing: only the pins move | see [0.18.0 to 0.19.0](#0180-to-0190) |
 
 Before 0.19.0, `plugin new` pinned 0.18.0 from CLI 0.1.33, 0.17.0 from CLI 0.1.29 to 0.1.32, 0.16.0 from CLI 0.1.28, 0.15.0 from CLI 0.1.27, 0.14.0 from CLI 0.1.26, 0.12.0 from CLI 0.1.24 and 0.1.25, 0.11.0 from CLI 0.1.23, 0.10.1 from CLI 0.1.22, 0.10.0 from CLI 0.1.21, 0.9.0 from CLI 0.1.20, 0.7.1 from CLI 0.1.18 and 0.1.19, and 0.6.1 from CLI 0.1.16 and 0.1.17.
+
+### 0.35.5 to 0.36.0 { #0355-to-0360 }
+
+The `to_0_36_0` step. Breaking: a new interface version, and a dataset's
+catalogue entry declares no licence. `meridian plugin migrate --to 0.36.0`
+moves the pins and rewrites:
+
+- **A dataset's licence into words** (`licence-default-described`): each
+  `licence_default=DatasetLicence(...)` whose arguments are literals becomes
+  `terms_and_pricing="..."`, the terms it declared in words, part by part.
+  A licence shared through a module-level name keeps its name, which then
+  holds the words. `DatasetLicence` and `DataEligibility` are dropped from
+  a `from meridian import ...` where nothing else names them.
+
+    ```python
+    # before
+    licence_default=DatasetLicence(kept=True, display=True, personal_use=True)
+    # after
+    terms_and_pricing="Kept by the lake; display allowed; one person's terms."
+    ```
+
+- **The base image** (`base-digest-dropped`): a base pinned by digest at an
+  older release is moved to 0.36.0 with its digest dropped, since the
+  migration runs with no network.
+
+Then, by hand where they apply:
+
+- a licence the rule could not read (an argument that is not a literal, a
+  dataset built from a mapping, terms past 2,000 characters in words), or
+  `DatasetLicence`, `DataEligibility` or `.licence_default` still named,
+  such as in a test (`licence-default-left`): write the vendor's terms in
+  `terms_and_pricing`, read them back as `.terms_and_pricing`;
+- a `DerivedSeries` or `CorporateActionAnnounced` of the SDK's given the
+  wire's `MeasureRef` as its `rule` (`measure-ref-sdk-form`): build it as
+  `meridian.MeasureRef(definition=..., version=...)`;
+- a suite test of a role that gained cases (`suite-cases-v30`):
+  `holds-a-standing-figure` in the `reporting`, `portfolio`, `compliance`
+  and `signal` suites, and `reads-the-source-priorities` in those of the
+  eight roles that read the lake. Map each, or name it not presented, with
+  why;
+- the plugin's e2e images, pinned to a core of this release by digest
+  (`core-images`), and the base's digest pinned again (`base-digest`).
+
+Then, where it helps: give each dataset its `gap_recovery`, an FX or other
+session-bound dataset its `sessions_calendar_id`, and a vendor allowing
+more than one connection per key its `most_shards`.
 
 ### 0.34.0 to 0.35.0 { #0340-to-0350 }
 

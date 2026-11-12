@@ -13,12 +13,21 @@ A rate is one row, with the envelope every lake row has, and:
 
 | Field | What |
 |---|---|
-| `kind` | `fixing`, `average`, `index_level`, `par_yield`, `zero`, `discount` or `coupon_equivalent` |
+| `kind` | `fixing`, `average`, `index_level`, `par_yield`, `benchmark_yield`, `zero`, `discount` or `coupon_equivalent` |
 | `value` | A `UnitValue`: a decimal with its unit. 3.87 per cent is 3.87 `percent`, never an amount of money. The units are a closed list (`percent`, `basis_points`, `index` with its base period, and a few counts and ratios), or a UCUM code for a physical unit |
 | `convention` | The rate's day count (`act_360`, `act_365_fixed`, `act_act`, `thirty_360`, `bus_252`) and compounding (`simple`, `compounded` with its periods a year, `continuous` or `discount`), as the publisher states them |
 | `tenor` or `maturity_date` | A curve's point by its tenor, a count and a unit (`ON`, `3M`, `10Y`), or by an exact maturity date |
 | `preliminary` | A fixing published as preliminary, made final by a later version |
 | `volume`, `transaction_count`, `percentiles` | Where the publisher states them, as SOFR's volume and its 1st, 25th, 75th and 99th percentiles |
+
+**A benchmark's yield beside the par yield.** `benchmark_yield` is an
+on-the-run benchmark's yield as its publisher states it, recorded on the
+curve's record at its tenor with the publisher's convention, apart from the
+par yield fitted at the same tenor: a read naming a kind answers each, and
+one naming none answers both. The analytics component's par curve reads
+par yields alone, so a benchmark is never fitted in as one. A data plugin
+records it with `rates.Feed.rate(..., "benchmark_yield", ...)` on SDK
+0.36.0.
 
 **What a publisher leaves out is no row.** A tenor not published that day
 is not recorded, and reads as the source silent, never as zero.

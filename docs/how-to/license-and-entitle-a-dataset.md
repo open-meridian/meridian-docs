@@ -20,22 +20,28 @@ its datasets are listed from the moment it runs. See
 ## Open the page
 
 In the dashboard, open **Settings**, then **Data sources**, beside
-**Instruments**. It has three tabs, each a page of one-line rows:
+**Instruments**. Its tabs are each a page of one-line rows; these are the
+ones this page works:
 
 | Tab | One row per |
 |---|---|
 | **Datasets** | dataset a launched data plugin's catalogue declares: its ID (`alpaca-1:daily`), its vendor (and aggregator), what it serves, the licence enforced, how many plugins are entitled to it, how many of its values were left unconverted, and how many identifiers and venues its plugin reported missing; and **Closed days**, how many of its daily rows are dated on a closed day of its calendar, those outside the calendar's coverage beside them ("(2 outside)"): see [A daily value on a closed day](../concepts/the-lake.md#a-daily-value-on-a-closed-day) |
 | **Entitlements** | plugin entitled to a dataset, with the fields it may read, who set it and when |
 | **Priority** | data type and price kind, with the datasets a default read takes first to last |
+| **Gaps** | gap the lake's write-ahead stream left that is not recovered yet: the dataset ("dataset not yet known" until it writes again), its state, the valid range, why and when it was found |
 
 The page shows no price: prices are read by the plugins entitled to them, on
 their own pages. Each tab has a search above its rows, beside its pager.
 
-## Confirm or change a dataset's licence
+## Set a dataset's licence
 
-Until you set one, a dataset is on its catalogue's default, the vendor's
-standard terms as its plugin declares them, and the **Licence** column says
-so on hover. To set the deployment's own:
+Until you set one, a dataset is kept and read with each use right read
+restrictively: kept, every field readable and shown, but no derived data
+outside the deployment, no redistribution, no computation outside it, and
+every listed use prohibited. The **Licence** column says *not licensed:
+kept and read, each use right restrictive* on hover. Read the vendor's
+terms and pricing first: hover the dataset's vendor, where its plugin
+describes them in its own words. To set the deployment's licence:
 
 1. On the dataset's row, select **Licence**.
 2. Tick or clear each term: **The lake may keep its rows** (cleared, they
@@ -94,11 +100,28 @@ order the lake lists them.
 The priority is replaced whole. If someone changed it after you opened the
 dialog, it is refused: read it again and redo the change.
 
+**When a source fails.** A default read moves to the next dataset where one
+is silent beyond its cadence, stalled or quarantined. While it stands on a
+backup, its row on **Priority** and a line above the tabs say **switched to
+backup source**, with from, to and why on hover; the data plugin's Summary
+says so too. It switches back by itself, and each switch and switch back is
+recorded.
+
+## Watch for gaps
+
+In the HA configuration, a lake writer gone past the write-ahead stream's
+bound leaves a gap. You hear of each one in your **Inbox**, a **Gap found**
+notice, once per gap, and it is a line on **Gaps** until it is recovered.
+Where the dataset's plugin serves history, the lake asks it for the span
+again by itself (**refetching**, then **recovered**); otherwise the line
+stays **unrecovered**, and a read over it answers what was recorded, never
+invented rows. See [Gaps](../concepts/licences-and-entitlements.md#gaps).
+
 ## Or ask your agent
 
-The same acts are five tools on the deployment's MCP surface, listed to a
-delegation covering the deployment admin's capabilities. Each change needs a
-note. See [Core's tools](../api/core-tools.md#the-data-sources-page).
+The same acts and reads are tools on the deployment's MCP surface, listed to
+a delegation covering the deployment admin's capabilities. Each change needs
+a note. See [Core's tools](../api/core-tools.md#the-data-sources-page).
 
 | To | Tool |
 |---|---|
@@ -107,8 +130,10 @@ note. See [Core's tools](../api/core-tools.md#the-data-sources-page).
 | Entitle a plugin, or withdraw it | `dashboard__set_dataset_entitlement` |
 | Read the priorities | `dashboard__list_source_priorities` |
 | Set a priority, against its `updated_at_ns` as read | `dashboard__set_source_priority` |
+| Read the switches to a backup source, and those standing now | `dashboard__list_source_switches` |
+| Read the gaps | `dashboard__list_dataset_gaps` |
 
-A delegation covering the deployment admin's capabilities reaches all five.
+A delegation covering the deployment admin's capabilities reaches them all.
 One narrowed to part of what you hold keeps the tools that change something
 its consent page listed; a tool that arrives later waits until you consent
 again from that client.

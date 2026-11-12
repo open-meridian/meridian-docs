@@ -37,21 +37,47 @@ backups set up. See [Back up and restore a deployment](back-up-and-restore.md). 
 changes on the way, release by release, is in the
 [release notes](../api/python-sdk.md#release-notes).
 
-!!! note "Upgrading to chart 0.1.477"
+!!! note "Upgrading to chart 0.1.538"
     Chart releases are numbered by the CI run that tested them, so the
-    numbers jump; 0.1.477 is the current one. Upgrading to it keeps the
-    counts a deployment runs: `resilience.profile` stays `tolerant`, and
-    TLS inside the cluster and the WAL archive stay off until you turn them
-    on (below, and
+    numbers jump; 0.1.538 is the current one. Upgrading to it keeps the
+    counts a deployment runs: `resilience.profile` stays as it was, and TLS
+    inside the cluster and the WAL archive stay off until you turn them on
+    (below, and
     [Back up and restore](back-up-and-restore.md#keep-a-wal-archive)). Each
-    store's writer now reads its own records again once a week, at low
-    priority (`<store>.scrub.intervalDays`, 7; 0 for never), and
-    `meridian status` shows when it last did and anything it found. A
-    database the deployment brought keeps what it was made with:
-    `meridian status` says whether its page checksums are on, and
+    store's writer reads its own records again once a week, at low priority
+    (`<store>.scrub.intervalDays`, 7; 0 for never), and `meridian status`
+    shows when it last did and anything it found. A database the deployment
+    brought keeps what it was made with: `meridian status` says whether its
+    page checksums are on, and
     [`--enable-checksums`](#to-turn-on-page-checksums) turns them on. With
     Helm 4, the upgrade passes `--force-conflicts` (see
     [Plain Helm](#plain-helm)).
+
+    **Each component connects as its own database login**
+    (`meridian_lake`, `meridian_bor`, `meridian_instrument`,
+    `meridian_street`, `meridian_conductor` and `meridian_dashboard`), each
+    query held to 5 seconds, so one component's slow query is refused on
+    its own and never holds the database for the rest. The upgrade makes
+    them in a database the deployment brought. For a database you run, its
+    administrator makes them (see
+    [Install a deployment](../getting-started/installation.md)); until
+    then the upgrade's check warns, naming each login missing with the
+    statement that makes it, and each such component connects as the
+    serving role, as before.
+
+    **Load is refused, never crashed on.** Each component works within a
+    budget of its memory limit (`memory.budgetPercent`, 80) and, with it
+    full, refuses a request for load with a time to ask again; past
+    `memory.shedPercent` (90) it cancels its largest request. Each plugin
+    has its share at its sidecar (`sidecar.limits.inFlight`,
+    `requestsPerSecond` and `answerMiB`: 16, 400 and 32 MiB), past which
+    only that plugin is refused; a launch can give one its own (see
+    [Its limits, shards and standby pod](../concepts/plugins.md#its-limits-shards-and-standby-pod)).
+
+    It also brings the [Resilience page and `meridian status --profile`](../concepts/service-levels.md#read-your-profile),
+    a [restore that chooses its timeline and `--to-archive-end`](back-up-and-restore.md#restore-to-a-point-in-time),
+    and [gaps and switches to a backup source](../concepts/licences-and-entitlements.md#gaps)
+    on Data sources. A plugin on SDK 0.36.0 needs it.
 
 !!! note "Upgrading from a chart before 0.1.408"
     The upgrade to chart 0.1.408 adds each store's change log, the table a
@@ -296,13 +322,13 @@ line, except a value whose key names a secret, password, token, key, code or cer
 
 ```text
 Upgrading meridian in meridian:
-  from  meridian-runtime 0.1.477 (revision 3), running ghcr.io/open-meridian/meridian-runtime:6126ab4
-  to    meridian-runtime 0.1.477, running ghcr.io/open-meridian/meridian-runtime:6126ab4
+  from  meridian-runtime 0.1.538 (revision 3), running ghcr.io/open-meridian/meridian-runtime:aae501d
+  to    meridian-runtime 0.1.538, running ghcr.io/open-meridian/meridian-runtime:aae501d
 
   Its values, with --set backup.walArchive.enabled merged over them (values not shown):
     backup.walArchive: set
 
-  helm upgrade meridian oci://ghcr.io/open-meridian/charts/meridian-runtime --version 0.1.477 --namespace meridian --reset-then-reuse-values --timeout 10m --force-conflicts --set backup.walArchive.enabled=true
+  helm upgrade meridian oci://ghcr.io/open-meridian/charts/meridian-runtime --version 0.1.538 --namespace meridian --reset-then-reuse-values --timeout 10m --force-conflicts --set backup.walArchive.enabled=true
 
 Upgrade it? [y/N]
 ```
@@ -340,7 +366,7 @@ Applied (1 of 2) as revision 5. Waiting for the migration, then every component 
 Member 0 is ready under Patroni (revision 5). The second upgrade, with the same chart and values, adds its 2 standbys, which clone from it.
 Applied (2 of 2) as revision 6. Waiting for the migration, then every component on its new template (up to 10m).
 ...
-Upgraded meridian in meridian: meridian-runtime 0.1.477 -> meridian-runtime 0.1.477, now revision 6.
+Upgraded meridian in meridian: meridian-runtime 0.1.538 -> meridian-runtime 0.1.538, now revision 6.
 ```
 
 If the first stops, the second is not run, and it says so. Once member 0 is ready, run the same
@@ -402,7 +428,7 @@ step of its own: it takes no `--chart-version`, `-f`, `--set` or `--https`, and 
 it. Where checksums are on already, it says so and changes nothing.
 
 It checks first, and stops, changing nothing, unless the release is deployed, it brought its
-database, the chart holds the step (0.1.477 does), and backups are set up, since it takes one first
+database, the chart holds the step (0.1.538 does), and backups are set up, since it takes one first
 (see [Turn backups on](back-up-and-restore.md#turn-backups-on)). Then it says the downtime, estimated
 from the database's size, and asks:
 

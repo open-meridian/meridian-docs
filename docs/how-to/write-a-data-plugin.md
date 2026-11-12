@@ -8,9 +8,9 @@ plugins of a pair pass it unchanged. This page starts one from the template
 and holds it to the suite. How a person then uses it is
 [Using a data plugin](using-a-data-plugin.md).
 
-You need CLI 0.1.59 and SDK 0.35.5 or later: `meridian plugin new
+You need CLI 0.1.60 and SDK 0.36.0 or later: `meridian plugin new
 --role data` writes this template on the role's common part, on SDK 0.35.0,
-for a runtime on chart 0.1.408 or later. It, and a plugin made by an older CLI, moves to 0.35.5 with
+for a runtime on chart 0.1.408 or later. It, and a plugin made by an older CLI, moves to 0.36.0 with
 [`meridian plugin migrate`](../api/cli.md#plugin-migrate), then maps any new
 cases as [below](#hold-it-to-the-suite).
 
@@ -40,7 +40,7 @@ conversion, and the Datasets page fills its rows from what it kept
 `.event_contracts` do a venue's whole work for a venue listing pairs or
 binary event contracts, with their pages and the checks a plugin runs
 (`meridian.roles.data.testing`); a venue of event contracts also reports
-how it groups them by event (see [Event groups](../concepts/event-groups.md)). A plugin made by an older CLI moves to the latest SDK, 0.35.5, with
+how it groups them by event (see [Event groups](../concepts/event-groups.md)). A plugin made by an older CLI moves to the latest SDK, 0.36.0, with
 `meridian plugin migrate`; see
 [Each role's common logic](../api/python-sdk.md#each-roles-common-logic).
 
@@ -55,7 +55,7 @@ The catalogue, in `declaration.py`, declares each dataset from code. A
 retail equity close might read:
 
 ```python
-from meridian import DatasetDeclaration, DatasetLicence, Declaration, Storage
+from meridian import DatasetDeclaration, Declaration, Storage
 
 CATALOGUE = [
     DatasetDeclaration(
@@ -65,9 +65,13 @@ CATALOGUE = [
         modes=["pull", "push"],
         cadence=86_400,                # seconds between updates
         history=3650,                  # days it reaches back
-        licence_default=DatasetLicence(kept=True, display=True, personal_use=True),
+        terms_and_pricing=(
+            "Personal plan, priced per user a month: display and keep for one "
+            "person's own use; no redistribution."
+        ),
         day_time_zone="America/New_York",
         day_end_minute=16 * 60,        # the day ends at the 16:00 close
+        gap_recovery="backfill",       # the vendor serves history
     ),
 ]
 
@@ -75,16 +79,32 @@ DECLARATION = Declaration(settings=SETTINGS, storage=Storage(retention_days=365)
                           catalogue=CATALOGUE)
 ```
 
-The default licence is what the vendor's standard terms say, which a
-deployment admin confirms or replaces; never a claim that a deployment
-meets them. Put the vendor's key in a secret setting, and, for a vendor with
-a sandbox as well as its live service, declare `meridian.environment()`
-first (see [Using a data plugin](using-a-data-plugin.md#its-settings)).
-From SDK 0.32.3 the licence also states the vendor's attribution terms,
-such as its copyright class, the attribution's text and its not-affiliated
-notice, set only for a deployment on chart 0.1.311 or later (see
-[Record rates in a data plugin](record-rates.md#declare-the-dataset)).
-Each part, and what the SDK refuses, is in the
+`terms_and_pricing` is what the vendor's standard terms and prices say, in
+plain words of at most 2,000 characters: the sources behind the vendor,
+what it charges and on what meters, what it forbids. Data sources shows
+it, and so do the plugin's docs. It is never a licence: the licence a
+deployment admin sets is the one enforced, and a dataset nobody has
+licensed is kept and read with each use right read restrictively (see
+[Licences and entitlements](../concepts/licences-and-entitlements.md)).
+
+`gap_recovery` says how a gap in the dataset is recovered: `backfill`
+where the vendor serves history, so the lake asks for the missing span
+again through the want; `stream_only` or `none` where it does not. Left
+empty, it reads as `none`. A dataset whose live rows follow a trading
+week names that calendar in `sessions_calendar_id`, a `CAL-` ID (an FX
+dataset names the FX week), beside `calendar_id`, its settlement
+calendar.
+
+A vendor that lets one key hold several connections can say how many pods
+of one instance it allows, `Declaration(most_shards=...)`, 0 to 64; 0 or 1
+says the plugin is not shardable. A deployment admin may launch it with up
+to that many shards. The deployment keeps the shards asked on the launch,
+and the plugin runs one pod today.
+
+Put the vendor's key in a secret setting, and, for a vendor with a sandbox
+as well as its live service, declare `meridian.environment()` first (see
+[Using a data plugin](using-a-data-plugin.md#its-settings)). Each part,
+and what the SDK refuses, is in the
 [Python SDK reference](../api/python-sdk.md#a-data-plugins-catalogue).
 
 ## Convert at the edge
@@ -135,8 +155,7 @@ Replace the stand-in vendor, keeping the template's shape in `convert.py`:
     ```
 
 8. **Trades and quotes.** Declare them in a live dataset
-   apart from the live prices, licensed by default kept two days or served,
-   not kept:
+   apart from the live prices, with the vendor's terms for them:
 
     ```python
     DatasetDeclaration(
@@ -144,9 +163,10 @@ Replace the stand-in vendor, keeping the template's shape in `convert.py`:
         vendor="My vendor",
         data_types=["meridian.v1.Trade"],
         modes=["pull", "stream"],
-        licence_default=DatasetLicence(kept=True, retention_days=2, personal_use=True),
+        terms_and_pricing="Real-time trades for one person's own use; kept two days at most.",
         day_time_zone="America/New_York",
         day_end_minute=16 * 60,
+        gap_recovery="backfill",
     )
     ```
 

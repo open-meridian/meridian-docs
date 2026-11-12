@@ -123,7 +123,7 @@ and nothing it reads leaves the deployment.
 ## Build your own
 
 A reporting plugin of your own uses what the sample does. You need CLI
-0.1.59 and SDK 0.35.5 or later:
+0.1.60 and SDK 0.36.0 or later:
 
 - **The reads.** A `reporting` plugin reads positions with
   [`list_positions`](../api/typed-operations.md#list_positions) and prices
