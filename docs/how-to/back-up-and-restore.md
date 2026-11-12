@@ -7,7 +7,7 @@ them. A backup is one file that holds what a restore needs to bring the deployme
 that only you can open it.
 
 Backups are made in an image of their own, `ghcr.io/open-meridian/meridian-backup`, which the
-published chart pins to the image built with it. You need chart 0.1.477 and CLI 0.1.59.
+published chart pins to the image built with it. You need chart 0.1.538 and CLI 0.1.60.
 
 | To | Run or do |
 |---|---|
@@ -18,6 +18,7 @@ published chart pins to the image built with it. You need chart 0.1.477 and CLI 
 | Restore a backup | `meridian restore <file> --identity <file>` |
 | Keep a WAL archive, to restore to a time | `meridian upgrade-deployment --set backup.walArchive.enabled=true` |
 | Restore the running deployment to a time | `meridian restore --to-time <time>` |
+| Restore it to the last commit the archive holds | `meridian restore --to-archive-end` |
 | Reach a database you run that has its own CA | Set `database.caSecret` in the chart's values |
 
 You back up and restore with your own cluster rights: the CLI drives your own `kubectl` and, to
@@ -419,9 +420,9 @@ meridian restore --to-time 2026-11-09T13:59:27Z
 ```
 
 This restores the running deployment's database, in place, from its WAL archive to the time
-named: the archive's newest base backup before that time, the log replayed to it, and the database
-promoted there on a timeline of its own. What came after the time stays in the archive, on the old
-timeline, and is not in the database. It takes no backup file and no identity.
+named: the newest base backup before that time on the timeline that held it, the log replayed along
+that timeline to it, and the database promoted there on a timeline of its own. What came after the
+time stays in the archive, and is not in the database. It takes no backup file and no identity.
 
 The time is RFC 3339 with its offset: `2026-11-09T13:59:27Z`, or `2026-11-09T08:59:27-05:00`, with a
 fraction of a second or none. A time after now is refused. So is a deployment that keeps no WAL
@@ -432,14 +433,14 @@ It checks first, then says what it will do and asks:
 
 ```text
 Restoring meridian's database, meridian-meridian-runtime-database, in meridian, to 2026-11-09T13:59:27Z:
-  from      its WAL archive: the newest base backup before 2026-11-09T13:59:27Z, the WAL replayed to it, and the database promoted there on a timeline of its own. What came after 2026-11-09T13:59:27Z is kept in the archive, on the old timeline, and is not in the database.
+  from      its WAL archive: the newest base backup before 2026-11-09T13:59:27Z on the timeline that held it, the WAL replayed along that timeline to it, and the database promoted there on a timeline of its own. What came after 2026-11-09T13:59:27Z is kept in the archive and is not in the database.
   archived  its last segment at 2026-11-09T13:59:19Z; the newest WAL is archived before it stops.
   downtime  proportional to the base backup's size and the WAL replayed; nothing answers until it is done.
 
   1. The release's CronJobs suspended (the replica comparison, the backup, the scrub), every component stopped, the newest WAL archived, then the database.
   2. The restore on member 0's volume, in a Job from meridian-meridian-runtime-database-offline.
   3. The database started, then every component, each to the count it ran at, and each CronJob as it was.
-  If 2026-11-09T13:59:27Z is outside the archive, the restore fails with its own words, the volume stays restorable, and everything stays stopped until a time inside it is named.
+  If 2026-11-09T13:59:27Z is outside the archive, the restore refuses it in its own words, naming the archive's first and last times, the volume stays restorable, and everything stays stopped until a time inside it is named.
 
 Restore it to that time? [y/N]
 ```
@@ -453,26 +454,59 @@ waits for each step.
 
 ```text
 Restored meridian's database to 2026-11-09T13:59:27Z, and started everything again.
-  database-offline: restoring to 2026-11-09 13:59:27+00 from the archive's newest base backup before it
-  database-offline: the base backup restored; the archive replays to 2026-11-09 13:59:27+00, and nothing answers until it is there
-  database-offline: promoted at 2026-11-09 13:59:27+00 on timeline 2: ...
-  database-offline: done in 3s
+  It recovered along timeline 1, the one that held 2026-11-09T13:59:27Z.
+  database-offline: the archive holds 2026-11-09 02:00:41+00 to 2026-11-09 14:09:02+00; its newest timeline is 1
+  database-offline: restoring to 2026-11-09 13:59:27+00 along timeline 1, the one that held it, from base backup ...
+  database-offline: promoted at 2026-11-09 13:59:27+00 on timeline 2, recovered along timeline 1: ...
 ```
+
+### Restoring twice
+
+Each restore starts a timeline of its own, so a second restore to a time before the first one's
+lies on an earlier timeline. You need not say which: the restore reads the archive's timeline
+history, finds the timeline that held the time you name, restores from the newest base backup on
+that timeline's history, and says which it recovered along. There is no option to choose it.
+
+```bash
+meridian restore --to-time 2026-11-09T13:59:27Z   # on timeline 1; the database is now on timeline 2
+meridian restore --to-time 2026-11-09T12:30:00Z   # earlier still: it recovers along timeline 1 again
+```
+
+A time while the database was stopped between two timelines, after one timeline's last commit and
+before the next began, was held by none, and is refused as outside the archive.
+
+### To the archive's end
+
+```bash
+meridian restore --to-archive-end
+```
+
+This restores to the last commit the archive holds, along its newest timeline: where the deployment
+was when it stopped, and the restore for a time at or past the last commit, which `--to-time`
+refuses. It has `--to-time`'s guards and steps: it is refused without
+a WAL archive, everything stops, the restore runs, and everything starts again, and it says it
+recovered along the archive's newest timeline. Name either a time or the end, not both.
 
 ### A time outside the archive
 
-A time the archive does not reach fails in the restore's own words, and leaves everything stopped,
-the scheduled jobs suspended, and the database's volume restorable. Run the command again with a
-time inside the archive, and it takes it from there:
+A time the archive does not hold is refused before the database's volume is touched. The refusal
+names the archive's first time (its oldest base backup's end) and its last (its last commit):
+
+```text
+meridian restore --to-time: the restore-to-time Job, job/..., failed: 2026-11-09 15:00:00+00 is outside the archive, which holds 2026-11-09 02:00:41+00 to 2026-11-09 14:09:02+00: a restore to a time stops before the first commit after it, ...
+What its log says (`meridian logs database-offline -n meridian`):
+  ...
+Everything stays stopped, and the release's CronJobs suspended: the restore changed nothing, and the database's volume is as it was. The archive holds 2026-11-09T02:00:41Z to 2026-11-09T14:09:02Z. Name a time inside it, after the first and before the last: `meridian restore --to-time <time> -n meridian`; the archive's end, the last commit itself, is `meridian restore --to-archive-end -n meridian`.
+```
 
 | It says | Name instead |
 |---|---|
-| `<time> is outside the archive: it is before its oldest base backup ended` | A time after the oldest base backup kept ended. |
-| `<time> is past the archive's end` | A time before the archive's last commit, which it gives, from Postgres's `last completed transaction` line, where that line is shown. |
+| `... it is before its oldest base backup ended` | A time after the first time it names. |
+| `... a restore to a time stops before the first commit after it` | A time before the last time it names, or `--to-archive-end` for the last commit itself. |
+| `... no timeline held it` | A time on either side of the stop it names. |
 
-```bash
-meridian restore --to-time <a time inside the archive>
-```
+Everything stays stopped until you run it again with a time inside the archive, or with
+`--to-archive-end`; it takes it from there.
 
 ### While it is stopped
 
@@ -484,6 +518,7 @@ Stopped by `meridian restore --to-time` since 2026-11-09T14:09:04Z:
   every component and the database stay stopped, and 1 CronJob(s) suspended (meridian-meridian-runtime-database-replicas), until it finishes. While it runs, `meridian logs database-offline -n meridian` says where its act is. If it no longer runs, `meridian restore --to-time <time> -n meridian` takes it from there and starts everything again.
 ```
 
+A stop left by `--to-archive-end` names `meridian restore --to-archive-end` instead.
 `meridian status --json` gives the same as `stopped_by`. A restore does not start while a Job of an
 earlier one, or of `--enable-checksums`, still runs.
 

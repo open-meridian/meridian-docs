@@ -12,8 +12,8 @@ It works on any deployment. For the faster loop where each save runs at once, se
 
 - A deployment you installed with [Install a deployment](installation.md).
 - You hold **deployment admin** on it. Only a deployment admin brings plugins in.
-- The `meridian` CLI 0.1.59 (`meridian --version`; update with `meridian upgrade`). Its
-  `plugin new` writes a plugin on SDK 0.35.0, so the deployment must run chart 0.1.408. `meridian plugin migrate` moves it to SDK 0.35.5, the latest (step 3).
+- The `meridian` CLI 0.1.60 (`meridian --version`; update with `meridian upgrade`). Its
+  `plugin new` writes a plugin on SDK 0.35.0, which runs on chart 0.1.408 or later. `meridian plugin migrate` moves it to SDK 0.36.0, the latest, which needs chart 0.1.538.
 - Docker on this machine. `meridian plugin upload` builds the plugin's image here, from its own
   `Dockerfile`.
 
@@ -113,7 +113,7 @@ macOS (`externally-managed-environment`). `--run-tests` runs the tests with `.ve
 the plugin has a `.venv`, and `.dockerignore` keeps the `.venv` out of the image.
 
 **Move it to the latest SDK.** `plugin new` writes the plugin on SDK 0.35.0. Commit it, then
-move it to 0.35.5, which changes only the two pins, `pyproject.toml`'s and the `Dockerfile`'s:
+move it to 0.36.0, which changes only the two pins, `pyproject.toml`'s and the `Dockerfile`'s:
 
 ```bash
 git init -q && git add -A && git commit -qm "From meridian plugin new"
@@ -182,7 +182,7 @@ meridian plugin list
 
 ```text
 Versions:
-  my-plugin 0.1.0  roles: none  page: yes  SDK 0.35.5
+  my-plugin 0.1.0  roles: none  page: yes  SDK 0.36.0
     documentation: https://meridian.localhost/admin/plugins/versions/my-plugin/0.1.0/documentation
 Launches:
   my-plugin  my-plugin 0.1.0  launched

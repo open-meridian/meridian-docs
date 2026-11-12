@@ -4,7 +4,7 @@
 
 Nothing in a cloud install depends on it. A marketplace listing's form and the deployment's own wizard are the whole path there; `meridian` makes the same things convenient from a terminal. Where it drives `helm` or `kubectl`, it drives your own, and what it tells you to run next is a `meridian` command, never `helm` or `kubectl`: you never run them yourself.
 
-This page describes release 0.1.59 of the command line. `meridian --version` says which one you have. For installing it, see [Install a deployment](../getting-started/installation.md).
+This page describes release 0.1.60 of the command line. `meridian --version` says which one you have. For installing it, see [Install a deployment](../getting-started/installation.md).
 
 ## Synopsis
 
@@ -19,7 +19,9 @@ meridian backup [--release <name>] [--to <dir>] [--timeout <d>]
 meridian backup key [--to <file>]
 meridian restore <file> --identity <file> [options]
 meridian restore --to-time <time> [--release <name>] [--timeout <d>] [--yes]
+meridian restore --to-archive-end [--release <name>] [--timeout <d>] [--yes]
 meridian status [--release <name>] [--json]
+meridian status --profile [--json]
 meridian logs <component> [--release <name>] [--since <span>] [--previous]
 meridian connect [<address>]
 meridian sign-out [<address>]
@@ -28,7 +30,7 @@ meridian plugin check [--dir <dir>] [--run-tests] [--json]
 meridian plugin migrate [--to <version>] [--dir <dir>] [--image <ref>] [--force] [--run-tests] [--json]
 meridian plugin upload [--dir <dir>]
 meridian plugin list
-meridian plugin launch <name> <version> --instance <id> [--yes]
+meridian plugin launch <name> <version> --instance <id> [--in-flight <n>] [--requests-per-second <n>] [--answer-mib <n>] [--shards <n>] [--standby] [--yes]
 meridian plugin stop <id>
 meridian plugin dev --instance <id> [--dir <dir>] [--yes] [--json] [--release]
 meridian plugin logs --instance <id> [--since <revision>] [--json]
@@ -295,7 +297,7 @@ Where it stops, it says what to run next, in `meridian` commands alone: `meridia
 
 Added in CLI 0.1.59. Turns on Postgres's data checksums in the database the deployment brought, which one made by an earlier chart has off. No chart version moves with it.
 
-1. **Check.** It changes nothing, and says what to do, unless the release is `deployed`, it brought its database, the chart holds the database's offline CronJob (`<release>-meridian-runtime-database-offline`, which chart 0.1.477 has), and backups are set up. Where the conductor reads checksums on already, it says so and exits 0.
+1. **Check.** It changes nothing, and says what to do, unless the release is `deployed`, it brought its database, the chart holds the database's offline CronJob (`<release>-meridian-runtime-database-offline`, which chart 0.1.538 has), and backups are set up. Where the conductor reads checksums on already, it says so and exits 0.
 2. **Show and ask.** It prints the database's size, its members and the downtime, estimated from the size: four minutes to stop and start everything, plus the size at 50 MiB a second, once for member 0 and again for each standby. Then the steps, and `Turn page checksums on?`. With no terminal to ask at, it is refused unless you pass `--yes`.
 3. **Back up.** It takes a backup as [`meridian backup`](#meridian-backup) does. If it fails, nothing is changed.
 4. **Stop.** It records what it stops on the database's StatefulSet, suspends the release's CronJobs, and stops every component, the launched plugins among them; under Patroni with standbys it makes member 0 the primary; then it stops the database.
@@ -373,9 +375,10 @@ Makes the identity backups are sealed to, an age X25519 key pair, and prints its
 ```text
 meridian restore <file> --identity <file> [-n <name>] [--release <name>] [--chart <ref>] [--chart-version <v>] [--timeout <d>] [--yes]
 meridian restore --to-time <time> [-n <name>] [--release <name>] [--timeout <d>] [--yes]
+meridian restore --to-archive-end [-n <name>] [--release <name>] [--timeout <d>] [--yes]
 ```
 
-With `--to-time`, it restores the running deployment's database in place instead: see [below](#restore-to-time).
+With `--to-time` or `--to-archive-end`, it restores the running deployment's database in place instead: see [below](#restore-to-time).
 
 Restores a backup with your own cluster rights, through `kubectl` and `helm`, into a namespace holding no deployment. It checks first, and changes nothing if a check fails:
 
@@ -420,7 +423,9 @@ Each step is printed on stderr as it is done; on stdout, what was restored, its 
 meridian restore --to-time <time> [-n <name>] [--release <name>] [--timeout <d>] [--yes]
 ```
 
-Added in CLI 0.1.59. Restores the running deployment's brought database, in place, from its WAL archive (`backup.walArchive`) to a time: the archive's newest base backup before it restored, the log replayed to it, and the database promoted there on a timeline of its own. It takes no backup file and no identity. See [Restore to a point in time](../how-to/back-up-and-restore.md#restore-to-a-point-in-time).
+Added in CLI 0.1.59. Restores the running deployment's brought database, in place, from its WAL archive (`backup.walArchive`) to a time: the newest base backup before it on the timeline that held it restored, the log replayed along that timeline to it, and the database promoted there on a timeline of its own. It takes no backup file and no identity. See [Restore to a point in time](../how-to/back-up-and-restore.md#restore-to-a-point-in-time).
+
+**The timeline is chosen, never asked** (changed in CLI 0.1.60). Each restore starts a timeline of its own, so a time before an earlier restore's lies on an earlier timeline. The restore reads the archive's timeline history, recovers along the timeline that held the time, from the newest base backup on that timeline's history, and the report says which: `It recovered along timeline 1, the one that held 2026-11-09T13:59:27Z.` There is no option to choose it. On an older chart, which restores along the archive's newest timeline only, it says so before anything stops.
 
 1. **Check.** It changes nothing, and says what to do, if the time is after now, the release is not `deployed`, the deployment brought no database, it keeps no WAL archive (with how to turn it on), the chart has no offline CronJob, or a Job of an earlier act still runs. The archiver's newest attempt failing is `worth`.
 2. **Show and ask.** It prints the database, the time, the archive's last segment, and the steps, and asks `Restore it to that time?`. With no terminal to ask at, it is refused unless you pass `--yes`.
@@ -428,7 +433,7 @@ Added in CLI 0.1.59. Restores the running deployment's brought database, in plac
 4. **Restore.** It runs the restore on member 0's volume, in a Job made from `<release>-meridian-runtime-database-offline`, and prints its lines.
 5. **Start.** Under Patroni it deletes the standbys' volumes, which Patroni makes again from member 0. It starts the database, then every component at the count it ran at, and gives each CronJob back as it was.
 
-A time outside the archive fails in the restore's own words, and leaves everything stopped, the CronJobs suspended and the volume restorable: before the oldest base backup ended, it says so; past the archive's end, it says the latest time that can be restored lies before the archive's last commit, gives that commit's time where Postgres's lines include it, and asks for a time before it. Run again with a time inside the archive, it takes it from there, as it does after any restore that did not finish. While it has the deployment stopped, [`meridian status`](#meridian-status) says so and names the command that resumes it.
+A time outside the archive (before its oldest base backup ended, at or past its last commit, or while the database was stopped between two timelines) is refused in the restore's own words before the database's volume is touched, naming the archive's first and last times, and saying the volume is as it was. Everything stays stopped and the CronJobs suspended, and the hint names the first and last times back, with `--to-archive-end` for the end itself. Run again with a time inside the archive, it takes it from there, as it does after any restore that did not finish. While it has the deployment stopped, [`meridian status`](#meridian-status) says so and names the command that resumes it.
 
 | Flag | Argument | Default | Meaning |
 |---|---|---|---|
@@ -439,6 +444,14 @@ A time outside the archive fails in the restore's own words, and leaves everythi
 | `-n`, `--namespace` | `<name>` | `meridian` | The namespace. |
 
 **Exit codes:** `0` restored, and everything started again; `1` a check stopped it (nothing was changed), it was not approved, or the restore or a wait failed, said with what it left and what to run; `2` asked wrongly: a time not in RFC 3339, a backup file or `--identity` beside `--to-time`, or a `--timeout` Helm would not read.
+
+### `meridian restore --to-archive-end` { #restore-to-archive-end }
+
+```text
+meridian restore --to-archive-end [-n <name>] [--release <name>] [--timeout <d>] [--yes]
+```
+
+Added in CLI 0.1.60. The same as `--to-time`, with the same checks and steps, to the last commit the archive holds, along its newest timeline: where the deployment was when it stopped. It asks `Restore it to the archive's end?`, and says it recovered along the archive's newest timeline. It is refused without `backup.walArchive`, saying how to turn it on, and on an older chart, before anything stops. A stop it leaves is resumed by `meridian restore --to-archive-end`, as `status` says. Naming both `--to-time` and `--to-archive-end` is asked wrongly (exit 2). Its flags and exit codes are `--to-time`'s.
 
 ## `meridian status`
 
@@ -457,7 +470,7 @@ Then **Components**: each workload the chart runs, named by its `meridian.dev/co
 
 Then **Database** (added in CLI 0.1.59): the database the deployment brought, its members, whether it runs under Patroni and whether it keeps a WAL archive; each member as `primary`, `standby` or `alone`, ready or not, and how far a standby is behind the primary; a member whose node is not ready, which waits for it and is never force-deleted; whether data checksums and `full_page_writes` are on, as the conductor reads them, with the [`doctor`](#meridian-doctor) hint where either is off; the WAL archiver's last segment and whether it is failing; the replica comparison's last run, with standbys; and whether TLS inside the cluster is on. For a database somebody else runs it says so, with its settings and address.
 
-Then **Integrity and members** (added in CLI 0.1.59): each store member's own answer, its mode (`writer` or `standby`), whether it is ready, and its lag; and, under the writer, when the store last read its own records again (`<store>.scrub.intervalDays`), how many it checked, and any finding not yet answered.
+Then **Integrity and members** (added in CLI 0.1.59): each store member's own answer, its mode (`writer` or `standby`), whether it is ready, and its lag, and from CLI 0.1.60 its zone and the partitions it owns or follows, a long list cut on its line (`and 2 more (--json lists them)`) and whole in `--json`; and, under the writer, when the store last read its own records again (`<store>.scrub.intervalDays`), how many it checked, and any finding not yet answered.
 
 While a restore to a time or `upgrade-deployment --enable-checksums` has the deployment stopped, a **Stopped by** block comes first (added in CLI 0.1.59): which command, since when, the CronJobs it suspended, `meridian logs database-offline`, which says where its act is, and the command that takes it from there and starts everything again.
 
@@ -482,9 +495,9 @@ Database:
   internal TLS on
 
 Integrity and members (each store member's probe):
-  meridian-meridian-runtime-bor-5cdc8c875b-8f8qm  writer, ready, lag 0 ms
+  meridian-meridian-runtime-bor-5cdc8c875b-8f8qm  writer, ready, lag 0 ms, zone zone-a, partitions control
                                                     bor record: not scrubbed yet; no findings
-  meridian-meridian-runtime-bor-5cdc8c875b-rdx4m  standby, ready, lag 0 ms
+  meridian-meridian-runtime-bor-5cdc8c875b-rdx4m  standby, ready, lag 0 ms, zone zone-b, partitions control
   ...
 
 Plugins:
@@ -499,9 +512,22 @@ The components are read through your own kubectl and the release through your ow
 | Flag | Argument | Default | Meaning |
 |---|---|---|---|
 | `--release` | `<name>` | `meridian` | The Helm release. |
-| `--json` | | off | One JSON object on stdout: `release`, with `release`, `revision`, `status`, `chart`, `app_version`, `updated` and `description`, or `not_read` with why; `components` and `plugins`, each with `component`, `kind`, `images`, `ready`, `wanted`, `restarts`, `last_restart_reason`, `last_restart_at`, `memory_bytes` (the busiest pod's), `memory_limit_bytes` (each pod's limit) and `pods`, each pod's `pod` and `memory_bytes`, and a plugin also `instance_id`, `plugin_image` and `launched`; `metrics`; and `book_health`, each account's `account_id`, `journal_entries`, `entries_since_snapshot` and `last_snapshot_at_ns`, or `not_read` with why. Added in CLI 0.1.59, beside every key it had: `database`, with `statefulset`, `patroni`, `wal_archive`, `wanted` and `members`, each member's `pod`, `role`, `ready`, `node`, `bytes_behind_primary` and `waits_for_node`; `database_settings`, with `data_checksums`, `full_page_writes` and `primary`; `wal_archiver`, with `last_archived_at`, `seconds_since`, `failed` and `failing`; `replica_comparison`, the last run's answer; `internal_tls`; `stopped_by`, with `act`, `command`, `since`, `resumed_by`, `database_members`, `components` and `cronjobs_suspended`, or null; and `probes`, each store member's `component`, `pod`, `member`, `integrity` and `not_read`. |
+| `--json` | | off | One JSON object on stdout: `release`, with `release`, `revision`, `status`, `chart`, `app_version`, `updated` and `description`, or `not_read` with why; `components` and `plugins`, each with `component`, `kind`, `images`, `ready`, `wanted`, `restarts`, `last_restart_reason`, `last_restart_at`, `memory_bytes` (the busiest pod's), `memory_limit_bytes` (each pod's limit) and `pods`, each pod's `pod` and `memory_bytes`, and a plugin also `instance_id`, `plugin_image` and `launched`; `metrics`; and `book_health`, each account's `account_id`, `journal_entries`, `entries_since_snapshot` and `last_snapshot_at_ns`, or `not_read` with why. Added in CLI 0.1.59, beside every key it had: `database`, with `statefulset`, `patroni`, `wal_archive`, `wanted` and `members`, each member's `pod`, `role`, `ready`, `node`, `bytes_behind_primary` and `waits_for_node`; `database_settings`, with `data_checksums`, `full_page_writes` and `primary`; `wal_archiver`, with `last_archived_at`, `seconds_since`, `failed` and `failing`; `replica_comparison`, the last run's answer; `internal_tls`; `stopped_by`, with `act`, `command`, `since`, `resumed_by`, `database_members`, `components` and `cronjobs_suspended`, or null; and `probes`, each store member's `component`, `pod`, `member`, `integrity` and `not_read`. Added in CLI 0.1.60: each probe's `member` names its `zone` and its `partitions`, whole. |
+| `--profile` | | off | The resilience profile alone: see [below](#status-profile). |
 
 **Exit codes:** `0` read; `1` no deployment of that release in the namespace, or kubectl failed; `2` asked wrongly.
+
+### `meridian status --profile` { #status-profile }
+
+```text
+meridian status --profile [--json] [--deployment <addr>]
+```
+
+Added in CLI 0.1.60. The resilience profile as the deployment computes it from its configuration as it is, never a preset's name: its level (Desktop, Single node, Multi-node or Multi-zone) and what the next level lacks, each change with its cost; each failure class and each tier, `met`, `met by restart` or `not met`, with its reason and the change that would meet it and its cost; and never blind per live data type (a second source, standby pods, age and source shown). It changes nothing: a change it names is made with `meridian upgrade-deployment --set`, or at the dashboard's Plugins and Data sources. See [Read your profile](../concepts/service-levels.md#read-your-profile).
+
+It reads the deployment's own answer through the session [`meridian connect`](#meridian-connect) keeps, a deployment admin's; `--json` prints that answer as it is (`level`, `next_level`, `next_level_changes`, `failures`, `tiers`, `never_blind` and `computed_at_ns`), as [`dashboard__read_resilience_profile`](core-tools.md#dashboard__read_resilience_profile) answers it.
+
+**Exit codes:** `0` read; `1` not read: no session, a person who is not a deployment admin, or an older core that does not answer it, each said.
 
 ## `meridian logs`
 
@@ -601,11 +627,11 @@ If the deployment can't be reached, the delegation is still forgotten here. It s
 meridian plugin new <name> [--into <dir>] [--role connectivity|custody|data|operations|pricing|reporting]
 ```
 
-!!! note "CLI 0.1.59"
-    CLI 0.1.59 writes SDK 0.35.0's templates: each role the plugin holds is
+!!! note "CLI 0.1.60"
+    CLI 0.1.60 writes SDK 0.35.0's templates: each role the plugin holds is
     one class, `meridian.roles.<role>.Role`, and the plugin enters through
     `meridian.run(declaration=..., roles=[...], ...)` with its classes
-    registered there. Move a new plugin to SDK 0.35.5 with
+    registered there. Move a new plugin to SDK 0.36.0 with
     [`meridian plugin migrate`](#plugin-migrate). Every template carries a
     `docs/` folder, its whole declaration named in `[tool.meridian]`, and a
     CI workflow checking with the `meridian` release that wrote it
@@ -638,8 +664,8 @@ Writes a working plugin to start from: the Python SDK's reference plugin, rename
 meridian plugin check [--dir <dir>] [--run-tests] [--verified] [--json]
 ```
 
-!!! note "CLI 0.1.59"
-    CLI 0.1.59 reads the current roles and suites: the data suite's
+!!! note "CLI 0.1.60"
+    CLI 0.1.60 reads the current roles and suites: the data suite's
     `records-a-derived-series` and `records-a-pools-factor` can be named in
     `not_presented`, and so can every read the suites mark with its `about`
     (datasets, orders, trading instructions, replacements, templates, event
@@ -844,6 +870,7 @@ The rewrites keep a file's formatting and comments wherever they change nothing.
 | 0.35.2 to 0.35.3: a fix: `helpers.sessions.Supervisor` hands `heard` every message received (`[]` for a heartbeat, waits at least a failure's `retry_after`, and opens a new session for what is wanted with `reopen_on_want=True` (`pairs.supervised` does); `SessionState.label`; a row delivered latest value first keyed by its own kind (a rate or a statistic no longer fails the hearing loop) and by its series key; a table setting's rows a list, typed or not; `RawStore.tend` reads from the settings only what it is not given, keeps what is past a window given alone, refuses a window below 0 or an unknown `past`; a typed delivery's SDK settings read only; `Recorder.hear(role, *rows)`; `PageClient` refuses a plain stand-in's acts; `Declaration(pricing_models=[PricingModelDeclaration(...)])`; the 0.33.0, 0.35.0 and 0.35.2 steps rewrite and name more | only the pins move | a `named` override calling `dataset` (`named-calls-dataset`); a method `timeliness(...)` hiding a listings feed's property (`timeliness-overridden`); a role class's field `subjects` (`subjects-shadowed`); a 0.34 handler name reached through another name (`old-handler-name`); a `receive(...)` left (`receive-gone`); a test reading `<x>.plugin.on(...)` (`stand-in-read`); a role class made outside the entry point, a test or a `bind(...)` (`unregistered-role-object`); a base pinned by tag alone where the plugin pins by digest (`base-digest`); and, by behaviour, a `heard` given to a `Supervisor` now handed `[]`, and a table's rows read as a tuple, now a list |
 | 0.35.3 to 0.35.4: a fix and an addition: a book record's view keyed by its entity (`views.ENTITY_KEYS`), an order whose venue's ID is set later held once; a quote stating no source time timed by its `valid_from_ns` (`roles.source_ns`, `confirmed_ns`), so `ems.ReferenceCheck` no longer judges it stale; the views' stream surviving a read again that fails outside gRPC; `pages.live_values` and `LiveValue.of`, a page's values worked out from its views with source, age and staleness counted only in session, served by `pages.live` to the kit's `<om-live cells>`; every template's AGENTS.md says so | only the pins move | a live module of the plugin's own, its cells worked out from views (`live.py`'s `Board`), moved onto `pages.live_values` and `LiveValue.of`, and its page script onto `<om-live cells>`; by behaviour, a book view's row keyed `order_id=<id>` alone (a key built from every identifier no longer matches), and a quote with no source time no longer stale by the pre-trade check |
 | 0.35.4 to 0.35.5: additive: `helpers.sessions.FX_WEEK`, the FX week's trading sessions, Sunday 17:00 to Friday 17:00 New York, the 17:00 roll in New York's own time on both sides of daylight saving, usable wherever sessions are taken (`LiveValue.of`, `ems.ReferenceCheck.stale`, `roles.in_session`); the base template links kit 0.16.0 (`pages.KIT`) | only the pins move | an FX week of the plugin's own (a `TradingSessions` for Sunday to Friday 17:00 New York, the samples' `FX_WEEK`), replaced by `helpers.sessions.FX_WEEK`; by behaviour, a page on the base template loads kit 0.16.0 where the deployment carries it |
+| 0.35.5 to 0.36.0: standing analytics (`analytics.job(..., standing=True)`, `analytics.measure(..., refresh=, cadence_ns=, material_move_bp=)`, `analytics.Jobs().standing(self, job)` answering a `LiveView`, `plugin.subscribe(..., job_ids=)`, `meridian.MeasureRef`); a stream that names the lake's rows or carries a view, silent past `receive.QUIET_SECONDS`, opened again and caught up; an act or read refused for load asked again after its retry-after (`client.load_wait`); a dataset's `terms_and_pricing` in place of its licence (`licence_default`, `DatasetLicence` and `DataEligibility` gone), `sessions_calendar_id`, `gap_recovery`; `Declaration(most_shards=)`; an event contract's terms and `Contract.category` stated at its resolve; the source priorities read; the suites' `holds-a-standing-figure` and `reads-the-source-priorities`. Breaking. It needs chart 0.1.538. See [0.35.5 to 0.36.0](python-sdk.md#0355-to-0360) | each literal `licence_default=DatasetLicence(...)` into `terms_and_pricing="..."`, the terms it declared in words, the retired names dropped from the import (`licence-default-described`); a base pinned by digest at an older release moved to 0.36.0, its digest dropped (`base-digest-dropped`) | a licence the rule could not read, or `DatasetLicence`, `DataEligibility` or `.licence_default` still named (`licence-default-left`); an SDK `DerivedSeries` or `CorporateActionAnnounced` given the wire's `MeasureRef` (`measure-ref-sdk-form`); map each role suite's new cases, or name one not presented with why (`suite-cases-v30`); pin the plugin's e2e images to a core of this release (`core-images`); pin the base's digest again (`base-digest`) |
 | 0.31.0 to 0.31.1: a saved setting value no longer among its choices, or not of its kind, is delivered unset rather than raised (`Settings.refused`, `meridian.RefusedSetting`, `request.own_settings_refused`); an event-contract venue's map keeps a range market's bounds, and `event_contracts.Feed.stated_identifiers`; the pricing template declares no storage; the templates' `AGENTS.md` on publishing to a registry. See [0.31.0 to 0.31.1](python-sdk.md#0310-to-0311) | Nothing: only the pins move | |
 
 `plugin migrate` adds three rules of its own: `base-digest`, for a base pinned by digest whose new digest could not be read, with the `docker buildx imagetools inspect` that names it; `pin-elsewhere`, for the old release still named in another file (a Makefile's base image, a workflow, a README), which it reports rather than moves because some of those are history; and `unreadable`, for a file that is not UTF-8, or that a step could not read as Python, which it leaves as it was.
@@ -943,17 +970,29 @@ A version is recorded once and never replaced: uploading a name and version alre
 meridian plugin list [--deployment <addr>]
 ```
 
-Prints the catalogue: every version uploaded, with its roles, whether it serves a page, and the SDK version it pins, and, where it carries documentation, its **Documentation** page, `<address>/admin/plugins/versions/<name>/<version>/documentation`; and every launch, with its instance, version and state (`launched`, `stopped` or `failed`, with the failure). Because it needs a live delegation, it is also the way to check you are connected: it exits 3 when you aren't.
+Prints the catalogue: every version uploaded, with its roles, whether it serves a page, and the SDK version it pins, and, where it carries documentation, its **Documentation** page, `<address>/admin/plugins/versions/<name>/<version>/documentation`; and every launch, with its instance, version and state (`launched`, `stopped` or `failed`, with the failure), and under it, where its launch asked any, its limits, shards and standby pod. Because it needs a live delegation, it is also the way to check you are connected: it exits 3 when you aren't.
 
 ### `meridian plugin launch`
 
 ```text
-meridian plugin launch <name> <version> --instance <id> [--yes] [--deployment <addr>]
+meridian plugin launch <name> <version> --instance <id> [--in-flight <n>] [--requests-per-second <n>] [--answer-mib <n>] [--shards <n>] [--standby] [--yes] [--deployment <addr>]
 ```
 
-Runs a recorded version as an instance. `<name>` is a local plugin's name, or, for a version installed from a registry, its listing, `<namespace>/<plugin>`, as `meridian plugin list` names it. It first prints the roles the version declares, then asks `Launch it as <id>, with these?`. Anything but `y` or `yes` is no. With no terminal to ask at, it is refused unless you pass `--yes`.
+Runs a recorded version as an instance. `<name>` is a local plugin's name, or, for a version installed from a registry, its listing, `<namespace>/<plugin>`, as `meridian plugin list` names it. It first prints the roles the version declares, and any limits, shards and standby asked, then asks `Launch it as <id>, with these?`. Anything but `y` or `yes` is no. With no terminal to ask at, it is refused unless you pass `--yes`.
 
-The deployment runs the instance with exactly the roles it declares; an approval that names anything else is refused. On success it prints the instance's page address, `<address>/plugins/<id>`. See [Plugins, roles and grants](../concepts/plugins.md).
+The deployment runs the instance with exactly the roles it declares; an approval that names anything else is refused. On success it prints the instance's page address, `<address>/plugins/<id>`, and, where the launch asked any, reads back what the deployment kept of its limits, shards and standby: `Kept on its launch, as asked: ...`. An older core keeps none of them, and that is said. See [Its limits, shards and standby pod](../concepts/plugins.md#its-limits-shards-and-standby-pod).
+
+| Flag | Argument | Default | Meaning |
+|---|---|---|---|
+| `--instance` | `<id>` | none (required) | The instance's name: lowercase letters, digits and single hyphens. |
+| `--in-flight` | `<n>` | the deployment's | The most requests it has in flight at its sidecar at once (`limits.in_flight`), over the chart's `sidecar.limits.inFlight`. Added in CLI 0.1.60. |
+| `--requests-per-second` | `<n>` | the deployment's | The most requests a second, with a second's burst (`limits.requests_per_second`). Added in CLI 0.1.60. |
+| `--answer-mib` | `<n>` | the deployment's | MiB of answers held or paged in flight for it (`limits.answer_mib`). Added in CLI 0.1.60. |
+| `--shards` | `<n>` | one pod | The pods of the instance sharing its subjects (`shards`), at most the version's `most_shards`, 0 to 64. Kept on the launch; the plugin runs one pod today. Added in CLI 0.1.60. |
+| `--standby` | | off | A standby pod that takes over within 10 seconds (`standby`). Kept on the launch; the plugin runs one pod today. Added in CLI 0.1.60. |
+| `--yes` | | off | Launch without being asked. For a script that has already read what it asks for. |
+
+A limit that is not a whole number above 0 is refused before anything is sent, naming its flag and the field as core names it; core's own refusals, such as shards past the version's `most_shards`, come through as it words them.
 
 ### `meridian plugin stop`
 

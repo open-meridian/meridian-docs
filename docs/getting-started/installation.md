@@ -104,6 +104,21 @@ GRANT ALL ON DATABASE meridian TO meridian_migrate;
 
 The wizard tests both roles and names the statement that fixes anything missing.
 
+Each component then connects as a login of its own, so one component's slow query is refused on
+its own and never holds the database for the rest. Make them with the serving role's password, each
+a member of the serving role:
+
+```sql
+CREATE ROLE meridian_lake LOGIN PASSWORD 'the-serving-password' IN ROLE meridian_app;
+ALTER ROLE meridian_lake SET statement_timeout = '5s';
+-- and the same for meridian_bor, meridian_instrument, meridian_street,
+-- meridian_conductor and meridian_dashboard
+```
+
+Until a component's login is made it connects as `meridian_app`, and each upgrade's check names any
+not made yet with the statement that makes it. A database the deployment brings is given them for
+you.
+
 **How people reach it.**
 
 | Choice | Use it when | What you pass to `meridian up` |

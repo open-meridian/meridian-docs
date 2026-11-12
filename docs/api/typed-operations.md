@@ -15,7 +15,7 @@ The operations are generated, not written by hand. One generator reads the inter
 - the sidecar's side of it;
 - the Python methods of the role classes, [`meridian.roles.<role>.Role`](python-sdk.md#role-classes).
 
-This page lists every operation in SDK 0.35.5: holdings ingestion and [the custodian's activity](../concepts/the-custodians-activity.md), the [book of record](../concepts/the-book-of-record.md)'s commands and reads, instrument and venue resolution, [the lake](../concepts/the-lake.md)'s records and reads, [the order path](#the-order-path), [booking](../concepts/booking.md), the [settlement calendars' reads](#settlement-calendars-reads), and the [one-ID model](../concepts/one-id.md)'s reads, [`list_replacements`](#list_replacements), [`list_templates`](#list_templates) and [`read_template`](#read_template), with `reference`'s [`offer_template_fields`](#offer_template_fields); the [analytics component, event groups, bounded lake query and agents' guard](#analytics-and-event-groups); [RFQ quotes, execution costs, rates, liveness and latency](#rfq-costs-rates-and-liveness); [listed options and futures, companies and corporate actions, derived series and saved scenarios, the stale-reference actions permitted, and the filings slice and quality states core serves later](#options-companies-and-scenarios); and [factors and an underlying's expirations](#factors-and-expirations), with fixed income's prices and fills. A resolve answers whether its record is provisional. The book refuses an entry missing what it requires, `REFUSAL_REASON_INCOMPLETE`, naming each missing field (see [What the book requires](#what-the-book-requires)). A command naming an order, a placement, a change request or a locate by its ID is admitted on the role's grant and held by the book to the plugin's write scope (see [The order lifecycle](../concepts/the-order-lifecycle.md#a-command-naming-a-record-by-its-id)).
+This page lists every operation in SDK 0.36.0: holdings ingestion and [the custodian's activity](../concepts/the-custodians-activity.md), the [book of record](../concepts/the-book-of-record.md)'s commands and reads, instrument and venue resolution, [the lake](../concepts/the-lake.md)'s records and reads, [the order path](#the-order-path), [booking](../concepts/booking.md), the [settlement calendars' reads](#settlement-calendars-reads), and the [one-ID model](../concepts/one-id.md)'s reads, [`list_replacements`](#list_replacements), [`list_templates`](#list_templates) and [`read_template`](#read_template), with `reference`'s [`offer_template_fields`](#offer_template_fields); the [analytics component, event groups, bounded lake query and agents' guard](#analytics-and-event-groups); [RFQ quotes, execution costs, rates, liveness and latency](#rfq-costs-rates-and-liveness); [listed options and futures, companies and corporate actions, derived series and saved scenarios, the stale-reference actions permitted, and the filings slice and quality states core serves later](#options-companies-and-scenarios); and [factors and an underlying's expirations](#factors-and-expirations), with fixed income's prices and fills. A resolve answers whether its record is provisional. The book refuses an entry missing what it requires, `REFUSAL_REASON_INCOMPLETE`, naming each missing field (see [What the book requires](#what-the-book-requires)). A command naming an order, a placement, a change request or a locate by its ID is admitted on the role's grant and held by the book to the plugin's write scope (see [The order lifecycle](../concepts/the-order-lifecycle.md#a-command-naming-a-record-by-its-id)).
 
 Three calls every plugin may make are in the Python SDK rather than here: reading the [prepared change](python-sdk.md#prepared) a page was opened from (`ReadPreparedCall`), saving [a person's own settings](python-sdk.md#own_settings) (`SetOwnSettings`), and calling one of the plugin's own acts as the [service account](../concepts/service-accounts.md) its role runs as (`CallAsServiceAccount`, offered as [`meridian.runs_as`](python-sdk.md#runs_as)). Where the dashboard makes such an act, its route is reached with a service account's claims and sends what it sends for a person, `acting_for` the header it received (see [Acting for a person](#acting-for-a-person)); the book records the service account and its owner as the entry's actor.
 
@@ -63,6 +63,7 @@ Three calls every plugin may make are in the Python SDK rather than here: readin
 | [`record_outcomes`](#record_outcomes) | `RecordOutcomes` | W10.4 Record prices, bars, trades and quotes in batches | command | `data` | `RecordOutcomesResult` |
 | [`list_outcomes`](#list_outcomes) | `ListOutcomes` | W10.6 Read prices, bars, trades and quotes, point in time, by source | query | `reporting`, `portfolio`, `compliance`, `signal`, `operations` | `ListOutcomesResult` |
 | [`list_datasets`](#list_datasets) | `ListDatasets` | W10.9 Read the datasets | query | `reporting`, `portfolio`, `compliance`, `signal`, `ems` | `ListDatasetsResult` |
+| [`list_source_priorities`](#list_source_priorities) | `ListSourcePriorities` | W10.2 Order the sources a default read takes | query | `reporting`, `portfolio`, `compliance`, `signal`, `ems`, `oms`, `operations`, `servicing` | `ListSourcePrioritiesResult` |
 | [`propose_order`](#propose_order) | `ProposeOrder` | W11.1 Propose an order | command | `portfolio`, `oms`, `ems` | `ProposeOrderResult` |
 | [`record_order`](#record_order) | `RecordOrder` | W11.2 Record an order the book did not create | command | `oms` | `RecordOrderResult` |
 | [`request_order_change`](#request_order_change) | `RequestOrderChange` | W11.3 Ask for a change to an order | command | `portfolio`, `oms`, `ems` | `RequestOrderChangeResult` |
@@ -1013,6 +1014,8 @@ async def resolve_identifier(
     exchange_mic: str = "", currency: str = "",
     stated_asset_class: AssetClass | str | None = None, stated_currency: str = "",
     stated_description: str = "", stated_instrument_type: InstrumentType | str | None = None,
+    provenance: Sequence[Provenance] = (),
+    stated_binary_event_contract: BinaryEventContract | None = None,
 ) -> ResolveIdentifierResult
 ```
 
@@ -1040,6 +1043,7 @@ async def resolve_identifier(
 | `currency` | `str` | no | Narrows a symbol match. |
 | `stated_asset_class`, `stated_currency`, `stated_description` | `AssetClass`, `str`, `str` | no | What the plugin's source states of the security, where it states it, and nothing it would have to guess. Kept on the record as offers from this instance, in force only when a person accepts them. Not stated is unspecified or empty. `stated_currency` is an ISO 4217 code. |
 | `stated_instrument_type` | `InstrumentType` | no | Its type within the stated class, where the source says it: a custodian's sweep fund is a money market fund. |
+| `stated_binary_event_contract` | `BinaryEventContract` | no | A data plugin's event contract's terms as its venue states them: its payout, close, bounds and `category`, the payout left unset where the venue gives none. The store records the category the first time it sees the contract, sourced to the plugin; every other term, and a category unlike the one held, is offered, in force only when a person accepts it. A term out of bounds is refused naming `stated_binary_event_contract.<field>`. `meridian.roles.data.event_contracts` states it for a venue's contracts. Added in SDK 0.36.0. |
 
 **Returns** `ResolveIdentifierResult`:
 
@@ -2211,7 +2215,25 @@ Each `DatasetRef` carries `closed_day_count` and `outside_coverage_count`
 `liveness` (see
 [Data age and liveness](../concepts/data-age-and-liveness.md)).
 
-**A data plugin's own datasets.** Asked by a data plugin, it answers only the datasets its own catalogue declares, each with the licence a deployment admin set on it, so its Datasets page says "Licensed" or "Not licensed yet" exactly; a dataset still on its catalogue's default answers no licence set by the deployment.
+**A data plugin's own datasets.** Asked by a data plugin, it answers only the datasets its own catalogue declares, each with the licence a deployment admin set on it, so its Datasets page says "Licensed" or "Not licensed yet" exactly; a dataset no deployment admin has licensed answers no licence set by the deployment, and is kept and read with each use right read restrictively.
+
+## `list_source_priorities` { #list_source_priorities }
+
+This operation is `preview`. Reads the order a default read takes its sources in: for each data type, and for prices each kind, the datasets first to last. Added in SDK 0.36.0.
+
+```python
+async def list_source_priorities(self) -> ListSourcePrioritiesResult
+```
+
+| | |
+|---|---|
+| gRPC | `rpc ListSourcePriorities(ListSourcePrioritiesParams) returns (ListSourcePrioritiesResult)` |
+| Workflow step | W10.2, Order the sources a default read takes |
+| Kind | query, on `platform.lake.query.list-source-priorities` |
+| Role | `reporting`, `portfolio`, `compliance`, `signal`, `ems`, `oms`, `operations`, `servicing`; read-only |
+| Served by | the lake |
+
+**Returns** `ListSourcePrioritiesResult`: `priorities`, each a `SourcePriority`: its `data_type`, its `kind` for a price, its `datasets` first to last, and who set it, when and why. Each lists only the datasets the plugin is entitled to read, and a priority naming none of them is not answered, so what it answers is the whole of what the plugin may use. Setting a priority is a deployment admin's, at Data sources (see [Licences and entitlements](../concepts/licences-and-entitlements.md#which-dataset-a-default-read-takes)). The role suites' case `reads-the-source-priorities` holds a plugin to it.
 
 ## The order path { #the-order-path }
 
@@ -2924,6 +2946,7 @@ async def run_job(self, *, job: Job | None = None) -> RunJobResult
 | `inputs` | The book's watermark (`book_at`), the lake's as-of (`lake_as_of_ns`) and the source choice (`sources`), one for the whole job; unset, now and the deployment's source priority |
 | `measures` | Each a `MeasureRef`: a `definition` and `version` the component serves, its `breakdowns`, and for `resolution_payoff` and `implied_distribution` its `event_group_id` |
 | `what_if` | Optionally, trades added to one of the job's accounts (`account_id`, `trades`: each an instrument, a side, a quantity and an assumed price or none), answered beside the base |
+| `standing` | `True` for a [standing job](../concepts/the-analytics-component.md#a-standing-job), its inputs live, each measure naming its `refresh` (`per_change`, or `cadence` with `cadence_ns` and `material_move_bp`). A watermark, as-of, business date or what-if beside it is refused naming `standing`; a measure with no refresh where its definition states none, naming its `refresh`; one past the coordinator's `analytics.standing.most`, naming `standing`. Added in SDK 0.36.0 |
 
 A job the component cannot answer at all is refused `invalid`, naming the
 field under `job.`: no account, no measure, a definition or version not
@@ -3058,7 +3081,7 @@ async def read_job_answer(self, *, job_id: str = "") -> ReadJobAnswerResult
 | Served by | the analytics component |
 
 **Returns** the answer as `run_job` returns it inline: `figures`,
-`not_evaluated` and `provenance`. Another instance's job raises
+`not_evaluated` and `provenance`, and, for a standing job, its `values`. Another instance's job raises
 `NotGranted`, naming `job_id`. A job still running, or one whose answer
 has left the component's memory, is a `CallFailed` of kind
 `"handler error"` saying so: run the job again, and its answer hash says
@@ -3747,7 +3770,7 @@ async def record_derived_series(
 
 | Parameter | Meaning |
 |---|---|
-| `values` | 1 to 500 `DerivedSeries`: each its `meta` (its subject, its own dataset and its `business_date`, required), its `series` name, its `value`, a `UnitValue`, its `rule` (a definition and version) and its `inputs`, each dataset read with the as-of it read at |
+| `values` | 1 to 500 `DerivedSeries`: each its `meta` (its subject, its own dataset and its `business_date`, required), its `series` name, its `value`, a `UnitValue`, its `rule` (a `meridian.MeasureRef`, a definition and version) and its `inputs`, each dataset read with the as-of it read at |
 | `acting_for` | As above |
 
 **Returns** `RecordDerivedSeriesResult`, as [`record_prices`](#record_prices) answers: `recorded`, `restated`, `unchanged` and the dataset's `watermark`. A row missing what it requires is refused `invalid`, naming `values[i]` and the field, and the batch is recorded whole or not at all. Its latest per series is kept. Never published as an event. `meridian.roles.signal.derived` builds one.

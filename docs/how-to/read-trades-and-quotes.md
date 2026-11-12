@@ -7,7 +7,7 @@ orders in real time. This page writes a plugin holding one of them that
 reads a day's trades, hears each new one, catches up what it missed, and
 reads the latest quotes, then holds it to its role's suite.
 
-You need CLI 0.1.59 and SDK 0.35.5 or later. The lake's trades and
+You need CLI 0.1.60 and SDK 0.36.0 or later. The lake's trades and
 quotes operations are `preview`.
 
 ## Which role
@@ -36,7 +36,7 @@ cd my-desk
 ```
 
 It writes the plugin on open-meridian 0.35.0. It, and a plugin an older CLI wrote,
-moves to 0.35.5 with [`meridian plugin migrate`](../api/cli.md#plugin-migrate), which
+moves to 0.36.0 with [`meridian plugin migrate`](../api/cli.md#plugin-migrate), which
 works only on what git holds: commit it first. Then, in `pyproject.toml`:
 
 ```toml

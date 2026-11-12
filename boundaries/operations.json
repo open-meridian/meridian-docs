@@ -1646,6 +1646,94 @@
       }
     },
     {
+      "name": "DerivedSeriesUpdated",
+      "step": "W12.4",
+      "title": "Finish a job later, and read its answer",
+      "kind": "event",
+      "topic": "platform.analytics.event.derived-series-updated",
+      "roles": {
+        "hears": [
+          "compliance",
+          "portfolio",
+          "reporting",
+          "signal"
+        ]
+      },
+      "stability": "preview",
+      "message": "meridian.v1.DerivedSeriesUpdatedEvent",
+      "parameters": [
+        {
+          "name": "job_id",
+          "type": "string",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "client_instance_id",
+          "type": "string",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "values",
+          "type": "repeated message DerivedSeries",
+          "repeated": true,
+          "required": false,
+          "required_unless": "",
+          "bounds": {
+            "count": [
+              0,
+              4096
+            ]
+          }
+        },
+        {
+          "name": "figures",
+          "type": "repeated message Figure",
+          "repeated": true,
+          "required": false,
+          "required_unless": "",
+          "bounds": {
+            "count": [
+              0,
+              4096
+            ]
+          }
+        },
+        {
+          "name": "not_evaluated",
+          "type": "repeated message NotEvaluated",
+          "repeated": true,
+          "required": false,
+          "required_unless": "",
+          "bounds": {
+            "count": [
+              0,
+              4096
+            ]
+          }
+        },
+        {
+          "name": "sequence",
+          "type": "int64",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        }
+      ],
+      "result": "",
+      "result_fields": [],
+      "refusals": [],
+      "methods": {
+        "python": "Operations.derived_series_updated"
+      }
+    },
+    {
       "name": "DontKnowExecution",
       "step": "W11.24",
       "title": "Answer an unmatched execution DK",
@@ -6082,6 +6170,43 @@
       }
     },
     {
+      "name": "ListSourcePriorities",
+      "step": "W10.2",
+      "title": "Order the sources a default read takes",
+      "kind": "query",
+      "topic": "platform.lake.query.list-source-priorities",
+      "roles": {
+        "reads": [
+          "compliance",
+          "ems",
+          "oms",
+          "operations",
+          "portfolio",
+          "reporting",
+          "servicing",
+          "signal"
+        ]
+      },
+      "stability": "preview",
+      "message": "meridian.v1.ListSourcePrioritiesRequest",
+      "parameters": [],
+      "result": "meridian.v1.ListSourcePrioritiesReply",
+      "result_fields": [
+        {
+          "name": "priorities",
+          "type": "repeated message SourcePriority",
+          "repeated": true,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        }
+      ],
+      "refusals": [],
+      "methods": {
+        "python": "Operations.list_source_priorities"
+      }
+    },
+    {
       "name": "ListStatements",
       "step": "W2.9",
       "title": "Read completed statements",
@@ -7091,6 +7216,14 @@
         {
           "name": "all_series",
           "type": "bool",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "gap_id",
+          "type": "string",
           "repeated": false,
           "required": false,
           "required_unless": "",
@@ -8803,6 +8936,14 @@
           "name": "next_cursor",
           "type": "string",
           "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
+        },
+        {
+          "name": "values",
+          "type": "repeated message DerivedSeries",
+          "repeated": true,
           "required": false,
           "required_unless": "",
           "bounds": {}
@@ -14648,6 +14789,14 @@
               32
             ]
           }
+        },
+        {
+          "name": "stated_binary_event_contract",
+          "type": "message BinaryEventContract",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
         }
       ],
       "result": "meridian.v1.ResolveIdentifierReply",

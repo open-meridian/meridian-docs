@@ -176,6 +176,7 @@
           "ListReplacements",
           "ListTemplates",
           "ReadTemplate",
+          "ListSourcePriorities",
           "ListPrices",
           "ListBars",
           "ListOutcomes",
@@ -211,7 +212,8 @@
           "JobFinished",
           "EventGroupChanged",
           "RatesRecorded",
-          "LivenessRecorded"
+          "LivenessRecorded",
+          "DerivedSeriesUpdated"
         ]
       }
     },
@@ -505,6 +507,7 @@
           "ListReplacements",
           "ListTemplates",
           "ReadTemplate",
+          "ListSourcePriorities",
           "ListTrades",
           "ListQuotes",
           "ListDatasets",
@@ -666,6 +669,7 @@
           "ListReplacements",
           "ListTemplates",
           "ReadTemplate",
+          "ListSourcePriorities",
           "ListEventGroups",
           "ReadAgentOrdersDemoOnly",
           "ListExecutionCosts",
@@ -766,6 +770,7 @@
           "ListReplacements",
           "ListTemplates",
           "ReadTemplate",
+          "ListSourcePriorities",
           "ListPrices",
           "ListOutcomes",
           "ListEventGroups",
@@ -864,6 +869,7 @@
           "ListReplacements",
           "ListTemplates",
           "ReadTemplate",
+          "ListSourcePriorities",
           "ListPrices",
           "ListBars",
           "ListOutcomes",
@@ -911,7 +917,8 @@
           "StatisticsRecorded",
           "LifecycleEventRecorded",
           "FactorsRecorded",
-          "SeriesRecorded"
+          "SeriesRecorded",
+          "DerivedSeriesUpdated"
         ]
       }
     },
@@ -974,6 +981,7 @@
           "ListReplacements",
           "ListTemplates",
           "ReadTemplate",
+          "ListSourcePriorities",
           "ListPrices",
           "ListBars",
           "ListOutcomes",
@@ -1018,7 +1026,8 @@
           "LifecycleEventRecorded",
           "FilingsRecorded",
           "CorporateActionsRecorded",
-          "FactorsRecorded"
+          "FactorsRecorded",
+          "DerivedSeriesUpdated"
         ]
       }
     },
@@ -1059,6 +1068,7 @@
           "ListReplacements",
           "ListTemplates",
           "ReadTemplate",
+          "ListSourcePriorities",
           "ListEventGroups",
           "ListLifecycleEvents",
           "ListFactors"
@@ -1152,6 +1162,7 @@
           "ListReplacements",
           "ListTemplates",
           "ReadTemplate",
+          "ListSourcePriorities",
           "ListPrices",
           "ListBars",
           "ListTrades",
@@ -1193,7 +1204,8 @@
           "FilingsRecorded",
           "CorporateActionsRecorded",
           "FactorsRecorded",
-          "SeriesRecorded"
+          "SeriesRecorded",
+          "DerivedSeriesUpdated"
         ]
       }
     },
@@ -1644,6 +1656,22 @@
       "roles": {
         "publishes": [
           "data"
+        ]
+      },
+      "stability": "preview"
+    },
+    {
+      "name": "DerivedSeriesUpdated",
+      "step": "W12.4",
+      "title": "Finish a job later, and read its answer",
+      "kind": "event",
+      "topic": "platform.analytics.event.derived-series-updated",
+      "roles": {
+        "hears": [
+          "compliance",
+          "portfolio",
+          "reporting",
+          "signal"
         ]
       },
       "stability": "preview"
@@ -2351,6 +2379,26 @@
           "ems",
           "oms",
           "portfolio",
+          "signal"
+        ]
+      },
+      "stability": "preview"
+    },
+    {
+      "name": "ListSourcePriorities",
+      "step": "W10.2",
+      "title": "Order the sources a default read takes",
+      "kind": "query",
+      "topic": "platform.lake.query.list-source-priorities",
+      "roles": {
+        "reads": [
+          "compliance",
+          "ems",
+          "oms",
+          "operations",
+          "portfolio",
+          "reporting",
+          "servicing",
           "signal"
         ]
       },

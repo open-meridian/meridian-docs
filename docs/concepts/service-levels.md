@@ -3,7 +3,7 @@
 A deployment can run on a laptop or across a cluster's zones, and the
 failures it rides out grow with where it runs. This page names four levels,
 each by where a deployment runs, says what each needs and the chart values
-that reach it, as chart 0.1.477 delivers them.
+that reach it, as chart 0.1.538 delivers them.
 
 It states tested behaviour only. It is no service agreement, no uptime
 figure and no claim of readiness for any regulation. Recovery times are
@@ -178,7 +178,7 @@ each still overridable by its own value:
 | `<component>.standby` (`lake`, `bor`, `instrument`, `street`, `conductor`, `launcher`) | 0 | 1 |
 | `database.brought.standbys` | 0 | 2, under Patroni |
 | `broker.replicas` | 1 | 3 |
-| `broker.jetstream.replicas` | 0 | 3, the analytics component's work queue |
+| `broker.jetstream.replicas` | 0 | 3, the analytics component's work queue and the lake's write-ahead stream |
 | `dashboard.replicaCount` | 1 | 2 |
 | `analytics.coordinator.replicaCount`, `analytics.worker.replicaCount` | 1 | 2 |
 
@@ -206,7 +206,68 @@ of its own (`broker.jetstream.size`, `1Gi`), so a server restarted rejoins
 with what it held. A client moves to another server when its own has not
 answered for 2 seconds.
 
+**The lake's writes.** A data plugin's writes go first to the lake's
+write-ahead stream on those three servers, and the plugin is answered once
+the stream holds the write and the lake has recorded it. After a database
+failover the lake goes back to the place in the stream the promoted standby
+holds, so no acknowledged row is lost. The stream holds a write for
+`lake.writeAhead.maxAge` (`10m`) and up to `lake.writeAhead.maxBytes`
+(`256MB`); full, it refuses a new write with a retry-after. A lake writer
+gone longer than `maxAge` leaves a gap, recorded and shown on Data sources
+(see [Gaps](licences-and-entitlements.md#gaps)).
+
 Every count the chart takes is one CI tests, and any other is refused.
+
+## Read your profile { #read-your-profile }
+
+The deployment computes which level it meets from its configuration as it
+is: the chart's values as the release states them, its members' reports,
+its nodes and zones, its Leases and the source priorities, never from a
+preset's name. Two places show it, both a deployment admin's, and neither
+changes anything:
+
+- **`meridian status --profile`** prints it, through the session
+  [`meridian connect`](../api/cli.md#meridian-connect) keeps; `--json` gives the
+  deployment's answer whole.
+- **The Resilience page**, under **Deployment** in the dashboard's
+  settings: its **Profile** tab, beside **Members** (each member's mode,
+  zone, lag and restarts), **Partitions** (each partition of the lake and
+  the book, its writer and epoch) and **History** (takeovers, the scrub's
+  findings and switches to a backup source, newest first).
+
+```text
+$ meridian status --profile
+Resilience profile, as the deployment computes it from its configuration as it is (computed 2026-11-12T14:03:07Z):
+  level: Desktop
+  the next, Single node, lacks:
+    change: backup.walArchive: on, with a backup schedule (costs a backup volume and its storage)
+
+Failure classes:
+  a pod  met by restart: Kubernetes restarts it, answering again within 2 minutes
+  ...
+```
+
+It gives:
+
+- **The level**, the highest of the four whose every property the
+  configuration meets, and **what the next level lacks**: each change, a
+  chart value and its value, nodes or zones to add, or a standby, with what
+  it costs (pods, memory, storage).
+- **Each failure class and each tier**, one line each: **met**; **met by
+  restart**, healed by Kubernetes restarting it within the tolerant bound;
+  or **not met**, with the reason (*one book writer, no standby*; *every
+  node in one zone*; *backups not scheduled*) and the change that would meet
+  it, with its cost. A class or tier is met only where CI tests that
+  configuration.
+- **Never blind, per live data type**: whether a second source stands in
+  its priority, whether its sources run standby pods, and whether its
+  pages show the age and source of each value.
+
+Make a change it names with
+[`meridian upgrade-deployment --set`](../how-to/upgrade-a-deployment.md),
+or at the dashboard's Plugins and Data sources pages. Your agent reads the
+same through [`dashboard__read_resilience_profile`](../api/core-tools.md#dashboard__read_resilience_profile),
+and can advise from it.
 
 ## The chart's values { #the-charts-values }
 

@@ -8,10 +8,9 @@ suite's rates cases. What a rate is, and how it is read, is in
 [Write a data plugin against its suite](write-a-data-plugin.md): this page
 adds what is different for rates.
 
-You need SDK 0.32.3 or later and a deployment on chart 0.1.311 or later,
-which resolves a subject by its administrator's code and takes the
-licence's attribution terms. `meridian plugin new` on CLI 0.1.59 writes a
-plugin on SDK 0.35.0, which needs a deployment.
+You need SDK 0.36.0 and a deployment on chart 0.1.538, which reads a
+dataset's terms and pricing. `meridian plugin new` on CLI 0.1.60 writes a
+plugin on SDK 0.35.0, which `meridian plugin migrate` moves to 0.36.0.
 
 ## Declare the dataset
 
@@ -25,29 +24,21 @@ DatasetDeclaration(
     modes=["pull"],
     cadence=86_400,
     history=3650,
-    licence_default=DatasetLicence(kept=True, display=True),
+    terms_and_pricing=(
+        "Public domain; free of charge. Cite as \"Source: My publisher\". "
+        "Not affiliated with or endorsed by My publisher."
+    ),
     day_time_zone="America/New_York",
+    gap_recovery="backfill",
 )
 ```
 
-A publisher's terms often ask to be cited. The licence states it with the
-attribution terms, each optional: `copyright_class` (`public_domain`,
-`copyright_citation_required` or `copyright_preapproval_required`),
-`redistribution` (`not_allowed`, `licence_required` or
-`allowed_with_attribution`), `attribution_required` with its
-`attribution_text`, `no_more_restrictive_terms`, and
-`not_affiliated_notice`, as the publisher words them. A deployment before
-chart 0.1.311 refuses the registration of a declaration setting any of
-them.
-
-```python
-licence_default=DatasetLicence(
-    kept=True, display=True, derived_use_terms="not_restricted",
-    copyright_class="public_domain",
-    attribution_required=True, attribution_text="Source: My publisher",
-    not_affiliated_notice="Not affiliated with or endorsed by My publisher.",
-)
-```
+A publisher's terms often ask to be cited. Say so in `terms_and_pricing`,
+in the publisher's words: its copyright, whether it may be passed on, the
+attribution it asks for and any notice that the plugin is not affiliated
+with it, in at most 2,000 characters. Data sources shows the text to the
+deployment admin, whose licence is the one enforced (see
+[Licences and entitlements](../concepts/licences-and-entitlements.md)).
 
 ## Resolve the subjects
 

@@ -6,7 +6,7 @@ builds a `signal` plugin's watchlist page the fast way: it subscribes once
 and is kept current, reads only the latest rows and only the fields it shows,
 batches what it asks, and never reads again per request.
 
-You need SDK 0.35.5, CLI 0.1.59 and a deployment on chart 0.1.477.
+You need SDK 0.36.0, CLI 0.1.60 and a deployment on chart 0.1.538.
 
 ## 1. Subscribe, don't poll
 

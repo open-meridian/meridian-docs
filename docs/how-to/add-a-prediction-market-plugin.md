@@ -19,7 +19,7 @@ Each serves one dataset, `<instance>:live`, for the contracts a reader asks
 about, pulled for a read and kept current while a standing want stands, at
 most once a second:
 
-| Plugin | What | Its money | Day | Default licence |
+| Plugin | What | Its money | Day | Its plugin's terms say |
 |---|---|---|---|---|
 | Kalshi | each contract's last trade price, best bid and best ask, as prices; its best bid and offer with their sizes, as a quote | US dollars, per contract | UTC, ending at 00:00 | served, not kept |
 | Polymarket | each outcome token's last trade price, best bid and best offer, as prices; its best bid and offer with their sizes, as a quote | Polymarket's own USDC instrument, per token | UTC, ending at 00:00 | kept two days |
@@ -106,12 +106,12 @@ Launch it as the others, from `plugin-polymarket-us`, named
 
 ## The terms
 
-No plugin's default licence says anything about Kalshi's, Polymarket's or
-Polymarket US's terms. What a deployment may keep, show, or use in a
-demonstration is for its deployment admin and its users to settle with each
-venue; this is not legal advice. The deployment admin records the licence
-they settled on the Data sources page, which replaces the default, and a
-licence records only what was entered. Neither the plugins nor these docs
+No plugin says anything for you about Kalshi's, Polymarket's or Polymarket
+US's terms. What a deployment may keep, show, or use in a demonstration is
+for its deployment admin and its users to settle with each venue; this is
+not legal advice. The deployment admin records the licence they settled on
+the Data sources page; until then each dataset is kept and read with each
+use right read restrictively, and a licence records only what was entered. Neither the plugins nor these docs
 say a deployment meets any venue's terms, and no venue is affiliated with or
 endorses Open Meridian.
 

@@ -5,10 +5,10 @@ its open interest from a reading plugin, ask for a series' record before an
 order names it, and run the options measures over it. What each part means
 is in [Listed options and futures](../concepts/listed-options-and-futures.md).
 
-You need SDK 0.35.5 or later, CLI 0.1.59, and a deployment
-(chart 0.1.477) whose platform publishes the `TPL-listed-option`
-template. `meridian plugin new` on CLI 0.1.59 writes a plugin on 0.35.0, which
-`meridian plugin migrate` moves to 0.35.5.
+You need SDK 0.36.0 or later, CLI 0.1.60, and a deployment
+(chart 0.1.538) whose platform publishes the `TPL-listed-option`
+template. `meridian plugin new` on CLI 0.1.60 writes a plugin on 0.35.0, which
+`meridian plugin migrate` moves to 0.36.0.
 
 ## In a data plugin: record the chain
 
@@ -25,7 +25,7 @@ is never resolved, and recording it mints nothing.
 ```python
 import meridian
 from decimal import Decimal
-from meridian.roles import chains
+from meridian.helpers import chains
 
 symbol = chains.osi_symbol("AAPL", "2026-11-20", "put", "230")   # "AAPL  261120P00230000"
 row = chains.option_series(

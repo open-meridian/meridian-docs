@@ -81,6 +81,56 @@ After a gap it catches up the jobs finished since the last sequence it saw
 the plugin runs the job again, and gets the same answer for the same
 inputs.
 
+### A standing job { #a-standing-job }
+
+A job may instead be **standing**: the component computes it once and keeps
+its answer current as what it reads changes, for every plugin that asks
+the same job. Its inputs are live, so it names no watermark, as-of,
+business date or what-if; each is refused, naming `standing`. Each measure
+says when it is computed again, its **refresh**:
+
+- **`per_change`**: as soon as a price, quote or rate it reads, or a
+  position of an account it is over, changes; deliveries in between are
+  conflated.
+- **`cadence`**: every `cadence_ns`, and, where `material_move_bp` is above
+  0, sooner when a chain's underlying moves that many basis points from
+  its price at the last fit.
+
+A measure with no refresh, where its definition states none, is refused
+naming it. In the Python SDK (0.36.0), `analytics.Jobs().standing` holds a
+standing job and answers a [`LiveView`](../api/python-sdk.md#live-values)
+of its figures, kept current:
+
+```python
+from meridian import analytics
+
+job = analytics.job(
+    analytics.measure("exposure", by=["asset_class"], refresh="per_change"),
+    analytics.measure("historical_var", refresh="cadence", cadence_ns=60_000_000_000),
+    accounts=["ACC-12"],
+    standing=True,
+)
+view = await analytics.Jobs().standing(self, job)   # in a role class
+for key, row in view.rows().items():
+    ...                                            # each figure, value and what was not evaluated
+await view.close()                                 # let it go
+```
+
+The job is held while its view is open: the plugin's sidecar renews it
+every 20 seconds, and the component stops a job no holder renewed within
+`analytics.standing.leaseSeconds` (30). After a gap, a loss or a broken
+stream the view reads the whole answer again, and a job the component no
+longer holds is registered again. Two plugins asking the same job over the
+same accounts and datasets share one computation; with other entitlements
+or another read scope, each has its own. A coordinator holds at most
+`analytics.standing.most` standing jobs (256), and one past it is refused
+naming `standing`. A standing job's memory is reserved against the
+component's budget while it is held: with no room for a first answer it is
+refused for load, with a retry-after.
+
+The `reporting`, `portfolio`, `compliance` and `signal` suites hold a case
+for it, `holds-a-standing-figure`.
+
 ## What it computes
 
 ### The measures

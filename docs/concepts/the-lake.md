@@ -120,8 +120,9 @@ declares:
 | Data types | The lake's types it serves, and the optional fields it fills, each by its [data dictionary](../boundaries/lake.md) entry: `meridian.v1.Bar.vwap`. |
 | Modes | How its rows can arrive: `pull` (fetched when a read wants them), `push` (recorded on the source's own timetable) and `stream`. |
 | Cadence, history | How often it updates, which says when it is silent; how far back it reaches. |
-| Default licence | What the vendor's standard terms say: kept or not, derived use, display, the default fields, and whether the terms are one person's. See [Licences and entitlements](licences-and-entitlements.md). |
-| Its day | The time zone a business date is in and the minute the day ends; the [settlement calendar](settlement-calendars.md) its business dates follow, by its `CAL-` ID, by which the lake flags a daily value dated on a closed day (see [A daily value on a closed day](#a-daily-value-on-a-closed-day)). See [Dates and time](dates-and-time.md). |
+| Terms and pricing | What the vendor's terms and prices say, in the plugin's words: the sources behind it, what it charges and on what meters, what it forbids. Never a licence, which a deployment admin sets. See [Licences and entitlements](licences-and-entitlements.md). |
+| Its day | The time zone a business date is in and the minute the day ends; the [settlement calendar](settlement-calendars.md) its business dates follow, by its `CAL-` ID, by which the lake flags a daily value dated on a closed day (see [A daily value on a closed day](#a-daily-value-on-a-closed-day)); and the trading-sessions calendar its live rows follow, such as the FX week. See [Dates and time](dates-and-time.md). |
+| Gap recovery | How a gap in it is recovered: `backfill`, where the vendor serves history, so the lake asks for the span again; `stream_only` or `none`. See [Gaps](licences-and-entitlements.md#gaps). |
 | Its venue | The venue the dataset is, by its [venue ID](venues.md); none for a consolidated view. |
 
 A catalogue is checked when the version is uploaded and again when its

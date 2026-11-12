@@ -55,8 +55,18 @@ has its bounds on the member's own record, as the binary event contract
 template's fields, not on the group: a floor and a cap, each with whether
 it is inclusive, and their unit, since a bound is often a level, a
 temperature or a percentage rather than money. An open tail has one bound.
-Template fields are offered by a `reference` plugin; a data plugin has no
-operation that sends them, so a data plugin's bounds do not reach a record.
+
+**A venue's terms, stated at its resolve.** A data plugin resolving a
+venue's event contract states its terms beside the identifiers, as the
+venue states them: its payout, close, bounds and **category** (the venue's
+own word, such as "Economics"), the payout left unstated where the venue gives
+none ([`resolve_identifier`](../api/typed-operations.md#resolve_identifier)'s
+`stated_binary_event_contract`; `meridian.roles.data.event_contracts` does
+it on SDK 0.36.0). The store records the category the first time it sees
+the contract, sourced to the plugin. Every other term, and a category
+unlike the one held, is **offered**, in force only when a person accepts it
+on the Instruments page. A `reference` plugin offers the template's fields
+as before.
 
 ## Reported, then minted
 

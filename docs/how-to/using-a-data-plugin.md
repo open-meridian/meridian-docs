@@ -265,8 +265,8 @@ for its deployment admin and its users to settle with each vendor.
   real time and consolidated, up to 120 requests a minute per token; the
   developer sandbox is delayed 15 minutes.
 
-So each dataset's default licence is one person's (`personal_use`). The
-deployment admin confirms or changes it on the Data sources page, which
+So license each dataset as one person's (`personal_use`). The deployment
+admin sets it on the Data sources page, which
 warns when more than one person can read a plugin entitled to a one-person
 dataset. Neither the plugins nor these docs say a deployment meets a
 vendor's terms: a licence records what the admin entered.
@@ -346,8 +346,8 @@ prices, such as VIGIX.
 pricing before relying on them, as they change. You use Tiingo under your
 own account and its terms; the plugin calls it with your token. Tiingo's
 free and Power plans are for internal and personal use, with no
-redistribution, so the dataset's default licence is one person's
-(`personal_use`); a firm's use needs Tiingo's commercial terms. The free
+redistribution, so license the dataset as one person's (`personal_use`);
+a firm's use needs Tiingo's commercial terms. The free
 plan's limits, as Tiingo states them, are 50 requests an hour, 1,000 a day
 and 500 symbols a month, and the plugin keeps inside them. Whether a
 deployment's use fits Tiingo's terms is for its admin and the account holder
@@ -453,12 +453,12 @@ deployment admin and its users to settle with each source.
 - **Coinbase**: its Market Data Terms allow an organisation to use and show
   Coinbase's market data within itself, and forbid redistributing or
   displaying it outside the organisation, or building applications for
-  other end users with it, without Coinbase's written consent. So the
-  default licence is kept and shown, and not one person's.
+  other end users with it, without Coinbase's written consent. So license
+  it kept and shown, and not one person's.
 - **Kraken**: it asks its prior permission for any non-personal commercial
   use of data from its public endpoints. Without it, a deployment keeps
-  Kraken's data for one person's own use, so the default licence is one
-  person's (`personal_use`).
+  Kraken's data for one person's own use, so license it as one person's
+  (`personal_use`).
 
 Neither is affiliated with or endorses Open Meridian.
 
@@ -500,8 +500,8 @@ its `daily` dataset, read back on the first run.
   without notice.
 - **Its terms.** The Board's site says its information is in the public
   domain and may be copied and distributed without permission, and asks
-  that the Board be cited as the source. So each dataset's default licence
-  is kept, with no limit on retention, derived use or display.
+  that the Board be cited as the source. So license each dataset kept,
+  with no limit on retention, derived use or display.
 
 It passes the whole data suite: it presents what it serves, its licences
 and the rates cases among them, and names every case about a kind of data
@@ -550,7 +550,7 @@ inverted, history from 1999. `ecb_estr` holds €STR as rates, with its
 compounded averages and its compounded index, history from October 2019.
 It reads TARGET's calendar from the deployment, and asks nothing on a day
 the ECB publishes nothing. No key. The ECB allows free use of its
-information with the ECB cited as the source, so each default licence is
+information with the ECB cited as the source, so license each dataset
 kept, with derived use and display; the ECB publishes the reference rates
 for information and discourages using them for transactions.
 

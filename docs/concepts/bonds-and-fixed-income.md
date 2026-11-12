@@ -33,6 +33,15 @@ its source and time beside the record. It never overwrites a value a
 person set, and a person can see each offer on the instrument's record and
 choose it.
 
+A bond's offered terms come as one **bond value** per offering plugin: the
+terms the record holds with that source's terms laid over them, shown on
+the Instruments page in their coupon and maturity. **Accept offered
+values** takes it whole, with its source, and the terms are then in force
+on the record (sourced under its `bond` field), the change in the record's
+history. Terms on a record whose type is not a bond, a date that is no
+plain date, or a decimal out of range are refused naming the field.
+`dashboard__complete_instruments` takes `bond` as the read answers it.
+
 An agency's disclosure plugin offers a pool's or a tranche's terms from
 the same files it reads factors from.
 
@@ -47,8 +56,13 @@ the same files it reads factors from.
   line at booking, so settlement is principal plus accrued. A coupon
   received is two cash lines: the purchased accrued returned, and the
   income.
-- **Accrual uses FIX's day counts.** A day count v29's engine does not
+- **Accrual uses FIX's day counts.** A day count the engine does not
   compute is named, never guessed: `NOT_EVALUATED_REASON_NOT_SUPPORTED`.
+- **A quoted yield may leave its day count unstated.** Where the source
+  quotes a yield without one, the price, trade or quote keeps it as quoted
+  (`debt.quoted_yield(...)` with no `day_count`), and the analytics
+  component never computes with it. A day count that is not one of the
+  defined ones is still refused.
 
 The lake's prices take the same bases: `Price`, `Trade` and `Quote` carry a
 `PriceBasis` of percent of par, yield or spread (with the benchmark a

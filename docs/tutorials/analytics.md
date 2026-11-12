@@ -6,7 +6,7 @@ risk page that asks the deployment's analytics engine for its figures, works
 them out when the book changes or on a cadence, keeps the answer per key, and
 serves every request from what it holds.
 
-You need SDK 0.35.5, CLI 0.1.59 and a deployment on chart 0.1.477.
+You need SDK 0.36.0, CLI 0.1.60 and a deployment on chart 0.1.538.
 
 ## 1. Use the engine's measures
 
@@ -76,6 +76,22 @@ class Reporting(reporting.Role):
                 job = risk_job(account_id, self.state.business_date(), self.state.currency_id)
                 self.state.answers[account_id] = await self.jobs.run(self, job)
             await asyncio.sleep(self.state.every_seconds)
+```
+
+**Or let the engine keep it current.** For a figure over live inputs, now
+rather than at a date, hold a [standing job](../concepts/the-analytics-component.md#a-standing-job)
+instead: the engine computes it once, shared by every plugin asking the
+same job, and keeps it current, each measure on change or on a cadence. Its inputs are live, so
+it names no business date.
+
+```python
+view = await self.jobs.standing(self, analytics.job(
+    analytics.measure("exposure", by=["asset_class", "currency"], refresh="per_change"),
+    analytics.measure("historical_var", refresh="cadence", cadence_ns=60_000_000_000),
+    accounts=[account_id],
+    standing=True,
+))
+self.state.views[account_id] = view       # its rows are the answer, kept current; close() it when done
 ```
 
 ## 3. Keep the answer per key
