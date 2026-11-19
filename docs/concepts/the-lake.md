@@ -147,10 +147,19 @@ refused naming the row and the field. Each row carries:
 - the **raw record** it was converted from, which only that plugin can
   follow.
 
-The lake decides when it recorded the row, its sequence in the dataset and
-its **version**. The same row key with the same values changes nothing,
-compared by decimal value: 764.2 is 764.20. A changed value is the next
-version, and the earlier one is kept. That is how a day still forming is
+The lake decides when it recorded the row, its sequence in the dataset (in
+its range, once a deployment admin has
+[split](../how-to/scale-out-the-lake-and-the-book.md#to-split-a-lake-range)
+the dataset) and its **version**. The same row key with the same values
+changes nothing, compared by decimal value: 764.2 is 764.20. So do the same
+values sent by another shard of the same instance: a raw record that differs
+only by its shard's folder, `shard-<n>/`, is the same value. A changed value
+is the next version, and the earlier one is kept.
+
+A row key fixes its first subject and its valid time. A restatement that
+changes either is refused, naming the field, and the rest of the write
+stands: record the correction under a new row key, as a consolidated feed
+publishes a corrected trade beside the one it cancels. That is how a day still forming is
 recorded: its close restated as it fills, under one row key, until it is
 final.
 

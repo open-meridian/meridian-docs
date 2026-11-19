@@ -91,6 +91,9 @@ itself for a finding), the plugin
 instance that sent it, when it was sent, received and committed, and the
 business date it stands for. Every record an entry changes is numbered from
 the account's partition, with no holes, so a reader that misses one can tell.
+An account moved to another partition closes its chain in the one and
+continues it in the other, linked, so it reads the same before and after
+(see [To move an account](../how-to/scale-out-the-lake-and-the-book.md#to-move-an-account)).
 
 The positions, breaks and figures a plugin reads are projections of the
 journal, and `meridian-bor rebuild` makes them again from the journal alone.

@@ -24,8 +24,12 @@ letters and digits, and may say more about itself, in free text:
 
 All four are optional and searchable, as the name is, so two accounts of the
 same name at different custodians can be told apart. None of them decides
-anything: who may reach an account is its account groups' and its links'
-business, never its owner's.
+who may reach an account: that is its account groups' and its links'
+business, never its owner's. The owner decides one thing: where the book
+runs several partitions, an account is placed when it is created in the
+partition its owner label falls to, so one owner's accounts land together,
+and by its ID where it has none. Editing the owner later moves nothing; see
+[To move an account](../how-to/scale-out-the-lake-and-the-book.md#to-move-an-account).
 
 ### In the book
 

@@ -242,8 +242,14 @@ A value that is not a whole number above 0 is refused naming its field
 (`limits.answer_mib`), and shards past the version's `most_shards` are
 refused naming `shards`. Each launch is its own record, with what it asked.
 
-The deployment keeps the shards and the standby pod on the launch, and the
-plugin runs one pod today.
+**Shards and a standby pod** run where the deployment's stores run
+standbys, as the HA profile sets. The instance runs a pod per shard, each
+serving its share of the subjects and holding its share of the limits, and
+one more for the standby, which waits and takes over a shard whose pod is
+lost. Shards past one are for a `data` plugin; any plugin may run a standby
+pod. A plugin that keeps storage shares it among its pods, a folder per
+shard. See
+[Run a plugin as shards or with a standby pod](../how-to/run-a-plugin-as-shards-or-with-a-standby.md).
 
 ## A plugin's page
 

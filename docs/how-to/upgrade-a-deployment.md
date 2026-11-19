@@ -394,6 +394,16 @@ meridian upgrade-deployment --set resilience.profile=tolerant
 Each count returns to one. A database that has moved under Patroni stays under it, with no
 standbys.
 
+Two things are refused, before anything changes, until you deal with them first:
+
+- **Plugins running as shards or with a standby pod.** Their leases are taken under an account
+  the stores' standbys bring, so leaving no store with a standby is refused, naming each such
+  plugin. Launch them as one pod first (see
+  [Run a plugin as shards or with a standby pod](run-a-plugin-as-shards-or-with-a-standby.md)).
+- **Fewer writer groups.** The HA profile raises a store's writer groups and does not lower them.
+  Keep `lake.writerGroups` and `bor.writerGroups` at the counts they run at (see
+  [Scale out the lake and the book](scale-out-the-lake-and-the-book.md)).
+
 ## To turn on TLS inside the cluster
 
 ```bash

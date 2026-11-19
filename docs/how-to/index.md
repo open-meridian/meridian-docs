@@ -46,6 +46,8 @@ Short recipes for one task each. They assume you have a deployment; if not, star
 | [Publish a plugin to a registry](publish-a-plugin.md) | Sign a release tag, and have the platform build, check and list it in the Community registry as `namespace/plugin`. |
 | [Install a plugin from a registry](install-from-a-registry.md) | Find a listed plugin, install it by digest at the dashboard or with `meridian plugin install`, install and keep a starter pack from Browse or with `meridian plugin pack`, update it, and carry one into a deployment that reaches nothing. |
 | [Upgrade a deployment](upgrade-a-deployment.md) | Move a deployment to a newer chart, with the command line or your own pipeline. |
+| [Scale out the lake and the book](scale-out-the-lake-and-the-book.md) | Add writer groups, book partitions and a database per group; move a partition or an account, split a lake range, and read the profile's advice. |
+| [Run a plugin as shards or with a standby pod](run-a-plugin-as-shards-or-with-a-standby.md) | Spread a data plugin's subjects over pods, keep a standby pod that takes over, and share its storage. |
 | [Review provisional records and the migration](review-provisional-records.md) | See each provisional record and why it waits on the Instruments page's Provisional tab, apply the upgrade's migration and hold a line back, and set the usage report. |
 | [Back up and restore a deployment](back-up-and-restore.md) | Make the identity backups are sealed to, back up on a schedule or now, and restore a backup into an empty namespace. |
 | [Remove or start over](remove-or-start-over.md) | Uninstall, reinstall, or retire a deployment. |
