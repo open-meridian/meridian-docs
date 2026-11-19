@@ -169,17 +169,28 @@ or with a standby pod, naming each. Launch them as one pod first.
 
 ## If you write the plugin
 
+- **Build it on SDK 0.37.0 or later.** An earlier plugin gives up on a
+  sidecar that does not answer within its wait, as a standby's does not
+  until it takes a lease, and is never registered again after its sidecar
+  restarts on its own. `meridian plugin migrate` moves it (see
+  [0.36.3 to 0.37.0](../api/python-sdk.md#0363-to-0370)).
 - **Declare the shards your vendor allows:** `Declaration(most_shards=...)`,
   the most connections one key may hold. 0 or 1 says it is not shardable.
-- **Write only in `edge.storage_dir()`.** Once the plugin has registered as
-  a shard, it is its own shard's folder; `edge.instance_storage_dir()` is
-  every shard's, to read. Raw record keys and archive objects are prefixed
+- **Read your storage from `on_start`, and write only in
+  `edge.storage_dir()`.** Once the plugin has registered as a shard, it is
+  its own shard's folder; `edge.instance_storage_dir()` is every shard's, to
+  read. Read before the plugin registers, it raises. Raw record keys and archive objects are prefixed
   `shard-<n>/` by the SDK, and `find_record` finds a record whichever shard
   kept it. A unit of another shard is restored by that shard's own pod.
 - **Let the plugin wait.** A standby's role classes start only once its
   sidecar holds a lease. When a sidecar is lost, `meridian.run` stops the
   role classes (`on_stop`) and waits for it in the same process; the plugin
-  never exits for it.
+  never exits for it. Registered again, it calls `on_start` again on the
+  same classes.
+- **A connectivity plugin with a standby pod needs storage.** Its `Trader`
+  notes each placement in the shard's folder before it sends it, so the pod
+  that takes the shard never sends it again. Without storage it sends no
+  placement, and says why.
 
 See [The Python SDK](../api/python-sdk.md#instance_storage_dir).
 

@@ -2446,7 +2446,12 @@ A fee with no fill on a placement (`fee`), such as a venue's cancel fee, or
 a rolling position's financing at a roll, with its
 `trade_date`, `settlement_date` and `raw_record`: it moves cash and counts
 toward no quantity. One naming no placement the book holds, or none, is
-kept unplaced (`UNPLACED_REASON_UNKNOWN_PLACEMENT`).
+kept unplaced (`UNPLACED_REASON_UNKNOWN_PLACEMENT`). It takes an
+`idempotency_key`, as the book's other commands do (see
+[Idempotency keys](#idempotency-keys)), so a charge reported again, by a
+restart or by the pod that took a shard over, is recorded once: the
+`Trader` reports each under `charge:<charge ID>|<placement ID>`. Added in
+SDK 0.37.0.
 
 ### `acknowledge_flag` { #acknowledge_flag }
 

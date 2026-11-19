@@ -16,7 +16,7 @@ such as Homebrew's on macOS (`externally-managed-environment`).
 |---|---|
 | PyPI name | `open-meridian` |
 | Import name | `meridian` |
-| Version | 0.36.0 |
+| Version | 0.37.0 |
 | Python | 3.11 or newer |
 | Dependencies | `grpcio>=1.68,<2`, `protobuf>=5.28,<7`, `jinja2>=3.1,<4` (for [pages](#pages)) |
 | Licence | Apache-2.0 |
@@ -24,7 +24,7 @@ such as Homebrew's on macOS (`externally-managed-environment`).
 !!! warning "Not `meridian-sdk`"
     The PyPI package `meridian-sdk` belongs to an unrelated company. Don't install it.
 
-A plugin pins the SDK exactly, `open-meridian==0.36.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the interface, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.36.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls (see [Moving a plugin to a new release](#moving-a-plugin-to-a-new-release)). CLI 0.1.60's `meridian plugin new` writes a plugin pinned to 0.35.0; `meridian plugin migrate` moves it to 0.36.0, which runs on chart 0.1.538.
+A plugin pins the SDK exactly, `open-meridian==0.37.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the interface, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.37.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls (see [Moving a plugin to a new release](#moving-a-plugin-to-a-new-release)). CLI 0.1.61's `meridian plugin new` writes a plugin pinned to 0.35.0; `meridian plugin migrate` moves it to 0.37.0, which runs on chart 0.1.NNN.
 
 | Optional extra | Installs | For |
 |---|---|---|
@@ -147,7 +147,7 @@ The plugin's process, until it is stopped. `run_async` takes the same arguments 
 5. serves `pages` on `port`, reports the plugin healthy, and reads `figures` on every heartbeat;
 6. when stopped, cancels the runs, calls each `on_stop` and leaves.
 
-**When its sidecar is lost** after it registered, it stops the classes as a stop does (`on_stop`, their `run`s cancelled) and waits in the same process for the sidecar to register it again, then starts them afresh; it never exits for a lost sidecar, and the pod is not ready while it waits. A standby pod's plugin waits the same way at its start: its sidecar registers it only once it holds a shard's lease, so its classes start then. Added in SDK 0.37.0.
+**When its sidecar is lost** after it registered, it stops the classes as a stop does (`on_stop`, their `run`s cancelled) and waits in the same process for the sidecar to register it again, then starts them afresh; it never exits for a lost sidecar, and the pod is not ready while it waits. A sidecar restarted on its own is one lost, as is one whose shard was taken over. A standby pod's plugin waits the same way at its start: its sidecar registers it only once it holds a shard's lease, so its classes start then. Starting afresh calls `on_start` again on the same objects, after their `on_stop`: set there what a class holds for a serving, since what an earlier one left in it is not to be trusted. A plugin that connects by hand with [`meridian.connect`](#connect) is not registered again: use `run`. Added in SDK 0.37.0.
 
 A plugin holding no role passes `roles=[]`. State the classes share is passed to each: `roles=[Lake(state), Trading(state)]`.
 
@@ -244,7 +244,7 @@ A plugin writes one class per role it holds. Each extends its role's base, `meri
 
 - **Its acts are its methods**, one per [typed operation](typed-operations.md) its role makes: `await self.record_prices(...)`. An act two roles hold is the same call from either class, and core checks every act against the plugin's declared roles and grants.
 - **Its events are `on_<event>` methods**, one per row its role hears, named from the row (`on_observations_wanted`, `on_activity_re_resolved`). The ones its role's suite requires are abstract, so a class missing one is refused when it is made, naming the role and the event. An optional one is heard only where the class overrides it, and a row no class hears is never asked of the sidecar. See [Events](#events).
-- **Its lifecycle**: `on_start()`, once the plugin has registered and before the stream opens; `run()`, its long-running work, started after every class's `on_start`, and restarted after a backoff when it fails, the failure logged and said on the plugin's health; `on_stop()`, when the plugin stops.
+- **Its lifecycle**: `on_start()`, once the plugin has registered and before the stream opens; `run()`, its long-running work, started after every class's `on_start`, and restarted after a backoff when it fails, the failure logged and said on the plugin's health; `on_stop()`, when the plugin stops, or its sidecar is lost. Registered again after a lost sidecar, `on_start()` is called again on the same object (changed in SDK 0.37.0). Read the plugin's storage here, never earlier: on a shard, `edge.storage_dir()` is known only once registered (see [`edge.storage_dir()`](#instance_storage_dir)).
 - **What it hears**: `seed` (a class attribute, `True` by default; `False` where its `on_start` reads the store itself), `subjects()`, the lake's subjects it hears, read when the stream opens, and `self.hear_again()` when they change, which opens the one stream again and catches up as after a broken stream.
 - **The connection**, `self.plugin`: what is the whole plugin's, never a role's. See [The connection](#plugin).
 
@@ -725,9 +725,13 @@ def instance_storage_dir() -> Path | None
 
 In `meridian.edge`. The storage the deployment grants the instance for its raw records, or `None` where it grants none (a test, a plugin holding no edge role). For an instance of one pod, the two are the same.
 
-An instance running as shards or with a standby pod shares one storage among its pods, a folder per shard. Once the plugin has registered as a shard, `storage_dir()` is its own shard's folder, `<storage>/shard-<n>`, the only place it writes, and `instance_storage_dir()` is the whole, every shard's folder, which any pod reads. Before it registers, no shard is known and `storage_dir()` is the whole.
+An instance running as shards or with a standby pod shares one storage among its pods, a folder per shard. Once the plugin has registered as a shard, `storage_dir()` is its own shard's folder, `<storage>/shard-<n>`, the only place it writes, and `instance_storage_dir()` is the whole, every shard's folder, which any pod reads. No shard is known before the plugin registers, so read `storage_dir()` from a class's `on_start` on. Read before then on storage the pods share -- on a pod of an instance launched as shards or with a standby pod, or on storage already copied for them or holding a shard's folder -- it raises `RuntimeError` rather than answer the whole, which is no pod's to write, and so it does where it cannot read the storage to tell. On an instance of one pod it answers the whole, as before. Changed in SDK 0.37.0.
 
 A key names a record across the instance: `plugin.raw_record(key)` prefixes a key in the shard's folder with `shard-<n>/`, as `RawStore` does, and the archive keeps its objects under the same prefix. A key with no prefix names what the instance kept before it ran as shards, which the copy put under `shard-0/`. Each shard keeps its own index of what moved; `find_record` reads the index of the shard a key names, whichever pod wrote it. A restore or a deletion of another shard's unit is refused, `the unit <unit> is shard <m>'s: its own pod restores it`. Added in SDK 0.37.0.
+
+**Two pods on one shard's folder.** Inside a takeover's lapse, the pod that lost its shard and the one that took it may both write the shard's folder. The SDK counts a live file's lines, and keeps the shard's index of what moved, under file locks, so the storage the pods share must support locks across them, as NFSv4 does. A move waits for another's lock at most 30 seconds, then raises `TimeoutError` and the unit stays for the next pass; `keep_line` waits at most two seconds, then raises `TimeoutError`, nothing written. One `Plugin` per process keeps raw records: connecting a second that declares storage while the first is registered raises `RuntimeError`. Make the moves from the loop the plugin registered on, and use a `RawStore` from one thread at a time: a second thread's `keep_line` while one is in it raises `RuntimeError`. Added in SDK 0.37.0.
+
+**The copy into `shard-0/`.** Before an instance that kept its own storage first runs as several pods, the deployment copies that storage into the shared one's `shard-0/`, with a pod running the plugin's own image as the plugin's own user, and the instance's pods wait for the copy before the plugin starts. Both run the SDK's command `meridian-storage` (`meridian-storage copy <claim>` and `meridian-storage copied <claim>`), on the base image's `PATH`. The plugin does nothing for either; an image built on another base installs the SDK as a package, so the command is on its `PATH`. Added in SDK 0.37.0.
 
 ### `edge.archive_dir()` { #archive_dir }
 
@@ -736,6 +740,8 @@ def archive_dir() -> Path | None
 ```
 
 In `meridian.edge`. The archive a deployment admin allowed this instance, where it is mounted (`MERIDIAN_ARCHIVE_DIR`), or `None`: in a test, for an instance allowed none, or where the archive is a bucket instead (`MERIDIAN_ARCHIVE_BUCKET`, an `s3://` URL read through `boto3`, which a plugin deployed with one installs). The helpers below reach either through the same interface; a plugin need not read the archive itself. Its storage is `edge.storage_dir()`, as before.
+
+Where the archive is a bucket, [`meridian.run`](#run) asks it for at most one key under the instance's prefix before each registration. Refused on auth (a 401 or 403, or no credential), the plugin does not register, and says the bucket refuses the instance's account, naming it, and asks again once a minute without exiting, so a trust added to the bucket is found without a restart. A network fault, a 5xx or no answer within 30 seconds is logged, and the plugin goes on to register. Added in SDK 0.37.0.
 
 ### A unit
 
@@ -2113,12 +2119,12 @@ What every plugin of a role must do the same way to fulfil its typed operations 
 
     trader = connectivity.Trader(
         lambda: venue, now=lambda: datetime.now(UTC),
-        sent=connectivity.Sent(sent), enabled=connectivity.Sent(enabled),
-        watched=connectivity.Watched(originated),
         market_zone=ZoneInfo("America/New_York"), poll_seconds=lambda: 5.0,
     )
     meridian.run(declaration=DECLARATION, roles=[trader], pages=pages, port=PORT)
     ```
+
+    The `Trader` reads what it sent, the accounts trading is enabled on, the orders it watches and the charges it reported from the plugin's storage on start, once registered: on a shard, its own folder (changed in SDK 0.37.0). A test gives it `sent=`, `enabled=`, `watched=` and `charged=` of its own.
 
 - **Custody's pages** (`meridian.roles.custody.account_pages`, added in SDK 0.31.0): **Account links**, **Statements** and **History**, each the same answer as its tool, declared for a plugin that hands it its `CustodySource`, the vendor's own reads. `meridian plugin check` counts the pages the helper declares as the plugin's own.
 - **A broker's US equity listings** (`meridian.roles.data.listings`, added in SDK 0.31.0): the lake layer for a broker's listings, a plugin subclassing `listings.Feed` and converting only its broker's trade conditions.
@@ -2126,6 +2132,7 @@ What every plugin of a role must do the same way to fulfil its typed operations 
 - **The pricing role** (`meridian.roles.pricing.Pricer`, added in SDK 0.31.0): each batch the analytics component routes to the plugin answered whole, from exactly the market objects each unit carries, and the batches still waiting read after a restart from the last sequence answered, kept in memory, since `pricing` holds no storage.
 - **Connectivity's pages** (added in SDK 0.32.0), each declared by the SDK with its acts and checks, from the plugin's state as it stands (`TradingState`: its `trader`, its venue adapter `venue`, its account `scope`, and for raw records its `store` and kept `values`) and its words for the venue: `connectivity.trading_pages(pages, state, *, venue, credentials, environment, environment_setting, ...)` declares **Trading** at `/admin/connections` (`TRADING`), with **Enable trading** (`ENABLE_TRADING`) and its check, and a **Sessions** section from `latency=`; `connectivity.raw_records_page(pages, state, *, kinds, why)` declares **Raw records** (`RAW`) for a plugin holding custody or connectivity; and, for a plugin holding `data` as well, `connectivity.connection_pages(pages, state, connection, *, venue, ...)` declares one **Connection** at `/` (`CONNECTION`) for both roles, the data role's record carrying connectivity's as `trading` (`ConnectionRead.trading`), in place of a Trading page of its own. `TradingRead` carries `session_latency`, `reached_environment`, `badge` and `environment_to_save`. `meridian plugin check` counts the pages each declares as the plugin's own.
 - **The merged Connection's tabs** (changed in SDK 0.32.3): `connection_pages` draws one group at a time under a tab row of its sections' own titles, **Key**, **Limits and use**, **Stream**, **Trading**, and **Sessions** once measured, picked by `?tab=`; **Enable trading** answers on Trading, and `read_connection` still answers every section. A page given no tabs draws every section at once. An account's **Enable trading** column shows only where its button does, and Raw records' record wraps within its box.
+- **A placement sent at most once across a takeover** (added in SDK 0.37.0): the `Trader` notes each placement before its send as a file of its own in the shard's folder, `trading/sent/<pid>`, created exclusively, so of the pod that lost the shard and the one that took it, only the one that created the note sends. The other finds the order at the venue by the placement's ID as its client order ID. A placement not found is reported once as outcome unknown, `request unanswered`, and never sent again by itself: the trader resolves it. Once its order is found, it is reported resolved before what the venue says of it. A placement noted as sent is worked as sent under a pause or a stop: its fills are reported, and under a stop its order is cancelled once found. An RFQ's acceptance is noted the same way, and an adapter's order made by an acceptance carries the placement's ID as its client order ID. A charge is reported under its key, `charge:<charge ID>|<placement ID>` (`report_charge`'s `idempotency_key`), so the book records it once however often a pod reports it. An adapter's `VenueCharge.charge_id` is the venue's ID for the charge or, where the venue states none, the fill's ID with the charge's kind, so two charges on one fill never share a key. The `Trader` reads the book to its last page, and stopped, its sidecar lost, forgets what it held and reads the book afresh when registered again; a subclass's `on_stop` calls `super().on_stop()`. An instance run as shards or with a standby pod needs storage granted for this: with none, the `Trader` sends no placement and holds each, and says why in its log and on its Trading page. `trading/sent.json`, as earlier releases wrote it, is read and never written again, so a connectivity instance is never rolled back below 0.37.0.
 - **The Trader's placement types and RFQs** (added in SDK 0.32.0): an adapter may answer `placement_types(code)`, the types its venue takes beside DMA, and where it takes RFQs `request_quotes(code, asked)`, `quotes(code, request_id)` (each a `VenueQuote`) and `accept_quote(code, request_id, quote, asked)`; the `Trader` lists the types on the catalogue (`Trader.placement_types()`), rejects one an account does not take with why, records each dealer's quote on the placement and accepts the pick. `VenueOrder` carries `identifiers` and `currency`; `connectivity.testing.placement(placement_type=...)` makes a test's placement, and `Rig.latency` its recorders. See [Placement types and RFQ quotes](../concepts/placement-types-and-rfq-quotes.md).
 - **An `ems`'s checks** (`meridian.roles.ems`, added in SDK 0.32.0): `ReferenceCheck(action, after_ns, latency, liveness)` judges the reference price's age before a placement (`stale(price, dataset=, asset_class=, sessions=)`), holding the order with its cause (`hold(plugin, order_id, stale)`) under `REFUSE` or marking the placement (`placement(stale)`) under `WARN`; `after_ns(rows)` reads the admin's `stale_reference_after`; `open_quotes(placement)` orders an RFQ placement's open quotes best first. Added in SDK 0.33.0: `permitted(plugin)` reads the stale-reference actions the deployment permits, at the plugin's own role, kept as `warn_permitted`; `refuses` is true for `WARN` too where warn is not permitted. See [Set staleness thresholds and the stale-reference action](../how-to/set-staleness-thresholds.md).
 - **An event-contract venue's events** (added in SDK 0.32.0): `event_contracts.Feed.keep_events(sleep=asyncio.sleep, *, clock=..., once=False)` reports the events of the contracts served, each read once its contract is first served and again every `EVENTS_EVERY_SECONDS` (600), a pass every `EVENTS_FIRST_SECONDS` (15), reported where new or stated otherwise than last reported, in place of a loop of the plugin's own. A range member's bounds go with its group (`member_bounds`). Added in SDK 0.32.3: a `Resolution` carries the venue's optional deadline to challenge a proposed determination, `challenge_ends_at_ns`, 0 unset by default, and `Feed.outcome()` carries it to the `Outcome` recorded.
@@ -2137,7 +2144,7 @@ What every plugin of a role must do the same way to fulfil its typed operations 
 
 Where a feed's method had an act's name it is renamed: a pairs feed's `record_trades_of` and `record_quotes_of`, an event-contract feed's `record_outcomes_of` and `record_bars_of`, a listings feed's `seed_symbols`. What faces a vendor, its transport, its pacing, its `Retry-After` and its allowance, stays the plugin's: the data template's `stream.py` and `pacing.py` show one way.
 
-The SDK's `templates/` holds a role template for `connectivity`, `custody`, `data`, `operations`, `pricing` and `reporting`. CLI 0.1.60 writes each, on SDK 0.35.0: `meridian plugin new <name> --role <role>`, then [`meridian plugin migrate`](cli.md#plugin-migrate) to move it to 0.36.0.
+The SDK's `templates/` holds a role template for `connectivity`, `custody`, `data`, `operations`, `pricing` and `reporting`. CLI 0.1.61 writes each, on SDK 0.35.0: `meridian plugin new <name> --role <role>`, then [`meridian plugin migrate`](cli.md#plugin-migrate) to move it to 0.37.0.
 
 ## Helpers { #helpers }
 
@@ -2364,6 +2371,31 @@ The package installs one command, `meridian-dev run`. On a development deploymen
 ## Release notes { #release-notes }
 
 Each release of the SDK, the interface version it declares, the runtime it needs, and the CLI whose `plugin new` writes a plugin on it. What a plugin's author does to move to it is in [Moving a plugin to a new release](#moving-a-plugin-to-a-new-release).
+
+!!! note "0.37.0: breaking"
+    open-meridian 0.37.0 keeps interface version `"v30"` and runs a plugin
+    [as shards or with a standby pod](../how-to/run-a-plugin-as-shards-or-with-a-standby.md).
+    [`meridian.run`](#run) waits for its sidecar for as long as it takes,
+    and when the sidecar is lost after the plugin registered, restarted on
+    its own or its shard taken over, stops the role classes and waits in the
+    same process to be registered again, then starts them afresh. A 0.36
+    plugin is never registered again after its sidecar restarts on its own,
+    so move every plugin to 0.37.0. Adds storage per shard
+    ([`edge.storage_dir()`](#instance_storage_dir), the shard's own folder
+    once registered, and `edge.instance_storage_dir()`, the whole); a
+    placement sent at most once across a takeover, each noted as a file of
+    its own, `trading/sent/<pid>`; a charge reported under its key
+    (`report_charge`'s `idempotency_key`); an archive's bucket asked before
+    each registration; and `meridian-storage`, the command the deployment
+    copies an instance's storage with, on the base image's `PATH`. Breaking:
+    `edge.storage_dir()` read before the plugin registers, on storage an
+    instance's pods share, raises `RuntimeError`; a connectivity instance
+    run as shards or with a standby pod sends no placement until it is
+    granted storage; and a connectivity instance is never rolled back below
+    0.37.0, since an earlier release would send again what 0.37.0 noted.
+    Base image `ghcr.io/open-meridian/plugin-python:0.37.0`; chart 0.1.NNN;
+    CLI 0.1.61's `plugin new` writes 0.35.0, which `meridian plugin migrate`
+    moves to it. See [0.36.3 to 0.37.0](#0363-to-0370).
 
 !!! note "0.36.0: breaking"
     open-meridian 0.36.0 declares a new interface version (`SCHEMA_VERSION`
@@ -2896,6 +2928,7 @@ Move a plugin one release at a time or several at once: [`meridian plugin migrat
 
 | From | To | Contract | Runtime | `plugin new` writes it from | `plugin migrate` rewrites | Then by hand |
 |---|---|---|---|---|---|---|
+| 0.36.3 | 0.37.0 | 30 | chart 0.1.NNN | none: CLI 0.1.61 writes 0.35.0 | the connectivity template's trading files, read by the `Trader` on start | `edge.storage_dir()` read before the plugin registers, moved to a class's `on_start`; a `Sent`'s file read whole; see [0.36.3 to 0.37.0](#0363-to-0370) |
 | 0.35.5 | 0.36.0 | 30 | chart 0.1.538 | none: CLI 0.1.60 writes 0.35.0 | a dataset's `licence_default=DatasetLicence(...)` into `terms_and_pricing="..."`; a base pinned by digest, moved with its digest dropped | see [0.35.5 to 0.36.0](#0355-to-0360) |
 | 0.35.4 | 0.35.5 | 29 | chart 0.1.408 | none: CLI 0.1.59 writes 0.35.0 | nothing: only the pins move | an FX week of the plugin's own replaced by `helpers.sessions.FX_WEEK` |
 | 0.35.3 | 0.35.4 | 29 | chart 0.1.408 | none: CLI 0.1.59 writes 0.35.0 | nothing: only the pins move | a live module of the plugin's own moved onto `pages.live_values` and `LiveValue.of`, its page script onto `<om-live cells>`; a book view's row is keyed `order_id=<id>` alone |
@@ -2927,6 +2960,85 @@ Move a plugin one release at a time or several at once: [`meridian plugin migrat
 | 0.18.0 | 0.19.0 | 14 | | CLI 0.1.34 | nothing: only the pins move | see [0.18.0 to 0.19.0](#0180-to-0190) |
 
 Before 0.19.0, `plugin new` pinned 0.18.0 from CLI 0.1.33, 0.17.0 from CLI 0.1.29 to 0.1.32, 0.16.0 from CLI 0.1.28, 0.15.0 from CLI 0.1.27, 0.14.0 from CLI 0.1.26, 0.12.0 from CLI 0.1.24 and 0.1.25, 0.11.0 from CLI 0.1.23, 0.10.1 from CLI 0.1.22, 0.10.0 from CLI 0.1.21, 0.9.0 from CLI 0.1.20, 0.7.1 from CLI 0.1.18 and 0.1.19, and 0.6.1 from CLI 0.1.16 and 0.1.17.
+
+### 0.36.3 to 0.37.0 { #0363-to-0370 }
+
+The `to_0_37_0` step. Breaking, with no new interface version: a plugin
+reads its storage from its class's `on_start`, once registered, since on an
+instance run as shards or with a standby pod its shard's folder is known
+only then (see [`edge.storage_dir()`](#instance_storage_dir)).
+`meridian plugin migrate --to 0.37.0` moves the pins and rewrites:
+
+- **The connectivity template's trading files** (`trading-files-on-start`):
+  where a function reads them,
+  `sent, enabled, originated = connectivity.trading_files(edge.storage_dir())`,
+  and builds the `Trader` with `sent=connectivity.Sent(sent)`,
+  `enabled=connectivity.Sent(enabled)` and
+  `watched=connectivity.Watched(originated)`, the assignment and the three
+  arguments go: the `Trader` reads them from its storage on start. `edge`'s
+  import goes where nothing else names it.
+
+    ```python
+    # before
+    sent, enabled, originated = connectivity.trading_files(edge.storage_dir())
+    trader = connectivity.Trader(
+        lambda: venue, now=lambda: datetime.now(UTC),
+        sent=connectivity.Sent(sent), enabled=connectivity.Sent(enabled),
+        watched=connectivity.Watched(originated),
+        market_zone=ZoneInfo("America/New_York"),
+    )
+    # after
+    # What it sent, enabled and watched is read from its storage on start,
+    # once registered: a shard's own folder is known only then.
+    trader = connectivity.Trader(
+        lambda: venue, now=lambda: datetime.now(UTC),
+        market_zone=ZoneInfo("America/New_York"),
+    )
+    ```
+
+Then, by hand where they apply:
+
+- `edge.storage_dir()` read where the plugin's code runs before it
+  registers -- a module's top level, a class body, `main()` or an
+  `__init__` -- such as an `option_chains.SeriesTimes` or an
+  `option_chains.Feed(series_path=...)` built with the class, or a
+  `Trader`'s files built in `main()` another way
+  (`storage-read-before-register`): read it in the class's `on_start`. A
+  `Trader` given no `sent`, `enabled` or `watched` reads them itself.
+
+    ```python
+    async def on_start(self) -> None:          # in the plugin's role class
+        self.times = option_chains.SeriesTimes(edge.storage_dir() / "series.json")
+    ```
+
+- a `connectivity.Sent`'s file read whole, `sent.json`, `enabled.json` or
+  `charged.json`, most often in a test (`noted-file-read-whole`): a `Sent`
+  now notes each name as a file of its own beside its file, and reads the
+  file an earlier release wrote without writing it again. Read what is
+  noted through the `Sent` (`name in sent`, `list(sent)`), or assert the
+  file, `(tmp_path / "trading" / "sent" / placement_id).is_file()`.
+
+Then, where it applies, though the step does not name it:
+
+- a class whose `on_start` assumes it runs once: after a lost sidecar,
+  `meridian.run` calls `on_stop` and, registered again, `on_start` on the
+  same object. Set there afresh what the class holds for a serving. A
+  subclass of `connectivity.Trader` that overrides `on_stop` calls
+  `super().on_stop()`;
+- a plugin connecting by hand with `meridian.connect`: it is not registered
+  again when its sidecar is lost. Move it to `meridian.run`;
+- a connectivity adapter's `VenueCharge`: its `charge_id` is the venue's ID
+  for the charge, or where the venue states none the fill's ID with the
+  charge's kind, since the `Trader` reports the charge under it;
+- a `report_charge` the plugin makes itself: give it an `idempotency_key`
+  derived from the charge, so a charge reported again is recorded once;
+- a connectivity instance to be run with a standby pod: grant it storage
+  first. Without it the `Trader` sends no placement.
+
+On an instance of one pod, `edge.storage_dir()` read before the plugin
+registers still answers the storage as a whole, so nothing else changes
+until it runs as shards or with a standby pod. Don't roll a connectivity
+instance back below 0.37.0.
 
 ### 0.35.5 to 0.36.0 { #0355-to-0360 }
 
