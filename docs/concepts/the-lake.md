@@ -151,9 +151,7 @@ The lake decides when it recorded the row, its sequence in the dataset (in
 its range, once a deployment admin has
 [split](../how-to/scale-out-the-lake-and-the-book.md#to-split-a-lake-range)
 the dataset) and its **version**. The same row key with the same values
-changes nothing, compared by decimal value: 764.2 is 764.20. So do the same
-values sent by another shard of the same instance: a raw record that differs
-only by its shard's folder, `shard-<n>/`, is the same value. A changed value
+changes nothing, compared by decimal value: 764.2 is 764.20. A changed value
 is the next version, and the earlier one is kept.
 
 A row key fixes its first subject and its valid time. A restatement that

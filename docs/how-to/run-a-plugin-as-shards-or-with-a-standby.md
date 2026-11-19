@@ -104,11 +104,6 @@ When a shard's pod or its node is lost, its lease lapses, and:
 3. **Without a standby**, the shards still holding leases share the lost
    shard's subjects between them until its pod is back.
 
-Inside a takeover, two pods can briefly record the same values for one
-subject. The lake keeps them as one version: the same values from another
-shard are an unchanged repeat, whichever shard's folder the raw record
-is in.
-
 Each takeover is its own record. It shows on the Resilience page's
 **History** as `shard taken over`, naming the instance, the shard, the pod
 that took it, the one before, the epoch and why (its lease lapsed, or it
