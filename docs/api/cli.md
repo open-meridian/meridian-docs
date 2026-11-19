@@ -1075,7 +1075,7 @@ The deployment runs the instance with exactly the roles it declares; an approval
 | `--requests-per-second` | `<n>` | the deployment's | The most requests a second, with a second's burst (`limits.requests_per_second`). Added in CLI 0.1.60. |
 | `--answer-mib` | `<n>` | the deployment's | MiB of answers held or paged in flight for it (`limits.answer_mib`). Added in CLI 0.1.60. |
 | `--shards` | `<n>` | one pod | The pods of a `data` plugin's instance sharing its subjects (`shards`), at most the version's `most_shards`, 0 to 64. See [Run a plugin as shards or with a standby pod](../how-to/run-a-plugin-as-shards-or-with-a-standby.md). Added in CLI 0.1.60. |
-| `--standby` | | off | A standby pod, which takes over a shard whose pod is lost (`standby`). Added in CLI 0.1.60. |
+| `--standby` | | off | A standby pod that takes over within 10 seconds (`standby`). Added in CLI 0.1.60. |
 | `--yes` | | off | Launch without being asked. For a script that has already read what it asks for. |
 
 A limit that is not a whole number above 0 is refused before anything is sent, naming its flag and the field as core names it; core's own refusals, such as shards past the version's `most_shards`, or shards and a standby where the deployment's stores run none, come through in the deployment's own words. Where the launch copied its plugin's storage into its shared storage, it says so once the copy is recorded.
