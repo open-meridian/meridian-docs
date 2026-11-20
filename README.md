@@ -43,33 +43,19 @@ page's [release notes](docs/api/python-sdk.md#release-notes), and its
 with the CLI's `plugin migrate` step table. An upgrade fact a page drops
 goes there first.
 
-Today they describe contract v28, released in chart 0.1.313 (core
-8def82a; its quality states served from chart 0.1.314, core d6781a1). CLI 0.1.53 (`meridian plugin install --pack` through the
-deployment, one pack install it keeps, and `meridian plugin pack
-list|show|update|remove`; new plugins on SDK 0.33.0). SDK 0.33.1 (an event-contract venue's bars, over 0.33.0's contract
-v28: `meridian.SubjectRef` only, with its role; `ReportLatency` sent and
-the three latency cases required; an `ems`'s read of the stale-reference
-actions permitted; listed options' and futures' chains, lifecycle events
-and package orders; a signal's derived series, saved scenarios and quality
-escalated; the filings slice and quality states at the edge;
-`DataEligibility`; every role's v28 cases marked by their `about`), with
-kit 0.13.0 and `boundaries/` vendored from meridian-schema dcca81b, which
-carries `operations.json` beside `roles.json`. The concept pages for listed
-options and futures, companies and corporate actions, scenarios, the
-analytics component's options measures, data age and latency, and
-licences' eligibility, and their how-tos, describe them; the API reference
-lists contract 28's typed operations and core's tools through contract 28.
-Core serves the filings slice, quality states and the data-use counts in a
-later chart release on contract 28, and the pages say so where they apply.
-The plugins, as the Integrations page lists them (integrations/released.json
-as refreshed on 2026-10-24), all on contract v27, which a contract-v28
-deployment runs: SnapTrade 0.20.0, Alpaca 0.13.1, Tradier 0.12.0, OANDA
-0.6.0, Tiingo 0.8.0, TrueFX 0.3.0, Coinbase 0.9.0, Kraken 0.9.0, Kalshi
-0.9.0, Polymarket 0.9.0, Polymarket US 0.4.0, the Federal Reserve Board
-1.0.0, the New York Fed 0.1.0, US Treasury 0.1.0, FRED 0.1.0 and the ECB
-0.2.0. The platform lists each in its Community registry, with five starter
-packs. What each SDK release added is in the Python SDK page's release
-notes.
+Today they describe contract v30, released in chart 0.1.632 (core
+8599e1fd): writer groups, book partitions and a database per group, moves
+and splits online, the resilience profile's advice, plugins run as shards or
+with a standby pod and the storage they share, and what a failover looks
+like. CLI 0.1.61 (`meridian partition split`, `partition move` and `account
+move`; `upgrade-deployment` checking the counts from what runs; `up
+--shared-storage-class`; new plugins on SDK 0.35.0). SDK 0.37.0 (storage per
+shard, `meridian.run` waiting for a lost sidecar in the same process, a
+placement sent at most once across a takeover, a charge reported under its
+key, `meridian-storage`), with kit 0.16.0 and `boundaries/` vendored from
+meridian-schema 978c758 (contract 30). The plugins are as the Integrations
+page lists them (integrations/released.json). What each SDK release added is
+in the Python SDK page's release notes.
 The tutorials were walked on CLI 0.1.36 and SDK 0.21.0. A page describes
 what is built, and says so where something is specified and not built yet.
 

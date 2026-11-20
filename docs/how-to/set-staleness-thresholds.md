@@ -9,7 +9,7 @@ check. What each number means is in
 [Data age and liveness](../concepts/data-age-and-liveness.md).
 
 You need a deployment (chart 0.1.632) and plugins on SDK
-0.36.0 or later.
+0.37.0 or later.
 
 ## A dataset's threshold
 

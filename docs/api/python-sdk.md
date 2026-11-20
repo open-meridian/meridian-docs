@@ -24,7 +24,7 @@ such as Homebrew's on macOS (`externally-managed-environment`).
 !!! warning "Not `meridian-sdk`"
     The PyPI package `meridian-sdk` belongs to an unrelated company. Don't install it.
 
-A plugin pins the SDK exactly, `open-meridian==0.37.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the interface, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.37.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls (see [Moving a plugin to a new release](#moving-a-plugin-to-a-new-release)). CLI 0.1.61's `meridian plugin new` writes a plugin pinned to 0.35.0; `meridian plugin migrate` moves it to 0.37.0, which runs on chart 0.1.NNN.
+A plugin pins the SDK exactly, `open-meridian==0.37.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the interface, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.37.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls (see [Moving a plugin to a new release](#moving-a-plugin-to-a-new-release)). CLI 0.1.61's `meridian plugin new` writes a plugin pinned to 0.35.0; `meridian plugin migrate` moves it to 0.37.0, which runs on chart 0.1.632.
 
 | Optional extra | Installs | For |
 |---|---|---|
@@ -1793,7 +1793,7 @@ class Pages(title: str = "", *, templates: str | os.PathLike | None = None, kit:
 |---|---|
 | `title` | The heading the base template draws, and the end of each page's `<title>`. |
 | `templates` | The directory `render` reads templates from. A directory that does not exist raises `FileNotFoundError`. |
-| `kit` | The kit version the base template links, at `/.meridian/ui/<kit>/`: `pages.KIT`, 0.16.0 in SDK 0.36.0, whose `<om-live cells>` draws [live values](#live-values). The dashboard answers any 0.x with the newest 0.x it carries. |
+| `kit` | The kit version the base template links, at `/.meridian/ui/<kit>/`: `pages.KIT`, 0.16.0 in SDK 0.37.0, whose `<om-live cells>` draws [live values](#live-values). The dashboard answers any 0.x with the newest 0.x it carries. |
 | `max_body` | The largest request body, in bytes, the pages take: `meridian.pages.MAX_BODY`, 1 MiB, unless said. A larger one is answered 413 before any view runs, so a view need not measure what it is sent. A negative number, or anything but an `int`, raises `ValueError`. |
 
 | Member | Meaning |
@@ -2393,9 +2393,38 @@ Each release of the SDK, the interface version it declares, the runtime it needs
     run as shards or with a standby pod sends no placement until it is
     granted storage; and a connectivity instance is never rolled back below
     0.37.0, since an earlier release would send again what 0.37.0 noted.
-    Base image `ghcr.io/open-meridian/plugin-python:0.37.0`; chart 0.1.NNN;
+    Base image `ghcr.io/open-meridian/plugin-python:0.37.0`; chart 0.1.632;
     CLI 0.1.61's `plugin new` writes 0.35.0, which `meridian plugin migrate`
     moves to it. See [0.36.3 to 0.37.0](#0363-to-0370).
+
+!!! note "0.36.3: a fix and an addition"
+    open-meridian 0.36.3 makes `option_chains.SeriesTimes` public, the
+    holder of each option series' first valid time and first subject that
+    `option_chains.Feed` is built on, for a plugin running a chain of its
+    own: it decides each series' row and sends the rows in the lake's
+    batches, taking a refusal of a series' own valid time as recorded. A
+    `Feed` whose calendar names no day keeps New York's. Base image
+    `ghcr.io/open-meridian/plugin-python:0.36.3`; chart 0.1.538.
+
+!!! note "0.36.2: fixes"
+    open-meridian 0.36.2 keeps each row key's first valid time in the SDK's
+    helpers: `helpers.chains.statistic` is valid from the start of the day
+    it describes; `helpers.chains.option_series` keeps a series' terms
+    under their key's first valid time, an adjustment a new key from its
+    date (`adjusted_on`); `option_chains.Feed` holds each series' first
+    valid time, in the plugin's storage where it is given `series_path`. An
+    event contract's outcome keeps its first determination's valid time,
+    and a listings feed's withdrawal of a trade keeps the trade's. Base
+    image `ghcr.io/open-meridian/plugin-python:0.36.2`; chart 0.1.538.
+
+!!! note "0.36.1: fixes"
+    open-meridian 0.36.1: an event-contract feed states a payout in a
+    venue's own token by the token's instrument once its record is held,
+    and by its category before then, where 0.36.0 refused it, and states a
+    range market's bounds only with their unit. `EventContractsChecks`
+    admits a plugin asking for a contract's own event and its series by
+    reference. Base image `ghcr.io/open-meridian/plugin-python:0.36.1`;
+    chart 0.1.538.
 
 !!! note "0.36.0: breaking"
     open-meridian 0.36.0 declares a new interface version (`SCHEMA_VERSION`
@@ -2928,7 +2957,10 @@ Move a plugin one release at a time or several at once: [`meridian plugin migrat
 
 | From | To | Contract | Runtime | `plugin new` writes it from | `plugin migrate` rewrites | Then by hand |
 |---|---|---|---|---|---|---|
-| 0.36.3 | 0.37.0 | 30 | chart 0.1.NNN | none: CLI 0.1.61 writes 0.35.0 | the connectivity template's trading files, read by the `Trader` on start | `edge.storage_dir()` read before the plugin registers, moved to a class's `on_start`; a `Sent`'s file read whole; see [0.36.3 to 0.37.0](#0363-to-0370) |
+| 0.36.3 | 0.37.0 | 30 | chart 0.1.632 | none: CLI 0.1.61 writes 0.35.0 | the connectivity template's trading files, read by the `Trader` on start | `edge.storage_dir()` read before the plugin registers, moved to a class's `on_start`; a `Sent`'s file read whole; see [0.36.3 to 0.37.0](#0363-to-0370) |
+| 0.36.2 | 0.36.3 | 30 | chart 0.1.538 | none: CLI 0.1.60 writes 0.35.0 | nothing: only the pins move | a chain's series built by the plugin itself held with `option_chains.SeriesTimes` (`series-without-a-holder`) |
+| 0.36.1 | 0.36.2 | 30 | chart 0.1.538 | none: CLI 0.1.60 writes 0.35.0 | nothing: only the pins move | a row's `valid_from_ns` taken from the plugin's clock: each record of a key given one valid time (`valid-time-from-the-clock`) |
+| 0.36.0 | 0.36.1 | 30 | chart 0.1.538 | none: CLI 0.1.60 writes 0.35.0 | nothing: only the pins move | none; the 0.35.5 to 0.36.0 step names a test's stand-in for a `Receive` call with no `read()` (`receive-stand-in-read`) |
 | 0.35.5 | 0.36.0 | 30 | chart 0.1.538 | none: CLI 0.1.60 writes 0.35.0 | a dataset's `licence_default=DatasetLicence(...)` into `terms_and_pricing="..."`; a base pinned by digest, moved with its digest dropped | see [0.35.5 to 0.36.0](#0355-to-0360) |
 | 0.35.4 | 0.35.5 | 29 | chart 0.1.408 | none: CLI 0.1.59 writes 0.35.0 | nothing: only the pins move | an FX week of the plugin's own replaced by `helpers.sessions.FX_WEEK` |
 | 0.35.3 | 0.35.4 | 29 | chart 0.1.408 | none: CLI 0.1.59 writes 0.35.0 | nothing: only the pins move | a live module of the plugin's own moved onto `pages.live_values` and `LiveValue.of`, its page script onto `<om-live cells>`; a book view's row is keyed `order_id=<id>` alone |
