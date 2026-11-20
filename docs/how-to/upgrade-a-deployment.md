@@ -37,9 +37,9 @@ backups set up. See [Back up and restore a deployment](back-up-and-restore.md). 
 changes on the way, release by release, is in the
 [release notes](../api/python-sdk.md#release-notes).
 
-!!! note "Upgrading to chart 0.1.538"
+!!! note "Upgrading to chart 0.1.632"
     Chart releases are numbered by the CI run that tested them, so the
-    numbers jump; 0.1.538 is the current one. Upgrading to it keeps the
+    numbers jump; 0.1.632 is the current one. Upgrading to it keeps the
     counts a deployment runs: `resilience.profile` stays as it was, and TLS
     inside the cluster and the WAL archive stay off until you turn them on
     (below, and
@@ -392,7 +392,20 @@ meridian upgrade-deployment --set resilience.profile=tolerant
 ```
 
 Each count returns to one. A database that has moved under Patroni stays under it, with no
-standbys.
+standbys. The broker's three servers go with their volumes, and with them the lake's write-ahead
+stream: a write it still held was never answered, so its plugin sends it again, and nothing
+answered is lost. `meridian upgrade-deployment` deletes any of those volumes still left, so a
+later move to `ha` starts the stream afresh.
+
+Two things are refused, before anything changes, until you deal with them first:
+
+- **Plugins running as shards or with a standby pod.** Their leases are taken under an account
+  the stores' standbys bring, so leaving no store with a standby is refused, naming each such
+  plugin. Launch them as one pod first (see
+  [Run a plugin as shards or with a standby pod](run-a-plugin-as-shards-or-with-a-standby.md)).
+- **Fewer writer groups.** The HA profile raises a store's writer groups and does not lower them.
+  Keep `lake.writerGroups` and `bor.writerGroups` at the counts they run at (see
+  [Scale out the lake and the book](scale-out-the-lake-and-the-book.md)).
 
 ## To turn on TLS inside the cluster
 

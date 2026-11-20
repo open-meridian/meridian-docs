@@ -2,7 +2,7 @@
 
 Put US equities' closes, bars, quotes and trades, and listed options'
 chains, into your deployment's lake from a data plugin, and read them from
-any plugin entitled to them. You need chart 0.1.538 and CLI 0.1.60.
+any plugin entitled to them. You need chart 0.1.632 and CLI 0.1.61.
 
 | Plugin | What it records | Its key |
 |---|---|---|

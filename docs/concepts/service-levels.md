@@ -3,7 +3,7 @@
 A deployment can run on a laptop or across a cluster's zones, and the
 failures it rides out grow with where it runs. This page names four levels,
 each by where a deployment runs, says what each needs and the chart values
-that reach it, as chart 0.1.538 delivers them.
+that reach it, as chart 0.1.632 delivers them.
 
 It states tested behaviour only. It is no service agreement, no uptime
 figure and no claim of readiness for any regulation. Recovery times are
@@ -21,10 +21,13 @@ Real hardware may fail in ways the tests' injections do not reach.
 
 ## How a component fails over { #how-a-component-fails-over }
 
-Every store is one **writer**: the lake, the book of record, the street
-store, the instrument store, the conductor and the launcher each write as
-one member, so a second replica would be a second writer over the same
-data. What adds a copy is a **warm standby**:
+Each store's data has one **writer** at a time: the lake, the book of
+record, the street store, the instrument store, the conductor and the
+launcher each write as one member, so a second replica would be a second
+writer over the same data. The lake and the book can run several writers,
+each owning its own share of the store, as **writer groups** (see
+[Scale out the writers](#scale-out-the-writers)); each group is then one
+writer. What adds a copy is a **warm standby**:
 
 - **`<component>.standby: 1`** runs a standby beside the writer: the same
   image, holding no lease and serving nothing, following the writer's
@@ -64,6 +67,17 @@ bound:
 |---|---|---|
 | Tolerant, the default | A writer's process killed (the lake, the book); a component cut from its database by a network policy | Back by restart within 2 minutes |
 | A warm standby per writer, three zones | A writer's process killed (the lake, the book, the street, the instrument store); a writer's node paused past its lease; a writer cut from the broker and the API server but not its database; a writer's node stopped; a component cut from its database | The book, the street and the instrument store answering again within 10 seconds, the lake's writes within 15 seconds |
+
+The HA shape runs the lake and the book at two writer groups. Under write
+load, CI also moves a lake range, a book partition and an account between
+groups, within one database and across two, and splits a lake range: each
+move refuses nothing inside its hold, compares equal digests at the switch,
+and leaves every answer as it was; a move with its target held back, or with
+its digests made to differ, does not switch and leaves its source owning. A
+data plugin at two shards with a standby pod has a shard's pod lost: each
+subject is served by one shard outside the takeover, and the standby serves
+the lost shard's subjects from the standing wants the lake delivers again
+at the take.
 
 ## Desktop { #desktop }
 
@@ -204,7 +218,9 @@ each standby is behind.
 **The broker.** Three servers, each keeping its JetStream state on a volume
 of its own (`broker.jetstream.size`, `1Gi`), so a server restarted rejoins
 with what it held. A client moves to another server when its own has not
-answered for 2 seconds.
+answered for 2 seconds. Leaving the HA profile removes the three servers and
+their volumes, so a return to it starts JetStream afresh, never on what the
+servers held before.
 
 **The lake's writes.** A data plugin's writes go first to the lake's
 write-ahead stream on those three servers, and the plugin is answered once
@@ -217,6 +233,94 @@ gone longer than `maxAge` leaves a gap, recorded and shown on Data sources
 (see [Gaps](licences-and-entitlements.md#gaps)).
 
 Every count the chart takes is one CI tests, and any other is refused.
+
+## Scale out the writers { #scale-out-the-writers }
+
+A standby keeps a store answering; it adds no capacity. When one writer
+cannot keep up, the lake and the book scale out by configuration, with no
+change to plugins or pages:
+
+- **Partitions.** Each store's data is split into partitions, each with its
+  own sequence and epoch. The book's are `P0` to `P<n-1>` (`bor.partitions`),
+  each account in one, placed when it is created: by its owner label where it
+  has one, so one owner's accounts land together, and by its ID otherwise.
+  The lake's are its datasets, and a busy dataset can be split into two
+  ranges by the hash of each row's first subject, `<dataset>/<lo>-<hi>`.
+  Every store also keeps a `control` partition for its own records.
+- **Writer groups** (`lake.writerGroups`, `bor.writerGroups`). Each group
+  owns a share of the partitions and is one writer, with its own lease and,
+  where the store keeps one, its own standby. Every member takes the store's
+  writes and hands each to the group that owns it; a write that spans
+  several groups is answered once each part has committed.
+- **A database per writer group** (`lake.databases`, `bor.databases`), for
+  when one database is the limit. Writer group *g* writes to database *g*
+  mod the count, and a read across them is merged.
+- **Moves and splits.** A partition moves to another writer group, an
+  account to another book partition, and a lake range splits in two,
+  online, one at a time, each a deployment admin's act and its own record.
+  A move holds writes to its partition for at most `moves.holdSeconds`,
+  and one that cannot switch cleanly leaves the partition where it was.
+- **Each writer batches.** Requests that arrive while a partition's commit
+  is in flight join its next one, with no wait added when the load is light.
+
+Every row of one subject stays in one partition, in order, so one very busy
+subject is as fast as one writer takes it, whatever the counts.
+
+Size it so peak load stays below about 60 to 70% of what a writer group
+takes, and start with more partitions than writer groups, so scaling out is
+adding a group. The profile advises when a group nears it (see
+[Read your profile](#read-your-profile)). For the steps, see
+[Scale out the lake and the book](../how-to/scale-out-the-lake-and-the-book.md).
+
+## Plugins: shards and a standby pod { #plugins-shards-and-a-standby-pod }
+
+A plugin instance can run as several pods where the deployment runs
+standbys: **shards** of a data plugin, sharing its subjects, and a
+**standby pod**, which takes over a shard whose pod is lost. Each shard
+holds a lease; a standby that takes one first has the shard's epoch raised
+in the lake and the book, so nothing the lost pod sends afterwards is kept,
+then serves the shard's subjects from the standing wants the lake
+delivers again once it has recorded the take. The
+profile's never-blind lines say whether a data type's sources run standby
+pods. See
+[Run a plugin as shards or with a standby pod](../how-to/run-a-plugin-as-shards-or-with-a-standby.md).
+
+## What a failover looks like { #what-a-failover-looks-like }
+
+**To someone at a page,** a takeover is a pause, not an outage:
+
+- **Live pages stay drawn,** each value with its last good data and its
+  age. A value from a source that has stopped is marked stale once it
+  passes its data type's threshold, and is never shown as live.
+- **A write may be answered "try again".** While a writer is taken over, a
+  partition switches in a move, or a stale writer is fenced, a write is
+  refused with a retry-after, never left unanswered, and nothing
+  acknowledged is lost or recorded twice. The SDK waits a retry-after out
+  within the act's own deadline, so a plugin carries on. An act refused
+  this way can be made again: what of it was kept is found unchanged, and
+  nothing is done twice.
+- **A placement whose answer was lost** in a takeover is **outcome
+  unknown**, and is never sent again by itself. The trader resolves it, as
+  any outcome unknown (see
+  [The order lifecycle](the-order-lifecycle.md)).
+- **A data plugin's subjects carry on** from its standby pod or its other
+  shards. Rows a lake writer could not record in time are a
+  [gap](licences-and-entitlements.md#gaps), shown on Data sources and
+  fetched again where the source serves history.
+
+**For the deployment admin,** a takeover heals itself, and the writer that
+lost its lease comes back as the standby. To see what happened:
+
+1. **The Resilience page's History,** or
+   [`dashboard__read_resilience`](../api/core-tools.md#dashboard__read_resilience):
+   each takeover, each plugin shard taken over, each move and split, each
+   integrity finding and each switch to a backup source, with why.
+2. **`meridian status`** and **`meridian doctor`**: each member's mode,
+   lag and restarts, and, for what did not heal, what happened and what to
+   do.
+3. **`meridian status --profile`**: what the configuration survives now.
+   A node or zone lost and not yet back can leave a class *not met*, naming
+   the change that would meet it again.
 
 ## Read your profile { #read-your-profile }
 
@@ -232,8 +336,10 @@ changes anything:
 - **The Resilience page**, under **Deployment** in the dashboard's
   settings: its **Profile** tab, beside **Members** (each member's mode,
   zone, lag and restarts), **Partitions** (each partition of the lake and
-  the book, its writer and epoch) and **History** (takeovers, the scrub's
-  findings and switches to a backup source, newest first).
+  the book, its writer group, its writer and epoch, with **Move**, **Split**
+  and **Move account**) and **History** (takeovers of writers and of plugin
+  shards, moves and splits, the scrub's findings and switches to a backup
+  source, newest first).
 
 ```text
 $ meridian status --profile
@@ -262,6 +368,12 @@ It gives:
 - **Never blind, per live data type**: whether a second source stands in
   its priority, whether its sources run standby pods, and whether its
   pages show the age and source of each value.
+- **Advice** on the lake's and the book's writers: a store with no more
+  partitions than writer groups, so a group added later would find none to
+  take, and a writer group whose commit lane was busy past 70% of a minute
+  at its busiest in the last 15 minutes, or that refused work as
+  overloaded, each with the change to make. See
+  [Read the advice](../how-to/scale-out-the-lake-and-the-book.md#read-the-advice).
 
 Make a change it names with
 [`meridian upgrade-deployment --set`](../how-to/upgrade-a-deployment.md),
@@ -285,6 +397,16 @@ and can advise from it.
 | `dashboard.replicaCount` | by the profile: `1`, `2` in `ha` | Copies of the dashboard, each reading the same sessions from its tables |
 | `database.brought.standbys` | by the profile: `0`, `2` in `ha` | The brought database's standbys under Patroni: 0 or 2 |
 | `broker.replicas` | by the profile: `1`, `3` in `ha` | The broker's servers: 1 or 3 |
+| `lake.writerGroups`, `bor.writerGroups` | `1` | [Writer groups](#scale-out-the-writers), each owning a share of the store's partitions, with its own lease and standby. Raised, never lowered, in `ha`, and for the lake wherever its write-ahead stream runs |
+| `lake.maxWriterGroups`, `bor.maxWriterGroups` | `2` | The most writer groups, 1 to 64. The database's connections are counted for them, so raising it restarts the database once |
+| `bor.partitions` | `1` | The book's partitions, 1 to 64, new accounts placed over them. Lowering it is refused while a partition past the new count holds accounts |
+| `lake.databases`, `bor.databases` | `1` | Databases the writer groups spread over. The chart brings one more for each past the first where it brought the first |
+| `<store>.database.groupSecrets` | `[]` | For a database somebody else runs: a Secret for each database past the first, in order |
+| `moves.holdSeconds` | `5` | How long a move holds writes to its partition at the switch, never past the caller's deadline |
+| `moves.switchSeconds` | `30` | How long a move's target has to catch up, and its switch to finish, before the move is left undone |
+| `pluginStorage.shared.storageClassName` | `""` | A ReadWriteMany storage class the pods of a plugin instance [share its storage through](../how-to/run-a-plugin-as-shards-or-with-a-standby.md#its-storage) on several nodes |
+| `pluginStorage.shared.size` | `10Gi` | That shared storage, per instance |
+| `sidecar.limits.writeMiBPerSecond` | `8` | A data plugin's share of the lake's writes, in MiB a second; past it the sidecar holds its writes' answers, then refuses with a retry-after |
 
 ### The hot layer { #the-hot-layer }
 

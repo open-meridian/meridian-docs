@@ -147,10 +147,17 @@ refused naming the row and the field. Each row carries:
 - the **raw record** it was converted from, which only that plugin can
   follow.
 
-The lake decides when it recorded the row, its sequence in the dataset and
-its **version**. The same row key with the same values changes nothing,
-compared by decimal value: 764.2 is 764.20. A changed value is the next
-version, and the earlier one is kept. That is how a day still forming is
+The lake decides when it recorded the row, its sequence in the dataset (in
+its range, once a deployment admin has
+[split](../how-to/scale-out-the-lake-and-the-book.md#to-split-a-lake-range)
+the dataset) and its **version**. The same row key with the same values
+changes nothing, compared by decimal value: 764.2 is 764.20. A changed value
+is the next version, and the earlier one is kept.
+
+A row key fixes its first subject and its valid time. A restatement that
+changes either is refused, naming the field, and the rest of the write
+stands: record the correction under a new row key, as a consolidated feed
+publishes a corrected trade beside the one it cancels. That is how a day still forming is
 recorded: its close restated as it fills, under one row key, until it is
 final.
 
@@ -285,7 +292,9 @@ A data plugin holds nothing it cannot lose, and has no way to read the
 standing wants back. So the lake delivers each standing want still asked
 for again once a minute, the same want under the same ID: a data plugin
 already holding it hears what it holds, and one relaunched or upgraded
-resumes its stream within about a minute.
+resumes its stream within about a minute. A pod that takes over a shard
+of a plugin is not left to wait for the minute: the lake delivers the
+instance's open standing wants again as soon as it has recorded the take.
 
 **The gap is filled from the venue's history.** Within a running plugin, a
 dropped connection is refilled from the venue's history, from the last trade

@@ -147,6 +147,8 @@ The plugin's process, until it is stopped. `run_async` takes the same arguments 
 5. serves `pages` on `port`, reports the plugin healthy, and reads `figures` on every heartbeat;
 6. when stopped, cancels the runs, calls each `on_stop` and leaves.
 
+**When its sidecar is lost** after it registered, it stops the classes as a stop does (`on_stop`, their `run`s cancelled) and waits in the same process for the sidecar to register it again, then starts them afresh; it never exits for a lost sidecar, and the pod is not ready while it waits. A standby pod's plugin waits the same way at its start: its sidecar registers it only once it holds a shard's lease, so its classes start then. Added in SDK 0.37.0.
+
 A plugin holding no role passes `roles=[]`. State the classes share is passed to each: `roles=[Lake(state), Trading(state)]`.
 
 ## `meridian.connect` { #connect }
@@ -714,6 +716,19 @@ For each kind, `connect` declares two settings beside the plugin's own, the same
 
 The names are the SDK's: a plugin declaring a setting of either name for a kind it declares is refused by the SDK, by the sidecar at registration, and by `meridian plugin check` ([`window-settings`](cli.md#the-rules)). Read them from [`settings()`](#settings) as delivered. The deployment refuses a save setting a window below the hold over the instance, naming the setting, and `archived` for a kind not archivable or an instance allowed no archive.
 
+### `edge.storage_dir()` and `edge.instance_storage_dir()` { #instance_storage_dir }
+
+```python
+def storage_dir() -> Path | None
+def instance_storage_dir() -> Path | None
+```
+
+In `meridian.edge`. The storage the deployment grants the instance for its raw records, or `None` where it grants none (a test, a plugin holding no edge role). For an instance of one pod, the two are the same.
+
+An instance running as shards or with a standby pod shares one storage among its pods, a folder per shard. Once the plugin has registered as a shard, `storage_dir()` is its own shard's folder, `<storage>/shard-<n>`, the only place it writes, and `instance_storage_dir()` is the whole, every shard's folder, which any pod reads. Before it registers, no shard is known and `storage_dir()` is the whole.
+
+A key names a record across the instance: `plugin.raw_record(key)` prefixes a key in the shard's folder with `shard-<n>/`, as `RawStore` does, and the archive keeps its objects under the same prefix. A key with no prefix names what the instance kept before it ran as shards, which the copy put under `shard-0/`. Each shard keeps its own index of what moved; `find_record` reads the index of the shard a key names, whichever pod wrote it. A restore or a deletion of another shard's unit is refused, `the unit <unit> is shard <m>'s: its own pod restores it`. Added in SDK 0.37.0.
+
 ### `edge.archive_dir()` { #archive_dir }
 
 ```python
@@ -874,7 +889,7 @@ DECLARATION = Declaration(
 
 The catalogue declares no licence: `DatasetLicence` and `DataEligibility` left the SDK in 0.36.0, and `meridian plugin migrate` writes a `licence_default` as `terms_and_pricing` (see [0.35.5 to 0.36.0](#0355-to-0360)). A dataset nobody has licensed is kept and read, each use right read restrictively, until a deployment admin licenses it.
 
-**Shards.** `Declaration(most_shards=...)`, 0 to 64, is the most pods of one instance its vendor allows; 0 or 1 says it is not shardable. A deployment admin may launch the instance with up to that many shards; the deployment keeps them on the launch, and the plugin runs one pod today (see [Its limits, shards and standby pod](../concepts/plugins.md#its-limits-shards-and-standby-pod)). Added in SDK 0.36.0.
+**Shards.** `Declaration(most_shards=...)`, 0 to 64, is the most pods of one instance its vendor allows; 0 or 1 says it is not shardable. A deployment admin may launch the instance with up to that many shards, each a pod serving its share of the subjects, which its sidecar hands it with no code of its own (see [Run a plugin as shards or with a standby pod](../how-to/run-a-plugin-as-shards-or-with-a-standby.md)). Added in SDK 0.36.0.
 
 **Raises** `ValueError` when the declaration is built, naming the dataset: a key out of form, a vendor or aggregator too long, a data type or field no dictionary entry names, one named twice, no mode or a mode twice, a negative cadence or history, a zone that is no IANA zone, a day end out of range, a venue that is no `VEN-` ID, a calendar that is no `CAL-` ID, terms and pricing past 2,000 characters, a `gap_recovery` that is none of its three words, `most_shards` outside 0 to 64, and a catalogue on a version not holding `data`. The upload's JSON carries the catalogue only where one is declared, its modes as words. The sidecar holds a catalogue to the same rules at registration, and refuses the plugin naming the field.
 
@@ -2334,7 +2349,7 @@ The sidecar's status is mapped onto these for typed operations:
 | Variable | Read by | Meaning |
 |---|---|---|
 | `MERIDIAN_SIDECAR_ADDRESS` | `connect` | The sidecar's address, when `address` is not given. |
-| `MERIDIAN_STORAGE_DIR` | `edge.storage_dir()` | Where the deployment mounted the instance's own storage, for a plugin holding an edge role. Unset where none is granted. |
+| `MERIDIAN_STORAGE_DIR` | `edge.storage_dir()`, `edge.instance_storage_dir()` | Where the deployment mounted the instance's own storage, for a plugin holding an edge role; for an instance of several pods, the storage they share, a folder per shard. Unset where none is granted. |
 | `MERIDIAN_ARCHIVE_DIR` | `edge.archive_dir()`, the archive's helpers | Where the instance's archive is mounted, beside its storage, once a deployment admin allows it one. Unset where none is allowed. See [The archive](#the-archive). |
 | `MERIDIAN_ARCHIVE_BUCKET` | the archive's helpers | In a cloud, the instance's own prefix of the deployment's bucket, in place of `MERIDIAN_ARCHIVE_DIR`, an `s3://` URL, read through `boto3`. |
 | `MERIDIAN_ARCHIVE_MOST_BYTES` | `archive_unit()` | The archive's bound in bytes, as a deployment admin set it. Unset, or 0, for none. A value that is not a whole number of bytes is refused. |

@@ -166,6 +166,8 @@ nav:
       - how-to/index.md
       - Run a deployment:
           - Upgrade a deployment: how-to/upgrade-a-deployment.md
+          - Scale out the lake and the book: how-to/scale-out-the-lake-and-the-book.md
+          - Run a plugin as shards or with a standby pod: how-to/run-a-plugin-as-shards-or-with-a-standby.md
           - Back up and restore a deployment: how-to/back-up-and-restore.md
           - Review provisional records and the migration: how-to/review-provisional-records.md
           - Keep older records in the archive: how-to/keep-older-records-in-the-archive.md

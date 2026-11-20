@@ -141,6 +141,9 @@ naming the field.
 | [`dashboard__list_dataset_gaps`](#dashboard__list_dataset_gaps) | reads | The deployment admin |
 | [`dashboard__read_resilience_profile`](#dashboard__read_resilience_profile) | reads | The deployment admin |
 | [`dashboard__read_resilience`](#dashboard__read_resilience) | reads | The deployment admin |
+| [`dashboard__move_partition`](#dashboard__move_partition) | acts | The deployment admin |
+| [`dashboard__move_account`](#dashboard__move_account) | acts | The deployment admin |
+| [`dashboard__split_partition`](#dashboard__split_partition) | acts | The deployment admin |
 | [`dashboard__read_linkable_accounts`](#dashboard__read_linkable_accounts) | reads | An admin of any of the plugin's roles, or the deployment admin |
 | [`dashboard__prepare_call`](#dashboard__prepare_call) | acts | Anyone whose delegation may make the act named, or holds it on a Prepare only row, where agents may make or prepare it |
 | [`dashboard__list_prepared`](#dashboard__list_prepared) | reads | The delegation's own |
@@ -428,11 +431,13 @@ a development deployment; `note`; and, each optional:
 | Argument | What it takes |
 |---|---|
 | `limits` | The instance's own limits at its sidecar, the sheet's **Limits at its sidecar**, each a whole number above 0 and each left out for the deployment's `sidecar.limits`: `in_flight`, the most requests it has in flight at once; `requests_per_second`, the most a second, with a second's burst; `answer_mib`, the MiB of answers held or paged in flight for it. |
-| `shards` | The pods of the one instance sharing its subjects, at most the version's `most_shards`; 0 or 1 is one pod. |
-| `standby` | `true` for a standby pod, which takes over when the instance's pod stops. |
+| `shards` | The pods of the one instance sharing its subjects, at most the version's `most_shards`; 0 or 1 is one pod. Past 1, for a `data` plugin. |
+| `standby` | `true` for a standby pod, which takes over a shard whose pod is lost. |
 
-The deployment keeps `shards` and `standby` on the launch, and the plugin
-runs one pod today.
+Shards and a standby pod run where the deployment's stores run standbys
+(see [Run a plugin as shards or with a standby pod](../how-to/run-a-plugin-as-shards-or-with-a-standby.md));
+elsewhere a launch asking for either is refused, saying so, as is one for a
+plugin that keeps storage on several nodes with no shared storage class.
 
 **Answer:** `made`, the launch, with its `limits`. Roles other than the
 version's own are refused, as are a version not in the catalogue and `live`
@@ -441,7 +446,8 @@ instance (a component's, or the runtime's), and an instance ID a stopped
 launch used for a different plugin. A limit that is not a whole number
 above 0 is refused naming it (`limits.answer_mib`), as is an answer budget
 that would leave the sidecar nothing of its own; shards past the version's
-`most_shards` are refused naming `shards`.
+`most_shards` are refused naming `shards`, as are more shards than the
+instance's `in_flight` or `answer_mib`, which would leave a shard none.
 
 ### `dashboard__stop_plugin`
 
@@ -821,9 +827,12 @@ inside a gap are not invented. Never a price.
 
 The dashboard's **Resilience** page, under **Deployment** on the settings'
 sidebar, at the deployment admin's level: what the deployment's
-configuration survives, and its members, partitions and history. See
-[Read your profile](../concepts/service-levels.md#read-your-profile).
-Neither tool changes anything.
+configuration survives, and its members, partitions and history; and
+moving a partition or an account, and splitting a lake range. See
+[Read your profile](../concepts/service-levels.md#read-your-profile) and
+[Scale out the lake and the book](../how-to/scale-out-the-lake-and-the-book.md).
+The two reads change nothing. Each act carries a note saying why, kept as
+its record's reason, and can be prepared.
 
 ### `dashboard__read_resilience_profile`
 
@@ -841,7 +850,12 @@ bound, or `not_met`), its `reason`, and for one not met the `changes` that
 would meet it (a chart value and its value, nodes or zones to add, a
 standby) with their cost; `never_blind`, per live data type, whether a
 second source stands in its priority, whether its sources run standby
-pods, and whether its pages show age and source; and `computed_at_ns`. A
+pods, and whether its pages show age and source; `advice`, lines in the
+failures' shape on the lake's and the book's writer groups and partitions
+(a store with no more partitions than writer groups; a writer group whose
+commit lane was busy past 70% of a minute at its busiest in the last 15
+minutes, or that refused work as overloaded), each with the change it
+names; and `computed_at_ns`. A
 class or tier is met only where CI tests that configuration. A change it
 names is made by `meridian upgrade-deployment --set`, or at Plugins and
 Data sources.
@@ -856,11 +870,82 @@ page before, for the history.
 **Answer:** `members`, each member of each component as it reported last:
 its mode (`writer`, `standby` or `reader`), zone, lag behind its writer in
 milliseconds, partitions and restarts; `partitions`, each partition of the
-lake and the book with its writer and the epoch it writes under; and
-`history`, a page of it newest first: each takeover of a writer, each
-finding of the stores' scrub and each switch of a default read's source,
-with `next_cursor`. The book's own takeovers and scrub findings are not
-among them.
+lake and the book with its writer group, its writer and the epoch it writes
+under; and `history`, a page of it newest first, with `next_cursor`: each
+takeover of a writer, the book's among them; each plugin shard taken over,
+with its instance, shard, holder and epoch; each partition moved, account
+moved, range split and move not switched, with its cause (`lag`, `timeout`
+or `digest`); each finding of the stores' scrub; and each switch of a
+default read's source.
+
+### `dashboard__move_partition`
+
+The **Partitions** tab's **Move**.
+
+**Input:**
+
+| Argument | What it takes |
+|---|---|
+| `partition` | Required: a lake range, its dataset's ID or `<dataset>/<lo>-<hi>` once split; or a book partition, `P0`, `P1` and on. |
+| `target_group` | Required: the writer group to move it to, numbered from 0. |
+| `note` | Required: why, at most 2,000 characters, kept as the move's reason. |
+
+**Answer:** the move begun: `partition`, `from_group` and `started_at_ns`.
+The target follows the partition's log, copying it first where its group
+writes another database, and switches once within the store's
+`readyLagMs`: writes to the partition are held for at most
+`moves.holdSeconds`, never past the caller's deadline, and answered
+`OVERLOADED` with a retry-after past either; the source closes, the digests
+are compared, the epoch is raised and the target owns. Its record,
+`PartitionMoved`, or `PartitionMoveAborted` with its cause (`lag`,
+`timeout` or `digest`) and the source still owning, is in
+[`dashboard__read_resilience`](#dashboard__read_resilience)'s history.
+Refused naming `partition` for `control`, an account (see
+[`dashboard__move_account`](#dashboard__move_account)), a partition the
+store does not have, and one with a move or split under way; naming
+`target_group` for the group that owns it and one the deployment does not
+run.
+
+### `dashboard__move_account`
+
+The **Partitions** tab's **Move account**.
+
+**Input:**
+
+| Argument | What it takes |
+|---|---|
+| `account_id` | Required: the account. |
+| `target_partition` | Required: the book partition it continues in, `P0`, `P1` and on. |
+| `note` | Required: why, at most 2,000 characters, kept as the move's reason. |
+
+**Answer:** the move as recorded: `account_id`, `from_partition` and its
+`closing_sequence`, `to_partition` and its `opening_sequence`, `moved_by`,
+`reason` and `moved_at_ns`. Its positions, lots and orders read the same
+before and after; acts on it wait while it is between the two. A move that
+does not switch for `lag` or `timeout` is refused `OVERLOADED` with a
+retry-after, and one for `digest` `FAILED_PRECONDITION` naming
+`account_id`; either may be asked again. Refused naming `target_partition`
+for its own partition and one the book does not have, and naming
+`account_id` for one the book does not hold or one with a move under way.
+
+### `dashboard__split_partition`
+
+The **Partitions** tab's **Split**, on a lake range.
+
+**Input:**
+
+| Argument | What it takes |
+|---|---|
+| `partition` | Required: the range, its dataset's ID or `<dataset>/<lo>-<hi>` once split. |
+| `note` | Required: why, at most 2,000 characters, kept as the split's reason. |
+
+**Answer:** the split as recorded: `parent`, its two `children`, the
+`closing_sequence` it closed at, `split_by`, `reason` and `split_at_ns`.
+The range halves at its midpoint in one commit of its writer, its halves
+numbered on from where it closed and staying with its writer group; nothing
+is copied. Refused naming `partition` for `control`, a book partition, a
+range the lake does not have open, a range of one hash value, and one with
+a move or split under way.
 
 ## The lake's bounded query
 

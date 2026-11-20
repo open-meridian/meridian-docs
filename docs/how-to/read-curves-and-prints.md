@@ -2,7 +2,7 @@
 
 Record government curves, inflation indexes, municipal and corporate bond
 prints and bond quotes in your deployment's lake, from Terrapin and
-OpenYield. You need chart 0.1.538 and CLI 0.1.60.
+OpenYield. You need chart 0.1.632 and CLI 0.1.61.
 
 | Plugin | Datasets | What they hold |
 |---|---|---|
