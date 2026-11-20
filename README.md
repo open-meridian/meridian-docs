@@ -49,10 +49,11 @@ and splits online, the resilience profile's advice, plugins run as shards or
 with a standby pod and the storage they share, and what a failover looks
 like. CLI 0.1.61 (`meridian partition split`, `partition move` and `account
 move`; `upgrade-deployment` checking the counts from what runs; `up
---shared-storage-class`; new plugins on SDK 0.35.0). SDK 0.37.0 (storage per
+--shared-storage-class`; new plugins on SDK 0.35.0). SDK 0.37.1 (storage per
 shard, `meridian.run` waiting for a lost sidecar in the same process, a
 placement sent at most once across a takeover, a charge reported under its
-key, `meridian-storage`), with kit 0.16.0 and `boundaries/` vendored from
+key, `meridian-storage`, and a raw record kept from two threads at once
+waiting its turn), with kit 0.16.0 and `boundaries/` vendored from
 meridian-schema 9f396f9 (contract 30). The plugins are as the Integrations
 page lists them (integrations/released.json). What each SDK release added is
 in the Python SDK page's release notes.

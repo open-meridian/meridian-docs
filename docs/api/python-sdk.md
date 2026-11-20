@@ -16,7 +16,7 @@ such as Homebrew's on macOS (`externally-managed-environment`).
 |---|---|
 | PyPI name | `open-meridian` |
 | Import name | `meridian` |
-| Version | 0.37.0 |
+| Version | 0.37.1 |
 | Python | 3.11 or newer |
 | Dependencies | `grpcio>=1.68,<2`, `protobuf>=5.28,<7`, `jinja2>=3.1,<4` (for [pages](#pages)) |
 | Licence | Apache-2.0 |
@@ -24,7 +24,7 @@ such as Homebrew's on macOS (`externally-managed-environment`).
 !!! warning "Not `meridian-sdk`"
     The PyPI package `meridian-sdk` belongs to an unrelated company. Don't install it.
 
-A plugin pins the SDK exactly, `open-meridian==0.37.0`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the interface, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.37.0`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls (see [Moving a plugin to a new release](#moving-a-plugin-to-a-new-release)). CLI 0.1.61's `meridian plugin new` writes a plugin pinned to 0.35.0; `meridian plugin migrate` moves it to 0.37.0, which runs on chart 0.1.632.
+A plugin pins the SDK exactly, `open-meridian==0.37.1`, in its `pyproject.toml`. The sidecar it runs beside speaks one version of the interface, and a version range would let a rebuild pick up another. Its `Dockerfile` builds on the base image for the same version, `ghcr.io/open-meridian/plugin-python:0.37.1`, so move the two together: [`meridian plugin migrate`](cli.md#plugin-migrate) moves both, and rewrites the plugin's code where a release changed what it calls (see [Moving a plugin to a new release](#moving-a-plugin-to-a-new-release)). CLI 0.1.61's `meridian plugin new` writes a plugin pinned to 0.35.0; `meridian plugin migrate` moves it to 0.37.1, which runs on chart 0.1.632.
 
 | Optional extra | Installs | For |
 |---|---|---|
@@ -729,7 +729,9 @@ An instance running as shards or with a standby pod shares one storage among its
 
 A key names a record across the instance: `plugin.raw_record(key)` prefixes a key in the shard's folder with `shard-<n>/`, as `RawStore` does, and the archive keeps its objects under the same prefix. A key with no prefix names what the instance kept before it ran as shards, which the copy put under `shard-0/`. Each shard keeps its own index of what moved; `find_record` reads the index of the shard a key names, whichever pod wrote it. A restore or a deletion of another shard's unit is refused, `the unit <unit> is shard <m>'s: its own pod restores it`. Added in SDK 0.37.0.
 
-**Two pods on one shard's folder.** Inside a takeover's lapse, the pod that lost its shard and the one that took it may both write the shard's folder. The SDK counts a live file's lines, and keeps the shard's index of what moved, under file locks, so the storage the pods share must support locks across them, as NFSv4 does. A move waits for another's lock at most 30 seconds, then raises `TimeoutError` and the unit stays for the next pass; `keep_line` waits at most two seconds, then raises `TimeoutError`, nothing written. One `Plugin` per process keeps raw records: connecting a second that declares storage while the first is registered raises `RuntimeError`. Make the moves from the loop the plugin registered on, and use a `RawStore` from one thread at a time: a second thread's `keep_line` while one is in it raises `RuntimeError`. Added in SDK 0.37.0.
+**Two pods on one shard's folder.** Inside a takeover's lapse, the pod that lost its shard and the one that took it may both write the shard's folder. The SDK counts a live file's lines, and keeps the shard's index of what moved, under file locks, so the storage the pods share must support locks across them, as NFSv4 does. A move waits for another's lock at most 30 seconds, then raises `TimeoutError` and the unit stays for the next pass; `keep_line` waits at most two seconds, then raises `TimeoutError`, nothing written. One `Plugin` per process keeps raw records: connecting a second that declares storage while the first is registered raises `RuntimeError`. Make the moves from the loop the plugin registered on: they are not thread-safe. Added in SDK 0.37.0.
+
+**Records kept from several threads.** A `RawStore` keeps records from several threads, such as a market's REST answer kept on a worker thread while a stream message is kept on the loop. A `keep_line`, `keep` or `tend` while another thread is in `keep_line` waits its turn. The wait for the other thread and the wait for another pod's lock share the two seconds; past them it raises `TimeoutError`, and nothing is written or moved. `keep`, `tend` and `get` never close a file another thread is writing. Changed in SDK 0.37.1.
 
 **The copy into `shard-0/`.** Before an instance that kept its own storage first runs as several pods, the deployment copies that storage into the shared one's `shard-0/`, with a pod running the plugin's own image as the plugin's own user, and the instance's pods wait for the copy before the plugin starts. Both run the SDK's command `meridian-storage` (`meridian-storage copy <claim>` and `meridian-storage copied <claim>`), on the base image's `PATH`. The plugin does nothing for either; an image built on another base installs the SDK as a package, so the command is on its `PATH`. Added in SDK 0.37.0.
 
@@ -1793,7 +1795,7 @@ class Pages(title: str = "", *, templates: str | os.PathLike | None = None, kit:
 |---|---|
 | `title` | The heading the base template draws, and the end of each page's `<title>`. |
 | `templates` | The directory `render` reads templates from. A directory that does not exist raises `FileNotFoundError`. |
-| `kit` | The kit version the base template links, at `/.meridian/ui/<kit>/`: `pages.KIT`, 0.16.0 in SDK 0.37.0, whose `<om-live cells>` draws [live values](#live-values). The dashboard answers any 0.x with the newest 0.x it carries. |
+| `kit` | The kit version the base template links, at `/.meridian/ui/<kit>/`: `pages.KIT`, 0.16.0 in SDK 0.37.1, whose `<om-live cells>` draws [live values](#live-values). The dashboard answers any 0.x with the newest 0.x it carries. |
 | `max_body` | The largest request body, in bytes, the pages take: `meridian.pages.MAX_BODY`, 1 MiB, unless said. A larger one is answered 413 before any view runs, so a view need not measure what it is sent. A negative number, or anything but an `int`, raises `ValueError`. |
 
 | Member | Meaning |
@@ -2144,7 +2146,7 @@ What every plugin of a role must do the same way to fulfil its typed operations 
 
 Where a feed's method had an act's name it is renamed: a pairs feed's `record_trades_of` and `record_quotes_of`, an event-contract feed's `record_outcomes_of` and `record_bars_of`, a listings feed's `seed_symbols`. What faces a vendor, its transport, its pacing, its `Retry-After` and its allowance, stays the plugin's: the data template's `stream.py` and `pacing.py` show one way.
 
-The SDK's `templates/` holds a role template for `connectivity`, `custody`, `data`, `operations`, `pricing` and `reporting`. CLI 0.1.61 writes each, on SDK 0.35.0: `meridian plugin new <name> --role <role>`, then [`meridian plugin migrate`](cli.md#plugin-migrate) to move it to 0.37.0.
+The SDK's `templates/` holds a role template for `connectivity`, `custody`, `data`, `operations`, `pricing` and `reporting`. CLI 0.1.61 writes each, on SDK 0.35.0: `meridian plugin new <name> --role <role>`, then [`meridian plugin migrate`](cli.md#plugin-migrate) to move it to 0.37.1.
 
 ## Helpers { #helpers }
 
@@ -2371,6 +2373,18 @@ The package installs one command, `meridian-dev run`. On a development deploymen
 ## Release notes { #release-notes }
 
 Each release of the SDK, the interface version it declares, the runtime it needs, and the CLI whose `plugin new` writes a plugin on it. What a plugin's author does to move to it is in [Moving a plugin to a new release](#moving-a-plugin-to-a-new-release).
+
+!!! note "0.37.1: a fix"
+    open-meridian 0.37.1 is a fix: a raw record kept from two threads at
+    once waits its turn, so no stream message is dropped. 0.37.0 refused a
+    second thread's `RawStore.keep_line` at once, and the message was lost.
+    A `keep_line`, `keep` or `tend` while another thread is in `keep_line`
+    now waits, the wait for the thread and for another pod's lock sharing
+    two seconds, then raises `TimeoutError` with nothing written; `keep`,
+    `tend` and `get` never close a file another thread is writing (see
+    [`edge.storage_dir()`](#instance_storage_dir)). Nothing a plugin calls
+    changed: `meridian plugin migrate` moves only the pins. Base image
+    `ghcr.io/open-meridian/plugin-python:0.37.1`; chart 0.1.632.
 
 !!! note "0.37.0: breaking"
     open-meridian 0.37.0 keeps interface version `"v30"` and runs a plugin
@@ -2957,6 +2971,7 @@ Move a plugin one release at a time or several at once: [`meridian plugin migrat
 
 | From | To | Contract | Runtime | `plugin new` writes it from | `plugin migrate` rewrites | Then by hand |
 |---|---|---|---|---|---|---|
+| 0.37.0 | 0.37.1 | 30 | chart 0.1.632 | none: CLI 0.1.61 writes 0.35.0 | nothing: only the pins move | nothing; by behaviour, a raw record kept from two threads at once waits its turn |
 | 0.36.3 | 0.37.0 | 30 | chart 0.1.632 | none: CLI 0.1.61 writes 0.35.0 | the connectivity template's trading files, read by the `Trader` on start | `edge.storage_dir()` read before the plugin registers, moved to a class's `on_start`; a `Sent`'s file read whole; see [0.36.3 to 0.37.0](#0363-to-0370) |
 | 0.36.2 | 0.36.3 | 30 | chart 0.1.538 | none: CLI 0.1.60 writes 0.35.0 | nothing: only the pins move | a chain's series built by the plugin itself held with `option_chains.SeriesTimes` (`series-without-a-holder`) |
 | 0.36.1 | 0.36.2 | 30 | chart 0.1.538 | none: CLI 0.1.60 writes 0.35.0 | nothing: only the pins move | a row's `valid_from_ns` taken from the plugin's clock: each record of a key given one valid time (`valid-time-from-the-clock`) |

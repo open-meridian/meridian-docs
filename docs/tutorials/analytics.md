@@ -6,7 +6,7 @@ risk page that asks the deployment's analytics engine for its figures, works
 them out when the book changes or on a cadence, keeps the answer per key, and
 serves every request from what it holds.
 
-You need SDK 0.37.0, CLI 0.1.61 and a deployment on chart 0.1.632.
+You need SDK 0.37.1, CLI 0.1.61 and a deployment on chart 0.1.632.
 
 ## 1. Use the engine's measures
 
