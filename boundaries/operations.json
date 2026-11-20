@@ -12434,6 +12434,14 @@
           "required": false,
           "required_unless": "",
           "bounds": {}
+        },
+        {
+          "name": "idempotency_key",
+          "type": "string",
+          "repeated": false,
+          "required": false,
+          "required_unless": "",
+          "bounds": {}
         }
       ],
       "result": "meridian.v1.FactReply",
