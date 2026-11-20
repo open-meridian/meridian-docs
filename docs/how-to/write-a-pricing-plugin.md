@@ -13,7 +13,7 @@ page starts one from the template and holds it to the suite.
 You need CLI 0.1.60 and SDK 0.36.0 or later: `meridian plugin
 new --role pricing` writes this template on the role's common part, on SDK
 0.35.0, for a runtime on chart 0.1.408 or later; `meridian plugin migrate` moves it
-to 0.36.0.
+to 0.37.0.
 
 ## Make the plugin
 

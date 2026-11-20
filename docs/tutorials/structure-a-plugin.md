@@ -8,7 +8,7 @@ closes.
 
 You need SDK 0.36.0, CLI 0.1.60 and a deployment on chart 0.1.538. Start from
 `meridian plugin new my-closes --role data`, then `meridian plugin migrate`
-to move it to 0.36.0.
+to move it to 0.37.0.
 
 ## 1. One class per role
 

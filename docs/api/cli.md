@@ -719,7 +719,7 @@ meridian plugin new <name> [--into <dir>] [--role connectivity|custody|data|oper
     CLI 0.1.61 writes SDK 0.35.0's templates: each role the plugin holds is
     one class, `meridian.roles.<role>.Role`, and the plugin enters through
     `meridian.run(declaration=..., roles=[...], ...)` with its classes
-    registered there. Move a new plugin to SDK 0.36.0 with
+    registered there. Move a new plugin to SDK 0.37.0 with
     [`meridian plugin migrate`](#plugin-migrate). Every template carries a
     `docs/` folder, its whole declaration named in `[tool.meridian]`, and a
     CI workflow checking with the `meridian` release that wrote it

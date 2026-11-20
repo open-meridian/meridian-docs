@@ -36,7 +36,7 @@ cd my-desk
 ```
 
 It writes the plugin on open-meridian 0.35.0. It, and a plugin an older CLI wrote,
-moves to 0.36.0 with [`meridian plugin migrate`](../api/cli.md#plugin-migrate), which
+moves to 0.37.0 with [`meridian plugin migrate`](../api/cli.md#plugin-migrate), which
 works only on what git holds: commit it first. Then, in `pyproject.toml`:
 
 ```toml

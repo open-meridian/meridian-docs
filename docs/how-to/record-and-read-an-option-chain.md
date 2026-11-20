@@ -8,7 +8,7 @@ is in [Listed options and futures](../concepts/listed-options-and-futures.md).
 You need SDK 0.36.0 or later, CLI 0.1.60, and a deployment
 (chart 0.1.538) whose platform publishes the `TPL-listed-option`
 template. `meridian plugin new` on CLI 0.1.60 writes a plugin on 0.35.0, which
-`meridian plugin migrate` moves to 0.36.0.
+`meridian plugin migrate` moves to 0.37.0.
 
 ## In a data plugin: record the chain
 

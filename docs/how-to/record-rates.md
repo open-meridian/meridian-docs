@@ -10,7 +10,7 @@ adds what is different for rates.
 
 You need SDK 0.36.0 and a deployment on chart 0.1.538, which reads a
 dataset's terms and pricing. `meridian plugin new` on CLI 0.1.60 writes a
-plugin on SDK 0.35.0, which `meridian plugin migrate` moves to 0.36.0.
+plugin on SDK 0.35.0, which `meridian plugin migrate` moves to 0.37.0.
 
 ## Declare the dataset
 
