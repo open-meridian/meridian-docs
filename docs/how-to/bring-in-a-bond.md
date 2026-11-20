@@ -2,7 +2,7 @@
 
 Make a record for a bond or a CD in your deployment's instrument master, and
 complete its terms from a reference data plugin, Terrapin or 9fin, which
-offers them. You need chart 0.1.538 and CLI 0.1.60.
+offers them. You need chart 0.1.632 and CLI 0.1.61.
 
 ## 1. Bring it in
 
