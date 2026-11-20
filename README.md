@@ -53,7 +53,7 @@ move`; `upgrade-deployment` checking the counts from what runs; `up
 shard, `meridian.run` waiting for a lost sidecar in the same process, a
 placement sent at most once across a takeover, a charge reported under its
 key, `meridian-storage`), with kit 0.16.0 and `boundaries/` vendored from
-meridian-schema 978c758 (contract 30). The plugins are as the Integrations
+meridian-schema 9f396f9 (contract 30). The plugins are as the Integrations
 page lists them (integrations/released.json). What each SDK release added is
 in the Python SDK page's release notes.
 The tutorials were walked on CLI 0.1.36 and SDK 0.21.0. A page describes
