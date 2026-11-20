@@ -3,7 +3,7 @@
 Put crypto pairs' closes, live prices, quotes and trades into your
 deployment's lake from Coinbase or Kraken, and read them from any plugin
 entitled to them. You need chart
-0.1.538 and CLI 0.1.60.
+0.1.632 and CLI 0.1.61.
 
 ## Coinbase and Kraken
 

@@ -37,9 +37,9 @@ backups set up. See [Back up and restore a deployment](back-up-and-restore.md). 
 changes on the way, release by release, is in the
 [release notes](../api/python-sdk.md#release-notes).
 
-!!! note "Upgrading to chart 0.1.538"
+!!! note "Upgrading to chart 0.1.632"
     Chart releases are numbered by the CI run that tested them, so the
-    numbers jump; 0.1.538 is the current one. Upgrading to it keeps the
+    numbers jump; 0.1.632 is the current one. Upgrading to it keeps the
     counts a deployment runs: `resilience.profile` stays as it was, and TLS
     inside the cluster and the WAL archive stay off until you turn them on
     (below, and

@@ -12,7 +12,7 @@ It works on any deployment. For the faster loop where each save runs at once, se
 
 - A deployment you installed with [Install a deployment](installation.md).
 - You hold **deployment admin** on it. Only a deployment admin brings plugins in.
-- The `meridian` CLI 0.1.60 (`meridian --version`; update with `meridian upgrade`). Its
+- The `meridian` CLI 0.1.61 (`meridian --version`; update with `meridian upgrade`). Its
   `plugin new` writes a plugin on SDK 0.35.0, which runs on chart 0.1.408 or later. `meridian plugin migrate` moves it to SDK 0.36.0, the latest, which needs chart 0.1.538.
 - Docker on this machine. `meridian plugin upload` builds the plugin's image here, from its own
   `Dockerfile`.

@@ -3,7 +3,7 @@
 A deployment can run on a laptop or across a cluster's zones, and the
 failures it rides out grow with where it runs. This page names four levels,
 each by where a deployment runs, says what each needs and the chart values
-that reach it, as chart 0.1.NNN delivers them.
+that reach it, as chart 0.1.632 delivers them.
 
 It states tested behaviour only. It is no service agreement, no uptime
 figure and no claim of readiness for any regulation. Recovery times are
