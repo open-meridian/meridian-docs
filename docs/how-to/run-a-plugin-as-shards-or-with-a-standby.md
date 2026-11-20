@@ -177,7 +177,7 @@ or with a standby pod, naming each. Launch them as one pod first.
 
 ## If you write the plugin
 
-- **Build it on SDK 0.37.0 or later.** An earlier plugin gives up on a
+- **Build it on SDK 0.37.1 or later.** An earlier plugin gives up on a
   sidecar that does not answer within its wait, as a standby's does not
   until it takes a lease, and is never registered again after its sidecar
   restarts on its own. `meridian plugin migrate` moves it (see

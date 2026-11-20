@@ -6,7 +6,7 @@ refreshing. This tutorial builds an FX rates page on `Pages.live_values`:
 every value carries its source and its age, says when it is stale, counts
 staleness only while its market is open, and is never blank.
 
-You need SDK 0.37.0, CLI 0.1.61 and a deployment on chart 0.1.632. The base
+You need SDK 0.37.1, CLI 0.1.61 and a deployment on chart 0.1.632. The base
 template links kit 0.16.0, whose `<om-live cells>` draws the values.
 
 ## 1. The values, worked out from views

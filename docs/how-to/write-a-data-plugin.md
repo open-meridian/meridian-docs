@@ -8,9 +8,9 @@ plugins of a pair pass it unchanged. This page starts one from the template
 and holds it to the suite. How a person then uses it is
 [Using a data plugin](using-a-data-plugin.md).
 
-You need CLI 0.1.61 and SDK 0.37.0 or later: `meridian plugin new
+You need CLI 0.1.61 and SDK 0.37.1 or later: `meridian plugin new
 --role data` writes this template on the role's common part, on SDK 0.35.0,
-for a runtime on chart 0.1.408 or later. It, and a plugin made by an older CLI, moves to 0.37.0 with
+for a runtime on chart 0.1.408 or later. It, and a plugin made by an older CLI, moves to 0.37.1 with
 [`meridian plugin migrate`](../api/cli.md#plugin-migrate), then maps any new
 cases as [below](#hold-it-to-the-suite).
 
@@ -40,7 +40,7 @@ conversion, and the Datasets page fills its rows from what it kept
 `.event_contracts` do a venue's whole work for a venue listing pairs or
 binary event contracts, with their pages and the checks a plugin runs
 (`meridian.roles.data.testing`); a venue of event contracts also reports
-how it groups them by event (see [Event groups](../concepts/event-groups.md)). A plugin made by an older CLI moves to the latest SDK, 0.37.0, with
+how it groups them by event (see [Event groups](../concepts/event-groups.md)). A plugin made by an older CLI moves to the latest SDK, 0.37.1, with
 `meridian plugin migrate`; see
 [Each role's common logic](../api/python-sdk.md#each-roles-common-logic).
 

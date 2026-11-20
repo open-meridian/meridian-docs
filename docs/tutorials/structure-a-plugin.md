@@ -6,9 +6,9 @@ and secrets declared once, and tests that hold each class to its role's
 behaviour. It builds a small `data` plugin that serves a made-up venue's daily
 closes.
 
-You need SDK 0.37.0, CLI 0.1.61 and a deployment on chart 0.1.632. Start from
+You need SDK 0.37.1, CLI 0.1.61 and a deployment on chart 0.1.632. Start from
 `meridian plugin new my-closes --role data`, then `meridian plugin migrate`
-to move it to 0.37.0.
+to move it to 0.37.1.
 
 ## 1. One class per role
 
