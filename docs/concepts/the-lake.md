@@ -292,7 +292,9 @@ A data plugin holds nothing it cannot lose, and has no way to read the
 standing wants back. So the lake delivers each standing want still asked
 for again once a minute, the same want under the same ID: a data plugin
 already holding it hears what it holds, and one relaunched or upgraded
-resumes its stream within about a minute.
+resumes its stream within about a minute. A pod that takes over a shard
+of a plugin is not left to wait for the minute: the lake delivers the
+instance's open standing wants again as soon as it has recorded the take.
 
 **The gap is filled from the venue's history.** Within a running plugin, a
 dropped connection is refilled from the venue's history, from the last trade

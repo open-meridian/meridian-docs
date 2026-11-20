@@ -4,7 +4,7 @@
 
 Nothing in a cloud install depends on it. A marketplace listing's form and the deployment's own wizard are the whole path there; `meridian` makes the same things convenient from a terminal. Where it drives `helm` or `kubectl`, it drives your own, and what it tells you to run next is a `meridian` command, never `helm` or `kubectl`: you never run them yourself.
 
-This page describes release 0.1.60 of the command line. `meridian --version` says which one you have. For installing it, see [Install a deployment](../getting-started/installation.md).
+This page describes release 0.1.61 of the command line. `meridian --version` says which one you have. For installing it, see [Install a deployment](../getting-started/installation.md).
 
 ## Synopsis
 
@@ -276,6 +276,8 @@ It works in four steps, and stops at the step that fails.
     - `writerGroups` or `databases` changed in the same upgrade as the first start of a release that has them: upgrade first, then change the count;
     - an upgrade that leaves no store or conductor with a standby, such as `resilience.profile=tolerant`, while a plugin runs as shards or with a standby pod, naming each: their leases are taken under an account that upgrade removes. Launch them as one pod first.
 
+    It deletes the volumes the broker's JetStream servers left from an earlier time in the HA profile, where those servers no longer run, and waits up to a minute for them to go, so a move to `ha` starts JetStream afresh (added in CLI 0.1.61). It deletes no other volume. Where they cannot be listed or deleted and the upgrade gives the broker JetStream again, it stops: `Nothing else was changed.`
+
     The chart refuses, in its own words, `writerGroups` above `maxWriterGroups`, and a lower `writerGroups` where the store can only raise them: in the HA profile, and for the lake wherever its write-ahead stream runs.
 
     Where a probe cannot say what a partition holds, a lowering is refused and says it could not be read. A failed upgrade that raised writer groups says to fix the cause and run it again, never to roll back, which would lower them.
@@ -284,7 +286,7 @@ It works in four steps, and stops at the step that fails.
 
 3. **Apply and wait.** It runs `helm upgrade <release> <chart> --version <v> --namespace <ns> --reset-then-reuse-values --timeout <d>`, with `--force-conflicts` under Helm 4 and each `-f` and `--set` given, never `--wait`. Then it waits, up to `--timeout`, for the new revision's migration Job to complete, every Deployment and StatefulSet of the release to roll out, and every one of their pods to run the image its template names. It prints each thing it is waiting for once, when it first sees it.
 
-4. **Clean up and report.** It deletes the finished Jobs of this release from earlier revisions, found by the release's label, and nothing else. Old ReplicaSets are left to the chart's `revisionHistoryLimit`. It then prints the versions it moved between, each component's images and readiness, every container that restarted during the upgrade with the reason Kubernetes gives and the `meridian logs <component> --previous` that shows why, and what it cleaned up.
+4. **Clean up and report.** It deletes the finished Jobs of this release from earlier revisions, found by the release's label, and, where the upgrade left the HA profile, the volumes the broker's JetStream servers left behind, without waiting for them; nothing else (the JetStream volumes added in CLI 0.1.61). One it cannot delete is named, the upgrade itself done, and the next `meridian upgrade-deployment` deletes it before `ha` is taken again. Old ReplicaSets are left to the chart's `revisionHistoryLimit`. It then prints the versions it moved between, each component's images and readiness, every container that restarted during the upgrade with the reason Kubernetes gives and the `meridian logs <component> --previous` that shows why, and what it cleaned up.
 
     Last, it names each launched plugin still on a sidecar that is not the one the components now run, since a plugin keeps the sidecar it was launched with until it is relaunched, and each plugin whose pod started during the upgrade before the new launcher was ready, since the old launcher may have launched it. For each it prints `meridian plugin stop <instance>` and `meridian plugin launch <name> <version> --instance <instance>` (`meridian plugin dev --instance <instance>` for a live one). The name comes from the plugin's image; the version is left as `<version>`, which `meridian plugin list` gives. It relaunches nothing itself.
 
@@ -713,8 +715,8 @@ If the deployment can't be reached, the delegation is still forgotten here. It s
 meridian plugin new <name> [--into <dir>] [--role connectivity|custody|data|operations|pricing|reporting]
 ```
 
-!!! note "CLI 0.1.60"
-    CLI 0.1.60 writes SDK 0.35.0's templates: each role the plugin holds is
+!!! note "CLI 0.1.61"
+    CLI 0.1.61 writes SDK 0.35.0's templates: each role the plugin holds is
     one class, `meridian.roles.<role>.Role`, and the plugin enters through
     `meridian.run(declaration=..., roles=[...], ...)` with its classes
     registered there. Move a new plugin to SDK 0.36.0 with
@@ -750,8 +752,8 @@ Writes a working plugin to start from: the Python SDK's reference plugin, rename
 meridian plugin check [--dir <dir>] [--run-tests] [--verified] [--json]
 ```
 
-!!! note "CLI 0.1.60"
-    CLI 0.1.60 reads the current roles and suites: the data suite's
+!!! note "CLI 0.1.61"
+    CLI 0.1.61 reads the current roles and suites: the data suite's
     `records-a-derived-series` and `records-a-pools-factor` can be named in
     `not_presented`, and so can every read the suites mark with its `about`
     (datasets, orders, trading instructions, replacements, templates, event
