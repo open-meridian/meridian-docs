@@ -392,7 +392,10 @@ meridian upgrade-deployment --set resilience.profile=tolerant
 ```
 
 Each count returns to one. A database that has moved under Patroni stays under it, with no
-standbys.
+standbys. The broker's three servers go with their volumes, and with them the lake's write-ahead
+stream: a write it still held was never answered, so its plugin sends it again, and nothing
+answered is lost. `meridian upgrade-deployment` deletes any of those volumes still left, so a
+later move to `ha` starts the stream afresh.
 
 Two things are refused, before anything changes, until you deal with them first:
 

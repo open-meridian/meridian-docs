@@ -79,8 +79,9 @@ with the new values, or with neither `--shards` nor `--standby`.
   a lease. Each sidecar hands its plugin only its share of what is wanted,
   so the plugin follows its share with no code of its own.
 - **A standby stands by.** Its plugin is not started until its sidecar
-  takes a lease, and the pod shows as not ready while it waits. Its sidecar
-  keeps the instance's standing wants meanwhile, so it can serve at once.
+  takes a lease, and the pod shows as not ready while it waits. It holds
+  nothing of the instance's work while it waits: what it serves comes to it
+  when it takes a shard.
 
 `meridian status` counts the shards as what the plugin wants ready, and its
 standby beside them:
@@ -98,11 +99,18 @@ When a shard's pod or its node is lost, its lease lapses, and:
    the shard's epoch in the lake and the book, so nothing the lost pod sends
    afterwards is kept: its writes are refused as fenced, and its sidecar
    stands by again.
-2. **It serves at once.** It hands its plugin the shard's share of the
-   standing wants it kept, and the plugin's pages and reads go on from the
-   lake as before.
+2. **It serves the shard's subjects.** Once the lake has recorded the
+   take, it delivers each of the instance's standing wants still open again,
+   the same want under the same ID. The new pod's sidecar holds what it
+   hears until its plugin has started, then hands the plugin the shard's
+   share, so nothing is missed or heard twice. The plugin's pages and reads
+   go on from the lake as before.
 3. **Without a standby**, the shards still holding leases share the lost
    shard's subjects between them until its pod is back.
+
+A row the lost pod had recorded may be recorded again by the pod that took
+its shard. The lake then keeps a second version of the row with the same
+values, its raw record in the new pod's folder.
 
 Each takeover is its own record. It shows on the Resilience page's
 **History** as `shard taken over`, naming the instance, the shard, the pod

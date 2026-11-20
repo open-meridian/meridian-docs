@@ -76,7 +76,8 @@ and leaves every answer as it was; a move with its target held back, or with
 its digests made to differ, does not switch and leaves its source owning. A
 data plugin at two shards with a standby pod has a shard's pod lost: each
 subject is served by one shard outside the takeover, and the standby serves
-the lost shard's subjects from the wants it kept.
+the lost shard's subjects from the standing wants the lake delivers again
+at the take.
 
 ## Desktop { #desktop }
 
@@ -217,7 +218,9 @@ each standby is behind.
 **The broker.** Three servers, each keeping its JetStream state on a volume
 of its own (`broker.jetstream.size`, `1Gi`), so a server restarted rejoins
 with what it held. A client moves to another server when its own has not
-answered for 2 seconds.
+answered for 2 seconds. Leaving the HA profile removes the three servers and
+their volumes, so a return to it starts JetStream afresh, never on what the
+servers held before.
 
 **The lake's writes.** A data plugin's writes go first to the lake's
 write-ahead stream on those three servers, and the plugin is answered once
@@ -276,7 +279,8 @@ standbys: **shards** of a data plugin, sharing its subjects, and a
 **standby pod**, which takes over a shard whose pod is lost. Each shard
 holds a lease; a standby that takes one first has the shard's epoch raised
 in the lake and the book, so nothing the lost pod sends afterwards is kept,
-then serves the shard's subjects at once from the wants it kept. The
+then serves the shard's subjects from the standing wants the lake
+delivers again once it has recorded the take. The
 profile's never-blind lines say whether a data type's sources run standby
 pods. See
 [Run a plugin as shards or with a standby pod](../how-to/run-a-plugin-as-shards-or-with-a-standby.md).
