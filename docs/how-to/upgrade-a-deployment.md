@@ -35,7 +35,7 @@ the cluster, and the dashboard does not upgrade itself.
 Take a backup before you upgrade, and copy it off the cluster: `meridian backup --to <dir>`, with
 backups set up. See [Back up and restore a deployment](back-up-and-restore.md). What an upgrade
 changes on the way, release by release, is in the
-[release notes](../api/python-sdk.md#release-notes).
+[release notes](../api/release-notes.md).
 
 !!! note "Upgrading to chart 0.1.632"
     Chart releases are numbered by the CI run that tested them, so the
@@ -78,74 +78,6 @@ changes on the way, release by release, is in the
     a [restore that chooses its timeline and `--to-archive-end`](back-up-and-restore.md#restore-to-a-point-in-time),
     and [gaps and switches to a backup source](../concepts/licences-and-entitlements.md#gaps)
     on Data sources. A plugin on SDK 0.36.0 needs it.
-
-!!! note "Upgrading from a chart before 0.1.408"
-    The upgrade to chart 0.1.408 adds each store's change log, the table a
-    standby follows, and the stores' hot layers, each bounded within the
-    component's memory limit (see
-    [Service levels](../concepts/service-levels.md#the-hot-layer)). Every
-    `standby` value defaults to 0, so a deployment keeps one member of each
-    component until you ask for more. It also brings
-    [bonds and fixed income](../concepts/bonds-and-fixed-income.md): the
-    debt templates, pools' factors in the lake, and the book's fixed-income
-    records. Plugins keep running as they are: one built on an older SDK
-    registers and sends what it did; move it with
-    [`meridian plugin migrate`](../api/cli.md#plugin-migrate).
-
-!!! note "Upgrading from a chart before 0.1.313"
-    The upgrade to chart 0.1.313 migrates the
-    instrument store (a listed series' terms, and the company records), the
-    conductor (the deployment's settings kept one record each, and starter
-    packs) and the dashboard's notices, each adding to what is held. The
-    book's snapshots change format, so each account's projection is
-    rebuilt from its journal once; the journal is not rewritten. The
-    settings home page gains **Series request rule** (series for an order
-    asked for, standing wants not, 500 a day) and **Stale reference actions
-    permitted** (refuse only); the **Data sources** page its **Age** tab; **Browse** its
-    **Starter packs** view. Plugins keep running as they are: one built on
-    SDK 0.32 registers and sends what it did, and reports no latency until
-    it moves to SDK 0.33.0 (see
-    [Moving a plugin to a new release](../api/python-sdk.md#moving-a-plugin-to-a-new-release)).
-    An `ems` moved to SDK 0.33.0 reads **Stale reference actions permitted**, so
-    a desk whose admin chose **Warn** refuses until a deployment admin
-    permits **Refuse or warn**. The options measures price at the US
-    Treasury's par yield curve, so a deployment running them launches a
-    rates plugin recording it (see [Rates](../concepts/rates.md)).
-
-    Upgrading from a chart before chart 0.1.309 also rebuilds each
-    account's projection from its journal once, as the book's snapshots
-    change format, so every lot relieved before it gains its
-    [proceeds](../concepts/the-book-of-record.md#a-closed-lots-proceeds);
-    the journal is not rewritten. The dashboard's settings move from a row
-    of tabs to a grouped sidebar, every address unchanged, with **FX pivot
-    currencies** under **Deployment**, reading USD, then EUR, until a
-    deployment admin sets them. Placements made before it have no type and
-    read as DMA. Plugins keep running as they are: one built on an older
-    SDK registers and sends what it did, and one moved to SDK 0.32.0 or
-    later records and reads [rates](../concepts/rates.md), liveness and
-    [execution costs](../concepts/execution-costs.md), and places by
-    [type](../concepts/placement-types-and-rfq-quotes.md) (see
-    [Moving a plugin to a new release](../api/python-sdk.md#moving-a-plugin-to-a-new-release)).
-    From chart 0.1.311 a plugin whose catalogue states the licence's
-    attribution terms registers, and rates resolve by their publisher's own
-    codes (see
-    [The licence list](../concepts/one-id.md#the-licence-list)).
-    Upgrading from a chart before chart 0.1.308 also adds
-    [the analytics component](../concepts/the-analytics-component.md): two
-    Deployments, a coordinator and a worker, on an image of its own,
-    `ghcr.io/open-meridian/meridian-analytics`, sized by the chart's
-    `analytics.coordinator` and `analytics.worker` values, stateless, with
-    no database and no volume, every pricing model built-in until a
-    deployment admin routes one; and the book records
-    [the agents' guard](../concepts/the-agents-guard.md) on, once, as its
-    own entry, a connectivity plugin reporting no environment for its
-    session being live for agents. From one before chart 0.1.306, it starts
-    the book's snapshots, one every `bor.snapshotInterval` entries (default
-    1,000), and gives the **Plugins** page **Browse** and **Registries**
-    (see [Registries](../concepts/registries.md)); from one before chart 0.1.305, it runs that release's instrument migration (see
-    [Review provisional records and the migration](review-provisional-records.md)).
-    `meridian status` shows the release, each component and plugin, and the
-    book's health after the upgrade.
 
 ## To upgrade with the command line
 
@@ -544,7 +476,7 @@ tidying, and optional.
 
 ```bash
 helm upgrade meridian oci://ghcr.io/open-meridian/charts/meridian-runtime \
-  --version 0.1.182 --namespace meridian --reset-then-reuse-values
+  --version 0.1.632 --namespace meridian --reset-then-reuse-values
 
 kubectl wait -n meridian --for=condition=complete --timeout=10m \
   job/meridian-meridian-runtime-migrate-8

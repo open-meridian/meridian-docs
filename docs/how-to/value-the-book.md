@@ -122,8 +122,9 @@ and nothing it reads leaves the deployment.
 
 ## Build your own
 
-A reporting plugin of your own uses what the sample does. You need CLI
-0.1.61 and SDK 0.37.1 or later:
+--8<-- "requirements.md"
+
+A reporting plugin of your own uses what the sample does:
 
 - **The reads.** A `reporting` plugin reads positions with
   [`list_positions`](../api/typed-operations.md#list_positions) and prices

@@ -8,7 +8,9 @@ suite's rates cases. What a rate is, and how it is read, is in
 [Write a data plugin against its suite](write-a-data-plugin.md): this page
 adds what is different for rates.
 
-You need SDK 0.37.1 and a deployment on chart 0.1.632, which reads a
+--8<-- "requirements.md"
+
+That chart reads a
 dataset's terms and pricing. `meridian plugin new` on CLI 0.1.61 writes a
 plugin on SDK 0.35.0, which `meridian plugin migrate` moves to 0.37.1.
 

@@ -62,7 +62,7 @@ flagged on the Data sources page, and in `dashboard__list_datasets`, where
 more than one person holds `read` or `write` on a plugin entitled to it,
 naming them: each person who has signed in, and each login a user group
 names, signed in yet or not. It warns; it does not refuse. A deployment
-enforces entitlements per plugin and per field, not yet per person.
+enforces entitlements per plugin and per field.
 
 **The data plugin knows its datasets' licences.** A data plugin reads the licence a deployment admin set on each
 dataset its own catalogue declares, and no other's, so its **Datasets** page

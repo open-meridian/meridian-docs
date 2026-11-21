@@ -5,12 +5,13 @@ Reference pages for building on Open Meridian, taken from the code of each relea
 | Page | What it covers |
 |---|---|
 | [Command line](cli.md) | `meridian`: every command and flag, their defaults, exit codes and `--json` output. It covers installing a deployment, signing in, and uploading, launching and developing plugins. |
-| [Python SDK](python-sdk.md) | The `open-meridian` package, imported as `meridian`: `meridian.run`, the role classes `meridian.roles.<role>.Role`, the connection, its types, `meridian.Pages` and its templates, `meridian.testing`, `CallerMiddleware`, the exceptions it raises, the order path and settlement calendars, its release notes, and how to move a plugin to a new release. |
+| [Python SDK](python-sdk.md) | The `open-meridian` package, imported as `meridian`: `meridian.run`, the role classes `meridian.roles.<role>.Role`, the connection, its types, `meridian.Pages` and its templates, `meridian.testing`, `CallerMiddleware`, the exceptions it raises, the order path and settlement calendars, and how to move a plugin to a new release. |
 | [Typed operations](typed-operations.md) | The workflow steps a plugin calls through its sidecar: each operation's Python method, gRPC rpc, role, parameters, result and errors. |
 | [Core's tools](core-tools.md) | The deployment's own tools on its MCP surface for a plugin's area, the Data sources page, prepared changes, the service accounts, the trading instructions, the account attributes, the Instruments and Calendars tabs: who may call each, its inputs, its answer and its refusals, the two exceptions, and where each change is recorded. |
 | [Data dictionary](../boundaries/street.md) | One page per store, every field anchored by its name, with its meaning, bounds and history, [the lake's](../boundaries/lake.md) and the venue master's record in the instrument store among them. |
 | [Plugin manifest](plugin-manifest.md) | `[tool.meridian]` in a plugin's `pyproject.toml`: its roles and whether it serves pages, and what a change to them takes. |
 | [`plugin dev` events](plugin-dev-events.md) | The JSON event stream of `meridian plugin dev --json` and `meridian plugin events --json`, for scripts and AI agents following a live plugin. |
+| [Release notes](release-notes.md) | What each SDK release changed, and what an upgrade from an older chart does on the way. |
 
 !!! note "What is not here"
     The typed operations cover holdings ingestion, reading what was recorded, instrument resolution, the lake's prices, bars, trades, quotes and outcomes, [the order path](typed-operations.md#the-order-path), booking, [settlement calendars' reads](typed-operations.md#settlement-calendars-reads), and [listed options' and futures' chains, lifecycle events and packages](typed-operations.md#options-companies-and-scenarios). The filings slice and quality states are served too: see [The lake](../concepts/the-lake.md#not-served-yet).

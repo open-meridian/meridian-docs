@@ -10,7 +10,9 @@ the market objects its model declares, it answers a value per unit, and
 nothing else. The role has a conformance suite, carried by the SDK. This
 page starts one from the template and holds it to the suite.
 
-You need CLI 0.1.61 and SDK 0.37.1 or later: `meridian plugin
+--8<-- "requirements.md"
+
+`meridian plugin
 new --role pricing` writes this template on the role's common part, on SDK
 0.35.0, for a runtime on chart 0.1.408 or later; `meridian plugin migrate` moves it
 to 0.37.1.
@@ -102,7 +104,7 @@ The rules a model keeps:
 - **Answer in the base currency, naming it.** The value's `instrument_id`
   is the cash instrument the unit's last conversion leg is in. A value in
   another asset is not taken, and the figure through it is not evaluated.
-- **Equal the built-in model on its model id.** A v26 model id is defined
+- **Equal the built-in model on its model id.** A built-in model id is defined
   by the built-in implementation, and the suite holds your answer to it
   exactly, digit for digit.
 - **Read nothing else.** No position, no account, no other price: the batch

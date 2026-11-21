@@ -123,7 +123,7 @@ on its next start. You need no override for that.
 
 ### Hold each registration to its declaration { #hold-each-registration-to-its-declaration }
 
-A plugin declaring v25 registers exactly the declaration its version was uploaded
+A plugin registers exactly the declaration its version was uploaded
 with, or its sidecar refuses it, naming the first difference. The harness performs no upload, so
 list each plugin with `"declaration": PATH`, and its sidecar holds it to that file instead: the
 SDK's JSON as `meridian-declaration` prints it from the plugin's own image, which is what

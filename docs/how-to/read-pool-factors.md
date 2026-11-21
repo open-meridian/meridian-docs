@@ -2,8 +2,9 @@
 
 Record the monthly factor of each agency pool and REMIC class you hold, from
 the agencies' disclosure files, and see how the book prices a fill whose
-settlement month's factor is not yet published. You need chart 0.1.632 and
-CLI 0.1.61.
+settlement month's factor is not yet published.
+
+--8<-- "requirements.md"
 
 ## 1. Arrange the files
 
@@ -27,9 +28,9 @@ token** if it asks for one. **Payment calendar** is the platform's US dollar
 calendar unless you name your own copy; a pool's record naming its own
 payment calendar goes first.
 
-On the **Data sources** page, license `gse-disclosures:fannie_mae` and
-`:freddie_mac`, or `ginnie-mae:ginnie_mae`, and entitle the plugins that
-read factors. The plugin's **Connection** reads Answering once the location
+License `gse-disclosures:fannie_mae` and `:freddie_mac`, or
+`ginnie-mae:ginnie_mae`, and entitle the plugins that read factors, as
+[License and entitle a dataset](license-and-entitle-a-dataset.md) says. The plugin's **Connection** reads Answering once the location
 answers.
 
 ## 3. Read the factors

@@ -87,7 +87,7 @@ component, no standby, the database the first-run wizard brings.
 **Tolerates** a pod lost, by Kubernetes restarting it.
 
 **Footprint**, measured on CI's GitHub-hosted Linux runner in a k3s cluster,
-the default profile with no plugin, from v29's chart:
+the default profile with no plugin, on an earlier chart:
 
 | | |
 |---|---|

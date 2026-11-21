@@ -368,16 +368,14 @@ conflated, catch up by reading the latest in force.
 | Outcomes | `reporting`, `portfolio`, `compliance`, `signal`, and `operations`, which reads the lake for outcomes alone, to explain a payout's break |
 | The datasets a plugin may read | `reporting`, `portfolio`, `compliance`, `signal` and `ems` |
 
-**`reporting` is for slower consumers.** In the product owner's words,
-"reporting is primarily aimed for slower consumers": it reads conflated
+**`reporting` is for slower consumers.** It reads conflated
 prices and bars, never trades or quotes. A dashboard or a valuation reads
 the latest price or the close, and needs no tape.
 
 **High-resolution data is `signal`'s and `ems`'s.** A `signal` plugin
 triggers orders on live data; an `ems` plugin sends orders in real time.
-`portfolio` and `oms` read prices and bars, not trades: "Portfolio primarily
-exists to shape order, and oms focuses on aggregating orders", as the
-product owner put it. A `portfolio` or `oms` plugin that needs
+`portfolio` and `oms` read prices and bars, not trades: a `portfolio`
+plugin exists to shape orders, and an `oms` to aggregate them. A `portfolio` or `oms` plugin that needs
 high-resolution data also takes `signal` (live order triggering) or `ems`
 (real-time order sending), and is approved for that role when it is
 launched.

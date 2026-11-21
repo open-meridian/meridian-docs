@@ -8,8 +8,7 @@ plugin's author, how a data plugin records liveness and an `ems` makes its
 check. What each number means is in
 [Data age and liveness](../concepts/data-age-and-liveness.md).
 
-You need a deployment (chart 0.1.632) and plugins on SDK
-0.37.1 or later.
+--8<-- "requirements.md"
 
 ## A dataset's threshold
 

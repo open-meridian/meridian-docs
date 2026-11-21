@@ -168,12 +168,6 @@ own tools, such as `read_plugin_build`, `list_signing_keys`, `set_plugin_attribu
 `withdraw_version` and `get_plugin_usage`. Who may publish and which keys
 sign are changed only on the organisation's pages or with the CLI, never by a tool.
 
-## Copyright notices
-
-The platform has a takedown process for copyright notices, built and not yet switched on. Until
-it is, only Open Meridian's own plugins publish. Acting on a notice is a pull of the versions it
-names, under the same rules as any pull: new installs stop, installed deployments are warned, nothing is removed.
-
 ## Related
 
 - [Plan your deployment](plan-your-deployment.md): which plugins a firm needs, and each one's

@@ -212,9 +212,7 @@ admin's level, has a **Calendars** tab, read-only:
   **subject** (a currency's ISO 4217 code, the venues by
   their `VEN-` IDs, or the settlement system's name and country), its
   version, the last date of its coverage (**Coverage to**) and when it was
-  last refreshed, paged. Venues are shown by ID, labelled as IDs, because
-  the dashboard cannot yet read a venue by its ID; their MICs and names
-  come in a later version. The list is filtered by kind
+  last refreshed, paged. Venues are shown by ID, labelled as IDs. The list is filtered by kind
   and searched by text on the name and the subject's codes, a venue's MIC
   and name among them, so it is searched rather than paged through. Empty, it says none is held yet: a calendar is
   pulled when a currency, a venue or a date read first needs it.
