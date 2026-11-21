@@ -5,8 +5,7 @@ phone as a manual placement, and works an order by asking dealers for
 quotes and picking one. What each type means is in
 [Placement types and RFQ quotes](../concepts/placement-types-and-rfq-quotes.md).
 
-You need SDK 0.32.0 or later and a deployment (chart
-0.1.309 or later).
+--8<-- "requirements.md"
 
 ## A manual placement
 

@@ -4338,7 +4338,7 @@ One account a connection reaches, as the custodian presents it.
 
 ### `AssetClass` { #assetclass }
 
-The kind of claim holding an instrument gives. A closed list: a class joins it by a ruling, never because a venue sent one. In a string, a value is spelled as its name without `ASSET_CLASS_`, in lower case.
+The kind of claim holding an instrument gives. A closed list: a class joins it only in a new release, never because a venue sent one. In a string, a value is spelled as its name without `ASSET_CLASS_`, in lower case.
 
 | Value | Number | Meaning |
 |---|---|---|

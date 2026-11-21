@@ -72,7 +72,7 @@ ASSETS = {
     "cash": "Cash",
 }
 ENVIRONMENTS = {"sandbox": "Sandbox", "live": "Live", "sample-data": "Sample data"}
-# The page lists released plugins only (the product owner, 2026-10-14), so a
+# The page lists released plugins only, so a
 # row's status must be `released` and the page shows no status column.
 STATUSES = {"released": "released"}
 

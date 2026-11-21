@@ -91,7 +91,7 @@ Each profile below is a table, one row per need:
 | **Build your own** | Open Meridian supports it today: a firm's agent can write the plugin now |
 
 Everything marked **Exists** is in the current release; what each release
-added is in the [release notes](../api/python-sdk.md#release-notes).
+added is in the [release notes](../api/release-notes.md#the-python-sdk).
 
 ## A US individual, accounts at Fidelity through SnapTrade
 

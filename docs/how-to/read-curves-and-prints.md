@@ -2,7 +2,9 @@
 
 Record government curves, inflation indexes, municipal and corporate bond
 prints and bond quotes in your deployment's lake, from Terrapin and
-OpenYield. You need chart 0.1.632 and CLI 0.1.61.
+OpenYield.
+
+--8<-- "requirements.md"
 
 | Plugin | Datasets | What they hold |
 |---|---|---|
@@ -31,11 +33,11 @@ Instruments page** before its rates are recorded. Until then the plugin's
 
 ## 3. License, entitle and read
 
-On the **Data sources** page, license each dataset on the terms of your
-agreement with the vendor (and FINRA's and MSRB's for the prints): the
-plugins declare no default terms. Entitle the plugins that read them, and
-set the priority where another dataset records the same curve or
-security.
+License each dataset on the terms of your agreement with the vendor (and
+FINRA's and MSRB's for the prints): the plugins declare no default terms.
+Entitle the plugins that read them, and set the priority where another
+dataset records the same curve or security. [License and entitle a dataset](license-and-entitle-a-dataset.md) gives
+the steps.
 
 A curve's points are rates: read them with
 [`list_rates`](../api/typed-operations.md#list_rates) (see

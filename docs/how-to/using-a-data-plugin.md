@@ -185,7 +185,7 @@ plain date in New York's day ending at the 16:00 close:
   its close is final.
 - A last price names the exchange it printed on, by its
   [venue ID](../concepts/venues.md); a consolidated price names none.
-  Alpaca's exchange codes are in the venue master. Tradier's are not yet, so
+  Alpaca's exchange codes are in the venue master. Tradier's are not, so
   each is reported as a venue the deployment does not hold and kept as
   Tradier reported it.
 - Berkshire's B shares are `BRK.B` in both; Tradier is asked in its own

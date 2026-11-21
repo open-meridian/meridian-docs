@@ -2,7 +2,9 @@
 
 Put US equities' closes, bars, quotes and trades, and listed options'
 chains, into your deployment's lake from a data plugin, and read them from
-any plugin entitled to them. You need chart 0.1.632 and CLI 0.1.61.
+any plugin entitled to them.
+
+--8<-- "requirements.md"
 
 | Plugin | What it records | Its key |
 |---|---|---|
@@ -24,13 +26,12 @@ whether the vendor answered, never the key itself.
 
 ## 2. License and entitle its datasets
 
-On the deployment's **Data sources** page a deployment admin:
-
-1. **licenses** each dataset your plan reaches (Databento's `daily`, `live`,
-   `trades` and `options`; Alpaca's `daily`, `live` and `trades`), each
-   starting from the vendor's terms, with a note;
-2. **entitles** the plugins that read prices, trades, quotes and chains;
-3. sets the **priority** where two datasets record the same prices.
+A deployment admin licenses each dataset your plan reaches (Databento's
+`daily`, `live`, `trades` and `options`; Alpaca's `daily`, `live` and
+`trades`), each starting from the vendor's terms; entitles the plugins that
+read prices, trades, quotes and chains; and sets the priority where two
+datasets record the same prices. [License and entitle a dataset](license-and-entitle-a-dataset.md) gives the
+steps.
 
 Nothing is read from the vendor until an entitled plugin asks.
 

@@ -34,16 +34,17 @@ developer guide. They are written from the code of
 [meridian-ui](https://github.com/open-meridian/meridian-ui); when those
 change, the pages change with them.
 
-**Pages describe the current release only.** A tutorial names the CLI and
-SDK it needs once; an API page marks a field, tool or operation new or
-changed in the last two releases with one line ("Added in SDK 0.28.0",
-"Changed in contract 24"). History lives in two places: the Python SDK
-page's [release notes](docs/api/python-sdk.md#release-notes), and its
+**Pages describe the current release only.** A page states what it needs
+with the one requirements line, `snippets/requirements.md`
+(`--8<-- "requirements.md"`); an API page marks a field, tool or operation
+new or changed in the last two releases with one line ("Added in SDK
+0.28.0"). History lives in two places: the
+[release notes](docs/api/release-notes.md), and the Python SDK page's
 [Moving a plugin to a new release](docs/api/python-sdk.md#moving-a-plugin-to-a-new-release)
 with the CLI's `plugin migrate` step table. An upgrade fact a page drops
 goes there first.
 
-Today they describe contract v30, released in chart 0.1.632 (core
+Today they describe interface version v30, released in chart 0.1.632 (core
 8599e1fd): writer groups, book partitions and a database per group, moves
 and splits online, the resilience profile's advice, plugins run as shards or
 with a standby pod and the storage they share, and what a failover looks
@@ -54,11 +55,11 @@ shard, `meridian.run` waiting for a lost sidecar in the same process, a
 placement sent at most once across a takeover, a charge reported under its
 key, `meridian-storage`, and a raw record kept from two threads at once
 waiting its turn), with kit 0.16.0 and `boundaries/` vendored from
-meridian-schema 9f396f9 (contract 30). The plugins are as the Integrations
+meridian-schema 9f396f9. The plugins are as the Integrations
 page lists them (integrations/released.json). What each SDK release added is
-in the Python SDK page's release notes.
+in the release notes.
 The tutorials were walked on CLI 0.1.36 and SDK 0.21.0. A page describes
-what is built, and says so where something is specified and not built yet.
+what is built.
 
 ## The roles page, the data dictionary and llms.txt
 

@@ -2,7 +2,9 @@
 
 Place orders for US stocks and ETFs at Alpaca or Tradier, from a plugin
 holding the `ems` role, through the Alpaca or Tradier plugin's
-`connectivity` role. You need chart 0.1.632 and CLI 0.1.61.
+`connectivity` role.
+
+--8<-- "requirements.md"
 
 ## 1. Choose the environment and enter the key
 

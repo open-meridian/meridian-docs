@@ -1253,7 +1253,7 @@ withdraws it at the page, or with **Unlink all and close**.
  "note": "The 2026 rollover account is empty and its link was removed."}
 ```
 
-## The Instruments page's provisional records { #the-instruments-pages-v24-additions }
+## The Instruments page's provisional records { #the-instruments-pages-provisional-records }
 
 The Instruments tools take and answer the provisional
 records (see [One ID per instrument](../concepts/one-id.md)):

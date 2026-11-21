@@ -5,8 +5,9 @@ on one pair and one value date: it proposes the net order, records the
 offset as internal crosses, and books the result. What a net is, and why,
 is in [FX netting](../concepts/fx-netting.md).
 
-You need SDK 0.32.0 or later, a deployment (chart 0.1.309 or
-later), an [allocation account](../concepts/accounts.md#in-the-book) in the
+--8<-- "requirements.md"
+
+You also need an [allocation account](../concepts/accounts.md#in-the-book) in the
 `oms`'s write scope, and the members' accounts in it too.
 
 ## Propose the net

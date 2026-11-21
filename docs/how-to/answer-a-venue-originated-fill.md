@@ -52,8 +52,7 @@ in your write access.
   exceeds order, no matching order, price exceeds limit, calculation
   difference, or other, which needs text.
 - **Once answered, a fill stays answered.** A wrong accept is put right as
-  any wrong fill is, by a bust, or by booking's corrections in a later
-  release.
+  any wrong fill is, by a bust.
 
 **Whether the venue is told** depends on what it takes, as its connectivity
 plugin's catalogue says. Where it takes a FIX acknowledgement, the

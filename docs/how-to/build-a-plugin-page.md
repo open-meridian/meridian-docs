@@ -133,7 +133,7 @@ market-direction convention, and the kit applies them.
 ## The kit's version
 
 The kit is at 0.13.0. What each version added is in the
-[release notes](../api/python-sdk.md#release-notes).
+[release notes](../api/release-notes.md#the-python-sdk).
 
 **A 0.x release only adds.** Nothing in the kit is removed or renamed within 0.x, so a page built
 against an earlier 0.x keeps working on a later one.

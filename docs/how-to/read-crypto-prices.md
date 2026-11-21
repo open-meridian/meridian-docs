@@ -2,19 +2,19 @@
 
 Put crypto pairs' closes, live prices, quotes and trades into your
 deployment's lake from Coinbase or Kraken, and read them from any plugin
-entitled to them. You need chart
-0.1.632 and CLI 0.1.61.
+entitled to them.
+
+--8<-- "requirements.md"
 
 ## Coinbase and Kraken
 
 1. **Launch it.** Install the plugin from **Browse**, or with
    `meridian plugin install`, and approve its `data` role. It asks for
    storage for its raw responses, and no key.
-2. **License its datasets** on the deployment's **Data sources** page:
-   `<instance>:daily`, `<instance>:live` and `<instance>:trades`, each listed
-   with the terms the exchange's standard terms impose. Confirm or change
-   each with a note.
-3. **Entitle** each plugin that reads them, and set the **priority** where
+2. **License and entitle its datasets**, `<instance>:daily`,
+   `<instance>:live` and `<instance>:trades`, each listed with the terms the
+   exchange's standard terms impose, as [License and entitle a dataset](license-and-entitle-a-dataset.md) says. Set the
+   [priority](license-and-entitle-a-dataset.md#set-a-source-priority) where
    another plugin also records the same pairs' closes.
 
 An agent you delegate to reads the plugin's pages through its tools,
@@ -35,5 +35,6 @@ from made-up data instead of the venue.
 ## Related
 
 - [Using a data plugin](using-a-data-plugin.md#coinbase-and-kraken).
+- [License and entitle a dataset](license-and-entitle-a-dataset.md).
 - [Read Pyth Network prices](read-pyth-prices.md).
 - [Crypto](../concepts/crypto.md).
